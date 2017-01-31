@@ -29,8 +29,8 @@ Vue.component('UiDropdown', Dropdown);
 import Field from './components/Field.vue';
 Vue.component('UiField', Field);
 
-import Input from './components/Input.vue';
-Vue.component('UiInput', Input);
+// import Input from './components/Input.vue';
+// Vue.component('UiInput', Input);
 
 import Link from './components/Link.vue';
 Vue.component('UiLink', Link);

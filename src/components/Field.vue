@@ -33,30 +33,40 @@
         },
 
         mounted() {
-            this.input = this.$refs.input.firstChild;
+            // Get the input element
+            this.input = this.$refs.input.getElementsByTagName('input')[0];
+            if (! this.input) this.input = this.$refs.input.getElementsByTagName('textarea')[0];
 
-            this.setAttributes();
-
-            this.input.addEventListener('focus', this.onFocus);
-            this.input.addEventListener('blur', this.onBlur);
-            this.input.addEventListener('input', this.onInput);
-//            this.input.addEventListener('change', this.onInput);
-        },
-
-        methods: {
-            setAttributes() {
+            if (this.input) {
+                // Get or generate the id to link label & input
                 this.id = this.input.getAttribute('id');
                 if (! this.id) {
                     this.id = 'input-' + uuid();
                     this.input.setAttribute('id', this.id);
                 }
+
+                this.value = this.input.getAttribute('value');
                 this.disabled = this.input.getAttribute('disabled');
                 this.required = this.input.getAttribute('required');
-                this.value = this.input.getAttribute('value');
                 this.maxlength = this.input.getAttribute('maxlength');
-                // TODO: Respond to input element attribute changes
-            },
 
+                this.input.addEventListener('focus', this.onFocus);
+                this.input.addEventListener('blur', this.onBlur);
+                this.input.addEventListener('input', this.onInput);
+    //            this.input.addEventListener('change', this.onInput);
+
+                new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (['disabled', 'required', 'maxlength'].indexOf(mutation.attributeName) > -1) {
+                            this[mutation.attributeName] = this.input.getAttribute(mutation.attributeName);
+                        }
+                    });
+                }).observe(this.input, { attributes: true });
+
+            }
+        },
+
+        methods: {
             onFocus() {
                 this.focus = true;
                 this.$emit('focus');
@@ -96,6 +106,68 @@
         margin-bottom: 16px;
         color: $field;
 
+        label {
+            padding-top: 2px;
+            display: block;
+            font-size: 12px;
+            color: inherit;
+        }
+
+        .input {
+            border-bottom: 1px solid $divider;
+            position: relative;
+
+            &:after {
+                display: block;
+                background-color: currentColor;
+                bottom: -1;
+                content: '';
+                height: 2px;
+                left: 48%;
+                position: absolute;
+                width: 4%;
+                transition: 0.2s ease-in-out;
+                visibility: hidden;
+            }
+
+            &.focus {
+                &:after {
+                    left: 0;
+                    visibility: visible;
+                    width: 100%;
+                }
+            }
+        }
+
+        input, textarea, .selection {
+            font-family: inherit;
+            position: relative;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            background: transparent;
+            display: block;
+            margin: 0;
+            padding: 4px 0;
+            width: 100%;
+            max-width: 100%;
+            background: none;
+            text-align: left;
+            color: darken($text, 10%);
+            font-size: 16px;
+        }
+
+        .hint {
+            font-size: 12px;
+            color: inherit;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        ::placeholder, .placeholder {
+            color: lighten($field, 15%);
+        }
+
         &.focus {
             color: $primary;
         }
@@ -103,91 +175,25 @@
         &.disabled {
             color: lighten($field, 20%);
             cursor: not-allowed;
+
+            label {
+                color: lighten($field, 20%);
+                cursor: not-allowed;
+            }
+
+            input, textarea, .selection {
+                color: lighten($text, 20%);
+                cursor: not-allowed;
+            }
         }
 
         &.invalid {
             color: $danger;
-        }
-    }
 
-    label {
-        padding-top: 2px;
-        display: block;
-        font-size: 12px;
-        color: inherit;
-    }
-
-    .disabled label {
-        color: lighten($field, 20%);
-        cursor: not-allowed;
-    }
-
-    input, textarea, .selection {
-        font-family: inherit;
-        position: relative;
-        border: none;
-        outline: none;
-        box-shadow: none;
-        background: transparent;
-        display: block;
-        margin: 0;
-        padding: 4px 0;
-        width: 100%;
-        max-width: 100%;
-        background: none;
-        text-align: left;
-        color: darken($text, 10%);
-        font-size: 16px;
-    }
-
-    .disabled {
-        input, textarea, .selection {
-            color: lighten($text, 20%);
-            cursor: not-allowed;
-        }
-    }
-
-    .input {
-        border-bottom: 1px solid $divider;
-        position: relative;
-
-        &:after {
-            display: block;
-            background-color: currentColor;
-            bottom: -1;
-            content: '';
-            height: 2px;
-            left: 48%;
-            position: absolute;
-            width: 4%;
-            transition: 0.2s ease-in-out;
-            visibility: hidden;
-        }
-
-        &.focus {
-            &:after {
-                left: 0;
-                visibility: visible;
-                width: 100%;
+            .input {
+                border-bottom: 1px solid $danger;
             }
         }
-    }
-
-    .invalid {
-        .input {
-            border-bottom: 1px solid $danger;
-        }
-    }
-
-    .hint {
-        font-size: 12px;
-        color: inherit;
-        display: flex;
-        justify-content: space-between;
-    }
-
-    ::placeholder, .placeholder {
-        color: lighten($field, 15%);
     }
 
 

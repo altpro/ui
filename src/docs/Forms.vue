@@ -8,15 +8,17 @@
             <form>
                 <p>Available attributes include:</p>
                 <ui-field label="Text input">
-                    <input type="text" v-model="text">
+                    <input type="text" value="test" required>
                 </ui-field>
-                <ui-input type="text" v-model="text" label="Input with placeholder" placeholder="Enter your name"></ui-input>
-                <ui-input type="email" v-model="email" label="Email input"></ui-input>
-                <ui-input type="number" v-model="number" label="Number input" min="2" max="5"></ui-input>
-                <ui-input type="text" v-model="disabled" label="Disabled input" disabled></ui-input>
-                <ui-input type="text" v-model="required" label="Required input" required></ui-input>
-                <ui-input type="text" v-model="hint" label="Input with hint" hint="Hints can be set as an attribute or slot in a template tag" required></ui-input>
-                <ui-input type="text" v-model="maxlength" label="Input with maxlength" hint="Maxlenght attribute automatically adds a counter" maxlength="20"></ui-input>
+
+                <input type="text" v-model="text">
+                <!--<ui-input type="text" v-model="text" label="Input with placeholder" placeholder="Enter your name"></ui-input>-->
+                <!--<ui-input type="email" v-model="email" label="Email input"></ui-input>-->
+                <!--<ui-input type="number" v-model="number" label="Number input" min="2" max="5"></ui-input>-->
+                <!--<ui-input type="text" v-model="disabled" label="Disabled input" disabled></ui-input>-->
+                <!--<ui-input type="text" v-model="required" label="Required input" required></ui-input>-->
+                <!--<ui-input type="text" v-model="hint" label="Input with hint" hint="Hints can be set as an attribute or slot in a template tag" required></ui-input>-->
+                <!--<ui-input type="text" v-model="maxlength" label="Input with maxlength" hint="Maxlenght attribute automatically adds a counter" maxlength="20"></ui-input>-->
 
                 <h2>Component Inputs</h2>
                 <ui-date v-model="date"></ui-date>
@@ -51,10 +53,10 @@
                 text: null,
                 email: null,
                 number: null,
-                disabled: 'Disabled input',
+                disabled: false,
                 required: null,
                 hint: null,
-                maxlength: null,
+                maxlength: 20,
                 checkbox: false,
                 radio: null,
                 date: null,
