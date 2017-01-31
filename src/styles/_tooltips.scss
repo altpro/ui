@@ -1,0 +1,42 @@
+@media #{$desktop} {
+    [data-tooltip] {
+        position: relative;
+        display: inline-flex;
+        justify-content: center;
+        cursor: pointer;
+    }
+
+    /* Hide the tooltip content by default */
+    [data-tooltip]:before {
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 99;
+        transition: 0.2s ease-in-out;
+    }
+
+    /* Position tooltip above the element */
+    [data-tooltip]:before {
+        position: absolute;
+        top: 90%;
+        padding: 0 8px;
+        text-transform: none;
+        font-weight: $font-normal;
+        line-height: 22px;
+        white-space: nowrap;
+        border-radius: 2px;
+        background: rgba($grey-darker, 0.85);
+        color: #fff;
+        font-size: 11px;
+        content: attr(data-tooltip);
+    }
+
+
+    /* Show tooltip content on hover */
+    [data-tooltip]:hover:before {
+        transition-delay: 0.5s;
+        visibility: visible;
+        opacity: 1;
+        top: calc(100% + 14px);
+    }
+}

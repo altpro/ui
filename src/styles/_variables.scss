@@ -1,0 +1,66 @@
+$primary: #618fb0;
+$success: #56bc76;
+$info: #4ab0ce;
+$warning: #f0ad4e;
+$danger: #d04f4f;
+
+$grey-darker: #4a4a4a;
+$grey-dark: #666;
+$grey: #757575;
+$grey-light: #aaa;
+$grey-lighter: #e6e6e6;
+
+$text: $grey;
+$field: $grey-light;
+$link: $text;
+$hover: $primary;
+
+$background: #fff;
+
+$divider: $grey-lighter;
+
+$font: 'Roboto', 'Helvetica', 'Arial', sans-serif !default;
+$font-light: 300 !default;
+$font-normal: 400 !default;
+$font-highlight: 500 !default;
+$font-bold: 700 !default;
+
+$tablet-breakpoint: 736px;
+$desktop-breakpoint: 1025px;
+$xl-breakpoint: 1300px;
+
+$phone: "all and (max-width : #{$tablet-breakpoint - 1})";
+$mobile: "all and (max-width : #{$desktop-breakpoint - 1})";
+$tablet: "all and (min-width : #{$tablet-breakpoint})";
+$desktop: "all and (min-width : #{$desktop-breakpoint})";
+$xl: "all and (min-width : #{$xl-breakpoint})";
+
+$phone-padding: 16px;
+$tablet-padding: 24px;
+$desktop-padding: 40px;
+
+$phone-inner-padding: 12px;
+$tablet-inner-padding: 16px;
+$desktop-inner-padding: 24px;
+
+$toolbar-background: $background;
+$toolbar-text: $text;
+$toolbar-buttons: $text;
+$toolbar-small: 56px;
+$toolbar-large: 64px;
+
+$drawer-background: $background;
+$drawer-links: $text;
+$drawer-hover: $hover;
+$drawer-width: 240px;
+
+$icon-hover: $grey-lighter;
+
+$states: (
+    primary: $primary,
+    success: $success,
+    info: $info,
+    warning: $warning,
+    danger: $danger
+);
+

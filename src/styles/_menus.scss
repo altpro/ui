@@ -1,0 +1,16 @@
+.menu {
+    > .link {
+        background: $background;
+        display: block;
+        text-align: left;
+        border: none;
+        color: $link;
+        font-size: inherit;
+        font-family: inherit;
+        width: 100%;
+
+        &:hover, &:focus {
+            color: $primary;
+        }
+    }
+}

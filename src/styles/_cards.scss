@@ -1,0 +1,28 @@
+.card {
+    background: $background;
+    border-radius: 2px;
+    padding: 16px;
+    margin-bottom: $phone-padding;
+    position: relative;
+
+    @include shadow-2dp;
+
+    > .toolbar {
+        margin-top: -16px;
+        margin-left: -16px;
+        margin-right: -16px;
+        border-radius: 2px 2px 0 0;
+    }
+
+    > .list {
+        margin: 0 -16px;
+    }
+
+    > .actions {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        padding-top: 16px;
+    }
+
+}

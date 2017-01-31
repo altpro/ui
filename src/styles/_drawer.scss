@@ -1,0 +1,129 @@
+#drawer {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    width: $drawer-width;
+    height: 100vh;
+    max-height: 100vh;
+    overflow: auto;
+    position: fixed;
+    z-index: 16;
+    top: 0;
+    left: 0;
+    background: $drawer-background;
+    padding: $phone-padding 0;
+
+    transition: 0.2s ease-in-out;
+    transform: translateX(-$drawer-width);
+
+    @include shadow-2dp;
+
+    @media #{$tablet} {
+        padding: $tablet-padding 0;
+    }
+
+    @media #{$desktop} {
+        z-index: 14; // just under the toolbar
+        padding: (16px + $toolbar-large) 0 $desktop-padding;
+        overflow: hidden;
+
+        &:hover {
+            overflow: auto;
+        }
+    }
+
+    @media #{$xl} {
+        transform: translateX(0);
+    }
+
+    &.open {
+        transform: translateX(0);
+    }
+
+    ul {
+        list-style: none;
+        margin: 0 0 8px;
+        padding: 0;
+    }
+
+    h4 {
+        display: flex;
+        align-items: center;
+        font-weight: $font-highlight;
+        padding: 16px 30px 8px;
+        > i {
+            margin-right: 8px;
+        }
+    }
+
+    li {
+        border-top: 1px solid $divider;
+
+        &:first-child {
+            border-top: none;
+        }
+
+        li {
+            border-top: none;
+        }
+    }
+
+    a {
+        color: $link;
+        border-left: 4px solid $drawer-background;
+        text-decoration: none;
+        display: block;
+        padding: 8px 36px;
+        position: relative;
+        transition: 0.3s ease-in-out;
+
+        &:hover {
+            color: $drawer-hover;
+        }
+
+        > i {
+            font-size: 18px;
+        }
+
+        &.active {
+            font-weight: $font-highlight;
+            color: $hover;
+            border-left: 4px solid $drawer-hover;
+        }
+
+    }
+
+    ul:first-child > li > a {
+        display: flex;
+        align-items: center;
+        font-weight: $font-highlight;
+        padding: 16px 30px 8px 26px;
+        > i {
+            margin-right: 8px;
+        }
+    }
+}
+
+#drawer-closer {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    z-index: 15;
+    background: rgba(0,0,0,0.4);
+
+    &.open {
+        display: block;
+
+        @media #{$xl} {
+            display: none;
+        }
+    }
+
+    @media #{$desktop} {
+        z-index: 13;
+    }
+
+}

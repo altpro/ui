@@ -1,0 +1,117 @@
+html {
+    height:100vh;
+}
+
+body {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    margin: 0;
+    -webkit-overflow-scrolling: touch;
+}
+
+#header {
+    position: fixed;
+    z-index: 15;
+    top: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    display: flex;
+    flex-wrap: nowrap;
+    align-items: center;
+    background: $toolbar-background;
+    color: $toolbar-text;
+    @include shadow-2dp();
+    height: $toolbar-small;
+    padding: 0 ($phone-padding / 2) 0 0;
+    overflow: hidden;
+
+    @media #{$tablet} {
+        padding: 0 ($tablet-padding / 2) 0 0;
+    }
+
+    @media #{$desktop} {
+        height: $toolbar-large;
+        padding: 0 ($desktop-padding / 2) 0 0;
+    }
+
+    > .title {
+        flex-grow: 1;
+        font-size: 20px;
+        line-height: 1;
+
+        @media #{$xl} {
+            padding-left: $desktop-padding;
+        }
+    }
+}
+
+#drawer-button {
+    height: $toolbar-small !important;
+    width: $toolbar-small !important;
+
+    @media #{$tablet} {
+        height: $toolbar-large !important;
+        width: $toolbar-large !important;
+    }
+
+    @media #{$xl} {
+        display: none;
+    }
+
+    &:hover, &:focus {
+        background: transparent;
+    }
+}
+
+main {
+    min-height: 100vh;
+    background: $grey-lighter;
+    padding: ($phone-padding + $toolbar-small) $phone-padding $phone-padding;
+
+
+    @media #{$tablet} {
+        padding: ($phone-padding + $toolbar-small) $phone-padding $phone-padding;
+    }
+
+    @media #{$desktop} {
+        padding: ($desktop-padding + $toolbar-large) $desktop-padding $desktop-padding;
+    }
+
+    @media #{$xl} {
+        margin-left: $drawer-width;
+    }
+}
+
+.no-drawer main {
+    @media #{$xl} {
+        margin-left: 0;
+    }
+}
+
+.heading {
+    display: flex;
+    align-items: center;
+    margin-bottom: $phone-inner-padding;
+
+    @media #{$tablet} {
+        margin-bottom: $phone-inner-padding;
+    }
+
+    @media #{$desktop} {
+        margin-bottom: $desktop-inner-padding;
+    }
+
+    > h1, > h2, > h3, > .title {
+        margin-bottom: 0;
+        flex: 1 1 auto;
+    }
+
+    > .actions {
+        display: flex;
+        align-items: center;
+    }
+}
+

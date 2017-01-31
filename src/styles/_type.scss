@@ -1,0 +1,45 @@
+body {
+    font-family: $font;
+    font-size: 15px;
+    font-weight: $font-normal;
+    line-height: 1.5;
+    color: $text;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin: 0 0 0.5em;
+    padding: 0;
+    line-height: 1.2;
+    font-weight: $font-normal;
+}
+
+h1 {
+    font-size: 24px;
+    line-height: 32px;
+    font-weight: $font-light;
+    margin-bottom: 0;
+
+    @media #{$tablet} {
+        font-size: 34px;
+        line-height: 40px;
+    }
+
+    @media #{$desktop} {
+        font-size: 45px;
+        line-height: 48px;
+    }
+}
+
+h1 small, h2 small, h3 small, h4 small, h5 small, h6 small {
+    font-size: 0.6em;
+}
+
+p {
+    margin: 0 0 1em;
+}
+
+@each $state, $color in $states {
+    .#{$state}-colour {
+        color: $color;
+    }
+}

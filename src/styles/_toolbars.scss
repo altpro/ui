@@ -1,0 +1,18 @@
+.toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+
+    > .title {
+        flex-grow: 1;
+    }
+
+    @each $state, $color in $states {
+        &.#{$state} {
+            background: $color;
+            color: #fff;
+            margin-bottom: 16px;
+        }
+    }
+}
