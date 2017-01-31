@@ -33,37 +33,33 @@
         },
 
         mounted() {
-            // Get the input element
-            this.input = this.$refs.input.getElementsByTagName('input')[0];
-            if (! this.input) this.input = this.$refs.input.getElementsByTagName('textarea')[0];
+            this.input = this.$refs.input.querySelector('input, textarea');
+            this.control = this.$refs.input.querySelector('input, textarea, button');
 
-            if (this.input) {
-                // Get or generate the id to link label & input
-                this.id = this.input.getAttribute('id');
-                if (! this.id) {
-                    this.id = 'input-' + uuid();
-                    this.input.setAttribute('id', this.id);
-                }
+            this.value = this.input.getAttribute('value');
+            this.disabled = this.input.getAttribute('disabled');
+            this.required = this.input.getAttribute('required');
+            this.maxlength = this.input.getAttribute('maxlength');
 
-                this.value = this.input.getAttribute('value');
-                this.disabled = this.input.getAttribute('disabled');
-                this.required = this.input.getAttribute('required');
-                this.maxlength = this.input.getAttribute('maxlength');
+            this.input.addEventListener('input', this.onInput);
+            this.input.addEventListener('change', this.onInput);
 
-                this.input.addEventListener('focus', this.onFocus);
-                this.input.addEventListener('blur', this.onBlur);
-                this.input.addEventListener('input', this.onInput);
-    //            this.input.addEventListener('change', this.onInput);
+            new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (['disabled', 'required', 'maxlength'].indexOf(mutation.attributeName) > -1) {
+                        this[mutation.attributeName] = this.input.getAttribute(mutation.attributeName);
+                    }
+                });
+            }).observe(this.input, { attributes: true });
 
-                new MutationObserver((mutations) => {
-                    mutations.forEach((mutation) => {
-                        if (['disabled', 'required', 'maxlength'].indexOf(mutation.attributeName) > -1) {
-                            this[mutation.attributeName] = this.input.getAttribute(mutation.attributeName);
-                        }
-                    });
-                }).observe(this.input, { attributes: true });
 
+            this.id = this.control.getAttribute('id');
+            if (! this.id) {
+                this.id = 'input-' + uuid();
+                this.control.setAttribute('id', this.id);
             }
+            this.control.addEventListener('focus', this.onFocus);
+            this.control.addEventListener('blur', this.onBlur);
         },
 
         methods: {
@@ -72,15 +68,19 @@
                 this.$emit('focus');
             },
 
-            onInput(e) {
-                this.value = e.target.value;
+            onInput() {
+                this.value = this.input.value;
                 if (this.invalid) {
                     this.checkValidity();
                 }
             },
 
             onBlur() {
-                this.checkValidity();
+                if (this.input.style.display === 'none') {
+                    setTimeout(this.checkValidity, 300);
+                } else {
+                    this.checkValidity();
+                }
                 this.focus = false;
                 this.$emit('blur');
             },

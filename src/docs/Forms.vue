@@ -21,11 +21,19 @@
                 <!--<ui-input type="text" v-model="maxlength" label="Input with maxlength" hint="Maxlenght attribute automatically adds a counter" maxlength="20"></ui-input>-->
 
                 <h2>Component Inputs</h2>
-                <ui-date v-model="date"></ui-date>
+                <ui-field label="Date">
+                    <ui-date v-model="date"></ui-date>
+                </ui-field>
 
                 <h2>Selects</h2>
-                <ui-select v-model="select" label="Select" :options="options" placeholder="Please select..."></ui-select>
-                <ui-select-multiple v-model="multiple" label="Select Multiple" :options="options" final-separator="&" placeholder="Please select..." help="Right click for context menu"></ui-select-multiple>
+                <ui-field label="Select">
+                    <ui-select v-model="select" label="Select" :options="options" placeholder="Please select..."></ui-select>
+                </ui-field>
+
+                <ui-field label="Select">
+                    <ui-select-multiple v-model="multiple" label="Select" :options="options" placeholder="Please select..."></ui-select-multiple>
+                </ui-field>
+                <!--<ui-select-multiple v-model="multiple" label="Select Multiple" :options="options" final-separator="&" placeholder="Please select..." help="Right click for context menu"></ui-select-multiple>-->
                 <!--<h2>Toggles</h2>-->
                 <!--<ui-checkbox v-model="checkbox" label="Check me!" inline></ui-checkbox>-->
                 <!--<ui-checkbox v-model="checkbox" label="Check me!" inline></ui-checkbox>-->
@@ -41,6 +49,7 @@
 
                 <!--<h2>WYSIWYG</h2>-->
                 <!--&lt;!&ndash;<ui-wysiwyg v-model="html" label="Content"></ui-wysiwyg>&ndash;&gt;-->
+                <button>Submit</button>
             </form>
         </div>
     </div>

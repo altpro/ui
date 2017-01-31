@@ -1,67 +1,61 @@
 <template>
-    <div class="field" :class="{ 'focus': focus || open }">
-        <label :for="computedId">{{ label }}
-            <slot name="label"></slot>
-        </label>
-        <div class="input select" :class="{ 'focus': focus }">
-            <input type="hidden"
-                   :name="name"
-                   :value="value">
+    <div class="select">
+        <button type="button"
+                class="selection"
+                ref="trigger"
+                :id="computedId"
+                :disabled="disabled"
+                @click="toggle"
+                @keyup.down="selectNext"
+                @keyup.up="selectPrevious"
+                @focus="onFocus"
+                @blur="onBlur">
+            <span :class="{ placeholder: ! value }">{{ selection }}</span>
+            <i>arrow_drop_down</i>
+        </button>
 
-            <button type="button"
-                    class="selection"
-                    id="computedId"
-                    :disabled="disabled"
-                    ref="trigger"
-                    @click="toggle"
-                    @keyup.down="selectNext"
-                    @keyup.up="selectPrevious"
-                    @focus="focus = true"
-                    @blur="focus = false">
-                <span :class="{ placeholder: ! value }">{{ selection }}</span>
-                <i>arrow_drop_down</i>
-            </button>
-
-            <div class="options" v-if="open" ref="options">
-                <div v-for="option in options"
-                     class="option"
-                     tabindex="0"
-                     :class="{ selected: option.value === value }"
-                     v-html="option.name"
-                     @click="select(option)"
-                     @keyup.space="select(option)"
-                     @keyup.down="selectNext"
-                     @keyup.up="selectPrevious">
-                </div>
+        <div class="options" v-if="opened" ref="options">
+            <div v-for="option in options"
+                 class="option"
+                 tabindex="0"
+                 :class="{ selected: option.value === value }"
+                 v-html="option.name"
+                 @click="select(option)"
+                 @keyup.space="select(option)"
+                 @keyup.down="selectNext"
+                 @keyup.up="selectPrevious">
             </div>
         </div>
-        <div class="help"><span>{{ help }}<slot name="help"></slot></span></div>
+
+        <input type="text"
+               tabindex="-1"
+               style="display: none"
+               :name="name"
+               :value="value"
+               :disabled="disabled"
+               :required="required">
     </div>
 </template>
 
 <script>
-    import Platform from '../utils/platform';
     import uuid from '../utils/uuid';
 
     export default {
         props: {
-            label: String,
             name: String,
             id: String,
             value: null,
             options: Array,
             multiple: Boolean,
             placeholder: String,
-            help: String,
-            disabled: Boolean
+            disabled: Boolean,
+            required: Boolean
         },
 
         data() {
             return {
-                open: false,
-                isDesktop: Platform.is.desktop,
-                focus: false,
-                randomId: 'select-' + uuid()
+                opened: false,
+                focus: false
             }
         },
 
@@ -72,23 +66,23 @@
             },
 
             computedId() {
-                return this.id ? this.id : this.randomId;
+                return this.id ? this.id : uuid();
             }
         },
 
         methods: {
             toggle() {
-                if (this.open) {
-                    this.hide();
+                if (this.opened) {
+                    this.close();
                 } else {
-                    this.show();
+                    this.open();
                 }
             },
 
-            show() {
-                this.open = true;
-                document.addEventListener('click', this.hide);
-                document.addEventListener('keydown', this.hide);
+            open() {
+                this.opened = true;
+                document.addEventListener('click', this.close);
+                document.addEventListener('keydown', this.close);
 
                 this.$nextTick(function () {
                     const rect = this.$refs.options.getBoundingClientRect();
@@ -98,18 +92,18 @@
                 });
             },
 
-            hide(e) {
+            close(e) {
                 if (!e || !this.$el.contains(e.target) || (e.which === 27 || e.keyCode === 27)) {
-                    this.open = false;
-                    document.removeEventListener('click', this.hide);
-                    document.removeEventListener('keydown', this.hide);
+                    this.opened = false;
+                    document.removeEventListener('click', this.close);
+                    document.removeEventListener('keydown', this.close);
                 }
             },
 
             select(option, persist) {
                 this.$emit('input', option.value);
-                if (!persist) {
-                    this.hide();
+                if (! persist) {
+                    this.close();
                     this.$refs.trigger.focus();
                 }
             },
@@ -130,6 +124,16 @@
                 if (prev > -1) {
                     this.select(this.options[prev], true);
                 }
+            },
+
+            onFocus() {
+                this.focus = true;
+                this.$emit('focus');
+            },
+
+            onBlur() {
+                this.focus = false;
+                this.$emit('blur');
             }
         }
     }
@@ -161,10 +165,6 @@
             width: 100%;
             color: $text;
             @include shadow-4dp;
-
-            &.open {
-                display: block;
-            }
         }
 
         .option {

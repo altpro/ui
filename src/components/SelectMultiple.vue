@@ -1,42 +1,42 @@
 <template>
-    <div class="field" :class="{ 'focus': focus || open, 'disabled': disabled }" @contextmenu.prevent="$refs.context.show()">
-        <label :for="computedId">{{ label }}<slot name="label"></slot></label>
-        <div class="input select" :class="{ 'focus': focus }">
-            <input type="hidden"
-                   :name="name"
-                   :value="value">
+    <div class="select" :class="{ 'focus': focus }" @contextmenu.prevent="$refs.context.show">
+        <button type="button"
+                class="selection"
+                id="computedId"
+                :disabled="disabled"
+                ref="trigger"
+                @click="toggle"
+                @keyup.down="openAndFocus"
+                @focus="onFocus"
+                @blur="onBlur">
+            <span :class="{ placeholder: ! value || value.length === 0 }" v-html="selection"></span>
+            <i>arrow_drop_down</i>
+        </button>
 
-            <button type="button"
-                    class="selection"
-                    id="computedId"
-                    :disabled="disabled"
-                    ref="trigger"
-                    @click="toggle"
-                    @keyup.down="showAndFocus"
-                    @focus="focus = true"
-                    @blur="focus = false">
-                <span :class="{ placeholder: ! value || value.length === 0 }" v-html="selection"></span>
-                <i>arrow_drop_down</i>
-            </button>
-
-            <div class="options multiple" v-if="open" ref="options">
-                <div v-for="option in options"
-                     tabindex="0"
-                     class="option"
-                     :class="{ checked: isSelected(option) }"
-                     @keydown.down="focusNext"
-                     @keydown.up="focusPrevious"
-                     @click="toggleOption(option)"
-                     @keyup.space="toggleOption(option)">
-                    <span class="check">
-                        <i v-if="! isSelected(option)">check_box_outline_blank</i>
-                        <i v-if="isSelected(option)">check_box</i>
-                    </span>
-                    <span v-html="option.name"></span>
-                </div>
+        <div class="options multiple" v-if="opened" ref="options">
+            <div v-for="option in options"
+                 tabindex="0"
+                 class="option"
+                 :class="{ checked: isSelected(option) }"
+                 @keydown.down="focusNext"
+                 @keydown.up="focusPrevious"
+                 @click="toggleOption(option)"
+                 @keyup.space="toggleOption(option)">
+                <span class="check">
+                    <i v-if="! isSelected(option)">check_box_outline_blank</i>
+                    <i v-if="isSelected(option)">check_box</i>
+                </span>
+                <span v-html="option.name"></span>
             </div>
         </div>
-        <div class="help"><span>{{ help }}<slot name="help"></slot></span></div>
+
+        <input type="text"
+               tabindex="-1"
+               style="display: none"
+               :name="name"
+               :value="value"
+               :disabled="disabled"
+               :required="required">
 
         <ui-context ref="context">
             <div class="menu">
@@ -49,12 +49,10 @@
 
 <script>
     import UiContext from './Context.vue';
-    import Platform from '../utils/platform';
     import uuid from '../utils/uuid';
 
     export default {
         props: {
-            label: String,
             name: String,
             id: String,
             value: Array,
@@ -65,16 +63,14 @@
                 default: ', '
             },
             finalSeparator: String,
-            help: String,
+            required: Boolean,
             disabled: Boolean
         },
 
         data() {
             return {
-                open: false,
-                isDesktop: Platform.is.desktop,
+                opened: false,
                 focus: false,
-                randomId: 'select-' + uuid()
             }
         },
 
@@ -95,7 +91,7 @@
             },
 
             computedId() {
-                return this.id ? this.id : this.randomId;
+                return this.id ? this.id : uuid();
             }
         },
 
@@ -109,17 +105,17 @@
 
         methods: {
             toggle() {
-                if (this.open) {
-                    this.hide();
+                if (this.opened) {
+                    this.close();
                 } else {
-                    this.show();
+                    this.open();
                 }
             },
 
-            show() {
-                this.open = true;
-                document.addEventListener('click', this.hide);
-                document.addEventListener('keydown', this.hide);
+            open() {
+                this.opened = true;
+                document.addEventListener('click', this.close);
+                document.addEventListener('keydown', this.close);
 
                 this.$nextTick(function() {
                     const rect = this.$refs.options.getBoundingClientRect();
@@ -129,11 +125,11 @@
                 });
             },
 
-            hide(e) {
+            close(e) {
                 if (! e || ! this.$el.contains(e.target) || (e.which === 27 || e.keyCode === 27)) {
-                    this.open = false;
-                    document.removeEventListener('click', this.hide);
-                    document.removeEventListener('keydown', this.hide);
+                    this.opened = false;
+                    document.removeEventListener('click', this.close);
+                    document.removeEventListener('keydown', this.close);
                     this.$refs.trigger.focus();
                 }
             },
@@ -154,8 +150,8 @@
                 this.$emit('input', selected);
             },
 
-            showAndFocus() {
-                this.show();
+            openAndFocus() {
+                this.open();
                 this.$nextTick(function() {
                     this.$refs.options.firstChild.focus();
                 });
@@ -173,7 +169,7 @@
                 if (previous) {
                     previous.focus();
                 } else {
-                    this.hide();
+                    this.close();
                 }
             },
 
@@ -184,6 +180,16 @@
 
             deselectAll() {
                 this.$emit('input', []);
+            },
+
+            onFocus() {
+                this.focus = true;
+                this.$emit('focus');
+            },
+
+            onBlur() {
+                this.focus = false;
+                this.$emit('blur');
             }
         }
     }
