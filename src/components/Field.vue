@@ -58,8 +58,9 @@
                 this.id = 'input-' + uuid();
                 this.control.setAttribute('id', this.id);
             }
-            this.control.addEventListener('focus', this.onFocus);
-            this.control.addEventListener('blur', this.onBlur);
+
+            this.$el.addEventListener('focusin', this.onFocus);
+            this.$el.addEventListener('focusout', this.onBlur);
         },
 
         methods: {
