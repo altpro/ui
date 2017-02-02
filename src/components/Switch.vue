@@ -57,7 +57,11 @@
                 this.focus = false;
                 this.$emit('input', ! this.value);
             }
-
         }
     }
 </script>
+
+<style lang="sass" rel="stylesheet/sass">
+    @import "../styles/_global.scss";
+
+</style>

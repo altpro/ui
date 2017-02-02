@@ -1,43 +1,44 @@
 <template>
-    <div class="checkbox" :class="{ 'inline': inline, 'focus': focus }">
+    <div class="checkbox" :class="{ inline: inline, focus: focus, disabled: disabled }">
         <label>
-            <input type="checkbox" @focus="focus = true" @blur="focus = false" :value="1" :name="name" :checked="value" @change="onInput">
-            <span class="checkbox-box" ref="rippleTrigger">
-                <i v-if="! value">check_box_outline_blank</i>
-                <i v-if="value" class="primary">check_box</i>
-                <app-ripple></app-ripple>
+            <input type="checkbox"
+                   :name="name"
+                   :value="trueValue"
+                   :checked="isChecked"
+                   :required="required"
+                   @focus="focus = true"
+                   @blur="focus = false"
+                   @change="onInput">
+            <span class="checkbox-box">
+                <i v-if="isChecked" class="primary">check_box</i>
+                <i v-else>check_box_outline_blank</i>
             </span>
-
-            {{ label }}
-            <slot name="label"></slot>
+            <slot name="label">{{ label }}</slot>
         </label>
     </div>
 </template>
 
 <script>
-    import AppRipple from './Ripple.vue';
-
     export default {
-
         props: {
             label: String,
             name: String,
-            value: {
-                type: [String, Number, Boolean],
+            value: null,
+            trueValue: {
+                default: true
+            },
+            falseValue: {
                 default: false
             },
-            boolean: {
-                type: Boolean,
-                default: false
-            },
-            inline: {
-                type: Boolean,
-                default: false
-            }
+            disabled: Boolean,
+            required: Boolean,
+            inline: Boolean
         },
 
-        components: {
-            AppRipple
+        computed: {
+            isChecked() {
+                return this.value == this.trueValue;
+            }
         },
 
         data() {
@@ -48,8 +49,8 @@
 
         methods: {
             onInput() {
-                this.focus = false;
-                this.$emit('input', ! this.value);
+                const value = this.value == this.trueValue ? this.falseValue : this.trueValue;
+                this.$emit('input', value);
             }
 
         }
