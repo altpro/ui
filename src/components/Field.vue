@@ -110,7 +110,7 @@
         label {
             padding-top: 2px;
             display: block;
-            font-size: 12px;
+            font-size: 13px;
             color: inherit;
         }
 
@@ -155,7 +155,7 @@
             background: none;
             text-align: left;
             color: darken($text, 10%);
-            font-size: 16px;
+            font-size: 15px;
         }
 
         .hint {

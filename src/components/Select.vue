@@ -168,6 +168,7 @@
         }
 
         .option {
+            font-size: 15px;
             display: flex;
             align-items: center;
             line-height: 1.2;

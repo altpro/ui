@@ -4,76 +4,124 @@
             <h1>Forms</h1>
         </div>
 
-        <div class="card">
-            <form method="post" ref="form" @submit.prevent="submit">
-                <p>Available attributes include:</p>
+        <form method="post" ref="form">
+            <div class="card">
+                <h2>Fields</h2>
+
+                <p>The <code>ui-field</code> component is an input element/component wrapper that automatically add style and functionality. </p>
+                <p><code>label</code> and <code>hint</code> are available as both props and slots (using template element). The child input is automatically monitored to check focus, disabled, required &amp; maxlength status and style the field accordingly.</p>
+                <p><code>input.checkValidity()</code> is called on blur. When failing the native error message is displayed but can be overridden using the <code>error</code> prop.</p>
+
                 <ui-field label="Text input">
                     <input type="text" v-model="text" name="text">
                 </ui-field>
 
-                <!--<ui-input type="text" v-model="text" label="Input with placeholder" placeholder="Enter your name"></ui-input>-->
-                <!--<ui-input type="email" v-model="email" label="Email input"></ui-input>-->
-                <!--<ui-input type="number" v-model="number" label="Number input" min="2" max="5"></ui-input>-->
-                <!--<ui-input type="text" v-model="disabled" label="Disabled input" disabled></ui-input>-->
-                <!--<ui-input type="text" v-model="required" label="Required input" required></ui-input>-->
-                <!--<ui-input type="text" v-model="hint" label="Input with hint" hint="Hints can be set as an attribute or slot in a template tag" required></ui-input>-->
-                <!--<ui-input type="text" v-model="maxlength" label="Input with maxlength" hint="Maxlenght attribute automatically adds a counter" maxlength="20"></ui-input>-->
+                <ui-field label="Required number input">
+                    <input type="number" v-model="number" name="number" required>
+                </ui-field>
 
-                <h2>Component Inputs</h2>
-                <!--<ui-field label="Date">-->
-                    <!--<ui-date v-model="date"></ui-date>-->
-                <!--</ui-field>-->
+                <ui-field label="Input with maxlength" hint="Counter is automatically added">
+                    <input type="text" v-model="maxlength" name="maxlength" maxlength="10">
+                </ui-field>
 
+                <ui-field label="Disabled input">
+                    <input type="text" v-model="disabled" name="disabled" disabled>
+                </ui-field>
+
+                <ui-field label="Textarea">
+                    <textarea v-model="textarea" name="textarea" rows="4"></textarea>
+                </ui-field>
+            </div>
+
+            <div class="card">
                 <h2>Selects</h2>
+
                 <ui-field label="Select">
                     <ui-select v-model="select" name="select" label="Select" :options="options" placeholder="Please select..."></ui-select>
                 </ui-field>
 
-                <ui-field label="Select">
+                <ui-field label="Select Multiple" hint="Right click for context menu">
                     <ui-select-multiple v-model="multiple" name="multiple[]" label="Select" :options="options" placeholder="Please select..."></ui-select-multiple>
                 </ui-field>
-                <!--<ui-select-multiple v-model="multiple" label="Select Multiple" :options="options" final-separator="&" placeholder="Please select..." help="Right click for context menu"></ui-select-multiple>-->
+            </div>
+
+            <div class="card">
                 <h2>Toggles</h2>
 
-                <label class="checkbox">
-                    <input type="checkbox" value="Jack" v-model="checkedNames">
-                    Jack
-                </label>
-                <label class="checkbox">
-                    <input type="checkbox" value="John" v-model="checkedNames">
-                    John
-                </label>
-                <label class="checkbox">
-                    <input type="checkbox" value="Mike" v-model="checkedNames">
-                    Mike
-                </label>
-                <br>
-                <p>Checked names: {{ checkedNames }}</p>
-                <p>
-                    <!--<svg version="1.1" class="mdc-checkbox__checkmark"-->
-         <!--xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"-->
-         <!--xml:space="preserve">-->
-      <!--<path class="mdc-checkbox__checkmark__path" fill="none" stroke="white"-->
-            <!--d="M1.73,12.91 8.1,19.28 22.79,4.59"/>-->
-    <!--</svg>-->
-                </p>
+                <p>The <code>ui-toggle</code> component is a wrapper for native checkbox & radio inputs. With an html label element as the root <code>label</code> is available as both a prop and slot (using template or span element).</p>
+                <h3 class="mt">Checkboxes</h3>
 
-                <!--<ui-checkbox v-model="checkbox" label="Check me!" inline></ui-checkbox>-->
-                <!--<ui-checkbox v-model="checkbox" label="Check me!" inline></ui-checkbox>-->
+                <ui-toggle label="Jack">
+                    <input type="checkbox" name="names[]" value="Jack" v-model="checkedNames">
+                </ui-toggle>
+                <ui-toggle label="John">
+                    <input type="checkbox" name="names[]" value="John" v-model="checkedNames">
+                </ui-toggle>
+                <ui-toggle label="Mike">
+                    <input type="checkbox" name="names[]" value="Mike" v-model="checkedNames">
+                </ui-toggle>
 
-                <!--<ui-checkbox v-model="checkbox" label="Check me!"></ui-checkbox>-->
-                <!--<ui-checkbox v-model="checkbox" label="Check me!"></ui-checkbox>-->
-                <!--<ui-checkbox v-model="checkbox" label="Check me!"></ui-checkbox>-->
+                <p class="mt">Add <code>.inline</code> class to display inline, <code>.success</code>, <code>.info</code> etc. to change the checked colour.</p>
 
-                <!--<ui-switch v-model="toggle" label="Switch me!" class="success"></ui-switch>-->
-                <!--<ui-switch v-model="toggle" label="Switch me!"></ui-switch>-->
-                <!--<ui-switch v-model="toggle" label="Switch me!"></ui-switch>-->
+                <ui-toggle class="inline success" label="Jack">
+                    <input type="checkbox" name="names[]" value="Jack" v-model="checkedNames">
+                </ui-toggle>
+                <ui-toggle class="inline info" label="John">
+                    <input type="checkbox" name="names[]" value="John" v-model="checkedNames">
+                </ui-toggle>
+                <ui-toggle class="inline warning" label="Mike">
+                    <input type="checkbox" name="names[]" value="Mike" v-model="checkedNames">
+                </ui-toggle>
 
-                <!--<h2>WYSIWYG</h2>-->
-                <!--&lt;!&ndash;<ui-wysiwyg v-model="html" label="Content"></ui-wysiwyg>&ndash;&gt;-->
+                <h3 class="mt">Radios</h3>
+
+                <ui-toggle label="Yes">
+                    <input type="radio" value="Yes" name="radio-input">
+                </ui-toggle>
+
+                <ui-toggle label="No">
+                    <input type="radio" value="No" name="radio-input">
+                </ui-toggle>
+
+                <h3 class="mt">Switch</h3>
+
+                <p>Add a class of <code>.switch</code> to turn a checkbox into a switch</p>
+
+                <ui-toggle class="switch" label="Setting 1">
+                    <input type="checkbox" name="toggle" v-model="switch1">
+                </ui-toggle>
+
+                <ui-toggle class="switch" label="Setting 2">
+                    <input type="checkbox" name="toggle" v-model="switch2">
+                </ui-toggle>
+
+                <ui-toggle class="switch" label="Setting 3">
+                    <input type="checkbox" name="toggle" v-model="switch3">
+                </ui-toggle>
+
+                <p class="mt mb0">A class of <code>.align-end</code> moves the control to the right on any toggle input (Useful within a divided list for settings).</p>
+                <div class="list divided">
+                    <div class="item">
+                        <ui-toggle class="switch success align-end" label="Setting 1">
+                            <input type="checkbox" name="toggle" v-model="switch1">
+                        </ui-toggle>
+                    </div>
+                    <div class="item">
+                        <ui-toggle class="switch info align-end" label="Setting 2">
+                            <input type="checkbox" name="toggle" v-model="switch2">
+                        </ui-toggle>
+                    </div>
+                    <div class="item">
+                        <ui-toggle class="switch warning align-end" label="Setting 3">
+                            <input type="checkbox" name="toggle" v-model="switch3">
+                        </ui-toggle>
+                    </div>
+                </div>
+
+
                 <button class="button primary">Submit</button>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 </template>
 
@@ -82,16 +130,20 @@
         data() {
             return {
                 text: null,
+                textarea: null,
                 email: null,
                 number: null,
-                disabled: false,
+                disabled: null,
                 required: null,
-                hint: null,
+                maxlength: null,
                 checkbox: false,
+                picked: null,
                 checkedNames: [],
                 radio: null,
                 date: null,
-                toggle: false,
+                switch1: false,
+                switch2: true,
+                switch3: false,
                 select: null,
                 html: null,
                 multiple: null,
@@ -118,53 +170,3 @@
         }
     }
 </script>
-
-<style lang="scss" rel="stylesheet/scss">
-    @import "../styles/_global.scss";
-
-    .checkbox {
-        display: flex;
-        font-size: 16px;
-        line-height: 32px;
-        padding: 0;
-        color: $text;
-
-        input {
-            position: relative;
-            color: inherit;
-            width: 0;
-            height: 0;
-            margin-right: 26px;
-
-            &:before {
-                position: absolute;
-                top: 2px;
-                left: 0;
-                font-family: 'Material Icons';
-                font-weight: normal;
-                font-style: normal;
-                font-size: 20px;
-                display: inline-block;
-                width: 1em;
-                height: 1em;
-                line-height: 1;
-                text-transform: none;
-                letter-spacing: normal;
-                word-wrap: normal;
-                white-space: nowrap;
-                direction: ltr;
-                -webkit-font-smoothing: antialiased;
-                text-rendering: optimizeLegibility;
-                -moz-osx-font-smoothing: grayscale;
-                font-feature-settings: 'liga';
-                content: 'check_box_outline_blank';
-            }
-
-            &:checked:before {
-                content: 'check_box';
-                color: $primary;
-            }
-        }
-    }
-
-</style>

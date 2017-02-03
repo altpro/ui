@@ -8,9 +8,6 @@ const router = new VueRouter(routes);
 
 import App from './App.vue';
 
-// import Checkbox from './components/Checkbox.vue';
-// Vue.component('UiCheckbox', Checkbox);
-
 import Collapse from './components/Collapse.vue';
 Vue.component('UiCollapse', Collapse);
 
@@ -29,12 +26,6 @@ Vue.component('UiDropdown', Dropdown);
 import Field from './components/Field.vue';
 Vue.component('UiField', Field);
 
-// import Input from './components/Input.vue';
-// Vue.component('UiInput', Input);
-
-import Link from './components/Link.vue';
-Vue.component('UiLink', Link);
-
 import Notification from './components/Notification.vue';
 Vue.component('UiNotification', Notification);
 
@@ -47,14 +38,11 @@ Vue.component('UiSelect', Select);
 import SelectMultiple from './components/SelectMultiple.vue';
 Vue.component('UiSelectMultiple', SelectMultiple);
 
-import Switch from './components/Switch.vue';
-Vue.component('UiSwitch', Switch);
-
 import Tabs from './components/Tabs.vue';
 Vue.component('UiTabs', Tabs);
 
-import Textarea from './components/Textarea.vue';
-Vue.component('UiTextarea', Textarea);
+import Toggle from './components/Toggle.vue';
+Vue.component('UiToggle', Toggle);
 
 import Time from './components/Time.vue';
 Vue.component('UiTime', Time);
@@ -68,4 +56,4 @@ new Vue({
     router,
     el: '#app',
     render: h => h(App)
-})
+});
