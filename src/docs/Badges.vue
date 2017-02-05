@@ -5,7 +5,7 @@
         </div>
 
         <div class="card">
-
+            <ui-date-picker></ui-date-picker>
         </div>
     </div>
 </template>

@@ -10,6 +10,7 @@
         <div class="card">
             <p>The button element has an html button as it's root element. The only functionality of the component is to add a ripple on click.</p>
             <p>
+                <button>Default</button>
                 <button class="button">Default Button</button>
                 <button class="button coloured">.coloured</button>
             </p>

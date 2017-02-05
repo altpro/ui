@@ -36,6 +36,12 @@
             <div class="card">
                 <h2>Selects</h2>
 
+                <ui-field label="Native select">
+                    <select v-model="select">
+                        <option v-for="option in options" :value="option.value" v-text="option.name"></option>
+                    </select>
+                </ui-field>
+
                 <ui-field label="Select">
                     <ui-select v-model="select" name="select" label="Select" :options="options" placeholder="Please select..."></ui-select>
                 </ui-field>
@@ -117,10 +123,25 @@
                         </ui-toggle>
                     </div>
                 </div>
-
-
-                <button class="button primary">Submit</button>
             </div>
+
+            <div class="card">
+                <h2>Dates</h2>
+                <ui-field label="Date">
+                    <input type="date" v-model="date" required>
+                </ui-field>
+                <ui-field label="Time">
+                    <input type="time" v-model="time">
+                </ui-field>
+                <ui-field label="Datetime">
+                    <input type="datetime" v-model="datetime">
+                </ui-field>
+                <ui-field label="Datetime">
+                    <input type="datetime-local" v-model="datetime">
+                </ui-field>
+            </div>
+
+            <button class="button primary">Submit</button>
         </form>
     </div>
 </template>
@@ -141,6 +162,8 @@
                 checkedNames: [],
                 radio: null,
                 date: null,
+                time: null,
+                datetime: null,
                 switch1: false,
                 switch2: true,
                 switch3: false,

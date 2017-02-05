@@ -17,6 +17,9 @@ Vue.component('UiContext', Context);
 import Date from './components/Date.vue';
 Vue.component('UiDate', Date);
 
+import DatePicker from './components/DatePicker.vue';
+Vue.component('UiDatePicker', DatePicker);
+
 import Dialog from './components/Dialog.vue';
 Vue.component('UiDialog', Dialog);
 

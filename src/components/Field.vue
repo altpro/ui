@@ -33,8 +33,8 @@
         },
 
         mounted() {
-            this.input = this.$refs.input.querySelector('input, textarea');
-            this.control = this.$refs.input.querySelector('input, textarea, button');
+            this.input = this.$refs.input.querySelector('input, textarea, select');
+            this.control = this.$refs.input.querySelector('input, textarea, select, button');
 
             this.value = this.input.getAttribute('value');
             this.disabled = this.input.getAttribute('disabled');
@@ -140,7 +140,7 @@
             }
         }
 
-        input, textarea, .selection {
+        input, textarea, select, .selection {
             font-family: inherit;
             position: relative;
             border: none;
@@ -196,6 +196,4 @@
             }
         }
     }
-
-
 </style>
