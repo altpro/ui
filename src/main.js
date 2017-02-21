@@ -8,9 +8,6 @@ const router = new VueRouter(routes);
 
 import App from './App.vue';
 
-import Collapse from './components/Collapse.vue';
-Vue.component('UiCollapse', Collapse);
-
 import Context from './components/Context.vue';
 Vue.component('UiContext', Context);
 

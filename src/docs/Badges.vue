@@ -5,7 +5,8 @@
         </div>
 
         <div class="card">
-            <ui-date-picker></ui-date-picker>
+            <ui-date-picker time></ui-date-picker>
+
         </div>
     </div>
 </template>
@@ -19,3 +20,8 @@
         }
     }
 </script>
+
+<style lang="scss" rel="stylesheet/scss">
+    @import "../styles/_global.scss";
+
+</style>

@@ -23,9 +23,17 @@
                 <div class="weekday">S</div>
                 <div class="weekday">S</div>
                 <template v-for="i in days">
-                    <button v-if="i > 0" class="day" v-text="i" :class="{ selected: isSelected(i) }"></button>
+                    <button v-if="i > 0"
+                            class="day"
+                            v-text="i"
+                            :class="{ selected: isSelected(i) }"
+                            @click="select(i)">
+                    </button>
                     <div v-else class="pad"></div>
                 </template>
+            </div>
+            <div class="time" v-if="time">
+                <input type="number" v-model="h" min="0" max="23"> <span>:</span> <input type="number" v-model="m" min="0" max="59">
             </div>
         </div>
     </div>
@@ -33,13 +41,18 @@
 
 <script>
     export default {
-        props: ['value'],
+        props: {
+            value: null,
+            time: Boolean
+        },
 
         data () {
             return {
                 year: new Date().getFullYear(),
                 month: new Date().getMonth(),
-                day: new Date().getDate()
+                day: new Date().getDate(),
+                h: new Date().getHours(),
+                m: new Date().getMinutes()
             }
         },
 
@@ -85,6 +98,11 @@
 
             isSelected(day) {
                 return this.date.toDateString() === new Date(this.year, this.month, day).toDateString();
+            },
+
+            select(day) {
+                const date = new Date(this.year, this.month, day);
+                console.log(date.toISOString());
             },
 
             monthName(month) {
@@ -151,6 +169,7 @@
         .day, .pad, .weekday {
             display: flex;
             justify-content: center;
+            text-align: center;
             align-items: center;
             border-radius: 50%;
             width: $daySize;
@@ -202,6 +221,23 @@
                 display: inline-flex;
                 margin-left: 5px;
                 font-weight: $font-bold;
+            }
+        }
+
+        .time {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            span {
+                margin: 0 4px;
+            }
+
+            input {
+                width: 44px;
+                border: 1px solid $divider;
+                color: inherit;
+                padding: 4px;
             }
         }
 

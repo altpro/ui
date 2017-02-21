@@ -143,10 +143,26 @@
     @import "../styles/_global.scss";
 
     .select {
+        position: relative;
         > .selection {
             display: flex;
             justify-content: space-between;
             align-items: center;
+
+            font-family: inherit;
+            position: relative;
+            border: none;
+            outline: none;
+            box-shadow: none;
+            background: transparent;
+            margin: 0;
+            padding: 4px 0;
+            width: 100%;
+            max-width: 100%;
+            background: none;
+            text-align: left;
+            color: darken($text, 10%);
+            font-size: 15px;
 
             > i {
                 color: $grey-light;

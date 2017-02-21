@@ -4,7 +4,7 @@ import NotFound from './docs/NotFound.vue';
 import Badges from './docs/Badges.vue';
 import Buttons from './docs/Buttons.vue';
 import Cards from './docs/Cards.vue';
-import Collapse from './docs/Collapse.vue';
+import Details from './docs/Details.vue';
 import Dialogs from './docs/Dialogs.vue';
 import Dropdowns from './docs/Dropdowns.vue';
 import Forms from './docs/Forms.vue';
@@ -21,7 +21,7 @@ export default {
         { path: '/badges', component: Badges },
         { path: '/buttons', component: Buttons },
         { path: '/cards', component: Cards },
-        { path: '/collapse', component: Collapse },
+        { path: '/details', component: Details },
         { path: '/dialogs', component: Dialogs },
         { path: '/dropdowns', component: Dropdowns },
         { path: '/forms', component: Forms },

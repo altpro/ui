@@ -5,8 +5,8 @@
                 <slot></slot>
                 <div class="actions">
                     <slot name="actions">
-                        <button class="button coloured">Cancel</button>
-                        <button class="button coloured">Ok</button>
+                        <button class="button flat">Cancel</button>
+                        <button class="button flat">Ok</button>
                     </slot>
                 </div>
             </div>

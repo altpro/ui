@@ -9,12 +9,12 @@
 
         <nav id="drawer" :class="{ 'open': drawer }" @focus="openDrawer" tabindex="0">
             <div class="menu">
-                <router-link to="/">Home</router-link>
+                <router-link to="/" exact>Home</router-link>
                 <div class="divider"></div>
                 <router-link to="/badges">Badges</router-link>
                 <router-link to="/buttons">Buttons</router-link>
                 <router-link to="/cards">Cards</router-link>
-                <router-link to="/collapse">Collapse</router-link>
+                <router-link to="/details">Details</router-link>
                 <router-link to="/dialogs">Dialogs</router-link>
                 <router-link to="/dropdowns">Dropdowns</router-link>
                 <router-link to="/forms">Forms</router-link>
@@ -65,7 +65,7 @@
     @import "styles/_app.scss";
 
     #main {
-        background-color: rgba(74, 121, 147, 0.89);
+        background: $primary;
         background-image: radial-gradient(
                 ellipse farthest-side at 10% 0,
                 rgba(74, 121, 147, 0.89),
