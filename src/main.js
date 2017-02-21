@@ -26,6 +26,9 @@ Vue.component('UiField', Field);
 import Notification from './components/Notification.vue';
 Vue.component('UiNotification', Notification);
 
+import Pagination from './components/Pagination.vue';
+Vue.component('UiPagination', Pagination);
+
 import Ripple from './components/Ripple.vue';
 Vue.component('UiRipple', Ripple);
 

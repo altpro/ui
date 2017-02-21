@@ -11,6 +11,7 @@ import Dropdowns from './docs/Dropdowns.vue';
 import Forms from './docs/Forms.vue';
 import Lists from './docs/Lists.vue';
 import Notifications from './docs/Notifications.vue';
+import Pagination from './docs/Pagination.vue';
 import Tables from './docs/Tables.vue';
 import Tabs from './docs/Tabs.vue';
 import Tooltips from './docs/Tooltips.vue';
@@ -29,6 +30,7 @@ export default {
         { path: '/forms', component: Forms },
         { path: '/lists', component: Lists },
         { path: '/notifications', component: Notifications },
+        { path: '/pagination', component: Pagination },
         { path: '/tables', component: Tables },
         { path: '/tabs', component: Tabs },
         { path: '/tooltips', component: Tooltips },

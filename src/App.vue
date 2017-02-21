@@ -21,6 +21,7 @@
                 <router-link to="/forms">Forms</router-link>
                 <router-link to="/lists">Lists</router-link>
                 <router-link to="/notifications">Notifications</router-link>
+                <router-link to="/pagination">Pagination</router-link>
                 <router-link to="/tables">Tables</router-link>
                 <router-link to="/tabs">Tabs</router-link>
                 <router-link to="/tooltips">Tooltips</router-link>
