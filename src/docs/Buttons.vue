@@ -141,7 +141,6 @@
             min-width: 32px;
             width: 32px;
             padding: 0;
-            overflow: hidden;
             color: inherit;
             line-height: normal;
 
@@ -153,6 +152,19 @@
                 color: rgba($text, 0.5);
                 &:hover, &:focus {
                     background: transparent;
+                }
+            }
+
+            @each $state, $color in $states {
+                &.#{$state} {
+                    color: $color;
+
+                    &:hover, &:focus {
+                        color: darken($color, 10%);
+                    }
+                    &[disabled], &.disabled {
+                        color: rgba($color, 0.5);
+                    }
                 }
             }
         }
@@ -185,6 +197,5 @@
             background-color: rgba($success, 0.5);
         }
     }
-
 
 </style>

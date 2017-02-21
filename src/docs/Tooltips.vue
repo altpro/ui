@@ -5,8 +5,8 @@
         </div>
 
         <div class="card">
-            <p>Tooltips are simple css only triggered on hover after a 0.5s delay. Apply to an element by adding a data-tooltip attribute:</p>
-            <pre>&lt;span data-tooltip=&quot;Tooltip&quot;&gt;Hover for tooltip&lt;/span&gt;</pre>
+            <p>Tooltips are simple css before pseudo elements. Displayed on desktop only they are triggered on hover after a 0.5s delay. Apply to an element by adding a data-tooltip attribute:</p>
+            <pre><code>&lt;span data-tooltip=&quot;Tooltip&quot;&gt;Hover for tooltip&lt;/span&gt;</code></pre>
             <p><span data-tooltip="Tooltip">Hover for tooltip</span></p>
             <div class="actions">
                 <button class="button primary" data-tooltip="Tooltip">Button</button>

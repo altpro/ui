@@ -14,6 +14,7 @@
                 <router-link to="/badges">Badges</router-link>
                 <router-link to="/buttons">Buttons</router-link>
                 <router-link to="/cards">Cards</router-link>
+                <router-link to="/date">Date</router-link>
                 <router-link to="/details">Details</router-link>
                 <router-link to="/dialogs">Dialogs</router-link>
                 <router-link to="/dropdowns">Dropdowns</router-link>

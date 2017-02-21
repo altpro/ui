@@ -1,635 +1,246 @@
 <template>
-    <input type="text" :value="value" @input="onInput">
+    <div class="date-picker">
+        <div class="header">
+            <span>{{ weekday }}</span>
+            <span>{{ date.getDate() }} {{ monthName(date.getMonth()) }}</span>
+            {{ date.getFullYear() }}
+        </div>
+        <div class="picker">
+            <div class="controls">
+                <button type="button" @click="prev"><i>navigate_before</i></button>
+                <span class="current-month">
+                    {{ monthName(month) }}
+                    <input type="number" v-model="year" size="4">
+                </span>
+                <button type="button" @click="next"><i>navigate_next</i></button>
+            </div>
+            <div class="days">
+                <div class="weekday">M</div>
+                <div class="weekday">T</div>
+                <div class="weekday">W</div>
+                <div class="weekday">T</div>
+                <div class="weekday">F</div>
+                <div class="weekday">S</div>
+                <div class="weekday">S</div>
+                <template v-for="i in days">
+                    <button v-if="i > 0"
+                            class="day"
+                            v-text="i"
+                            :class="{ selected: isSelected(i) }"
+                            @click="select(i)">
+                    </button>
+                    <div v-else class="pad"></div>
+                </template>
+            </div>
+            <div class="time" v-if="time">
+                <input type="number" v-model="h" min="0" max="23"> <span>:</span> <input type="number" v-model="m" min="0" max="59">
+            </div>
+        </div>
+    </div>
 </template>
 
 <script>
-    import Flatpickr from 'flatpickr';
-    Flatpickr.l10ns.default.weekdays.shorthand = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-    Flatpickr.l10ns.default.firstDayOfWeek = 1;
-
     export default {
         props: {
-            options: {
-                type: Object,
-                default: () => {return {
-                    altInput: true,
-                    altFormat: 'd/m/Y h:m K',
-                    enableTime: true
-                }}
-            },
-            value: {
-                type: String,
-                default: ''
-            }
+            value: null,
+            time: Boolean
         },
 
         data () {
-            return {}
+            return {
+                year: new Date().getFullYear(),
+                month: new Date().getMonth(),
+                day: new Date().getDate(),
+                h: new Date().getHours(),
+                m: new Date().getMinutes()
+            }
         },
 
         computed: {
-            fpOptions () {
-                return JSON.stringify(this.options);
-            }
-        },
+            date() {
+                return this.value ? new Date(this.value) : new Date();
+            },
 
-        watch: {
-            fpOptions (newOpt) {
-                const option = JSON.parse(newOpt);
+            weekday() {
+                const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-                for (let o in option) {
-                    this.fp.set(o, option[o]);
+                return days[this.date.getDay()];
+            },
+
+            days() {
+                let pad = new Date(this.year, this.month).getDay();
+                pad = pad > 0 ? pad - 1 : 6; // Offset for monday being first day of the week
+                const days = new Array(pad).fill(0);
+                const daysInMonth = 32 - new Date(this.year, this.month, 32).getDate();
+
+                for (let i = 0; i < daysInMonth; i++) {
+                    days.push(i + 1);
                 }
+
+                return days;
             }
-        },
-
-        mounted () {
-            const self = this;
-            const origOnValUpdate = this.options.onValueUpdate;
-            this.fp = new Flatpickr(this.$el, Object.assign(this.options, {
-//                appendTo: self.$el.parentElement,
-                onValueUpdate () {
-                    self.onInput(self.$el.value);
-                    if (typeof origOnValUpdate === 'function') {
-                        origOnValUpdate();
-                    }
-                }
-            }));
-
-            this.$emit('FlatpickrRef', this.fp);
         },
 
         methods: {
-            onInput (e) {
-                typeof e === 'string' ? this.$emit('input', e) : this.$emit('input', e.target.value);
-            }
+            next() {
+                const date = new Date(this.year, this.month);
+                date.setMonth(date.getMonth() + 1);
+                this.month = date.getMonth();
+                this.year = date.getFullYear();
+            },
+
+            prev() {
+                const date = new Date(this.year, this.month);
+                date.setMonth(date.getMonth() - 1);
+                this.month = date.getMonth();
+                this.year = date.getFullYear();
+            },
+
+            isSelected(day) {
+                return this.date.toDateString() === new Date(this.year, this.month, day).toDateString();
+            },
+
+            select(day) {
+                const date = new Date(this.year, this.month, day);
+                console.log(date.toISOString());
+            },
+
+            monthName(month) {
+                const months = [
+                    'January', 'February', 'March', 'April', 'May', 'June',
+                    'July', 'August', 'September', 'October', 'November', 'December'
+                ];
+
+                return months[month];
+            },
         },
 
-        destroyed () {
-            this.fp.destroy();
-            this.fp = null;
-        }
     }
 </script>
 
 <style lang="scss" rel="stylesheet/scss">
     @import "../styles/_global.scss";
 
-    .flatpickr-calendar {
-        overflow: hidden;
-        max-height: 0;
-        opacity: 0;
-        visibility: hidden;
-        text-align: center;
-        padding: 16px;
-        animation: none;
-        direction: ltr;
-        border: 0;
-        font-size: 14px;
-        line-height: 24px;
+    $daySize: 36px;
+
+    .date-picker {
+        background: #fff;
         border-radius: 2px;
         position: absolute;
-        width: 284px;
-        box-sizing: border-box;
-        transition: top cubic-bezier(0, 1, 0.5, 1) 100ms;
-        z-index: 999;
-        background: #fff;
-        @include shadow-6dp;
-    }
-    .flatpickr-calendar.open,
-    .flatpickr-calendar.inline {
-        opacity: 1;
-        visibility: visible;
-        overflow: visible;
-        max-height: 640px;
-    }
-    .flatpickr-calendar.open {
-        display: inline-block;
-        animation: flatpickrFadeInDown 300ms cubic-bezier(0, 1, 0.5, 1);
-    }
-    .flatpickr-calendar.inline {
-        display: block;
-        position: relative;
-        top: 2px;
-    }
-    .flatpickr-calendar.static {
-        position: absolute;
-        top: calc(100% + 2px);
-    }
-    .flatpickr-calendar.static.open {
-        display: block;
-    }
-    .flatpickr-calendar.hasWeeks {
-        width: auto;
-    }
-    .flatpickr-calendar.dateIsPicked.hasTime .flatpickr-time {
-        height: 40px;
-        border-top: 1px solid #e6e6e6;
-    }
-    .flatpickr-calendar.noCalendar.hasTime .flatpickr-time {
-        height: auto;
-    }
-
-    .flatpickr-calendar.rightMost:before,
-    .flatpickr-calendar.rightMost:after {
-        left: auto;
-        right: 22px;
-    }
-
-    .flatpickr-wrapper {
-        position: relative;
-        display: inline-block;
-    }
-    .flatpickr-month {
-        background: transparent;
-        fill: $text;
-        height: 28px;
-        line-height: 24px;
-        text-align: center;
-        position: relative;
-        user-select: none;
-    }
-    .flatpickr-prev-month,
-    .flatpickr-next-month {
-        text-decoration: none;
-        cursor: pointer;
-        position: absolute;
-        top: 10px;
-        height: 16px;
-        line-height: 16px;
-    }
-    .flatpickr-prev-month i,
-    .flatpickr-next-month i {
-        position: relative;
-    }
-    .flatpickr-prev-month.flatpickr-prev-month,
-    .flatpickr-next-month.flatpickr-prev-month {
-    /*
-            /*rtl:begin:ignore*/
-    /*
-            */
-      left: calc(3.57% - 1.5px);
-    /*
-            /*rtl:end:ignore*/
-    /*
-            */
-    }
-    /*
-            /*rtl:begin:ignore*/
-    /*
-            /*rtl:end:ignore*/
-    .flatpickr-prev-month.flatpickr-next-month,
-    .flatpickr-next-month.flatpickr-next-month {
-    /*
-            /*rtl:begin:ignore*/
-    /*
-            */
-      right: calc(3.57% - 1.5px);
-    /*
-            /*rtl:end:ignore*/
-    /*
-            */
-    }
-    /*
-            /*rtl:begin:ignore*/
-    /*
-            /*rtl:end:ignore*/
-    .flatpickr-prev-month:hover,
-    .flatpickr-next-month:hover {
-        color: #959ea9;
-    }
-    .flatpickr-prev-month:hover svg,
-    .flatpickr-next-month:hover svg {
-        fill: $danger;
-    }
-    .flatpickr-prev-month svg,
-    .flatpickr-next-month svg {
-        width: 14px;
-    }
-    .flatpickr-prev-month svg path,
-    .flatpickr-next-month svg path {
-        transition: fill 0.1s;
-        fill: inherit;
-    }
-    .numInputWrapper {
-        position: relative;
-        height: auto;
-    }
-    .numInputWrapper input,
-    .numInputWrapper span {
-        display: inline-block;
-    }
-    .numInputWrapper input {
-        width: 100%;
-    }
-    .numInputWrapper span {
-        position: absolute;
-        right: 0;
-        width: 14px;
-        padding: 0 4px 0 2px;
-        height: 50%;
-        line-height: 50%;
-        opacity: 0;
-        cursor: pointer;
-        border: 1px solid rgba(57,57,57,0.05);
-        box-sizing: border-box;
-    }
-    .numInputWrapper span:hover {
-        background: rgba(0,0,0,0.1);
-    }
-    .numInputWrapper span:active {
-        background: rgba(0,0,0,0.2);
-    }
-    .numInputWrapper span:after {
-        display: block;
-        content: "";
-        position: absolute;
-        top: 33%;
-    }
-    .numInputWrapper span.arrowUp {
-        top: 0;
-        border-bottom: 0;
-    }
-    .numInputWrapper span.arrowUp:after {
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-bottom: 4px solid rgba(57,57,57,0.6);
-    }
-    .numInputWrapper span.arrowDown {
-        top: 50%;
-    }
-    .numInputWrapper span.arrowDown:after {
-        border-left: 4px solid transparent;
-        border-right: 4px solid transparent;
-        border-top: 4px solid rgba(57,57,57,0.6);
-    }
-    .numInputWrapper span svg {
-        width: inherit;
-        height: auto;
-    }
-    .numInputWrapper span svg path {
-        fill: rgba(0,0,0,0.5);
-    }
-    .numInputWrapper:hover {
-        background: rgba(0,0,0,0.05);
-    }
-    .numInputWrapper:hover span {
-        opacity: 1;
-    }
-    .flatpickr-current-month {
-        font-size: 15px;
-        line-height: inherit;
-        color: inherit;
-        position: absolute;
-        width: 75%;
-        left: 12.5%;
-        top: 5px;
-        display: inline-block;
-        text-align: center;
-    }
-    .flatpickr-current-month span.cur-month {
-        font-family: inherit;
-        font-weight: $font-bold;
-        color: inherit;
-        display: inline-block;
-        margin-left: 7px;
-        padding: 0;
-    }
-    .flatpickr-current-month span.cur-month:hover {
-        background: rgba(0,0,0,0.05);
-    }
-    .flatpickr-current-month .numInputWrapper {
-        width: 6ch;
-        width: 7ch\0;
-        display: inline-block;
-    }
-    .flatpickr-current-month .numInputWrapper span.arrowUp:after {
-        border-bottom-color: rgba(0,0,0,0.9);
-    }
-    .flatpickr-current-month .numInputWrapper span.arrowDown:after {
-        border-top-color: rgba(0,0,0,0.9);
-    }
-    .flatpickr-current-month input.cur-year {
-        background: transparent;
-        box-sizing: border-box;
-        color: inherit;
-        cursor: default;
-        padding: 0 0 0 0.5ch;
-        margin: 0;
-        display: inline;
-        font-size: inherit;
-        font-family: inherit;
-        font-weight: $font-bold;
-        line-height: inherit;
-        height: initial;
-        border: 0;
-        border-radius: 0;
-        vertical-align: initial;
-    }
-    .flatpickr-current-month input.cur-year:focus {
-        outline: 0;
-    }
-    .flatpickr-current-month input.cur-year[disabled],
-    .flatpickr-current-month input.cur-year[disabled]:hover {
-        font-size: 100%;
-        color: rgba(0,0,0,0.5);
-        background: transparent;
-        pointer-events: none;
-    }
-    .flatpickr-weekdays {
-        background: transparent;
-        text-align: center;
-        overflow: hidden;
-        padding: 10px 0;
-    }
-    .flatpickr-days,
-    .flatpickr-weeks {
-        padding: 1px 0 0 0;
-    }
-    .flatpickr-days {
-        padding: 0;
-        outline: 0;
-        text-align: left;
-        width: 252px;
-        box-sizing: border-box;
         display: flex;
-        flex-wrap: wrap;
-        justify-content: space-around;
-        position: relative;
-    }
-    .flatpickr-day {
-        font-size: 13px;
-        background: none;
-        border: 1px solid transparent;
-        border-radius: 50%;
-        box-sizing: border-box;
-        color: #393939;
-        cursor: pointer;
-        font-weight: $font-normal;
-        width: 14.2857143%;
-        flex-basis: 14.2857143%;
-        max-width: 36px;
-        height: 36px;
-        margin: 0;
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-    }
-    .flatpickr-day.inRange,
-    .flatpickr-day.prevMonthDay.inRange,
-    .flatpickr-day.nextMonthDay.inRange,
-    .flatpickr-day.today.inRange,
-    .flatpickr-day.prevMonthDay.today.inRange,
-    .flatpickr-day.nextMonthDay.today.inRange,
-    .flatpickr-day:hover,
-    .flatpickr-day.prevMonthDay:hover,
-    .flatpickr-day.nextMonthDay:hover,
-    .flatpickr-day:focus,
-    .flatpickr-day.prevMonthDay:focus,
-    .flatpickr-day.nextMonthDay:focus {
-        cursor: pointer;
-        outline: 0;
-        background: #e6e6e6;
-        border-color: #e6e6e6;
-    }
-    .flatpickr-day.today {
-        border-color: #959ea9;
-    }
-    .flatpickr-day.today:hover,
-    .flatpickr-day.today:focus {
-        border-color: #959ea9;
-        background: #959ea9;
-        color: #fff;
-    }
-    .flatpickr-day.selected,
-    .flatpickr-day.startRange,
-    .flatpickr-day.endRange,
-    .flatpickr-day.selected:focus,
-    .flatpickr-day.startRange:focus,
-    .flatpickr-day.endRange:focus,
-    .flatpickr-day.selected:hover,
-    .flatpickr-day.startRange:hover,
-    .flatpickr-day.endRange:hover,
-    .flatpickr-day.selected.prevMonthDay,
-    .flatpickr-day.startRange.prevMonthDay,
-    .flatpickr-day.endRange.prevMonthDay,
-    .flatpickr-day.selected.nextMonthDay,
-    .flatpickr-day.startRange.nextMonthDay,
-    .flatpickr-day.endRange.nextMonthDay {
-        background: $primary;
-        color: #fff;
-        border-color: $primary;
-    }
-    .flatpickr-day.selected.startRange,
-    .flatpickr-day.startRange.startRange,
-    .flatpickr-day.endRange.startRange {
-        border-radius: 50px 0 0 50px;
-    }
-    .flatpickr-day.selected.endRange,
-    .flatpickr-day.startRange.endRange,
-    .flatpickr-day.endRange.endRange {
-        border-radius: 0 50px 50px 0;
-    }
-    .flatpickr-day.inRange {
-        border-radius: 0;
-        box-shadow: -5px 0 0 #e6e6e6, 5px 0 0 #e6e6e6;
-    }
-    .flatpickr-day.disabled,
-    .flatpickr-day.disabled:hover {
-        pointer-events: none;
-    }
-    .flatpickr-day.disabled,
-    .flatpickr-day.disabled:hover,
-    .flatpickr-day.prevMonthDay,
-    .flatpickr-day.nextMonthDay,
-    .flatpickr-day.notAllowed,
-    .flatpickr-day.notAllowed.prevMonthDay,
-    .flatpickr-day.notAllowed.nextMonthDay {
-        color: rgba(57,57,57,0.3);
-        background: transparent;
-        border-color: transparent;
-        cursor: default;
-    }
-    span.flatpickr-weekday {
-        cursor: default;
-        font-size: 13px;
-        color: $grey-light;
-        height: 27.333333333333332px;
-        line-height: 24px;
-        margin: 0;
-        background: transparent;
-        text-align: center;
-        display: block;
-        float: left;
-        width: 14.28%;
-        padding-top: 3.333333333333333px;
-    }
-    .rangeMode .flatpickr-day {
-        margin-top: 1px;
-    }
-    .flatpickr-weekwrapper {
-        display: inline-block;
-        float: left;
-    }
-    .flatpickr-weekwrapper .flatpickr-weeks {
-        padding: 1px 12px 0 12px;
-        box-shadow: 1px 0 0 #e6e6e6;
-    }
-    .flatpickr-weekwrapper .flatpickr-weekday {
-        float: none;
-        width: 100%;
-    }
-    .flatpickr-weekwrapper span.flatpickr-day {
-        display: block;
-        width: 100%;
-        max-width: none;
-    }
-    .flatpickr-innerContainer {
-        display: block;
-        display: -webkit-box;
-        display: -ms-flexbox;
-        display: flex;
-        box-sizing: border-box;
-        overflow: hidden;
-    }
-    .flatpickr-rContainer {
-        display: inline-block;
-        padding: 0;
-        box-sizing: border-box;
-    }
-    .flatpickr-time {
-        text-align: center;
-        outline: 0;
-        display: block;
-        height: 0;
-        line-height: 40px;
-        max-height: 40px;
-        box-sizing: border-box;
-        overflow: hidden;
-        -webkit-transition: height 0.33s cubic-bezier(0, 1, 0.5, 1);
-        transition: height 0.33s cubic-bezier(0, 1, 0.5, 1);
-        display: -webkit-box;
-        display: -ms-flexbox;
-        display: flex;
-    }
-    .flatpickr-time:after {
-        content: "";
-        display: table;
-        clear: both;
-    }
-    .flatpickr-time .numInputWrapper {
-        -webkit-box-flex: 1;
-            -ms-flex: 1;
-                flex: 1 1 0%;
-        width: 40%;
-        height: 40px;
-        float: left;
-    }
-    .flatpickr-time .numInputWrapper span.arrowUp:after {
-        border-bottom-color: #393939;
-    }
-    .flatpickr-time .numInputWrapper span.arrowDown:after {
-        border-top-color: #393939;
-    }
-    .flatpickr-time.hasSeconds .numInputWrapper {
-        width: 26%;
-    }
-    .flatpickr-time.time24hr .numInputWrapper {
-        width: 49%;
-    }
-    .flatpickr-time input {
-        background: transparent;
-        box-shadow: none;
-        border: 0;
-        border-radius: 0;
-        text-align: center;
-        margin: 0;
-        padding: 0;
-        height: inherit;
-        line-height: inherit;
-        cursor: pointer;
-        color: #393939;
-        font-size: 14px;
-        position: relative;
-        box-sizing: border-box;
-    }
-    .flatpickr-time input.flatpickr-hour {
-        font-weight: bold;
-    }
-    .flatpickr-time input.flatpickr-minute,
-    .flatpickr-time input.flatpickr-second {
-        font-weight: 400;
-    }
-    .flatpickr-time input:focus {
-        outline: 0;
-        border: 0;
-    }
-    .flatpickr-time .flatpickr-time-separator,
-    .flatpickr-time .flatpickr-am-pm {
-        height: inherit;
-        display: inline-block;
-        float: left;
-        line-height: inherit;
-        color: #393939;
-        font-weight: bold;
-        width: 2%;
-        -webkit-user-select: none;
-            -moz-user-select: none;
-                -ms-user-select: none;
-                    user-select: none;
-    }
-    .flatpickr-time .flatpickr-am-pm {
-        outline: 0;
-        width: 18%;
-        cursor: pointer;
-        text-align: center;
-        font-weight: 400;
-    }
-    .flatpickr-time .flatpickr-am-pm:hover,
-    .flatpickr-time .flatpickr-am-pm:focus {
-        background: #f0f0f0;
-    }
-    .hasWeeks .flatpickr-days,
-    .hasTime .flatpickr-days {
-        border-bottom: 0;
-        border-bottom-right-radius: 0;
-        border-bottom-left-radius: 0;
-    }
-    .hasWeeks .flatpickr-days {
-        border-left: 0;
-    }
-    @media all and (-ms-high-contrast: none) {
-    .flatpickr-month {
-        padding: 0;
-    }
-    .flatpickr-month svg {
-        top: 0 !important;
-    }
-    }
-    @-webkit-keyframes flatpickrFadeInDown {
-    from {
-    opacity: 0;
-        -webkit-transform: translate3d(0, -20px, 0);
-            transform: translate3d(0, -20px, 0);
-    }
-    to {
-    opacity: 1;
-        -webkit-transform: none;
-            transform: none;
-    }
-    }
-    @keyframes flatpickrFadeInDown {
-    from {
-    opacity: 0;
-        -webkit-transform: translate3d(0, -20px, 0);
-            transform: translate3d(0, -20px, 0);
-    }
-    to {
-    opacity: 1;
-        -webkit-transform: none;
-            transform: none;
-    }
-    }
+        flex-direction: column;
+        @include shadow-4dp;
 
+        @media #{$desktop} {
+            flex-direction: row;
+        }
+
+        .header {
+            color: #fff;
+            background: $primary;
+            padding: 16px;
+            font-size: 18px;
+            span:first-child {
+                font-size: 13px;
+                display: block;
+                color: $grey-lighter;
+            }
+
+            @media #{$desktop} {
+                span {
+                    display: block;
+                }
+
+                width: 145px;
+            }
+        }
+
+        .picker {
+            padding: 8px;
+        }
+
+        .days {
+            display: flex;
+            width: $daySize * 7;
+            flex-wrap: wrap;
+            height: $daySize * 7;
+        }
+
+        .day, .pad, .weekday {
+            display: flex;
+            justify-content: center;
+            text-align: center;
+            align-items: center;
+            border-radius: 50%;
+            width: $daySize;
+            height: $daySize;
+        }
+
+        .weekday {
+            color: $grey-light;
+            font-size: 12px;
+            font-weight: $font-bold;
+        }
+
+        button:hover, button:focus {
+            background: $grey-lighter;
+        }
+
+        .selected {
+            background: $primary;
+            color: #fff;
+            &:hover, &:focus {
+                background: $primary;
+            }
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-weight: $font-bold;
+
+            button {
+                border-radius: 50%;
+                display: inline-flex;
+                width: 32px;
+                height: 32px;
+                justify-content: center;
+                align-items: center;
+            }
+
+            span {
+                display: inline-flex;
+                padding-left: 15px;
+            }
+
+            input {
+                color: inherit;
+                width: 50px;
+                border: none;
+                display: inline-flex;
+                margin-left: 5px;
+                font-weight: $font-bold;
+            }
+        }
+
+        .time {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            span {
+                margin: 0 4px;
+            }
+
+            input {
+                width: 44px;
+                border: 1px solid $divider;
+                color: inherit;
+                padding: 4px;
+            }
+        }
+
+    }
 
 </style>
