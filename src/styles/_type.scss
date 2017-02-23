@@ -46,6 +46,10 @@ p {
     margin: 0 0 1em;
 }
 
+hr {
+    color: $divider;
+}
+
 @each $state, $color in $states {
     .#{$state}-colour {
         color: $color;

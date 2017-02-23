@@ -7,6 +7,8 @@
         <div class="card">
             <p>A component to control pagination. Right aligned with op</p>
             <ui-pagination :items="100" v-model="page" :options="[10, 25, 50]" :display="display" @change="display = arguments[0]"></ui-pagination>
+            <hr>
+            <ui-pagination simple :items="100" v-model="page"></ui-pagination>
             <h2>Props</h2>
             <table style="margin-bottom: 1em;">
                 <thead>
@@ -36,6 +38,11 @@
                         <td><code>options</code></td>
                         <td>Array (null)</td>
                         <td>The display options e.g. <code>[10, 25, 50]</code>, if used set the display prop on change event: <code>@change="display = arguments[0]"</code></td>
+                    </tr>
+                    <tr>
+                        <td><code>simple</code></td>
+                        <td>Boolean</td>
+                        <td>When set only prev &amp; next controls will show</td>
                     </tr>
                 </tbody>
             </table>

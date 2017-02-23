@@ -19,7 +19,7 @@
                 </div>
             </ui-dropdown>
         </div>
-        <div class="summary">
+        <div class="summary" v-if="! simple">
             {{ from }} &ndash; {{ to }} of {{ items }}
         </div>
         <div class="controls">
@@ -42,7 +42,7 @@
             display: {
                 default: 25
             },
-            value: null,
+            value: Number,
             items: Number
         },
 
@@ -56,7 +56,9 @@
             },
 
             to() {
-                return this.value * this.display;
+                const to = this.value * this.display;
+
+                return this.items < to ? this.items : to;
             }
         },
 
@@ -118,7 +120,7 @@
             display: inline-flex;
             align-items: center;
             &[disabled] {
-                color: $grey-lighter;
+                color: lighten($grey, 25%);
             }
         }
 
