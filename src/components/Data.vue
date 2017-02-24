@@ -70,7 +70,7 @@
                 if (this.searchable && this.search.length > 0) {
                     return this.items.filter(item => {
                         return this.searchable.some(key => {
-                            return String(item[key]).toLowerCase().indexOf(this.search) > -1
+                            return String(item[key]).toLowerCase().indexOf(this.search.toLowerCase()) > -1
                         });
                     });
                 } else {
