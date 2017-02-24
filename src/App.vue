@@ -7,7 +7,7 @@
             <button class="button icon"><i>help_outline</i></button>
         </header>
 
-        <nav id="drawer" :class="{ 'open': drawer }" @focus="openDrawer" tabindex="0">
+        <nav id="drawer" :class="{ 'open': drawer }" @focus="openDrawer" tabindex="0" @click="onDrawerClick">
             <div class="menu">
                 <router-link to="/" exact>Home</router-link>
                 <div class="divider"></div>
@@ -59,6 +59,10 @@
 
             closeDrawer() {
                 this.drawer = false;
+            },
+
+            onDrawerClick() {
+                setTimeout(this.closeDrawer, 200);
             }
         }
     }
