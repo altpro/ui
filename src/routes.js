@@ -4,6 +4,7 @@ import NotFound from './docs/NotFound.vue';
 import Badges from './docs/Badges.vue';
 import Buttons from './docs/Buttons.vue';
 import Cards from './docs/Cards.vue';
+import Data from './docs/Data.vue';
 import Date from './docs/Date.vue';
 import Details from './docs/Details.vue';
 import Dialogs from './docs/Dialogs.vue';
@@ -23,6 +24,7 @@ export default {
         { path: '/badges', component: Badges },
         { path: '/buttons', component: Buttons },
         { path: '/cards', component: Cards },
+        { path: '/data', component: Data },
         { path: '/date', component: Date },
         { path: '/details', component: Details },
         { path: '/dialogs', component: Dialogs },

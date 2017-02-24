@@ -47,7 +47,9 @@ p {
 }
 
 hr {
-    color: $divider;
+    border: 0;
+    height: 1px;
+    background: $divider;
 }
 
 @each $state, $color in $states {

@@ -24,7 +24,7 @@
             </div>
 
             <div class="actions">
-                <button>Ok</button>
+                <button class="button">Ok</button>
             </div>
         </div>
     </div>

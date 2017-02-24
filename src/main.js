@@ -11,6 +11,9 @@ import App from './App.vue';
 import Context from './components/Context.vue';
 Vue.component('UiContext', Context);
 
+import Data from './components/Data.vue';
+Vue.component('UiData', Data);
+
 import Date from './components/Date.vue';
 Vue.component('UiDate', Date);
 

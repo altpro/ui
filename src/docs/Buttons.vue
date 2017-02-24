@@ -58,7 +58,7 @@
         color: inherit;
         position: relative;
         height: 36px;
-        margin: 0 4px;
+        margin: 0;
         min-width: 64px;
         padding: 0 8px;
         display: inline-flex;
@@ -91,14 +91,6 @@
             &:hover {
                 @include shadow-4dp();
             }
-        }
-
-        &:first-child {
-            margin-left: 0;
-        }
-
-        &:last-child {
-            margin-right: 0;
         }
 
         &:hover, &:focus {
