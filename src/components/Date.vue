@@ -2,7 +2,7 @@
     <div class="date-input">
         <input type="hidden" :value="value">
         <ui-dropdown persist ref="dropdown">
-            <button type="button" class="selection" slot="trigger">{{ selection }}</button>
+            <button type="button" class="selection" slot="trigger">{{ selection }} <i v-if="! selection">event</i></button>
             <div class="date-picker">
                 <div class="header">
                     <span>{{ weekday }}</span>
@@ -75,7 +75,7 @@
             },
 
             selection() {
-                return this.value ? this.display() : 'Click to select...';
+                return this.value ? this.display() : null;
             },
 
             weekday() {
@@ -216,6 +216,11 @@
     .date-input {
         .dropdown {
             display: block;
+        }
+
+        .selection i {
+            color: $grey-light;
+            font-size: 16px;
         }
     }
 
