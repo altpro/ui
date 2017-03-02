@@ -1,16 +1,19 @@
 @import "global";
 
 @import "reset";
-
 @import "type";
-@import "icons";
-@import "layout";
-//@import "buttons";
-@import "drawer";
+
+@import "badges";
+@import "buttons";
 @import "cards";
+@import "details";
+@import "drawer";
+@import "icons";
 @import "lists";
 @import "menus";
 @import "tables";
 @import "toolbars";
 @import "tooltips";
 @import "utilities";
+
+@import "layout";

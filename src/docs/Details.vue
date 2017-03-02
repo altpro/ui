@@ -50,29 +50,5 @@
 <style lang="scss" rel="stylesheet/scss">
     @import "../styles/_global.scss";
 
-    details {
-        > summary {
-            display: flex;
-            align-items: center;
-            cursor: pointer;
-            &::-webkit-details-marker {
-                display: none;
-            }
 
-            &:after {
-                content: 'expand_more';
-                margin-left: auto;
-                @include icon;
-                transition: 0.2s ease-in-out;
-            }
-
-            + * {
-                margin-top: 13px;
-            }
-        }
-
-        &[open] summary:after {
-            transform: rotateX(180deg);
-        }
-    }
 </style>
