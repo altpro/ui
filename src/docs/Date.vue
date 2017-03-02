@@ -5,7 +5,9 @@
         </div>
 
         <div class="card">
-            <ui-date time></ui-date>
+            <ui-field label="Date Picker">
+                <ui-date time v-model="date"></ui-date>
+            </ui-field>
 
         </div>
     </div>
@@ -15,7 +17,7 @@
     export default {
         data() {
             return {
-
+                date: null
             }
         }
     }

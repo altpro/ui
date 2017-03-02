@@ -1,41 +1,49 @@
 <template>
-    <div class="date-picker">
-        <div class="header">
-            <span>{{ weekday }}</span>
-            <span>{{ date.getDate() }} {{ monthName(date.getMonth()) }}</span>
-            {{ date.getFullYear() }}
-        </div>
-        <div class="picker">
-            <div class="controls">
-                <button type="button" @click="prev"><i>navigate_before</i></button>
-                <span class="current-month">
-                    {{ monthName(month) }}
-                    <input type="number" v-model="year" size="4">
-                </span>
-                <button type="button" @click="next"><i>navigate_next</i></button>
+    <div class="date-input">
+        <input type="hidden" :value="value">
+        <ui-dropdown persist ref="dropdown">
+            <button type="button" class="selection" slot="trigger">{{ selection }}</button>
+            <div class="date-picker">
+                <div class="header">
+                    <span>{{ weekday }}</span>
+                    <span>{{ date.getDate() }} {{ monthName(date.getMonth()) }}</span>
+                    {{ date.getFullYear() }}
+                </div>
+                <div class="picker">
+                    <div class="controls">
+                        <button type="button" @click="prev"><i>navigate_before</i></button>
+                        <span class="current-month">
+                            {{ monthName(month) }}
+                            <input type="number" v-model="year" size="4">
+                        </span>
+                        <button type="button" @click="next"><i>navigate_next</i></button>
+                    </div>
+
+                    <div class="days">
+                        <div class="weekday">M</div>
+                        <div class="weekday">T</div>
+                        <div class="weekday">W</div>
+                        <div class="weekday">T</div>
+                        <div class="weekday">F</div>
+                        <div class="weekday">S</div>
+                        <div class="weekday">S</div>
+                        <template v-for="d in days">
+                            <button v-if="d > 0"
+                                    class="day"
+                                    v-text="d"
+                                    :class="{ selected: isSelected(d), today: isToday(d) }"
+                                    @click="select(d)">
+                            </button>
+                            <div v-else class="pad"></div>
+                        </template>
+                    </div>
+
+                    <div class="time" v-if="time">
+                        <input type="number" :value="hour12" min="1" max="12" @input="setHour"> <span>:</span> <input type="number" v-model="minute" min="0" max="59" @input="done"> <button type="button" @click="switchNoon">{{ pm ? 'pm' : 'am' }}</button>
+                    </div>
+                </div>
             </div>
-            <div class="days">
-                <div class="weekday">M</div>
-                <div class="weekday">T</div>
-                <div class="weekday">W</div>
-                <div class="weekday">T</div>
-                <div class="weekday">F</div>
-                <div class="weekday">S</div>
-                <div class="weekday">S</div>
-                <template v-for="i in days">
-                    <button v-if="i > 0"
-                            class="day"
-                            v-text="i"
-                            :class="{ selected: isSelected(i) }"
-                            @click="select(i)">
-                    </button>
-                    <div v-else class="pad"></div>
-                </template>
-            </div>
-            <div class="time" v-if="time">
-                <input type="number" v-model="h" min="0" max="23"> <span>:</span> <input type="number" v-model="m" min="0" max="59">
-            </div>
-        </div>
+        </ui-dropdown>
     </div>
 </template>
 
@@ -43,22 +51,31 @@
     export default {
         props: {
             value: null,
-            time: Boolean
+            time: Boolean,
+            required: true,
+            min: null,
+            max: null
         },
 
-        data () {
+        data() {
             return {
                 year: new Date().getFullYear(),
                 month: new Date().getMonth(),
                 day: new Date().getDate(),
-                h: new Date().getHours(),
-                m: new Date().getMinutes()
+                hour: new Date().getHours(),
+                minute: new Date().getMinutes(),
+                pm: new Date().getHours() > 12,
+                inst: new Date()
             }
         },
 
         computed: {
             date() {
                 return this.value ? new Date(this.value) : new Date();
+            },
+
+            selection() {
+                return this.value ? this.display() : 'Click to select...';
             },
 
             weekday() {
@@ -78,6 +95,14 @@
                 }
 
                 return days;
+            },
+
+            hour12() {
+                if (this.hour === 0) {
+                    return 12;
+                } else {
+                    return this.hour > 12 ? this.hour - 12 : this.hour;
+                }
             }
         },
 
@@ -100,9 +125,28 @@
                 return this.date.toDateString() === new Date(this.year, this.month, day).toDateString();
             },
 
+            isToday(day) {
+                return new Date().toDateString() === new Date(this.year, this.month, day).toDateString();
+            },
+
             select(day) {
-                const date = new Date(this.year, this.month, day);
-                console.log(date.toISOString());
+                this.day = day;
+                this.done();
+            },
+
+            done() {
+                const date = new Date(this.year, this.month, this.day);
+
+                if (this.time) {
+                    date.setHours(this.hour);
+                    date.setMinutes(this.minute);
+                }
+
+                this.$emit('input', this.toString(date));
+
+                if (! this.time) {
+                    this.$refs.dropdown.close();
+                }
             },
 
             monthName(month) {
@@ -113,6 +157,52 @@
 
                 return months[month];
             },
+
+            setHour(e) {
+                const set = Number(e.target.value);
+                if (this.pm) {
+                    this.hour = set === 12 ? set : set + 12;
+                } else {
+                    this.hour = set === 12 ? 0 : set;
+                }
+                this.done();
+            },
+
+            switchNoon() {
+                this.pm = !this.pm;
+                if (this.pm) {
+                    this.hour = this.hour === 12 ? this.hour : this.hour + 12;
+                } else {
+                    this.hour = this.hour -12
+                }
+
+                this.done();
+            },
+
+            toString(date) {
+                date = date ? date : this.date;
+
+                if (this.time) {
+                    return date.toISOString().substring(0, 19).replace('T', ' ');
+                } else {
+                    return date.toISOString().substring(0, 10);
+                }
+            },
+
+            display() {
+                if (this.time) {
+                    return this.date.toLocaleString('en-GB', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute:'2-digit',
+                        hour12: true
+                    });
+                } else {
+                    return this.date.toLocaleDateString('en-GB');
+                }
+            }
         },
 
     }
@@ -123,10 +213,16 @@
 
     $daySize: 36px;
 
+    .date-input {
+        .dropdown {
+            display: block;
+        }
+    }
+
     .date-picker {
+        color: $text;
         background: #fff;
         border-radius: 2px;
-        position: absolute;
         display: flex;
         flex-direction: column;
         @include shadow-4dp;
@@ -182,13 +278,18 @@
             font-weight: $font-bold;
         }
 
+        .today {
+            color: $primary;
+            font-weight: $font-bold;
+        }
+
         button:hover, button:focus {
             background: $grey-lighter;
         }
 
         .selected {
             background: $primary;
-            color: #fff;
+            color: #fff !important;
             &:hover, &:focus {
                 background: $primary;
             }
@@ -221,26 +322,39 @@
                 display: inline-flex;
                 margin-left: 5px;
                 font-weight: $font-bold;
+                font-size: inherit;
             }
+        }
+
+        .current-month {
+            display: inline-flex;
+            align-items: center;
         }
 
         .time {
             display: flex;
             justify-content: center;
             align-items: center;
+            border-top: 1px solid $divider;
+            padding-top: 8px;
 
             span {
                 margin: 0 4px;
             }
 
-            input {
-                width: 44px;
+            input, button {
+                width: 48px;
                 border: 1px solid $divider;
                 color: inherit;
-                padding: 4px;
+                padding: 4px 6px;
+                line-height: 1;
+            }
+
+            button {
+                padding: 8px 6px 7px;
+                margin-left: 4px;
+                width: auto;
             }
         }
-
     }
-
 </style>
