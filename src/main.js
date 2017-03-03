@@ -1,14 +1,9 @@
 import './utils/polyfills';
-
 import Vue from 'vue';
-import VueRouter from 'vue-router';
-
-Vue.use(VueRouter);
-
-import routes from './routes';
-const router = new VueRouter(routes);
-
 import App from './App.vue';
+import router from './router';
+
+Vue.config.productionTip = false;
 
 import Context from './components/Context.vue';
 Vue.component('UiContext', Context);
@@ -58,7 +53,9 @@ Vue.component('UiWysiwyg', Wysiwyg);
 
 /* eslint-disable no-new */
 new Vue({
-    router,
     el: '#app',
+    router,
     render: h => h(App)
-});
+})
+
+
