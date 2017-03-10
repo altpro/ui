@@ -21,7 +21,7 @@
                 document.addEventListener('click', this.hide);
                 document.addEventListener('keydown', this.hide);
 
-                this.$nextTick(function() {
+                this.$nextTick(() => {
                     this.$el.style.left = position.x + 'px';
                     this.$el.style.top = position.y + 'px';
                 });
