@@ -1,8 +1,15 @@
 <template>
     <div class="date-input">
-        <input type="hidden" :value="value">
-        <ui-dropdown persist ref="dropdown">
-            <button type="button" class="selection" slot="trigger">{{ selection }} <i v-if="! selection">event</i></button>
+        <button type="button"
+                class="selection"
+                ref="trigger"
+                :id="id"
+                :disabled="disabled"
+                @click="toggle">
+            {{ selection }} <i v-if="! selection">event</i>
+        </button>
+
+        <div class="wrapper" v-if="open" ref="picker">
             <div class="date-picker">
                 <div class="header">
                     <span>{{ weekday }}</span>
@@ -41,9 +48,16 @@
                     <div class="time" v-if="time">
                         <input type="number" :value="hour12" min="1" max="12" @input="setHour"> <span>:</span> <input type="number" v-model="minute" min="0" max="59" @input="done"> <button type="button" @click="switchNoon">{{ pm ? 'pm' : 'am' }}</button>
                     </div>
+
+                    <div class="actions">
+                        <button type="button" class="button" v-if="!required" @click="clear">Clear</button>
+                        <button type="button" class="button" @click="onOk">Ok</button>
+                    </div>
                 </div>
             </div>
-        </ui-dropdown>
+        </div>
+
+        <input type="hidden" :value="value" :name="name">
     </div>
 </template>
 
@@ -51,8 +65,11 @@
     export default {
         props: {
             value: null,
+            name: null,
+            id: null,
             time: Boolean,
-            required: true,
+            required: Boolean,
+            disabled: Boolean,
             min: null,
             max: null
         },
@@ -65,7 +82,8 @@
                 hour: new Date().getHours(),
                 minute: new Date().getMinutes(),
                 pm: new Date().getHours() > 12,
-                inst: new Date()
+                inst: new Date(),
+                open: false
             }
         },
 
@@ -107,6 +125,36 @@
         },
 
         methods: {
+            toggle() {
+                if (this.open) {
+                    this.close();
+                } else {
+                    this.show();
+                }
+            },
+
+            show() {
+                this.open = true;
+                document.addEventListener('click', this.close);
+                document.addEventListener('keydown', this.close);
+
+                this.$nextTick(() => {
+                    const rect = this.$refs.picker.getBoundingClientRect();
+                    if (rect.bottom > window.innerHeight) {
+                        this.$refs.picker.style.bottom = `30px`;
+                    }
+                });
+            },
+
+            close(e) {
+                if (! e || ! this.$el.contains(e.target) || (e.which === 27 || e.keyCode === 27)) {
+                    this.open = false;
+                    document.removeEventListener('click', this.close);
+                    document.removeEventListener('keydown', this.close);
+                    this.$refs.trigger.focus();
+                }
+            },
+
             next() {
                 const date = new Date(this.year, this.month);
                 date.setMonth(date.getMonth() + 1);
@@ -142,11 +190,16 @@
                     date.setMinutes(this.minute);
                 }
 
-                this.$emit('input', this.toString(date));
+                this.$emit('input', this.toValue(date));
 
                 if (! this.time) {
-                    this.$refs.dropdown.close();
+                    this.close();
                 }
+            },
+
+            onOk() {
+                this.done();
+                this.close();
             },
 
             monthName(month) {
@@ -179,7 +232,12 @@
                 this.done();
             },
 
-            toString(date) {
+            clear() {
+                this.$emit('input', null);
+                this.close();
+            },
+
+            toValue(date) {
                 date = date ? date : this.date;
 
                 if (this.time) {
@@ -214,13 +272,33 @@
     $daySize: 36px;
 
     .date-input {
-        .dropdown {
-            display: block;
-        }
-
         .selection i {
             color: $grey-light;
             font-size: 16px;
+        }
+
+        &.right {
+            .date-picker {
+                right: 0;
+            }
+        }
+
+        .wrapper {
+            position: absolute;
+            z-index: 9;
+
+            @media #{$mobile} {
+                z-index: 16;
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: rgba(0,0,0, 0.4);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
         }
     }
 
@@ -340,8 +418,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            border-top: 1px solid $divider;
-            padding-top: 8px;
+            padding: 0 0 12px;
 
             span {
                 margin: 0 4px;
@@ -360,6 +437,15 @@
                 margin-left: 4px;
                 width: auto;
             }
+        }
+
+        .actions {
+            border-top: 1px solid $divider;
+            padding: 8px 8px 0;
+            margin: 0 -8px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
         }
     }
 </style>
