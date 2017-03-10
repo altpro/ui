@@ -13,20 +13,28 @@
             <i>arrow_drop_down</i>
         </button>
 
-        <div class="options multiple" v-if="opened" ref="options">
-            <div v-for="option in options"
-                 tabindex="0"
-                 class="option"
-                 :class="{ checked: isSelected(option) }"
-                 @keydown.down="focusNext"
-                 @keydown.up="focusPrevious"
-                 @click="toggleOption(option)"
-                 @keyup.space="toggleOption(option)">
-                <span class="check">
-                    <i v-if="! isSelected(option)">check_box_outline_blank</i>
-                    <i v-if="isSelected(option)">check_box</i>
-                </span>
-                <span v-html="option.name"></span>
+        <div class="wrapper" v-if="opened" ref="options">
+            <div class="options-container">
+                <div class="options multiple">
+                    <div v-for="option in options"
+                         tabindex="0"
+                         class="option"
+                         :class="{ checked: isSelected(option) }"
+                         @keydown.down="focusNext"
+                         @keydown.up="focusPrevious"
+                         @click="toggleOption(option)"
+                         @keyup.space="toggleOption(option)">
+                        <span class="check">
+                            <i v-if="! isSelected(option)">check_box_outline_blank</i>
+                            <i v-if="isSelected(option)">check_box</i>
+                        </span>
+                        <span v-html="option.name"></span>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button class="button" type="button" @click="forceClose">Ok</button>
+                </div>
             </div>
         </div>
 
@@ -134,6 +142,10 @@
                 }
             },
 
+            forceClose() {
+                this.close();
+            },
+
             isSelected(option) {
                 return this.value.indexOf(option.value) > -1;
             },
@@ -194,3 +206,28 @@
         }
     }
 </script>
+
+<style lang="scss" rel="stylesheet/scss">
+    @import "../styles/_global.scss";
+
+    .options.multiple {
+        box-shadow: none;
+    }
+
+    .options-container {
+        background: #fff;
+        @include shadow-4dp;
+
+        .actions {
+            border-top: 1px solid $divider;
+            padding: 8px;
+            display: flex;
+            justify-content: flex-end;
+
+            @media #{$desktop} {
+                display: none;
+            }
+        }
+    }
+
+</style>

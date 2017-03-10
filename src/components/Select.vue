@@ -14,16 +14,18 @@
             <i>arrow_drop_down</i>
         </button>
 
-        <div class="options" v-if="opened" ref="options">
-            <div v-for="option in options"
-                 class="option"
-                 tabindex="0"
-                 :class="{ selected: option.value === value }"
-                 v-html="option.name"
-                 @click="select(option)"
-                 @keyup.space="select(option)"
-                 @keyup.down="selectNext"
-                 @keyup.up="selectPrevious">
+        <div class="wrapper" v-if="opened" ref="options">
+            <div class="options">
+                <div v-for="option in options"
+                     class="option"
+                     tabindex="0"
+                     :class="{ selected: option.value === value }"
+                     v-html="option.name"
+                     @click="select(option)"
+                     @keyup.space="select(option)"
+                     @keyup.down="selectNext"
+                     @keyup.up="selectPrevious">
+                </div>
             </div>
         </div>
 
@@ -170,20 +172,48 @@
             }
         }
 
-        > .options {
-            display: block;
-            position: absolute;
-            z-index: 9;
+        > .wrapper {
+            @media #{$mobile} {
+                z-index: 16;
+                position: fixed;
+                top: 0;
+                left: 0;
+                bottom: 0;
+                right: 0;
+                background: rgba(0,0,0, 0.4);
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+
+            @media #{$desktop} {
+                display: block;
+                position: absolute;
+                z-index: 9;
+                max-height: 50vh;
+                top: calc(100% + 2px);
+                width: 100%;
+                @include shadow-4dp;
+                overflow-y: auto;
+            }
+        }
+
+        .options {
             background: #fff;
-            overflow-y: auto;
-            max-height: 50vh;
-            top: calc(100% + 2px);
-            width: 100%;
-            color: $text;
-            @include shadow-4dp;
+            position: relative;
+            @media #{$mobile} {
+                display: block;
+                width: 75vw;
+                max-height: 75vh;
+                background: #fff;
+                border-radius: 2px;
+                overflow-y: auto;
+                @include shadow-4dp;
+            }
         }
 
         .option {
+            color: $text;
             font-size: 15px;
             display: flex;
             align-items: center;
