@@ -113,6 +113,7 @@
             position: absolute;
             width: 0;
             height: 0;
+            opacity: 0;
         }
 
         input:checked + .control {
