@@ -9,10 +9,10 @@
             <ui-dropdown persist>
                 <button class="button icon" slot="trigger"><i>more_vert</i></button>
                 <div class="menu">
-                    <div class="link">Option 1</div>
-                    <div class="link">Option 2</div>
-                    <div class="link">Option 3</div>
-                    <div class="link">Option 4</div>
+                    <button class="link">Options 1</button>
+                    <button class="link">Options 2</button>
+                    <button class="link">Options 3</button>
+                    <button class="link">Options 4</button>
                 </div>
             </ui-dropdown>
             <pre><code>

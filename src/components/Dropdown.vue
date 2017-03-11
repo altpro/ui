@@ -1,7 +1,7 @@
 <template>
     <div class="dropdown">
         <slot name="trigger" class="trigger"></slot>
-        <div class="target" ref="target" v-if="opened">
+        <div class="target" ref="target" v-show="opened">
             <slot></slot>
         </div>
     </div>
@@ -96,6 +96,12 @@
 
         &.right > .target {
             right: 0;
+        }
+
+        .menu {
+            a, .link {
+                white-space: nowrap;
+            }
         }
     }
 </style>

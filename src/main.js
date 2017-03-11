@@ -1,4 +1,4 @@
-import './utils/polyfills';
+import './polyfills/polyfills';
 import Vue from 'vue';
 import App from './App.vue';
 import router from './router';
@@ -16,6 +16,9 @@ Vue.component('UiDate', Date);
 
 import Dialog from './components/Dialog.vue';
 Vue.component('UiDialog', Dialog);
+
+import Drawer from './components/Drawer.vue';
+Vue.component('UiDrawer', Drawer);
 
 import Dropdown from './components/Dropdown.vue';
 Vue.component('UiDropdown', Dropdown);

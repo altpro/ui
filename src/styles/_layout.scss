@@ -4,8 +4,6 @@ html {
 
 body {
     min-height: 100vh;
-    display: flex;
-    flex-direction: column;
     position: relative;
     margin: 0;
     -webkit-overflow-scrolling: touch;
@@ -66,9 +64,10 @@ body {
     }
 }
 
-main {
-    min-height: 100vh;
+#main {
+    position: relative;
     background: $grey-lighter;
+    min-height: 100vh;
     padding: ($phone-padding + $toolbar-small) $phone-padding $phone-padding;
 
 
@@ -82,12 +81,6 @@ main {
 
     @media #{$xl} {
         margin-left: $drawer-width;
-    }
-}
-
-.no-drawer main {
-    @media #{$xl} {
-        margin-left: 0;
     }
 }
 

@@ -1,33 +1,31 @@
 <template>
-    <div>
+    <div id="#app">
         <header id="header">
-            <button class="button icon" id="drawer-button" @click="toggleDrawer"><i>menu</i></button>
+            <button class="button icon" id="drawer-button" @click="$refs.drawer.toggle()"><i>menu</i></button>
             <div class="title">UI</div>
             <button class="button icon"><i>search</i></button>
             <button class="button icon"><i>help_outline</i></button>
         </header>
 
-        <nav id="drawer" :class="{ 'open': drawer }" @focus="openDrawer" tabindex="0" @click="onDrawerClick">
-            <div class="menu">
-                <router-link to="/" exact>Home</router-link>
-                <div class="divider"></div>
-                <router-link to="/badges">Badges</router-link>
-                <router-link to="/buttons">Buttons</router-link>
-                <router-link to="/cards">Cards</router-link>
-                <router-link to="/data">Data</router-link>
-                <router-link to="/date">Date</router-link>
-                <router-link to="/details">Details</router-link>
-                <router-link to="/dialogs">Dialogs</router-link>
-                <router-link to="/dropdowns">Dropdowns</router-link>
-                <router-link to="/forms">Forms</router-link>
-                <router-link to="/lists">Lists</router-link>
-                <router-link to="/notifications">Notifications</router-link>
-                <router-link to="/pagination">Pagination</router-link>
-                <router-link to="/tables">Tables</router-link>
-                <router-link to="/tabs">Tabs</router-link>
-                <router-link to="/tooltips">Tooltips</router-link>
-            </div>
-        </nav>
+        <ui-drawer ref="drawer">
+            <router-link to="/" exact>Home</router-link>
+            <div class="divider"></div>
+            <router-link to="/badges">Badges</router-link>
+            <router-link to="/buttons">Buttons</router-link>
+            <router-link to="/cards">Cards</router-link>
+            <router-link to="/data">Data</router-link>
+            <router-link to="/date">Date</router-link>
+            <router-link to="/details">Details</router-link>
+            <router-link to="/dialogs">Dialogs</router-link>
+            <router-link to="/dropdowns">Dropdowns</router-link>
+            <router-link to="/forms">Forms</router-link>
+            <router-link to="/lists">Lists</router-link>
+            <router-link to="/notifications">Notifications</router-link>
+            <router-link to="/pagination">Pagination</router-link>
+            <router-link to="/tables">Tables</router-link>
+            <router-link to="/tabs">Tabs</router-link>
+            <router-link to="/tooltips">Tooltips</router-link>
+        </ui-drawer>
 
         <main id="main">
             <transition name="fade" mode="out-in" appear>
@@ -36,7 +34,6 @@
         </main>
 
         <ui-notification></ui-notification>
-        <div id="drawer-closer" @click="closeDrawer" :class="{ 'open': drawer }"></div>
     </div>
 </template>
 
@@ -44,26 +41,12 @@
     export default {
         data() {
             return {
-                drawer: false
+
             }
         },
 
         methods: {
-            toggleDrawer() {
-                this.drawer = ! this.drawer;
-            },
 
-            openDrawer() {
-                this.drawer = true;
-            },
-
-            closeDrawer() {
-                this.drawer = false;
-            },
-
-            onDrawerClick() {
-                setTimeout(this.closeDrawer, 200);
-            }
         }
     }
 </script>

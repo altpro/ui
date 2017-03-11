@@ -1,10 +1,10 @@
 .menu {
-    > .link {
-        background: $background;
+    > a, >.link {
+        background: #fff;
         display: block;
         text-align: left;
         border: none;
-        color: $link;
+        color: $text;
         font-size: inherit;
         font-family: inherit;
         width: 100%;
