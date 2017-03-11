@@ -1,4 +1,4 @@
-.button {
+button, .button {
     background: transparent;
     border: none;
     border-radius: 2px;
@@ -53,7 +53,7 @@
         &.#{$state} {
             padding: 0 16px;
             background: $color;
-            color: #fff;
+            color: #fff !important;
 
             &:hover, &:focus {
                 background-color: darken($color, 10%);
@@ -117,7 +117,7 @@
     line-height: normal;
     padding: 0;
     background: $success;
-    color: #fff;
+    color: #fff !important;
     @include shadow-4dp;
     position: relative;
 
@@ -135,4 +135,34 @@
     &[disabled], &.disabled {
         background-color: rgba($success, 0.5);
     }
+}
+
+.buttons, .actions {
+    .button {
+        margin: 0 4px;
+
+        &:first-child {
+            margin-left: 0;
+        }
+
+        &:last-child {
+            margin-right: 0;
+        }
+    }
+}
+
+.actions {
+    display: flex;
+    justify-content: flex-end;
+
+    button {
+        color: $primary;
+    }
+}
+
+
+.card > .actions {
+    margin: 24px -24px -24px;
+    padding: 8px;
+    border-top: 1px solid $divider;
 }

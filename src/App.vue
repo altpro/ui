@@ -7,9 +7,9 @@
             <button class="button icon"><i>help_outline</i></button>
         </header>
 
-        <ui-drawer ref="drawer">
+        <ui-drawer ref="drawer" id="drawer">
             <router-link to="/" exact>Home</router-link>
-            <div class="divider"></div>
+            <hr>
             <router-link to="/badges">Badges</router-link>
             <router-link to="/buttons">Buttons</router-link>
             <router-link to="/cards">Cards</router-link>
@@ -17,6 +17,7 @@
             <router-link to="/date">Date</router-link>
             <router-link to="/details">Details</router-link>
             <router-link to="/dialogs">Dialogs</router-link>
+            <router-link to="/drawer">Drawer</router-link>
             <router-link to="/dropdowns">Dropdowns</router-link>
             <router-link to="/forms">Forms</router-link>
             <router-link to="/lists">Lists</router-link>
@@ -25,6 +26,7 @@
             <router-link to="/tables">Tables</router-link>
             <router-link to="/tabs">Tabs</router-link>
             <router-link to="/tooltips">Tooltips</router-link>
+
         </ui-drawer>
 
         <main id="main">
@@ -65,7 +67,7 @@
         background-attachment: fixed, fixed;
     }
 
-    h1 {
+    h1, h1 a {
         color: #fff;
         font-weight: 300;
     }

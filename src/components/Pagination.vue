@@ -119,9 +119,13 @@
         button {
             display: inline-flex;
             align-items: center;
+            padding: 0;
+            height: auto;
+            min-width: 0;
             &[disabled] {
                 color: lighten($grey, 25%);
             }
+            border-radius: 50%;
         }
 
         .dropdown {

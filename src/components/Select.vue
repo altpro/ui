@@ -150,6 +150,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            text-transform: inherit;
+            font-weight: inherit;
 
             font-family: inherit;
             position: relative;

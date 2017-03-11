@@ -9,6 +9,7 @@ $grey-dark: #666;
 $grey: #757575;
 $grey-light: #aaa;
 $grey-lighter: #e6e6e6;
+$grey-lightest: #ececec;
 
 $text: $grey;
 $field: $grey-light;
@@ -27,7 +28,7 @@ $font-bold: 700 !default;
 
 $tablet-breakpoint: 736px;
 $desktop-breakpoint: 1025px;
-$xl-breakpoint: 1300px;
+$xl-breakpoint: 1260px;
 
 $phone: "all and (max-width : #{$tablet-breakpoint - 1})";
 $mobile: "all and (max-width : #{$desktop-breakpoint - 1})";
@@ -53,7 +54,7 @@ $drawer-background: $background;
 $drawer-text: $text;
 $drawer-link: $text;
 $drawer-hover: $hover;
-$drawer-width: 240px;
+$drawer-width: 255px;
 
 $icon-hover: $grey-lighter;
 

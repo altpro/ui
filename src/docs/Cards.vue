@@ -24,6 +24,7 @@
             </div>
 
             <div class="actions">
+                <button class="button">Cancel</button>
                 <button class="button">Ok</button>
             </div>
         </div>

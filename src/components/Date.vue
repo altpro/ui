@@ -366,8 +366,13 @@
             font-weight: $font-bold;
         }
 
-        button:hover, button:focus {
-            background: $grey-lighter;
+        button {
+            min-width: 0;
+            font-weight: inherit;
+
+            &:hover, &:focus {
+                background: $grey-lighter;
+            }
         }
 
         .selected {
@@ -446,6 +451,11 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
+
+            button {
+                font-weight: $font-highlight;
+                min-width: 64px;
+            }
         }
     }
 </style>

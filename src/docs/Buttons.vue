@@ -12,11 +12,11 @@
             <p>
                 <button>Default</button>
                 <button class="button">Default Button</button>
-                <button class="button coloured">.coloured</button>
+                <button class="button primary-colour">.coloured</button>
             </p>
 
             <h2>Classes</h2>
-            <p>
+            <p class="buttons">
                 <button class="button primary">.primary</button>
                 <button class="button secondary">.secondary</button>
                 <button class="button success">.success</button>
@@ -24,9 +24,8 @@
                 <button class="button warning">.warning</button>
                 <button class="button danger">.danger</button>
                 <button class="button raised">.raised</button>
-
             </p>
-            <div>
+            <div class="buttons">
                 <button class="button fab"><i>add</i></button> .fab
                 <button class="button fab mini"><i>add</i></button> .fab.mini
                 <button class="button icon"><i>person</i></button> .icon

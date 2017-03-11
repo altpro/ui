@@ -11,6 +11,7 @@ import Data from '@/docs/Data.vue';
 import Date from '@/docs/Date.vue';
 import Details from '@/docs/Details.vue';
 import Dialogs from '@/docs/Dialogs.vue';
+import Drawer from '@/docs/Drawer.vue';
 import Dropdowns from '@/docs/Dropdowns.vue';
 import Forms from '@/docs/Forms.vue';
 import Lists from '@/docs/Lists.vue';
@@ -32,6 +33,7 @@ export default new Router({
         { path: '/date', component: Date, name: 'Date' },
         { path: '/details', component: Details, name: 'Details' },
         { path: '/dialogs', component: Dialogs, name: 'Dialogs' },
+        { path: '/drawer', component: Drawer, name: 'Drawer' },
         { path: '/dropdowns', component: Dropdowns, name: 'Dropdowns' },
         { path: '/forms', component: Forms, name: 'Forms' },
         { path: '/lists', component: Lists, name: 'Lists' },

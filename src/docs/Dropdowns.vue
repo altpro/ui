@@ -15,8 +15,8 @@
                     <button class="link">Options 4</button>
                 </div>
             </ui-dropdown>
-            <pre><code>
-&lt;ui-dropdown persist&gt;
+            <pre>
+<code>&lt;ui-dropdown persist&gt;
     &lt;button class="button icon" slot="trigger"&gt;&lt;i&gt;more_vert&lt;/i&gt;&lt;/button&gt;
     &lt;div class="menu"&gt;
         &lt;div class="link"&gt;Option 1&lt;/div&gt;

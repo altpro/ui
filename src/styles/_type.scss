@@ -52,8 +52,20 @@ hr {
     background: $divider;
 }
 
+code {
+    background: $grey-lightest;
+    padding: 2px 4px;
+    border-radius: 2px;
+    color: $primary
+}
+
+a {
+    color: $text;
+    text-decoration: underline;
+}
+
 @each $state, $color in $states {
     .#{$state}-colour {
-        color: $color;
+        color: $color !important;
     }
 }

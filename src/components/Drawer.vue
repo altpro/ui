@@ -46,6 +46,10 @@
                 }
             },
 
+            pathMatches(regex) {
+                return regex.test(window.location.pathname);
+            },
+
             closeOnEscape(e) {
                 if (e.which === 27 || e.keyCode === 27) {
                     this.close();
@@ -91,28 +95,71 @@
             transform: translateX(0);
         }
 
-        a {
-            color: $link;
-            border-left: 4px solid $drawer-background;
+        a, details > summary {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            font-size: 13px;
+            color: $text;
             text-decoration: none;
-            display: block;
-            padding: 8px 36px;
+            padding: 8px 36px 8px 62px;
             position: relative;
             transition: 0.3s ease-in-out;
 
             &:hover {
-                color: $drawer-hover;
-            }
-
-            > i {
-                font-size: 18px;
+                background: $grey-lightest;
+                color: $primary;
             }
 
             &.active {
                 font-weight: $font-highlight;
-                color: $hover;
-                border-left: 4px solid $drawer-hover;
+                color: $primary;
             }
+
+            > i {
+                margin-left: -40px;
+                margin-right: 16px;
+                color: lighten($text, 10%);
+            }
+        }
+
+        summary {
+            text-transform: uppercase;
+            &:after {
+                font-size: 16px;
+            }
+            + * {
+                margin-top: 0;
+            }
+        }
+
+        details[open] summary {
+            color: $text;
+            > i {
+                color: $primary;
+            }
+        }
+
+        details > details {
+            > summary {
+                text-transform: none;
+                width: auto;
+                &:after {
+                    content: 'arrow_drop_down';
+                    margin-left: -24px;
+                    margin-right: 8px;
+                    order: -1;
+                    transform: rotate(-90deg);
+                }
+            }
+            &[open] > summary:after {
+                transform: rotate(0deg)
+            }
+        }
+
+
+        hr {
+            margin: 4px 0;
         }
     }
 
