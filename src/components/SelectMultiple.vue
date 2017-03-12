@@ -33,7 +33,7 @@
                 </div>
 
                 <div class="actions">
-                    <button class="button" type="button" @click="forceClose">Ok</button>
+                    <button class="primary-colour" type="button" @click="forceClose">Ok</button>
                 </div>
             </div>
         </div>

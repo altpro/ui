@@ -77,11 +77,13 @@
 
     .dropdown {
         position: relative;
-        display: inline-block;
+        display: inline-flex;
 
         > .target {
             position: absolute;
+            display: block;
             min-width: 96px;
+            max-width: 300px;
             z-index: 9;
             background: #fff;
             overflow-y: auto;
@@ -99,8 +101,42 @@
         }
 
         .menu {
-            a, .link {
-                white-space: nowrap;
+            white-space: nowrap;
+            padding: 8px 0;
+
+            a, .link, button {
+                display: flex;
+                align-items: center;
+                font-size: 14px;
+                background: #fff;
+                text-decoration: none;
+                color: $text;
+                padding: 8px 16px;
+                margin: 0;
+
+                &:hover, &:focus {
+                    background: $grey-lightest;
+                }
+
+                &[disabled] {
+                    opacity: .5;
+
+                    &:hover, &:focus {
+                        background: #fff;
+                    }
+                }
+            }
+
+            i {
+                font-size: 18px;
+
+                &:first-child {
+                    margin-right: 8px;
+                }
+            }
+
+            .no-icon {
+                padding-left: 42px;
             }
         }
     }

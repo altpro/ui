@@ -1,4 +1,4 @@
-button, .button {
+.button {
     background: transparent;
     border: none;
     border-radius: 2px;
@@ -15,14 +15,33 @@ button, .button {
     font-weight: $font-highlight;
     text-transform: uppercase;
     letter-spacing: .03em;
-    will-change: box-shadow;
     transition: 0.2s ease-in-out;
     outline: none;
     cursor: pointer;
     text-decoration: none;
     line-height: 36px;
 
-    &.flat {
+    &:hover, &:focus {
+        background: $grey-lightest;
+    }
+}
+
+button {
+    &.action, &.flat, &.dense, &.raised, &.secondary {
+        @extend .button;
+    }
+    @each $state, $color in $states {
+        &.#{$state} {
+            @extend .button;
+        }
+        &.#{$state}-color {
+            @extend .button;
+        }
+    }
+}
+
+button, .button {
+    &.action {
         color: $primary;
     }
 
@@ -40,13 +59,9 @@ button, .button {
         }
     }
 
-    &:hover, &:focus {
-        background: $icon-hover;
-    }
-
     &[disabled], &.disabled {
         cursor: default;
-        color: rgba($text, 0.5);
+        opacity: .5;
     }
 
     @each $state, $color in $states {
@@ -58,9 +73,6 @@ button, .button {
             &:hover, &:focus {
                 background-color: darken($color, 10%);
             }
-            &[disabled], &.disabled {
-                background-color: rgba($color, 0.5);
-            }
         }
     }
 
@@ -71,45 +83,46 @@ button, .button {
             background: darken($icon-hover, 5%);
         }
     }
+}
 
-    &.icon {
-        background: transparent;
-        border-radius: 50%;
-        font-size: 24px;
-        height: 32px;
-        min-width: 32px;
-        width: 32px;
-        padding: 0;
-        color: inherit;
-        line-height: normal;
+.icon {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    background: transparent;
+    border-radius: 50% !important;
+    font-size: 24px;
+    height: 32px !important;
+    min-width: 32px !important;
+    width: 32px;
+    padding: 0;
+    color: inherit;
+    line-height: 1 !important;
 
-        &:hover, &:focus {
-            background: $icon-hover;
-        }
+    &:hover, &:focus {
+        background: $grey-lightest !important;
+    }
 
-        &[disabled], &.disabled {
-            color: rgba($text, 0.5);
+    &[disabled], &.disabled {
+        opacity: .5;
+    }
+
+    @each $state, $color in $states {
+        &.#{$state} {
+            background: transparent;
+            color: $color !important;
+
             &:hover, &:focus {
-                background: transparent;
-            }
-        }
-
-        @each $state, $color in $states {
-            &.#{$state} {
-                color: $color;
-
-                &:hover, &:focus {
-                    color: darken($color, 10%);
-                }
-                &[disabled], &.disabled {
-                    color: rgba($color, 0.5);
-                }
+                color: darken($color, 10%);
             }
         }
     }
 }
 
-.fab {
+button.fab, .button.fab {
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
     height: 56px;
     min-width: 56px;
     width: 56px;
@@ -120,6 +133,8 @@ button, .button {
     color: #fff !important;
     @include shadow-4dp;
     position: relative;
+    transition: 0.2s ease-in-out;
+    cursor: pointer;
 
     &.mini {
         height: 40px;
@@ -133,12 +148,24 @@ button, .button {
     }
 
     &[disabled], &.disabled {
-        background-color: rgba($success, 0.5);
+        opacity: .5;
+    }
+
+    @each $state, $color in $states {
+        &.#{$state} {
+            background: $color;
+
+            &:hover, &:focus {
+                background-color: darken($color, 5%);
+            }
+        }
     }
 }
 
 .buttons, .actions {
-    .button {
+    display: flex;
+    align-items: center;
+    button, .fab {
         margin: 0 4px;
 
         &:first-child {
@@ -152,12 +179,7 @@ button, .button {
 }
 
 .actions {
-    display: flex;
     justify-content: flex-end;
-
-    button {
-        color: $primary;
-    }
 }
 
 

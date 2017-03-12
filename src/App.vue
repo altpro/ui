@@ -26,6 +26,33 @@
             <router-link to="/tables">Tables</router-link>
             <router-link to="/tabs">Tabs</router-link>
             <router-link to="/tooltips">Tooltips</router-link>
+            <div v-if="$router.currentRoute.name === 'drawer'">
+                <hr>
+                <h4>Drawer demo</h4>
+                <router-link to="#1"><i>person</i> Link 1</router-link>
+                <details :open="/^\/drawer/.test($router.currentRoute.path)">
+                    <summary><i>view_list</i> Link 2</summary>
+                    <router-link to="#2.1">Link 2.1</router-link>
+                    <router-link to="#2.2">Link 2.2</router-link>
+                    <details>
+                        <summary>Link 2.3</summary>
+                        <router-link to="#2.3.1">Link 2.3.1</router-link>
+                        <router-link to="#2.3.2">Link 2.3.2</router-link>
+                    </details>
+                </details>
+                <details>
+                    <summary><i>trending_up</i> Link 3</summary>
+                    <router-link to="#3.1">Link 3.1</router-link>
+                    <router-link to="#3.2">Link 3.2</router-link>
+                    <details>
+                        <summary>Link 3.3</summary>
+                        <router-link to="#3.3.1">Link 3.3.1</router-link>
+                        <router-link to="#3.3.2">Link 3.3.2</router-link>
+                    </details>
+                </details>
+                <router-link to="#1"><i>settings</i> Link 4</router-link>
+
+            </div>
 
         </ui-drawer>
 

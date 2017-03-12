@@ -102,6 +102,7 @@
             font-size: 13px;
             color: $text;
             text-decoration: none;
+            text-transform: uppercase;
             padding: 8px 36px 8px 62px;
             position: relative;
             transition: 0.3s ease-in-out;
@@ -124,7 +125,6 @@
         }
 
         summary {
-            text-transform: uppercase;
             &:after {
                 font-size: 16px;
             }
@@ -140,23 +140,33 @@
             }
         }
 
-        details > details {
-            > summary {
+        details {
+            a {
                 text-transform: none;
-                width: auto;
-                &:after {
-                    content: 'arrow_drop_down';
-                    margin-left: -24px;
-                    margin-right: 8px;
-                    order: -1;
-                    transform: rotate(-90deg);
-                }
             }
-            &[open] > summary:after {
-                transform: rotate(0deg)
+            > details {
+                > summary {
+                    text-transform: none;
+                    width: auto;
+                    &:after {
+                        content: 'arrow_drop_down';
+                        margin-left: -24px;
+                        margin-right: 8px;
+                        order: -1;
+                        transform: rotate(-90deg);
+                    }
+                }
+                &[open] > summary:after {
+                    transform: rotate(0deg)
+                }
             }
         }
 
+        h4 {
+            font-size: 13px;
+            font-weight: $font-highlight;
+            padding: 16px 36px 8px 26px;
+        }
 
         hr {
             margin: 4px 0;

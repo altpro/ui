@@ -1,6 +1,6 @@
 <template>
     <div class="expanding-search" :class="{ open: open || expanded }" :style="{ 'max-width': width }">
-        <button class="button icon" @click="show"><i>search</i></button>
+        <button class="icon" @click="show"><i>search</i></button>
         <input type="search"
                autocapitalize="off"
                ref="input"

@@ -7,17 +7,18 @@
         <div class="card">
 
             <ui-dropdown persist>
-                <button class="button icon" slot="trigger"><i>more_vert</i></button>
+                <button class="icon" slot="trigger"><i>more_vert</i></button>
                 <div class="menu">
-                    <button class="link">Options 1</button>
-                    <button class="link">Options 2</button>
-                    <button class="link">Options 3</button>
-                    <button class="link">Options 4</button>
+                    <a href="/" class="no-icon">Link</a>
+                    <button><i>check</i> Button</button>
+                    <hr>
+                    <button disabled>Disabled</button>
+                    <button>Button</button>
                 </div>
             </ui-dropdown>
             <pre>
 <code>&lt;ui-dropdown persist&gt;
-    &lt;button class="button icon" slot="trigger"&gt;&lt;i&gt;more_vert&lt;/i&gt;&lt;/button&gt;
+    &lt;button class="icon" slot="trigger"&gt;&lt;i&gt;more_vert&lt;/i&gt;&lt;/button&gt;
     &lt;div class="menu"&gt;
         &lt;div class="link"&gt;Option 1&lt;/div&gt;
         &lt;div class="link"&gt;Option 2&lt;/div&gt;

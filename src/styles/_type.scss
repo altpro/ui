@@ -60,12 +60,13 @@ code {
 }
 
 a {
-    color: $text;
+    color: $primary;
     text-decoration: underline;
+    text-decoration-skip: ink;
 }
 
 @each $state, $color in $states {
-    .#{$state}-colour {
+    .#{$state}-color {
         color: $color !important;
     }
 }

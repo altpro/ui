@@ -8,11 +8,10 @@
             <div class="toolbar">
                 <h2>Heading</h2>
                 <div class="actions">
-                    <button class="button icon"><i>search</i></button>
-                    <button class="button icon">
+                    <button class="icon"><i>search</i></button>
+                    <button class="icon">
                         <i>more_vert</i>
                     </button>
-                    <!--<button class="button fab mini" data-tooltip="Add"><i>add</i></button>-->
                 </div>
             </div>
 
@@ -24,8 +23,8 @@
             </div>
 
             <div class="actions">
-                <button class="button">Cancel</button>
-                <button class="button">Ok</button>
+                <button class="flat">Cancel</button>
+                <button class="action">Ok</button>
             </div>
         </div>
     </div>

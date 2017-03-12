@@ -50,8 +50,8 @@
                     </div>
 
                     <div class="actions">
-                        <button type="button" class="button" v-if="!required" @click="clear">Clear</button>
-                        <button type="button" class="button" @click="onOk">Ok</button>
+                        <button type="button" class="flat" v-if="!required" @click="clear">Clear</button>
+                        <button type="button" class="primary-colour" @click="onOk">Ok</button>
                     </div>
                 </div>
             </div>
