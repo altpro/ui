@@ -81,7 +81,7 @@
 </script>
 
 <style lang="scss">
-    @import "styles/_app.scss";
+    @import "styles/_global.scss";
 
     #main {
         background: $primary;

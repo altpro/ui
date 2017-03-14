@@ -1,3 +1,6 @@
+import './src/polyfills/polyfills';
+import './src/styles/_app.scss';
+
 import Context from './src/components/Context.vue';
 import Data from './src/components/Data.vue';
 import Date from './src/components/Date.vue';
@@ -29,7 +32,7 @@ const Ui = {
     Tabs,
     Toggle,
 
-    install(Vue) {
+    install: function(Vue) {
         Vue.component('UiContext', Context);
         Vue.component('UiData', Data);
         Vue.component('UiDate', Date);
