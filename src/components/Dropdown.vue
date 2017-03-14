@@ -111,7 +111,7 @@
                 background: #fff;
                 text-decoration: none;
                 color: $text;
-                padding: 8px 16px;
+                padding: 8px 24px 8px 16px;
                 margin: 0;
 
                 &:hover, &:focus {
@@ -125,6 +125,12 @@
                         background: #fff;
                     }
                 }
+            }
+
+            h4 {
+                padding: 8px 16px;
+                font-size: 12px;
+                color: $grey-light;
             }
 
             i {

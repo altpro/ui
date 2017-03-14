@@ -5,27 +5,30 @@
         </div>
 
         <div class="card">
+            <p>Dropdown component ideal for menus. Overflows with a scrollbar rather than drop below the viewport.</p>
+            <p>Add <code>slot="trigger"</code> to the trigger element, default slot is the dropdown content, ideally <code>.menu</code></p>
+            <p>By default will close on any click, set a <code>persist</code> attribute to keep open, close with the <code>close()</code> method.</p>
+            <p>Accepts <code>a</code>, <code>button</code> or <code>.button</code> elements as options. <code>hr</code> as dividers, <code>h4</code> for headings.</p>
+            <p>When adding icons use the <code>.no-icon</code> class on sibling elements to bring inline.</p>
 
             <ui-dropdown persist>
                 <button class="icon" slot="trigger"><i>more_vert</i></button>
                 <div class="menu">
-                    <a href="/" class="no-icon">Link</a>
-                    <button><i>check</i> Button</button>
+                    <button>Option 1</button>
+                    <button>Option 2</button>
+                    <button>Option 3</button>
+                    <hr>
+                    <h4>With icons</h4>
+                    <button :class="{ 'no-icon': !check1 }" @click="check1 = !check1">
+                        <i v-if="check1">check</i> Option 4
+                    </button>
+                    <button :class="{ 'no-icon': !check2 }" @click="check2 = !check2">
+                        <i v-if="check2">check</i> Option 5
+                    </button>
                     <hr>
                     <button disabled>Disabled</button>
-                    <button>Button</button>
                 </div>
             </ui-dropdown>
-            <pre>
-<code>&lt;ui-dropdown persist&gt;
-    &lt;button class="icon" slot="trigger"&gt;&lt;i&gt;more_vert&lt;/i&gt;&lt;/button&gt;
-    &lt;div class="menu"&gt;
-        &lt;div class="link"&gt;Option 1&lt;/div&gt;
-        &lt;div class="link"&gt;Option 2&lt;/div&gt;
-        &lt;div class="link"&gt;Option 3&lt;/div&gt;
-        &lt;div class="link"&gt;Option 4&lt;/div&gt;
-    &lt;/div&gt;
-&lt;/ui-dropdown&gt;</code></pre>
 
         </div>
     </div>
@@ -35,6 +38,8 @@
     export default {
         data() {
             return {
+                check1: true,
+                check2: false
             }
         }
     }
