@@ -1,15 +1,29 @@
 {
   "name": "ui",
-  "version": "1.0.0",
-  "description": "Vue.js User Interface Components",
-  "author": "Steve Rayner <steve@alt-productions.co.uk>",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Material Design Inspired Vue.js Components",
+  "author": "Steve Rayner",
+  "main": "src/index.js",
   "scripts": {
     "dev": "node build/dev-server.js",
     "build": "node build/build.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/altpro/ui.git"
+  },
+  "keywords": [
+    "vue",
+    "vuejs",
+    "material design",
+    "components",
+    "ui"
+  ],
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/altpro/ui/issues"
+  },
   "dependencies": {
-    "dialog-polyfill": "^0.4.7",
     "vue": "^2.2.1",
     "vue-router": "^2.2.0"
   },
