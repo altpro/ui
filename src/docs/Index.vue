@@ -1,9 +1,10 @@
 <template>
     <div class="view">
         <div class="heading">
-            <h1><a href="https://material.io/guidelines/" target="_blank">Material Design</a> Inspired <a href="https://vuejs.org" target="_blank">Vue</a> JS Components</h1>
+            <h1><a href="https://material.io/guidelines/" target="_blank">Material Design</a> Inspired <a href="https://vuejs.org" target="_blank">Vue.js</a> Components</h1>
         </div>
         <div class="card">
+            <p>Making full use of native HTML5 & CSS features, alongside Vue.js components to bring additional functionality to the user interface.</p>
             <h2>DO NOT USE IN PRODUCTION! <br><small>(Unless you're me or work with me)</small></h2>
             <p>Developed for internal use because I get frustrated with everything else. The project is open for reference, copy anything you like but if you're looking for a package to pull in to your project you'd be far better off with something like <a
                     href="https://vuematerial.github.io/#/">https://vuematerial.github.io/#/</a> or <a href="http://quasar-framework.org/">http://quasar-framework.org/</a></p>
