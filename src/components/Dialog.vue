@@ -1,12 +1,11 @@
 <template>
     <transition name="modal">
-        <div class="modal">
+        <div class="modal" v-if="isOpen">
             <div class="dialog">
                 <slot></slot>
                 <div class="actions">
                     <slot name="actions">
-                        <button class="flat">Cancel</button>
-                        <button class="primary-colour">Ok</button>
+                        <button class="action" @click="close">Ok</button>
                     </slot>
                 </div>
             </div>
@@ -17,9 +16,39 @@
 
 <script>
     export default {
+        props: {
+            open: Boolean
+        },
+
+        data() {
+            return {
+                isOpen: false
+            }
+        },
+
+        watch: {
+            open(value) {
+                if (value === true) {
+                    this.show();
+                } else {
+                    this.close();
+                }
+            }
+        },
+
         methods: {
+            show() {
+                this.isOpen = true;
+                this.$emit('open');
+            },
+
             close() {
+                this.isOpen = false;
                 this.$emit('close');
+            },
+
+            toggle() {
+                return this.isOpen ? this.close() : this.show();
             }
         }
     }
@@ -63,11 +92,6 @@
 
     .modal-leave-active {
         opacity: 0;
-    }
-
-    .modal-enter .modal-container,
-    .modal-leave-active .modal-container {
-        transform: scale(1.1);
     }
 
 </style>

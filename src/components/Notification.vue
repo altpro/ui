@@ -1,6 +1,6 @@
 <template>
     <div class="notification" v-if="open">
-        <div class="message" @click="hide" ref="message">
+        <div class="message" @click="close" ref="message">
             {{ msg }}
         </div>
     </div>
@@ -20,7 +20,7 @@
             this.$root.$on('notification', msg => {
                 this.msg = msg;
                 this.open = true;
-                setTimeout(this.hide, 3000);
+                setTimeout(this.close, 3000);
 
                 this.$nextTick(() => {
                     this.$refs.message.style.transform = 'translate(0, 0)';
@@ -29,7 +29,7 @@
         },
 
         methods: {
-            hide() {
+            close() {
                 if (this.open) {
                     this.$refs.message.style.transform = 'translate(0, 100%)';
                     setTimeout(() => {
