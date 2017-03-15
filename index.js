@@ -1,5 +1,4 @@
 import './src/polyfills/polyfills';
-import './src/styles/_app.scss';
 
 import Context from './src/components/Context.vue';
 import Data from './src/components/Data.vue';
