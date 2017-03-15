@@ -68,14 +68,13 @@
         input {
             font-size: 16px;
             border: none;
-            border-bottom: 1px solid $divider;
-            color: darken($text, 10%);
+            border-bottom: 1px solid var(--divider);
             width: 100%;
             padding: 0;
 
             &:focus {
                 transform: translate(0, 1px);
-                border-bottom: 2px solid $primary;
+                border-bottom: 2px solid var(--primary);
             }
         }
 

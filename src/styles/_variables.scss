@@ -1,68 +1,13 @@
-$primary: #618fb0 !default;
-$success: #56bc76 !default;
-$info: #4ab0ce !default;
-$warning: #f0ad4e !default;
-$danger: #d04f4f !default;
-
-$grey-darker: #4a4a4a !default;
-$grey-dark: #666 !default;
-$grey: #757575 !default;
-$grey-light: #aaa !default;
-$grey-lighter: #e6e6e6 !default;
-$grey-lightest: #ececec !default;
-
-$text: $grey !default;
-$field: $grey-light !default;
-$link: $text !default;
-$hover: $primary !default;
-
-$background: #fff !default;
-
-$divider: $grey-lighter !default;
-
-$font: 'Roboto', 'Helvetica', 'Arial', sans-serif !default;
-$font-light: 300 !default;
-$font-normal: 400 !default;
-$font-highlight: 500 !default;
-$font-bold: 700 !default;
-
-$tablet-breakpoint: 736px !default;
-$desktop-breakpoint: 1025px !default;
-$xl-breakpoint: 1260px !default;
-
-$phone: "all and (max-width : #{$tablet-breakpoint - 1})" !default;
-$mobile: "all and (max-width : #{$desktop-breakpoint - 1})" !default;
-$tablet: "all and (min-width : #{$tablet-breakpoint})" !default;
-$desktop: "all and (min-width : #{$desktop-breakpoint})" !default;
-$xl: "all and (min-width : #{$xl-breakpoint})" !default;
-
-$phone-padding: 16px !default;
-$tablet-padding: 24px !default;
-$desktop-padding: 40px !default;
-
-$phone-inner-padding: 12px !default;
-$tablet-inner-padding: 16px !default;
-$desktop-inner-padding: 24px !default;
-
-$toolbar-background: $background !default;
-$toolbar-text: $text !default;
-$toolbar-buttons: $text !default;
-$toolbar-small: 56px !default;
-$toolbar-large: 64px !default;
-
-$drawer-background: $background !default;
-$drawer-text: $text !default;
-$drawer-link: $text !default;
-$drawer-hover: $hover !default;
-$drawer-width: 255px !default;
-
-$icon-hover: $grey-lighter !default;
+$phone: "all and (max-width : calc(var(--tablet) - 1px))";
+$mobile: "all and (max-width : calc(var(--desktop) - 1px))";
+$tablet: "all and (min-width : var(--tablet))";
+$desktop: "all and (min-width : var(--desktop))";
+$xl: "all and (min-width : var(--xl))";
 
 $states: (
-    primary: $primary,
-    success: $success,
-    info: $info,
-    warning: $warning,
-    danger: $danger
-) !default;
-
+        primary: var(--primary),
+        success: var(--success),
+        info: var(--info),
+        warning: var(--warning),
+        danger: var(--danger)
+);

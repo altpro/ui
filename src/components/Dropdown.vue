@@ -89,7 +89,7 @@
             overflow-y: auto;
             max-height: 50vh;
             top: 100%;
-            @include shadow-4dp;
+            box-shadow: var(--shadow-4dp);
         }
 
         &.left > .target {
@@ -110,12 +110,12 @@
                 font-size: 14px;
                 background: #fff;
                 text-decoration: none;
-                color: $text;
+                color: var(--color);
                 padding: 8px 24px 8px 16px;
                 margin: 0;
 
                 &:hover, &:focus {
-                    background: $grey-lightest;
+                    background: var(--lightest);
                 }
 
                 &[disabled] {
@@ -130,7 +130,7 @@
             h4 {
                 padding: 8px 16px;
                 font-size: 12px;
-                color: $grey-light;
+                color: var(--light);
             }
 
             i {

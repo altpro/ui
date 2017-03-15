@@ -21,11 +21,11 @@
         top: 90%;
         padding: 0 8px;
         text-transform: none;
-        font-weight: $font-normal;
+        font-weight: var(--font-normal);
         line-height: 22px;
         white-space: nowrap;
-        border-radius: 2px;
-        background: rgba($grey-darker, 0.85);
+        border-radius: var(--radius);
+        background: var(--darker);
         color: #fff;
         font-size: 11px;
         content: attr(data-tooltip);

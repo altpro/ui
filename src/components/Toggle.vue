@@ -100,7 +100,7 @@
 
             > i {
                 display: none;
-                color: $primary;
+                color: var(--primary);
 
                 &:first-child {
                     color: inherit;
@@ -133,18 +133,18 @@
         }
 
         &.disabled {
-            color: lighten($text, 20%);
+            opacity: .8;
             cursor: not-allowed;
         }
 
         &.focus {
             > .control {
-                background: $icon-hover
+                background: var(--focus-background);
             }
         }
 
         &.invalid {
-            color: $danger;
+            color: var(--danger);
         }
 
         &.align-end {
@@ -170,7 +170,7 @@
     }
 
     .switch-track {
-        background: $grey-light;
+        background: var(--light);
         position: absolute;
         left: 0;
         top: 9px;
@@ -180,11 +180,11 @@
     }
 
     .focus .switch-track {
-        @include shadow-3dp();
+        box-shadow: var(--shadow-3dp);
     }
 
     .switch-toggle {
-        background: $grey-lighter;
+        background: var(--lighter);
         position: absolute;
         left: 0;
         top: 6px;
@@ -193,17 +193,18 @@
         border-radius: 50%;
         transition: left 0.1s ease-in-out;
         cursor: pointer;
-        @include shadow-2dp();
+        box-shadow: var(--shadow-2dp);
     }
 
     input:checked + .switch-control {
         .switch-track {
-            background: lighten($primary, 30%);
+            opacity: .8;
+            background: var(--primary);
         }
         .switch-toggle {
-            background: $primary;
+            background: var(--primary);
             left: 16px;
-            @include shadow-3dp();
+            box-shadow: var(--shadow-3dp);
         }
     }
 
@@ -212,12 +213,12 @@
             &.#{$state} {
                 input:checked + .switch-control {
                     .switch-track {
-                        background: lighten($color, 30%);
+                        background: $color;
                     }
                     .switch-toggle {
                         background: $color;
                         left: 16px;
-                        @include shadow-3dp();
+                        box-shadow: var(--shadow-3dp);
                     }
                 }
             }

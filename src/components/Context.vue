@@ -37,12 +37,10 @@
 </script>
 
 <style lang="scss" rel="stylesheet/scss">
-    @import "../styles/_global.scss";
-
     .context {
         position: fixed;
         z-index: 16;
-        background: $background;
-        @include shadow-4dp;
+        background: var(--background);
+        box-shadow: var(--shadow-4dp);
     }
 </style>

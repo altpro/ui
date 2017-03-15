@@ -39,7 +39,7 @@
         }
 
         .path {
-            stroke: $primary;
+            stroke: var(--primary);
             stroke-dasharray: $offset;
             stroke-dashoffset: 0;
             transform-origin: center;

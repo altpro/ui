@@ -187,7 +187,7 @@
         }
 
         .pagination {
-            border-top: 1px solid $divider;
+            border-top: 1px solid var(--divider);
             padding: 16px 24px;
         }
 

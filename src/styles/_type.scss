@@ -1,22 +1,22 @@
 body {
-    font-family: $font;
+    font-family: var(--font);
     font-size: 13px;
-    font-weight: $font-normal;
+    font-weight: var(--font-normal);
     line-height: 1.5;
-    color: $text;
+    color: var(--color);
 }
 
 h1, h2, h3, h4, h5, h6 {
     margin: 0 0 0.5em;
     padding: 0;
     line-height: 1.2;
-    font-weight: $font-normal;
+    font-weight: var(--font-normal);
 }
 
 h1 {
     font-size: 24px;
     line-height: 32px;
-    font-weight: $font-light;
+    font-weight: var(--font-light);
     margin-bottom: 0;
 
     @media #{$tablet} {
@@ -49,18 +49,18 @@ p {
 hr {
     border: 0;
     height: 1px;
-    background: $divider;
+    background: var(--divider);
 }
 
 code {
-    background: $grey-lightest;
+    background: var(--lightest);
     padding: 2px 4px;
-    border-radius: 2px;
-    color: $primary
+    border-radius: var(--radius);
+    color: var(--primary)
 }
 
 a {
-    color: $primary;
+    color: var(--primary);
     text-decoration: underline;
     text-decoration-skip: ink;
 }

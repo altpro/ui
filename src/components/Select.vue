@@ -165,11 +165,11 @@
             max-width: 100%;
             background: none;
             text-align: left;
-            color: darken($text, 10%);
+            color: var(--color);
             font-size: 15px;
 
             > i {
-                color: $grey-light;
+                color: var(--light);
                 margin-left: 16px;
             }
         }
@@ -195,7 +195,7 @@
                 max-height: 50vh;
                 top: calc(100% + 2px);
                 width: 100%;
-                @include shadow-4dp;
+                box-shadow: var(--shadow-4dp);
                 overflow-y: auto;
             }
         }
@@ -208,14 +208,14 @@
                 width: 75vw;
                 max-height: 75vh;
                 background: #fff;
-                border-radius: 2px;
+                border-radius: var(--radius);
                 overflow-y: auto;
-                @include shadow-4dp;
+                box-shadow: var(--shadow-4dp);
             }
         }
 
         .option {
-            color: $text;
+            color: var(--color);
             font-size: 15px;
             display: flex;
             align-items: center;
@@ -224,12 +224,12 @@
 
             &.checked {
                 i {
-                    color: $primary;
+                    color: var(--primary);
                 }
             }
 
             &:hover, &:focus, &.selected {
-                background: $primary;
+                background: var(--primary);
                 color: #fff;
                 i {
                     color: #fff;

@@ -123,7 +123,7 @@
             height: auto;
             min-width: 0;
             &[disabled] {
-                color: lighten($grey, 25%);
+                color: var(--grey-lighter);
             }
             border-radius: 50%;
         }

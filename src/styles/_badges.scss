@@ -14,9 +14,9 @@
         width: 22px;
         height: 22px;
         text-transform: none;
-        font-weight: $font-normal;
+        font-weight: var(--font-normal);
         border-radius: 50%;
-        background: $primary;
+        background: var(--primary);
         color: #fff !important;
         font-size: 11px;
     }

@@ -15,16 +15,16 @@ th, td {
 }
 
 td {
-    border-top: 1px solid $divider;
+    border-top: 1px solid var(--divider);
 }
 
 thead th {
     vertical-align: bottom;
-    border-bottom: 1px solid $divider;
+    border-bottom: 1px solid var(--divider);
 }
 
 tbody tr:hover {
-    background: $grey-lighter !important;
+    background: var(--lighter) !important;
 }
 
 table.striped {
@@ -53,8 +53,8 @@ td:last-child, th:last-child {
 }
 
 .card > table {
-    width: calc(100% + 48px);
-    margin-left: -24px;
-    margin-right: -24px;
+    width: calc(100% + calc(2 * var(--padding)));
+    margin-left: calc(-1 * var(--padding));
+    margin-right: calc(-1 * var(--padding));
 
 }

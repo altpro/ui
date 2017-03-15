@@ -2,7 +2,7 @@
     list-style: none;
     margin: 0;
     padding: 8px 0;
-    border-radius: 2px;
+    border-radius: var(--radius);
 
     > * {
         padding: 13px 24px;
@@ -25,7 +25,7 @@
 
     &.divided {
         > * {
-            border-top: 1px solid $grey-lighter;
+            border-top: 1px solid var(--lighter);
             &:first-child {
                 border-top: none;
             }

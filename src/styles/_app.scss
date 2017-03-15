@@ -1,3 +1,57 @@
+:root {
+    --primary: #618fb0;
+    --success: #56bc76;
+    --info: #4ab0ce;
+    --warning: #f0ad4e;
+    --danger: #d04f4f;
+
+    --darker: #4a4a4a;
+    --dark: #666;
+    --grey: #757575;
+    --light: #aaa;
+    --lighter: #e6e6e6;
+    --lightest: #ececec;
+
+    --color: var(--grey);
+    --background: #fff;
+
+    --font: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+    --font-light: 300;
+    --font-normal: 400;
+    --font-highlight: 500;
+    --font-bold: 700;
+
+    --padding: 16px;
+    --gutter: 16px;
+    --radius: 2px;
+
+    --drawer: 255px;
+    --toolbar: 56px;
+
+    --focus-background: var(--lightest);
+    --divider: var(--lighter);
+
+    --tablet: 720px;
+    --desktop: 1025px;
+    --xl: 1260px;
+
+    --shadow-2dp: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
+    0 3px 1px -2px rgba(0, 0, 0, 0.2),
+    0 1px 5px 0 rgba(0, 0, 0, 0.12);
+
+    --shadow-3dp: 0 3px 4px 0 rgba(0, 0, 0, 0.14),
+    0 3px 3px -2px rgba(0, 0, 0, 0.2),
+    0 1px 8px 0 rgba(0, 0, 0, 0.12);
+
+    --shadow-4dp: 0 4px 5px 0 rgba(0, 0, 0, 0.14),
+    0 1px 10px 0 rgba(0, 0, 0, 0.12),
+    0 2px 4px -1px rgba(0, 0, 0, 0.2);
+
+    --shadow-6dp: 0 6px 10px 0 rgba(0, 0, 0, 0.14),
+    0 1px 18px 0 rgba(0, 0, 0, 0.12),
+    0 3px 5px -1px rgba(0, 0, 0, 0.2);
+}
+
 @import "global";
 
 @import "reset";

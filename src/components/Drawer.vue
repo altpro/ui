@@ -63,7 +63,7 @@
     @import "../styles/_global.scss";
 
     .drawer {
-        width: $drawer-width;
+        width: var(--drawer);
         height: 100vh;
         max-height: 100vh;
         overflow: auto;
@@ -71,15 +71,15 @@
         z-index: 16;
         top: 0;
         left: 0;
-        background: $drawer-background;
+        background: var(--background);
         padding: 16px 0;
         transition: 0.2s ease-in-out;
-        transform: translateX(-$drawer-width);
-        @include shadow-2dp;
+        transform: translateX(calc(-1 * var(--drawer)));
+        box-shadow: var(--shadow-2dp);
 
         @media #{$desktop} {
             z-index: 14; // just under the toolbar
-            padding: (16px + $toolbar-large) 0 16px;
+            padding: (16px + var(--toolbar)) 0 16px;
             overflow: hidden;
 
             &:hover {
@@ -100,7 +100,7 @@
             align-items: center;
             width: 100%;
             font-size: 13px;
-            color: $text;
+            color: var(--color);
             text-decoration: none;
             text-transform: uppercase;
             padding: 8px 36px 8px 62px;
@@ -108,19 +108,19 @@
             transition: 0.3s ease-in-out;
 
             &:hover {
-                background: $grey-lightest;
-                color: $primary;
+                background: var(--lightest);
+                color: var(--primary);
             }
 
             &.active {
-                font-weight: $font-highlight;
-                color: $primary;
+                font-weight: var(--font-highlight);
+                color: var(--primary);
             }
 
             > i {
                 margin-left: -40px;
                 margin-right: 16px;
-                color: lighten($text, 10%);
+                opacity: .9;
             }
         }
 
@@ -134,9 +134,9 @@
         }
 
         details[open] summary {
-            color: $text;
+            color: var(--color);
             > i {
-                color: $primary;
+                color: var(--primary);
             }
         }
 
@@ -164,7 +164,7 @@
 
         h4 {
             font-size: 13px;
-            font-weight: $font-highlight;
+            font-weight: var(--font-highlight);
             padding: 16px 36px 8px 26px;
         }
 

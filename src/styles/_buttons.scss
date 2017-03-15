@@ -1,7 +1,7 @@
 .button {
     background: transparent;
     border: none;
-    border-radius: 2px;
+    border-radius: var(--radius);
     color: inherit;
     position: relative;
     height: 36px;
@@ -12,7 +12,7 @@
     align-items: center;
     justify-content: center;
     font-size: 14px;
-    font-weight: $font-highlight;
+    font-weight: var(--font-highlight);
     text-transform: uppercase;
     letter-spacing: .03em;
     transition: 0.2s ease-in-out;
@@ -22,7 +22,7 @@
     line-height: 36px;
 
     &:hover, &:focus {
-        background: $grey-lightest;
+        background: var(--lightest);
     }
 }
 
@@ -42,7 +42,7 @@ button {
 
 button, .button {
     &.action {
-        color: $primary;
+        color: var(--primary);
     }
 
     &.dense {
@@ -53,9 +53,9 @@ button, .button {
 
     &.raised {
         padding: 0 16px;
-        @include shadow-3dp();
+        box-shadow: var(--shadow-3dp);
         &:hover {
-            @include shadow-4dp();
+            box-shadow: var(--shadow-4dp);
         }
     }
 
@@ -71,16 +71,17 @@ button, .button {
             color: #fff !important;
 
             &:hover, &:focus {
-                background-color: darken($color, 10%);
+                background: $color;
+                box-shadow: inset 0 0 0 99999px rgba(0,0,0,0.2);
             }
         }
     }
 
     &.secondary {
         padding: 0 16px;
-        background: $icon-hover;
+        background: var(--focus-background);
         &:hover, &:focus {
-            background: darken($icon-hover, 5%);
+            box-shadow: inset 0 0 0 99999px rgba(0,0,0,0.1);
         }
     }
 }
@@ -100,7 +101,7 @@ button, .button {
     line-height: 1 !important;
 
     &:hover, &:focus {
-        background: $grey-lightest !important;
+        background: var(--lightest) !important;
     }
 
     &[disabled], &.disabled {
@@ -111,15 +112,11 @@ button, .button {
         &.#{$state} {
             background: transparent;
             color: $color !important;
-
-            &:hover, &:focus {
-                color: darken($color, 10%);
-            }
         }
     }
 }
 
-button.fab, .button.fab {
+button.fab, .fab {
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -129,9 +126,9 @@ button.fab, .button.fab {
     border-radius: 50%;
     line-height: normal;
     padding: 0;
-    background: $success;
+    background: var(--success);
     color: #fff !important;
-    @include shadow-4dp;
+    box-shadow: var(--shadow-4dp);
     position: relative;
     transition: 0.2s ease-in-out;
     cursor: pointer;
@@ -143,8 +140,7 @@ button.fab, .button.fab {
     }
 
     &:hover, &:focus {
-        @include shadow-4dp();
-        background-color: darken($success, 5%);
+        box-shadow: var(--shadow-6dp);
     }
 
     &[disabled], &.disabled {
@@ -154,10 +150,6 @@ button.fab, .button.fab {
     @each $state, $color in $states {
         &.#{$state} {
             background: $color;
-
-            &:hover, &:focus {
-                background-color: darken($color, 5%);
-            }
         }
     }
 }
@@ -184,7 +176,7 @@ button.fab, .button.fab {
 
 
 .card > .actions {
-    margin: 24px -24px -24px;
+    margin: var(--padding) calc(-1 * var(--padding)) calc(-1 * var(--padding));
     padding: 8px;
-    border-top: 1px solid $divider;
+    border-top: 1px solid var(--divider);
 }

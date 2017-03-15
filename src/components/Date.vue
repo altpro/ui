@@ -273,7 +273,7 @@
 
     .date-input {
         .selection i {
-            color: $grey-light;
+            color: var(--light);
             font-size: 16px;
         }
 
@@ -303,12 +303,12 @@
     }
 
     .date-picker {
-        color: $text;
+        color: var(--color);
         background: #fff;
-        border-radius: 2px;
+        border-radius: var(--radius);
         display: flex;
         flex-direction: column;
-        @include shadow-4dp;
+        box-shadow: var(--shadow-4dp);
 
         @media #{$desktop} {
             flex-direction: row;
@@ -316,13 +316,13 @@
 
         .header {
             color: #fff;
-            background: $primary;
+            background: var(--primary);
             padding: 16px;
             font-size: 18px;
             span:first-child {
                 font-size: 13px;
                 display: block;
-                color: $grey-lighter;
+                color: var(--lighter);
             }
 
             @media #{$desktop} {
@@ -352,14 +352,14 @@
         }
 
         .weekday {
-            color: $grey-light;
+            color: var(--light);
             font-size: 12px;
-            font-weight: $font-bold;
+            font-weight: var(--font-bold);
         }
 
         .today {
-            color: $primary;
-            font-weight: $font-bold;
+            color: var(--primary);
+            font-weight: var(--font-bold);
         }
 
         button {
@@ -367,15 +367,15 @@
             font-weight: inherit;
 
             &:hover, &:focus {
-                background: $grey-lighter;
+                background: var(--lighter);
             }
         }
 
         .selected {
-            background: $primary;
+            background: var(--primary);
             color: #fff !important;
             &:hover, &:focus {
-                background: $primary;
+                background: var(--primary);
             }
         }
 
@@ -383,7 +383,7 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            font-weight: $font-bold;
+            font-weight: var(--font-bold);
 
             button {
                 border-radius: 50%;
@@ -405,7 +405,7 @@
                 border: none;
                 display: inline-flex;
                 margin-left: 5px;
-                font-weight: $font-bold;
+                font-weight: var(--font-bold);
                 font-size: inherit;
             }
         }
@@ -427,7 +427,7 @@
 
             input, button {
                 width: 48px;
-                border: 1px solid $divider;
+                border: 1px solid var(--divider);
                 color: inherit;
                 padding: 4px 6px;
                 line-height: 1;
@@ -441,7 +441,7 @@
         }
 
         .actions {
-            border-top: 1px solid $divider;
+            border-top: 1px solid var(--divider);
             padding: 8px 8px 0;
             margin: 0 -8px;
             display: flex;
@@ -449,7 +449,7 @@
             align-items: center;
 
             button {
-                font-weight: $font-highlight;
+                font-weight: var(--font-highlight);
                 min-width: 64px;
             }
         }

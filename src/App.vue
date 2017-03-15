@@ -81,10 +81,10 @@
 </script>
 
 <style lang="scss">
-    @import "styles/_global.scss";
+    @import "styles/_app.scss";
 
     #main {
-        background: $primary;
+        background: var(--primary);
         background-image: radial-gradient(
                 ellipse farthest-side at 10% 0,
                 rgba(74, 121, 147, 0.89),

@@ -19,21 +19,12 @@ body {
     display: flex;
     flex-wrap: nowrap;
     align-items: center;
-    background: $toolbar-background;
-    color: $toolbar-text;
-    @include shadow-2dp();
-    height: $toolbar-small;
-    padding: 0 ($phone-padding / 2) 0 0;
+    background: var(--background);
+    color: var(--color);
+    box-shadow: var(--shadow-2dp);
+    height: var(--toolbar);
+    padding: 0 calc(var(--gutter) / 2) 0 0;
     overflow: hidden;
-
-    @media #{$tablet} {
-        padding: 0 ($tablet-padding / 2) 0 0;
-    }
-
-    @media #{$desktop} {
-        height: $toolbar-large;
-        padding: 0 ($desktop-padding / 2) 0 0;
-    }
 
     > .title {
         flex-grow: 1;
@@ -41,19 +32,14 @@ body {
         line-height: 1;
 
         @media #{$xl} {
-            padding-left: $desktop-padding;
+            padding-left: var(--gutter);
         }
     }
 }
 
 #drawer-button {
-    height: $toolbar-small !important;
-    width: $toolbar-small !important;
-
-    @media #{$tablet} {
-        height: $toolbar-large !important;
-        width: $toolbar-large !important;
-    }
+    height: var(--toolbar) !important;
+    width: var(--toolbar) !important;
 
     @media #{$xl} {
         display: none;
@@ -67,34 +53,17 @@ body {
 #main {
     position: relative;
     min-height: 100vh;
-    padding: ($phone-padding + $toolbar-small) $phone-padding $phone-padding;
-
-
-    @media #{$tablet} {
-        padding: ($phone-padding + $toolbar-small) $phone-padding $phone-padding;
-    }
-
-    @media #{$desktop} {
-        padding: ($desktop-padding + $toolbar-large) $desktop-padding $desktop-padding;
-    }
+    padding: calc(var(--gutter) + var(--toolbar)) var(--gutter) var(--gutter);
 
     @media #{$xl} {
-        margin-left: $drawer-width;
+        margin-left: var(--drawer);
     }
 }
 
 .heading {
     display: flex;
     align-items: center;
-    margin-bottom: $phone-inner-padding;
-
-    @media #{$tablet} {
-        margin-bottom: $phone-inner-padding;
-    }
-
-    @media #{$desktop} {
-        margin-bottom: $desktop-inner-padding;
-    }
+    margin-bottom: var(--gutter);
 
     > h1, > h2, > h3, > .title {
         margin-bottom: 0;

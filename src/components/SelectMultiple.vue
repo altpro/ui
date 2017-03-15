@@ -216,10 +216,10 @@
 
     .options-container {
         background: #fff;
-        @include shadow-4dp;
+        box-shadow: var(--shadow-4dp);
 
         .actions {
-            border-top: 1px solid $divider;
+            border-top: 1px solid var(--divider);
             padding: 8px;
             display: flex;
             justify-content: flex-end;

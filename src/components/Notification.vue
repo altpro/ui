@@ -70,7 +70,7 @@
             background-color: #323232;
             color: #fff;
             font-size: 14px;
-            border-radius: 2px 2px 0 0;
+            border-radius: var(--radius) var(--radius) 0 0;
         }
     }
 

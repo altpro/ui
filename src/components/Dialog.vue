@@ -73,7 +73,7 @@
 
     .dialog {
         background: #fff;
-        border-radius: 2px;
+        border-radius: var(--radius);
         padding: 24px;
         width: 280px;
 

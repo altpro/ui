@@ -105,7 +105,7 @@
     .field {
         position: relative;
         margin-bottom: 16px;
-        color: $field;
+        color: var(--color);
 
         label {
             padding-top: 2px;
@@ -115,7 +115,7 @@
         }
 
         .input {
-            border-bottom: 1px solid $divider;
+            border-bottom: 1px solid var(--divider);
             position: relative;
 
             &:after {
@@ -154,7 +154,7 @@
             max-width: 100%;
             background: none;
             text-align: left;
-            color: darken($text, 10%);
+            color: var(--color);
             font-size: 15px;
         }
 
@@ -166,33 +166,33 @@
         }
 
         ::placeholder, .placeholder {
-            color: lighten($field, 15%);
+            color: var(--light);
         }
 
         &.focus {
-            color: $primary;
+            color: var(--primary);
         }
 
         &.disabled {
-            color: lighten($field, 20%);
+            color: var(--light);
             cursor: not-allowed;
 
             label {
-                color: lighten($field, 20%);
+                color: var(--light);
                 cursor: not-allowed;
             }
 
             input, textarea, .selection {
-                color: lighten($text, 20%);
+                color: var(--light);
                 cursor: not-allowed;
             }
         }
 
         &.invalid {
-            color: $danger;
+            color: var(--danger);
 
             .input {
-                border-bottom: 1px solid $danger;
+                border-bottom: 1px solid var(--danger);
             }
         }
     }
