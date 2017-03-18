@@ -229,11 +229,7 @@
             }
 
             &:hover, &:focus, &.selected {
-                background: var(--primary);
-                color: #fff;
-                i {
-                    color: #fff;
-                }
+                background: var(--focus);
             }
         }
 

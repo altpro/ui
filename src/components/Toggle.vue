@@ -139,7 +139,7 @@
 
         &.focus {
             > .control {
-                background: var(--focus-background);
+                background: var(--focus);
             }
         }
 

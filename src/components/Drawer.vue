@@ -79,7 +79,7 @@
 
         @media #{$desktop} {
             z-index: 14; // just under the toolbar
-            padding: (16px + var(--toolbar)) 0 16px;
+            padding: calc(16px + var(--toolbar)) 0 16px;
             overflow: hidden;
 
             &:hover {
@@ -108,7 +108,7 @@
             transition: 0.3s ease-in-out;
 
             &:hover {
-                background: var(--lightest);
+                background: var(--focus);
                 color: var(--primary);
             }
 

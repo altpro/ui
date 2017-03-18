@@ -1,8 +1,8 @@
-$phone: "all and (max-width : calc(var(--tablet) - 1px))";
-$mobile: "all and (max-width : calc(var(--desktop) - 1px))";
-$tablet: "all and (min-width : var(--tablet))";
-$desktop: "all and (min-width : var(--desktop))";
-$xl: "all and (min-width : var(--xl))";
+$phone: "all and (max-width: 719px)";
+$mobile: "all and (max-width: 1024px)";
+$tablet: "all and (min-width: 720px)";
+$desktop: "all and (min-width: 1025px)";
+$xl: "all and (min-width: 1260px)";
 
 $states: (
         primary: var(--primary),

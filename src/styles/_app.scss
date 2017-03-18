@@ -1,3 +1,5 @@
+@import "global";
+
 :root {
     --primary: #618fb0;
     --success: #56bc76;
@@ -28,12 +30,8 @@
     --drawer: 255px;
     --toolbar: 56px;
 
-    --focus-background: var(--lightest);
+    --focus: var(--lightest);
     --divider: var(--lighter);
-
-    --tablet: 720px;
-    --desktop: 1025px;
-    --xl: 1260px;
 
     --shadow-2dp: 0 2px 2px 0 rgba(0, 0, 0, 0.14),
     0 3px 1px -2px rgba(0, 0, 0, 0.2),
@@ -52,7 +50,28 @@
     0 3px 5px -1px rgba(0, 0, 0, 0.2);
 }
 
-@import "global";
+@media #{$tablet} {
+    :root {
+        --gutter: 20px;
+        --padding: 16px;
+        --toolbar: 64px;
+    }
+}
+
+@media #{$desktop} {
+    :root {
+        --gutter: 30px;
+        --padding: 20px;
+    }
+}
+
+@media #{$xl} {
+    :root {
+        --gutter: 40px;
+        --padding: 24px;
+    }
+}
+
 
 @import "reset";
 @import "type";
