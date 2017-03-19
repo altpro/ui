@@ -1,7 +1,7 @@
 <template>
     <div class="data">
         <div class="toolbar" v-if="searchable">
-            <div class="title"><slot name="title">T</slot></div>
+            <div class="title"><slot name="title"></slot></div>
             <div class="actions">
                 <ui-search v-if="searchable"
                            v-model="search"
