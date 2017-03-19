@@ -344,8 +344,8 @@
         .day, .pad, .weekday {
             display: flex;
             justify-content: center;
-            text-align: center;
             align-items: center;
+            text-align: center;
             border-radius: 50%;
             width: $daySize;
             height: $daySize;
