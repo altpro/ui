@@ -7,6 +7,7 @@
                            v-model="search"
                            @input="page = 1">
                 </ui-search>
+                <slot name="actions"></slot>
             </div>
         </div>
 
@@ -188,7 +189,7 @@
 
         .pagination {
             border-top: 1px solid var(--divider);
-            padding: 16px 24px;
+            padding: 13px var(--padding);
         }
 
         .empty {

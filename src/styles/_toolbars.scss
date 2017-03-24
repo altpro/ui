@@ -1,7 +1,12 @@
 .toolbar {
     display: flex;
     align-items: center;
-    padding: var(--padding);
+    padding: 13px var(--padding);
+
+    @media #{$desktop} {
+        padding-top: 16px;
+        padding-bottom: 16px;
+    }
 
     h1, h2, h3, h4 {
         margin: 0;
@@ -11,7 +16,6 @@
         &.#{$state} {
             background: $color;
             color: #fff;
-            margin-bottom: var(--padding);
         }
     }
 

@@ -105,7 +105,7 @@
     .field {
         position: relative;
         margin-bottom: 16px;
-        color: var(--color);
+        color: var(--light);
 
         label {
             padding-top: 2px;

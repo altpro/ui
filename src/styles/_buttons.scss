@@ -133,6 +133,7 @@ button.fab, .fab {
     box-shadow: var(--shadow-4dp);
     position: relative;
     transition: 0.2s ease-in-out;
+    text-decoration: none;
     cursor: pointer;
 
     &.mini {
@@ -159,7 +160,7 @@ button.fab, .fab {
 .buttons, .actions {
     display: flex;
     align-items: center;
-    button, .fab {
+    > button, > .fab, > .dropdown {
         margin: 0 4px;
 
         &:first-child {

@@ -5,7 +5,8 @@
     border-radius: var(--radius);
 
     > * {
-        padding: 13px 24px;
+        display: flex;
+        padding: 13px var(--padding);
     }
 
     > hr {
@@ -17,9 +18,7 @@
         font-size: 13px;
 
         > * {
-            display: flex;
-            padding-top: 8px;
-            padding-bottom: 8px;
+            padding: 8px var(--padding);
         }
     }
 
@@ -29,6 +28,22 @@
             &:first-child {
                 border-top: none;
             }
+        }
+    }
+
+    &.resource {
+        > * {
+            border-top: 1px solid var(--lighter);
+            &:first-child {
+                border-top: none;
+            }
+
+            &:hover, &:focus {
+                background: var(--focus);
+            }
+
+            text-decoration: none;
+            color: var(--color);
         }
     }
 }

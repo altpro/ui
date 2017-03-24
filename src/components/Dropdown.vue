@@ -106,6 +106,7 @@
 
             a, .link, button {
                 display: flex;
+                width: 100%;
                 align-items: center;
                 font-size: 14px;
                 background: #fff;
