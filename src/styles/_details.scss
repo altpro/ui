@@ -1,4 +1,5 @@
 details {
+    width: 100%;
     > summary {
         display: flex;
         align-items: center;
@@ -8,9 +9,9 @@ details {
         }
 
         &:after {
+            @include icon;
             content: 'expand_more';
             margin-left: auto;
-            @include icon;
             transition: 0.2s ease-in-out;
         }
 

@@ -1,3 +1,8 @@
 i {
     @include icon;
+
+    &.inline {
+        vertical-align: baseline;
+        font-size: inherit;
+    }
 }

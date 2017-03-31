@@ -34,9 +34,9 @@
     &.resource {
         > * {
             border-top: 1px solid var(--lighter);
-            &:first-child {
-                border-top: none;
-            }
+            //&:first-child {
+            //    border-top: none;
+            //}
 
             &:hover, &:focus {
                 background: var(--focus);

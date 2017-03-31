@@ -14,8 +14,10 @@
     --lighter: #e6e6e6;
     --lightest: #ececec;
 
-    --color: var(--grey);
     --background: #fff;
+    --color: var(--grey);
+    --highlight: var(--dark);
+    --muted: var(--light);
 
     --font: 'Roboto', 'Helvetica', 'Arial', sans-serif;
     --font-light: 300;

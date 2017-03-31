@@ -12,6 +12,7 @@
             <p>The button css classes can be added to a <code>button</code> or <code>.button</code> element to apply the material styles.</p>
             <h2>Classes</h2>
             <p class="buttons">
+                <button class="flat">.flat</button>
                 <button class="action">.action</button>
                 <button class="raised">.raised</button>
             </p>
@@ -31,15 +32,24 @@
                 <button class="danger-color">.danger-color</button>
             </p>
 
+            <p class="buttons">
+                <button class="primary loading">.primary</button> .primary.loading
+                <button class="action loading">.action</button> .action.loading
+            </p>
+
             <h2>Types</h2>
-            <div class="buttons">
+            <p class="buttons">
                 <button class="fab"><i>add</i></button> .fab
                 <button class="fab primary"><i>add</i></button> .fab.primary
-                <button class="fab"><i>add</i></button> .fab
+                <button class="fab loading"><i>add</i></button> .fab.loading
                 <button class="fab mini"><i>add</i></button> .fab.mini
+            </p>
+
+            <p class="buttons">
                 <button class="icon"><i>person</i></button> .icon
                 <button class="icon primary"><i>person</i></button> .icon.primary
-            </div>
+            </p>
+
 
             <div class="actions">
                 <a href="https://github.com/altpro/ui/blob/master/src/docs/Buttons.vue" target="_blank" class="button">Docs Source</a>
