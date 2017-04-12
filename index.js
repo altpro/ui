@@ -7,6 +7,8 @@ import Dialog from './src/components/Dialog.vue';
 import Drawer from './src/components/Drawer.vue';
 import Dropdown from './src/components/Dropdown.vue';
 import Field from './src/components/Field.vue';
+import Form from './src/components/Form.vue';
+import Loader from './src/components/Loader.vue';
 import Notification from './src/components/Notification.vue';
 import Pagination from './src/components/Pagination.vue';
 import Select from './src/components/Select.vue';
@@ -22,6 +24,8 @@ const Ui = {
     Drawer,
     Dropdown,
     Field,
+    Form,
+    Loader,
     Notification,
     Pagination,
     Select,
@@ -37,6 +41,8 @@ const Ui = {
         Vue.component('UiDrawer', Drawer);
         Vue.component('UiDropdown', Dropdown);
         Vue.component('UiField', Field);
+        Vue.component('UiForm', Form);
+        Vue.component('UiLoader', Loader);
         Vue.component('UiNotification', Notification);
         Vue.component('UiPagination', Pagination);
         Vue.component('UiSelect', Select);
@@ -55,6 +61,8 @@ export { Dialog };
 export { Drawer };
 export { Dropdown };
 export { Field };
+export { Form };
+export { Loader };
 export { Notification };
 export { Pagination };
 export { Select };

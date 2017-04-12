@@ -154,6 +154,10 @@
             }
         }
 
+        &.field {
+            margin-bottom:16px;
+        }
+
         @each $state, $color in $states {
             &.#{$state} {
                 i {

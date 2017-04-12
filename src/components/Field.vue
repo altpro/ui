@@ -88,12 +88,16 @@
 
             checkValidity() {
                 if (! this.input.checkValidity()) {
-                    this.invalid = true;
-                    this.errorMessage = this.error ? this.error : this.input.validationMessage;
+                    this.setError(this.input.validationMessage);
                 } else {
                     this.invalid = false;
                     this.errorMessage = null;
                 }
+            },
+
+            setError(error) {
+                this.invalid = true;
+                this.errorMessage = this.error ? this.error : error;
             }
         }
     }

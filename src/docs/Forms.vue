@@ -43,11 +43,11 @@
                 </ui-field>
 
                 <ui-field label="Select">
-                    <ui-select v-model="select" name="select" label="Select" :options="options" placeholder="Please select..."></ui-select>
+                    <ui-select v-model="select" name="select" :options="options" placeholder="Please select..."></ui-select>
                 </ui-field>
 
                 <ui-field label="Select Multiple" hint="Right click for context menu">
-                    <ui-select-multiple v-model="multiple" name="multiple[]" label="Select" :options="options" placeholder="Please select..."></ui-select-multiple>
+                    <ui-select-multiple v-model="multiple" name="multiple[]" :options="options" placeholder="Please select..."></ui-select-multiple>
                 </ui-field>
             </div>
 

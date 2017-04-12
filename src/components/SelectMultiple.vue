@@ -88,7 +88,9 @@
                     return this.placeholder;
                 }
 
-                const selection = this.options.filter(o => this.value.indexOf(o.value) > -1).map(o => o.name);
+                const value = Array.isArray(this.value) ? this.value : [];
+
+                const selection = this.options.filter(o => value.indexOf(o.value) > -1).map(o => o.name);
 
                 if (! this.finalSeparator || selection.length === 1) {
                     return selection.join(this.separator);
@@ -147,11 +149,13 @@
             },
 
             isSelected(option) {
-                return this.value.indexOf(option.value) > -1;
+                const value = Array.isArray(this.value) ? this.value : [];
+
+                return value.indexOf(option.value) > -1;
             },
 
             toggleOption(option) {
-                const selected = Array.from(this.value);
+                const selected = Array.isArray(this.value) ? this.value : [];
                 const index = selected.indexOf(option.value);
                 if (index > -1) {
                     selected.splice(index, 1);
