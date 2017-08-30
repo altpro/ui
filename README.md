@@ -1,6 +1,6 @@
 # ui
 
-> Vue.js User Interface Components
+> Material Design Inspired Vue.js Components
 
 ## Build Setup
 
