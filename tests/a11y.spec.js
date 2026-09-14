@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const pages = ["index.html", "button.html", "join.html", "badge.html", "avatar.html", "nav.html", "dropdown.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "badge.html", "avatar.html", "nav.html", "dropdown.html", "tooltip.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -70,6 +70,27 @@ for (const colorScheme of ["light", "dark"]) {
       const [t3, p3] = [await bottom.boundingBox(), await page.locator("#menu-left").boundingBox()];
       expect(p3.y).toBeGreaterThan(t3.y);
       expect(p3.y + p3.height).toBeLessThanOrEqual(150);
+    });
+
+    // the bubble is a pseudo-element: it hit-tests as the host, so elementFromPoint above the host finds it
+    test("tooltip.html: hover shows a bubble above every host, inside the viewport", async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/tooltip.html");
+      await page.addStyleTag({ content: "*, ::before, ::after { transition: none !important }" });
+      const failures = [];
+      for (const t of await page.locator("main [data-tooltip]").all()) {
+        await t.evaluate((el) => el.scrollIntoView({ block: "center" }));
+        await t.hover();
+        const r = await t.evaluate((el) => {
+          const s = getComputedStyle(el, "::after"), box = el.getBoundingClientRect();
+          const [w, h] = [parseFloat(s.width), parseFloat(s.height)];
+          const cx = box.x + box.width / 2;
+          return { visibility: s.visibility, w, left: cx - w / 2, right: cx + w / 2, top: box.y - h, hit: document.elementFromPoint(cx, box.y - h / 2) === el };
+        });
+        const ok = r.visibility === "visible" && r.hit && r.left >= 0 && r.right <= 800 && r.top >= 0;
+        if (!ok) failures.push(`${await t.getAttribute("data-tooltip")}: ${JSON.stringify(r)}`);
+      }
+      expect(failures).toEqual([]);
     });
 
     for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8]]) {

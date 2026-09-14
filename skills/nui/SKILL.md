@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, badge, avatar, nav, dropdown, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, badge, avatar, nav, dropdown, tooltip, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -182,6 +182,22 @@ A panel anchored to the button that opens it. Native `popover` plus CSS anchor p
 - Add `autofocus` to the first item to move keyboard focus into the panel on open. Without it, Tab from the trigger enters the panel.
 
 Custom properties: `--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius --dropdown-shadow`.
+
+## Tooltip: `data-tooltip`
+
+One line of text in a bubble above an element, on hover and keyboard focus. An attribute, not a class, and no JavaScript. Works on any element; for something that is not focusable, add `tabindex="0"` so keyboard users can reach it.
+
+```html
+<button class="btn" data-tooltip="Saves and closes the editor">Save</button>
+<button class="btn ghost" data-tooltip="Copy to clipboard" aria-label="Copy to clipboard">…</button>
+```
+
+- Screen readers do not read the tooltip. An icon-only control still needs `aria-label`; use the same words in both.
+- One line, up to `20rem`, then an ellipsis. Anything longer, or anything with markup, is a `.dropdown`.
+- Always above and centred. It does not flip or slide, and an ancestor with `overflow` clips it. Keep tooltips off the top edge of the page and out of scroll containers.
+- The bubble inverts the region's colours (page foreground as fill), so it is correct inside `.light` `.dark` `.inverse` without extra classes.
+
+Custom properties: `--tooltip-bg --tooltip-fg --tooltip-radius --tooltip-h --tooltip-px --tooltip-text --tooltip-gap --tooltip-tail`.
 
 ## Theme tokens
 

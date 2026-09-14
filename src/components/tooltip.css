@@ -1,0 +1,70 @@
+/* Tooltip: one line of text in a bubble above the element.
+   <button class="btn" data-tooltip="Copy to clipboard">…</button>
+   Shows on hover and keyboard focus. Pure CSS: ::after is the bubble,
+   ::before the tail, absolutely positioned over the host. Not anchor
+   positioning: a pseudo-element may not anchor to its own host, so
+   there is no viewport flip. Overflow ancestors clip it.
+   Anything more than a line of text is a dropdown. */
+@layer components {
+  [data-tooltip]:not([data-tooltip=""]) {
+    --tooltip-bg: var(--color-foreground);
+    --tooltip-fg: var(--color-background);
+    --tooltip-radius: min(var(--radius), 0.5rem);
+    --tooltip-h: 1.75rem;
+    --tooltip-px: 0.625rem;
+    --tooltip-text: var(--text-xs, 0.75rem);
+    --tooltip-gap: 0.375rem;
+    --tooltip-tail: 0.5rem;
+
+    position: relative;
+
+    &::before, &::after {
+      position: absolute;
+      left: 50%;
+      z-index: 50;
+      background: var(--tooltip-bg);
+      visibility: hidden;
+      opacity: 0;
+      transition: opacity 0.15s, visibility 0.15s;
+    }
+    &::after {
+      content: attr(data-tooltip);
+      bottom: 100%;
+      translate: -50%;
+      /* a transparent border spans the gap so the pointer can cross onto the bubble */
+      border-bottom: var(--tooltip-gap) solid transparent;
+      background-clip: padding-box;
+      width: max-content;
+      max-width: min(20rem, calc(100vw - 1rem));
+      padding-inline: var(--tooltip-px);
+      border-radius: var(--tooltip-radius);
+      /* the painted corner sits inside the border, which only shortens its vertical radius:
+         add the gap to that axis alone so the visible corner stays circular */
+      border-end-start-radius: var(--tooltip-radius) calc(var(--tooltip-radius) + var(--tooltip-gap));
+      border-end-end-radius: var(--tooltip-radius) calc(var(--tooltip-radius) + var(--tooltip-gap));
+      color: var(--tooltip-fg);
+      font-size: var(--tooltip-text);
+      font-weight: 500;
+      line-height: var(--tooltip-h);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      text-align: center;
+    }
+    &::before {
+      content: "";
+      /* a square centred on the bubble's bottom edge, rotated into a tail */
+      bottom: calc(100% + var(--tooltip-gap) - var(--tooltip-tail) / 2);
+      width: var(--tooltip-tail);
+      height: var(--tooltip-tail);
+      translate: -50%;
+      rotate: 45deg;
+    }
+    &:is(:hover, :focus-visible)::before,
+    &:is(:hover, :focus-visible)::after {
+      visibility: visible;
+      opacity: 1;
+      transition-delay: 0.3s;
+    }
+  }
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Tooltip</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Tooltip</h1>
+    <p class="text-muted-foreground">A <code>data-tooltip</code> attribute with one line of text. Shows above the element on hover and keyboard focus. No class, no JavaScript. Anything longer than a line is a <a href="dropdown.html" class="underline">dropdown</a>.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">On anything</h2>
+    <p class="text-sm text-muted-foreground">Buttons, badges, avatars, links, plain text. The tooltip is not read by screen readers, so an icon-only button still needs an <code>aria-label</code>; repeat the same words in both.</p>
+    <div class="flex flex-wrap items-center gap-4">
+      <button class="btn primary" data-tooltip="Saves and closes the editor">Save</button>
+      <button class="btn ghost" data-tooltip="Copy to clipboard" aria-label="Copy to clipboard">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
+      </button>
+      <button class="badge warning" data-tooltip="3 invoices past due">Overdue</button>
+      <a href="#" class="avatar green" data-tooltip="Bea Sato" aria-label="Bea Sato">BS</a>
+      <span class="underline decoration-dotted" data-tooltip="Fable 5.1, 2026-09-14" tabindex="0">Last edited by Claude</span>
+      <button class="btn secondary" data-tooltip="A very long tooltip is cut with an ellipsis rather than wrapping, because a tooltip is one line and anything more is a dropdown">Long text</button>
+    </div>
+<pre>&lt;button class="btn primary" data-tooltip="Saves and closes the editor"&gt;Save&lt;/button&gt;
+&lt;button class="btn ghost" data-tooltip="Copy to clipboard" aria-label="Copy to clipboard"&gt;…&lt;/button&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Placement</h2>
+    <p class="text-sm text-muted-foreground">Always above, centred on the element, up to <code>20rem</code> wide. It does not flip or slide, and an ancestor with <code>overflow</code> clips it. Keep tooltips off the top edge of the page and out of scroll containers; a <a href="dropdown.html" class="underline">dropdown</a> handles those.</p>
+    <div class="flex justify-between">
+      <button class="btn" data-tooltip="Short">Left edge</button>
+      <button class="btn" data-tooltip="Short">Right edge</button>
+    </div>
+<pre>&lt;button class="btn" data-tooltip="Short"&gt;Left edge&lt;/button&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel"><button class="btn" data-tooltip="Dark bubble in a light region">Light</button></div>
+      <div class="dark panel"><button class="btn" data-tooltip="Light bubble in a dark region">Dark</button></div>
+      <div class="inverse panel"><button class="btn" data-tooltip="Follows the region it sits in">Inverse</button></div>
+    </div>
+    <p class="text-sm text-muted-foreground">The bubble inverts the region's colours: page foreground as fill, page background as text. Custom properties: <code>--tooltip-bg --tooltip-fg --tooltip-radius --tooltip-h --tooltip-px --tooltip-text --tooltip-gap --tooltip-tail</code>.</p>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>
