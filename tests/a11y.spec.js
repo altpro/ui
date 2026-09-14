@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -94,6 +94,18 @@ for (const colorScheme of ["light", "dark"]) {
       // the long one is taller than the viewport, so it must scroll inside rather than grow
       await page.locator("[command=show-modal][commandfor=d-long]").click();
       expect(await page.locator("#d-long").evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    });
+
+    // the closed panel is a 0fr grid row with its padding transitioned away, so it must measure 0; opening one named item closes its sibling
+    test("accordion.html: a closed panel has no height and a named group is exclusive", async ({ page }) => {
+      await page.goto("/accordion.html");
+      await page.addStyleTag({ content: "*, ::details-content { transition: none !important }" });
+      const h = (i) => page.locator("main .accordion details").nth(i).evaluate((el) => parseFloat(getComputedStyle(el, "::details-content").height));
+      expect(await h(1)).toBe(0);
+      expect(await h(0)).toBeGreaterThan(0);
+      await page.locator("main .accordion details summary").nth(1).click();
+      expect(await h(0)).toBe(0);
+      expect(await h(1)).toBeGreaterThan(0);
     });
 
     // the bubble is a pseudo-element: it hit-tests as the host, so elementFromPoint above the host finds it

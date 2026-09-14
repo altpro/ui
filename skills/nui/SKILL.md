@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -378,6 +378,35 @@ A card in the top layer, on a native `<dialog>`. Everything in the Card section 
 - Place the dialog where a `div` card would go: inside `main`, `section` or another sectioned element, so its `header` is not announced as the page banner. Not as a direct child of a `space-y-*` or `space-x-*` container: those set margins on every child, and the dialog centres with `margin: auto`.
 
 Custom properties: `--dialog-w --dialog-shadow --dialog-backdrop`, plus the card ones.
+
+## Accordion: `.accordion`
+
+A stack of native `<details>`, each a bordered row that slides open. The `<summary>` is the trigger and the one element after it is the panel. No JavaScript; the chevron is drawn in CSS.
+
+```html
+<div class="accordion">
+  <details name="faq" open>
+    <summary>Is it accessible?</summary>
+    <div>Yes. A native disclosure.</div>
+  </details>
+  <details name="faq">
+    <summary>Is it styled?</summary>
+    <div>Yes.</div>
+  </details>
+</div>
+```
+
+| Kind | Attributes |
+|------|------------|
+| Exclusive | The same `name` on every `<details>` in the group. Opening one closes the rest. Omit it to let several stay open. |
+| Start open | `open` on the `<details>`. |
+
+- The panel is one element after the summary: a `<p>`, or a `<div>` holding several things. Two siblings after the summary break the slide.
+- Items are divided by a line; the last has none. Wrap the accordion in a `.card` for an outer border.
+- Width is the container's. Use `max-w-xl` or similar.
+- The slide and the chevron turn stop under `prefers-reduced-motion`.
+
+Custom properties: `--accordion-fg --accordion-border --accordion-py --accordion-text --accordion-duration`.
 
 ## Theme tokens
 

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Accordion</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Accordion</h1>
+    <p class="text-muted-foreground"><code>.accordion</code> on a <code>div</code> holding native <code>&lt;details&gt;</code>. The summary is the trigger, the one element after it is the panel. It slides open and closed, and the chevron turns, with no script.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Exclusive group</h2>
+    <div class="accordion max-w-xl">
+      <details name="faq" open>
+        <summary>Is it accessible?</summary>
+        <div>Yes. A native disclosure: the summary is a button to screen readers, Space and Enter toggle it, and the open state is announced.</div>
+      </details>
+      <details name="faq">
+        <summary>Is it styled?</summary>
+        <div>Yes. It comes with default styles that match the other components, and Tailwind utilities override any of it.</div>
+      </details>
+      <details name="faq">
+        <summary>Is it animated?</summary>
+        <div>Yes. The panel slides on a grid row and the chevron turns. Both stop under <code>prefers-reduced-motion</code>.</div>
+      </details>
+    </div>
+    <p class="text-sm text-muted-foreground">The same <code>name</code> on each item makes the group exclusive: opening one closes the rest. That is the browser, not nui.</p>
+<pre>&lt;div class="accordion"&gt;
+  &lt;details name="faq" open&gt;
+    &lt;summary&gt;Is it accessible?&lt;/summary&gt;
+    &lt;div&gt;Yes. A native disclosure.&lt;/div&gt;
+  &lt;/details&gt;
+  &lt;details name="faq"&gt;
+    &lt;summary&gt;Is it styled?&lt;/summary&gt;
+    &lt;div&gt;Yes.&lt;/div&gt;
+  &lt;/details&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Several open, rich panels</h2>
+    <div class="accordion max-w-xl">
+      <details open>
+        <summary>Shipping</summary>
+        <div class="space-y-2">
+          <p>Orders leave the warehouse within two working days.</p>
+          <p>Tracking arrives by email. <a class="underline" href="#">Track an order</a>.</p>
+        </div>
+      </details>
+      <details>
+        <summary>Returns and a summary long enough to wrap onto a second line so the chevron stays on the first</summary>
+        <div>
+          <p class="mb-3">Thirty days, any reason. Print the label from your account.</p>
+          <button class="btn sm">Start a return</button>
+        </div>
+      </details>
+      <details>
+        <summary>Warranty</summary>
+        <p>Two years on everything except consumables.</p>
+      </details>
+    </div>
+    <p class="text-sm text-muted-foreground">No <code>name</code>, so any number can be open. The panel must be one element after the summary: a <code>p</code>, or a <code>div</code> holding several things.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel"><div class="accordion"><details open><summary>Light</summary><div>Panel text.</div></details><details><summary>Closed</summary><div>Panel text.</div></details></div></div>
+      <div class="dark panel"><div class="accordion"><details open><summary>Dark</summary><div>Panel text.</div></details><details><summary>Closed</summary><div>Panel text.</div></details></div></div>
+      <div class="inverse panel"><div class="accordion"><details open><summary>Inverse</summary><div>Panel text.</div></details><details><summary>Closed</summary><div>Panel text.</div></details></div></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>
