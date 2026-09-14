@@ -27,6 +27,7 @@ Copy or symlink `skills/nui/SKILL.md` into the consuming project's `.claude/skil
 ```
 npm install
 npm run dev
+npm test     # WCAG 2.2 AA checks with axe, light and dark
 ```
 
 `AGENTS.md` has the conventions. `skills/nui/SKILL.md` is the class reference.

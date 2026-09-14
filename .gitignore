@@ -2,3 +2,5 @@ node_modules
 dist
 .playwright-mcp
 *.png
+test-results
+playwright-report
