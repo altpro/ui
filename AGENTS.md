@@ -8,9 +8,9 @@ CSS-only component layer for Tailwind v4. Private library, consumed from GitHub 
 src/nui.css              entry, imports everything below
 src/theme.css            @theme default tokens, all light-dark(); --radius knob on :root
 src/scheme.css           color-scheme regions: .light .dark .inverse
-src/components/*.css     one file per component (button, join)
+src/components/*.css     one file per component (button, join, badge, avatar, nav)
 demo/*.html              one page per component, plus index and theme
-demo/demo.js             shared header: nav links, theme and radius switchers
+demo/demo.js             shared header (theme and radius switchers) and sidebar nav
 skills/nui/SKILL.md      reference for agents in consuming projects
 ```
 
@@ -33,7 +33,7 @@ skills/nui/SKILL.md      reference for agents in consuming projects
 
 1. `src/components/<name>.css`, following the button file's shape.
 2. Import it from `src/nui.css`.
-3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `pages` array in `demo/demo.js`.
+3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name.
 4. Add a section to `skills/nui/SKILL.md` with the class table and one copy-paste example.
 5. Add the page to `pages` in `tests/a11y.spec.js` and give it a hover-contrast loop if it has hover states.
 6. `npm run build` and `npm test` must pass. Check the demo page in light, dark, pill and square.

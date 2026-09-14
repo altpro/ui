@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, badge, avatar, nav, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -74,6 +74,82 @@ Wraps buttons (and, later, inputs) into one bar. The radius moves to the group. 
 - `--join-radius` overrides the corner radius for one group. Defaults to `--radius`.
 - Icon-only members need `aria-label`.
 
+## Badge: `.badge`
+
+Small label for status, counts and tags. Same modifier words as the button. A `<span>` is static. An `<a>` or `<button>` badge gets hover, a focus ring and a pointer, so a badge can open a popover or link somewhere.
+
+| Kind | Classes |
+|------|---------|
+| Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias). No colour = neutral grey. |
+| Style | `outline`, `ghost` |
+| Size | `sm` `lg`. No size = default (1.5rem tall, 24px, the minimum for a link or button badge). |
+
+```html
+<span class="badge success">Active</span>
+<span class="badge outline danger sm">Overdue</span>
+```
+
+Icons inside a badge are `size-3`. Badges can sit inside `.join`.
+
+Custom properties: `--badge-bg --badge-fg --badge-accent --badge-outline --badge-hover --badge-radius --badge-h --badge-px --badge-text`.
+
+## Avatar: `.avatar`
+
+A circle showing a photo or initials. Put the class on the `<img>` itself, or on a `<span>` holding initials (or wrapping an `<img>`). Always round, whatever `--radius` is; add `rounded-lg` to square one.
+
+| Kind | Classes |
+|------|---------|
+| Hue | Any Tailwind hue name: `red` `orange` `amber` `yellow` `lime` `green` `emerald` `teal` `cyan` `sky` `blue` `indigo` `violet` `purple` `fuchsia` `pink` `rose`. No hue = neutral grey. |
+| Size | `xs` `sm` `lg` `xl`. No size = 2.5rem. |
+
+```html
+<img class="avatar" src="/u/ada.jpg" alt="Ada Okafor">
+<span class="avatar blue lg">LW</span>
+```
+
+Hues are a tint in light and a deep shade in dark; text colour is derived from the fill, so any hue is readable in both. An `<a>` avatar gets a focus ring; give it an `aria-label`, initials are not a name.
+
+Groups: wrap avatars in `.join` and they overlap by a third with a 2px ring between them. A plain `<span class="avatar">+3</span>` at the end is the overflow count. On a non-page background set `--avatar-ring` on the group to the surface colour.
+
+```html
+<div class="join">
+  <img class="avatar" src="/u/ada.jpg" alt="Ada Okafor">
+  <span class="avatar green">BS</span>
+  <span class="avatar">+3</span>
+</div>
+```
+
+Custom properties: `--avatar-bg --avatar-fg --avatar-size --avatar-radius --avatar-ring`.
+
+## Nav: `.nav`
+
+Vertical menu for a sidebar or settings page. Put it on a `<nav>` with an `aria-label`. Children are styled by element, so no item classes exist.
+
+| Element | Role |
+|---------|------|
+| `<a>` | A link. `aria-current="page"` marks the current one. |
+| `<details><summary>…</summary>…</details>` | A collapsible section. `open` starts it expanded. Links inside are indented. No JS. |
+| `<h2>` to `<h6>` | A small uppercase section label. |
+| `<hr>` | A divider. |
+
+```html
+<nav class="nav" aria-label="Main">
+  <a href="/" aria-current="page"><svg class="size-4" aria-hidden="true">…</svg> Home</a>
+  <a href="/inbox">Inbox <span class="badge primary sm ml-auto">12</span></a>
+  <details open>
+    <summary><svg class="size-4" aria-hidden="true">…</svg> Projects</summary>
+    <a href="/p/1">Website</a>
+    <a href="/p/2">Mobile app</a>
+  </details>
+  <h2>Account</h2>
+  <a href="/profile">Profile</a>
+</nav>
+```
+
+Icons go first inside the link or summary, `size-4`, `aria-hidden`. Lucide fits. A trailing badge or count gets `ml-auto`. Width comes from the container or a utility (`w-56`). One level of `<details>` is supported.
+
+Custom properties: `--nav-fg --nav-active-fg --nav-hover --nav-active-bg --nav-radius --nav-h --nav-px --nav-text`.
+
 ## Theme tokens
 
 All colours are Tailwind theme variables, so `bg-primary`, `text-muted-foreground`, `border-border` and the rest exist as utilities. Each `X` has an `X-foreground` for text placed on it.
@@ -84,6 +160,8 @@ card        card-foreground
 muted       muted-foreground
 border      ring
 primary     secondary  info  success  warning  danger   (each with -foreground)
+red orange amber yellow lime green emerald teal cyan sky blue indigo violet purple fuchsia pink rose
+            (hue fills: a tint in light, a deep shade in dark; pair with text derived from them, as .avatar does)
 ```
 
 Every token is `light-dark()`, so the same class is correct in both schemes. Do not write `dark:` variants for these colours.

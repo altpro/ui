@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Badge</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Badge</h1>
+    <p class="text-muted-foreground"><code>.badge</code> plus any of: a colour, <code>outline</code> or <code>ghost</code>, and a size. Same modifier words as the button.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Colours × styles</h2>
+    <div class="grid grid-cols-[auto_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 text-sm">
+      <span></span><span class="text-muted-foreground">solid</span><span class="text-muted-foreground">outline</span><span class="text-muted-foreground">ghost</span>
+
+      <code>(none)</code>
+      <div><button class="badge">Badge</button></div>
+      <div><button class="badge outline">Badge</button></div>
+      <div><button class="badge ghost">Badge</button></div>
+
+      <code>primary</code>
+      <div><button class="badge primary">Badge</button></div>
+      <div><button class="badge outline primary">Badge</button></div>
+      <div><button class="badge ghost primary">Badge</button></div>
+
+      <code>secondary</code>
+      <div><button class="badge secondary">Badge</button></div>
+      <div><button class="badge outline secondary">Badge</button></div>
+      <div><button class="badge ghost secondary">Badge</button></div>
+
+      <code>info</code>
+      <div><button class="badge info">Badge</button></div>
+      <div><button class="badge outline info">Badge</button></div>
+      <div><button class="badge ghost info">Badge</button></div>
+
+      <code>success</code>
+      <div><button class="badge success">Badge</button></div>
+      <div><button class="badge outline success">Badge</button></div>
+      <div><button class="badge ghost success">Badge</button></div>
+
+      <code>warning</code>
+      <div><button class="badge warning">Badge</button></div>
+      <div><button class="badge outline warning">Badge</button></div>
+      <div><button class="badge ghost warning">Badge</button></div>
+
+      <code>danger</code>
+      <div><button class="badge danger">Badge</button></div>
+      <div><button class="badge outline danger">Badge</button></div>
+      <div><button class="badge ghost danger">Badge</button></div>
+    </div>
+    <p class="text-sm text-muted-foreground"><code>error</code> is an alias for <code>danger</code>. These are <code>&lt;button&gt;</code>s so you can see hover and focus; a <code>&lt;span&gt;</code> badge is static.</p>
+<pre>&lt;span class="badge success"&gt;Active&lt;/span&gt;
+&lt;span class="badge outline danger"&gt;Overdue&lt;/span&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Sizes</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <span class="badge primary sm">sm</span>
+      <span class="badge primary">default</span>
+      <span class="badge primary lg">lg</span>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">With an icon, in text, as a link</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <span class="badge success">
+        <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
+        Verified
+      </span>
+      <span class="badge outline">
+        <svg class="size-3" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
+        Draft
+      </span>
+      <p>Release notes <span class="badge info">v2.1</span> are out.</p>
+      <a href="#" class="badge primary">Link badge</a>
+      <button class="badge outline" popovertarget="status">Status ▾</button>
+      <div id="status" popover class="rounded-md border border-border bg-background p-2 shadow"><button class="btn ghost sm">Set active</button></div>
+    </div>
+    <p class="text-sm text-muted-foreground">Icons are <code>size-3</code>. A link or button badge gets hover, a focus ring and a pointer. Keep it at the default size or larger so it meets the 24px target minimum.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Joined</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="join"><span class="badge">Status</span><span class="badge success">Active</span></div>
+      <div class="join"><span class="badge outline">Env</span><span class="badge outline warning">Staging</span></div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outline danger">C</span></div>
+      <div class="dark panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outline danger">C</span></div>
+      <div class="inverse panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outline danger">C</span></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

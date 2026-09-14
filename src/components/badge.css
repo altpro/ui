@@ -1,0 +1,109 @@
+/* Badge.
+   <span class="badge primary">   <span class="badge outline danger sm">
+   Same model as .btn: colour variants set --badge-* vars only, `.outline`
+   and `.ghost` set real properties from those vars, sizes set the size
+   vars. A <span> is static; an <a> or <button> gets hover, focus ring and
+   pointer. Layered so Tailwind utilities win. */
+@layer components {
+  .badge {
+    --badge-bg: var(--color-muted);
+    --badge-fg: var(--color-foreground);
+    --badge-accent: var(--color-foreground);
+    --badge-outline: var(--color-border);
+    --badge-hover: color-mix(in oklab, var(--badge-bg), light-dark(black, white) 10%);
+    --badge-radius: var(--radius);
+    --badge-h: 1.5rem;
+    --badge-px: 0.625rem;
+    --badge-text: var(--text-xs, 0.75rem);
+    --join-divider: color-mix(in oklab, currentColor 30%, transparent);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    height: var(--badge-h);
+    padding-inline: var(--badge-px);
+    font-size: var(--badge-text);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-radius: var(--badge-radius);
+    background: var(--badge-bg);
+    color: var(--badge-fg);
+    text-decoration: none;
+
+    /* interactive only when the element is */
+    &:is(a, button) {
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+      &:hover {
+        background: var(--badge-hover);
+      }
+      &:focus-visible {
+        outline: 2px solid var(--color-ring);
+        outline-offset: 2px;
+      }
+      &:disabled, &[aria-disabled="true"] {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+    }
+
+    /* colour variants */
+    &.primary {
+      --badge-bg: var(--color-primary);
+      --badge-fg: var(--color-primary-foreground);
+      --badge-accent: var(--color-primary);
+      --badge-outline: var(--badge-accent);
+    }
+    &.secondary {
+      --badge-bg: var(--color-secondary);
+      --badge-fg: var(--color-secondary-foreground);
+      --badge-accent: var(--color-secondary-foreground);
+      --badge-outline: var(--color-border);
+    }
+    &.info {
+      --badge-bg: var(--color-info);
+      --badge-fg: var(--color-info-foreground);
+      --badge-accent: var(--color-info);
+      --badge-outline: var(--badge-accent);
+    }
+    &.success {
+      --badge-bg: var(--color-success);
+      --badge-fg: var(--color-success-foreground);
+      --badge-accent: var(--color-success);
+      --badge-outline: var(--badge-accent);
+    }
+    &.warning {
+      --badge-bg: var(--color-warning);
+      --badge-fg: var(--color-warning-foreground);
+      /* amber is too light to read as text on a light page: darken it for outline/ghost */
+      --badge-accent: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
+      --badge-outline: var(--badge-accent);
+    }
+    &.danger, &.error {
+      --badge-bg: var(--color-danger);
+      --badge-fg: var(--color-danger-foreground);
+      --badge-accent: var(--color-danger);
+      --badge-outline: var(--badge-accent);
+    }
+
+    /* style modifiers */
+    &.outline, &.ghost {
+      background: transparent;
+      color: var(--badge-accent);
+      &:is(a, button):hover {
+        background: color-mix(in oklab, var(--badge-accent) 10%, transparent);
+      }
+    }
+    &.outline {
+      border-color: var(--badge-outline);
+      --join-divider: var(--badge-outline);
+    }
+
+    /* sizes */
+    &.sm { --badge-h: 1.25rem; --badge-px: 0.5rem; }
+    &.lg { --badge-h: 1.75rem; --badge-px: 0.75rem; --badge-text: var(--text-sm, 0.875rem); }
+  }
+}

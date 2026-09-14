@@ -9,7 +9,9 @@
 </head>
 <body class="min-h-screen bg-background text-foreground">
 <header class="border-b border-border"></header>
-<main class="mx-auto max-w-5xl space-y-10 px-6 py-10">
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Button</h1>
     <p class="text-muted-foreground"><code>.btn</code> plus any of: a colour, <code>outline</code> or <code>ghost</code>, and a size.</p>
@@ -144,6 +146,7 @@
     </div>
   </section>
 </main>
+</div>
 <script type="module" src="demo.js"></script>
 </body>
 </html>

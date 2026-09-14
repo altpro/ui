@@ -1,0 +1,84 @@
+/* Avatar.
+   <img class="avatar" src="…" alt="Steve Rayner">
+   <span class="avatar blue lg">SR</span>
+   A circle by default, whatever --radius is; `rounded-lg` or --avatar-radius
+   squares it. Colour variants set --avatar-bg only; the text colour is
+   derived from it, so every hue reads AA in both schemes. Inside .join the
+   members overlap by a third and get a ring in the page colour instead of
+   the 1px divider. Layered so Tailwind utilities win. */
+@layer components {
+  .avatar {
+    --avatar-bg: var(--color-muted);
+    /* deep text on a tint in light, pale text on a shade in dark */
+    --avatar-fg: light-dark(oklch(from var(--avatar-bg) 0.3 c h), oklch(from var(--avatar-bg) 0.92 c h));
+    --avatar-size: 2.5rem;
+    --avatar-radius: 9999px;
+    --avatar-ring: var(--color-background);
+
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    vertical-align: middle;
+    width: var(--avatar-size);
+    height: var(--avatar-size);
+    padding: 0;
+    border: 0;
+    border-radius: var(--avatar-radius);
+    overflow: hidden;
+    background: var(--avatar-bg);
+    color: var(--avatar-fg);
+    font-size: calc(var(--avatar-size) * 0.4);
+    font-weight: 600;
+    line-height: 1;
+    text-decoration: none;
+    object-fit: cover;
+
+    > img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    &:is(a, button):focus-visible {
+      outline: 2px solid var(--color-ring);
+      outline-offset: 2px;
+    }
+
+    /* colour variants */
+    &.red { --avatar-bg: var(--color-red); }
+    &.orange { --avatar-bg: var(--color-orange); }
+    &.amber { --avatar-bg: var(--color-amber); }
+    &.yellow { --avatar-bg: var(--color-yellow); }
+    &.lime { --avatar-bg: var(--color-lime); }
+    &.green { --avatar-bg: var(--color-green); }
+    &.emerald { --avatar-bg: var(--color-emerald); }
+    &.teal { --avatar-bg: var(--color-teal); }
+    &.cyan { --avatar-bg: var(--color-cyan); }
+    &.sky { --avatar-bg: var(--color-sky); }
+    &.blue { --avatar-bg: var(--color-blue); }
+    &.indigo { --avatar-bg: var(--color-indigo); }
+    &.violet { --avatar-bg: var(--color-violet); }
+    &.purple { --avatar-bg: var(--color-purple); }
+    &.fuchsia { --avatar-bg: var(--color-fuchsia); }
+    &.pink { --avatar-bg: var(--color-pink); }
+    &.rose { --avatar-bg: var(--color-rose); }
+
+    /* sizes */
+    &.xs { --avatar-size: 1.5rem; }
+    &.sm { --avatar-size: 2rem; }
+    &.lg { --avatar-size: 3rem; }
+    &.xl { --avatar-size: 4rem; }
+
+    /* in a group: overlap instead of divide. Same specificity as the .join
+       child rules, so this file must import after join.css. */
+    .join > & {
+      border-radius: var(--avatar-radius);
+      border-inline-start: 0;
+      box-shadow: 0 0 0 2px var(--avatar-ring);
+      &:not(:first-child) {
+        margin-inline-start: calc(var(--avatar-size) / -3);
+      }
+    }
+  }
+}

@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Avatar</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Avatar</h1>
+    <p class="text-muted-foreground"><code>.avatar</code> on an <code>&lt;img&gt;</code>, or on a <code>&lt;span&gt;</code> holding initials, plus a hue and a size. Always a circle, whatever the radius knob says.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Images</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <img class="avatar xs" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ada Okafor">
+      <img class="avatar sm" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Ben Sato">
+      <img class="avatar" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Chloe Marsh">
+      <img class="avatar lg" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Dev Patel">
+      <img class="avatar xl" src="https://randomuser.me/api/portraits/women/12.jpg" alt="Eve Lindqvist">
+      <span class="avatar xl"><img src="https://randomuser.me/api/portraits/men/54.jpg" alt="Finn Byrne"></span>
+    </div>
+    <p class="text-sm text-muted-foreground">Sizes <code>xs sm lg xl</code>, default 2.5rem. The last one wraps the image in a span, which works the same and lets you drop the image later without changing the class.</p>
+<pre>&lt;img class="avatar lg" src="…" alt="Dev Patel"&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Initials and hues</h2>
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="avatar">AO</span>
+      <span class="avatar red">BS</span>
+      <span class="avatar orange">CM</span>
+      <span class="avatar amber">DP</span>
+      <span class="avatar yellow">EL</span>
+      <span class="avatar lime">FB</span>
+      <span class="avatar green">GH</span>
+      <span class="avatar emerald">HK</span>
+      <span class="avatar teal">IJ</span>
+      <span class="avatar cyan">JN</span>
+      <span class="avatar sky">KR</span>
+      <span class="avatar blue">LW</span>
+      <span class="avatar indigo">MA</span>
+      <span class="avatar violet">NT</span>
+      <span class="avatar purple">OC</span>
+      <span class="avatar fuchsia">PY</span>
+      <span class="avatar pink">QZ</span>
+      <span class="avatar rose">RD</span>
+    </div>
+    <p class="text-sm text-muted-foreground">Every Tailwind hue name is a modifier. No hue is neutral grey. Each is a tint in light and a deep shade in dark, and the text colour is derived from the fill so it meets 4.5:1 either way.</p>
+<pre>&lt;span class="avatar blue"&gt;LW&lt;/span&gt;
+&lt;span class="avatar pink lg"&gt;QZ&lt;/span&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Sizes</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <span class="avatar teal xs">xs</span>
+      <span class="avatar teal sm">sm</span>
+      <span class="avatar teal">md</span>
+      <span class="avatar teal lg">lg</span>
+      <span class="avatar teal xl">xl</span>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Groups</h2>
+    <p class="text-sm text-muted-foreground">Inside <code>.join</code>, avatars overlap by a third of their width and get a 2px ring in the page colour. Later members sit on top. A plain avatar with a count makes the overflow marker.</p>
+    <div class="flex flex-wrap items-center gap-8">
+      <div class="join">
+        <img class="avatar" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ada Okafor">
+        <img class="avatar" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Ben Sato">
+        <img class="avatar" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Chloe Marsh">
+        <img class="avatar" src="https://randomuser.me/api/portraits/men/75.jpg" alt="Dev Patel">
+        <span class="avatar">+3</span>
+      </div>
+      <div class="join">
+        <span class="avatar blue">AO</span>
+        <span class="avatar green">BS</span>
+        <span class="avatar pink">CM</span>
+        <span class="avatar amber">DP</span>
+      </div>
+      <div class="join">
+        <img class="avatar lg" src="https://randomuser.me/api/portraits/women/12.jpg" alt="Eve Lindqvist">
+        <span class="avatar lg violet">FB</span>
+        <img class="avatar lg" src="https://randomuser.me/api/portraits/men/54.jpg" alt="Finn Byrne">
+        <span class="avatar lg">+12</span>
+      </div>
+      <div class="join">
+        <span class="avatar xs red">A</span>
+        <span class="avatar xs orange">B</span>
+        <span class="avatar xs lime">C</span>
+        <span class="avatar xs cyan">D</span>
+        <span class="avatar xs indigo">E</span>
+      </div>
+    </div>
+<pre>&lt;div class="join"&gt;
+  &lt;img class="avatar" src="…" alt="Ada Okafor"&gt;
+  &lt;img class="avatar" src="…" alt="Ben Sato"&gt;
+  &lt;span class="avatar"&gt;+3&lt;/span&gt;
+&lt;/div&gt;</pre>
+    <p class="text-sm text-muted-foreground">On a surface that is not the page background, set <code>--avatar-ring</code> on the group so the ring matches.</p>
+    <div class="rounded-lg bg-muted p-4">
+      <div class="join" style="--avatar-ring: var(--color-muted)">
+        <span class="avatar sky">AO</span>
+        <span class="avatar rose">BS</span>
+        <span class="avatar emerald">CM</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Square, linked, in text</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <img class="avatar rounded-lg" src="https://randomuser.me/api/portraits/men/32.jpg" alt="Ben Sato">
+      <span class="avatar purple rounded-lg">SR</span>
+      <a href="#" class="avatar green" aria-label="Open Grace Hall's profile">GH</a>
+      <p>Assigned to <img class="avatar sm" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Chloe Marsh"> Chloe.</p>
+    </div>
+    <p class="text-sm text-muted-foreground"><code>rounded-lg</code> or any radius utility squares one. <code>--avatar-radius</code> on <code>.avatar</code> changes the default for a whole app. A linked avatar gets a focus ring; give it an <code>aria-label</code> because initials are not a name.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel"><div class="join"><span class="avatar blue">A</span><span class="avatar green">B</span><span class="avatar">+2</span></div></div>
+      <div class="dark panel"><div class="join"><span class="avatar blue">A</span><span class="avatar green">B</span><span class="avatar">+2</span></div></div>
+      <div class="inverse panel"><div class="join"><span class="avatar blue">A</span><span class="avatar green">B</span><span class="avatar">+2</span></div></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

@@ -9,7 +9,9 @@
 </head>
 <body class="min-h-screen bg-background text-foreground">
 <header class="border-b border-border"></header>
-<main class="mx-auto max-w-5xl space-y-10 px-6 py-10">
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Theme</h1>
     <p class="text-muted-foreground">Tokens are Tailwind <code>@theme</code> variables using <code>light-dark()</code>. Override any of them in your app's <code>@theme</code> block.</p>
@@ -49,6 +51,7 @@
 .btn  { --btn-radius: 0; }    /* square buttons only */</pre>
   </section>
 </main>
+</div>
 <script type="module" src="demo.js"></script>
 <script type="module">
 const tokens = ["background","foreground","card","card-foreground","muted","muted-foreground","border","ring",

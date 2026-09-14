@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const pages = ["index.html", "button.html", "join.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "badge.html", "avatar.html", "nav.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -24,11 +24,13 @@ for (const colorScheme of ["light", "dark"]) {
       });
     }
 
-    test("button.html: every colour and style keeps contrast on hover", async ({ page }) => {
-      await page.goto("/button.html");
+    // cls also selects nav links, so it is wrapped in :is() where it joins another selector
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8]]) {
+    test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
+      await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
-      const buttons = page.locator("main section:nth-of-type(2) .btn");
-      expect(await buttons.count()).toBe(21);
+      const buttons = page.locator("main section:nth-of-type(2) " + cls);
+      expect(await buttons.count()).toBe(count);
       const failures = [];
       for (const b of await buttons.all()) {
         await b.hover();
@@ -40,29 +42,31 @@ for (const colorScheme of ["light", "dark"]) {
       expect(failures).toEqual([]);
     });
 
-    test("button.html: keyboard focus shows a ring", async ({ page }) => {
-      await page.goto("/button.html");
-      for (let i = 0; i < 5; i++) {
+    test(`${p}: keyboard focus shows a ring`, async ({ page }) => {
+      await page.goto("/" + p);
+      for (let i = 0; i < 30; i++) {
         await page.keyboard.press("Tab");
-        if (await page.evaluate(() => document.activeElement.matches(".btn"))) break;
+        if (await page.evaluate((cls) => document.activeElement.matches("main " + cls), cls)) break;
       }
-      const outline = await page.evaluate(() => {
+      const outline = await page.evaluate((cls) => {
         const s = getComputedStyle(document.activeElement);
-        return { matches: document.activeElement.matches(".btn"), style: s.outlineStyle, width: parseFloat(s.outlineWidth) };
-      });
+        return { matches: document.activeElement.matches("main " + cls), style: s.outlineStyle, width: parseFloat(s.outlineWidth) };
+      }, cls);
       expect(outline.matches).toBe(true);
       expect(outline.style).not.toBe("none");
       expect(outline.width).toBeGreaterThanOrEqual(2);
     });
 
-    test("button.html: every button meets the 24px minimum target size", async ({ page }) => {
-      await page.goto("/button.html");
+    test(`${p}: every interactive element meets the 24px minimum target size`, async ({ page }) => {
+      await page.goto("/" + p);
       const small = [];
-      for (const b of await page.locator("main .btn").all()) {
+      for (const b of await page.locator(`main :is(a, button):is(${cls})`).all()) {
+        if (!(await b.isVisible())) continue; // e.g. inside a closed <details>
         const box = await b.boundingBox();
-        if (!box || box.width < 24 || box.height < 24) small.push(await b.getAttribute("class"));
+        if (box.width < 24 || box.height < 24) small.push(await b.textContent());
       }
       expect(small).toEqual([]);
     });
+    }
   });
 }

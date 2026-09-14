@@ -1,0 +1,98 @@
+/* Nav: vertical link list for sidebars and menus.
+   <nav class="nav" aria-label="Main">
+     <a href="/" aria-current="page"><svg class="size-4">…</svg> Home</a>
+     <details open>
+       <summary><svg class="size-4">…</svg> Settings</summary>
+       <a href="/profile">Profile</a>
+     </details>
+   </nav>
+   Links, summaries and headings are styled by element, so wrapping them in
+   <ul>/<li> or a <div> changes nothing. aria-current="page" marks the
+   current link. Sections are native <details>; the chevron is drawn in CSS
+   so no icon markup is needed. Layered so Tailwind utilities win. */
+@layer components {
+  .nav {
+    --nav-fg: var(--color-muted-foreground);
+    --nav-active-fg: var(--color-foreground);
+    --nav-hover: color-mix(in oklab, var(--color-muted) 60%, transparent);
+    --nav-active-bg: var(--color-muted);
+    --nav-radius: var(--radius);
+    --nav-h: 2.25rem;
+    --nav-px: 0.75rem;
+    --nav-text: var(--text-sm, 0.875rem);
+
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    font-size: var(--nav-text);
+
+    a, summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: var(--nav-h);
+      padding-inline: var(--nav-px);
+      border-radius: var(--nav-radius);
+      color: var(--nav-fg);
+      font-weight: 500;
+      text-decoration: none;
+      cursor: pointer;
+      user-select: none;
+      transition: background-color 0.15s, color 0.15s;
+
+      > svg { flex: none; }
+
+      &:hover {
+        background: var(--nav-hover);
+        color: var(--nav-active-fg);
+      }
+      &:focus-visible {
+        outline: 2px solid var(--color-ring);
+        outline-offset: 2px;
+      }
+    }
+    a[aria-current] {
+      background: var(--nav-active-bg);
+      color: var(--nav-active-fg);
+    }
+
+    /* collapsible section */
+    summary {
+      list-style: none;
+      &::-webkit-details-marker { display: none; }
+      &::after {
+        content: "";
+        margin-inline-start: auto;
+        width: 0.45em;
+        height: 0.45em;
+        border: solid currentColor;
+        border-width: 0 2px 2px 0;
+        rotate: -45deg;
+        transition: rotate 0.15s;
+      }
+    }
+    details[open] > summary::after {
+      rotate: 45deg;
+      translate: 0 -0.15em;
+    }
+    /* ponytail: one level of nesting; a second details indents no further */
+    details > a {
+      margin-block-start: 2px;
+      padding-inline-start: calc(var(--nav-px) + 1.5rem);
+    }
+
+    /* section label and divider */
+    :is(h2, h3, h4, h5, h6) {
+      padding: 0.75rem var(--nav-px) 0.25rem;
+      font-size: var(--text-xs, 0.75rem);
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--nav-fg);
+    }
+    hr {
+      margin-block: 0.5rem;
+      border-color: var(--color-border);
+    }
+  }
+}

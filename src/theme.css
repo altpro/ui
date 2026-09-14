@@ -34,6 +34,27 @@
 
   --color-danger: light-dark(oklch(0.55 0.22 27), oklch(0.74 0.18 27));
   --color-danger-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));
+
+  /* Hue fills, named after Tailwind's hues but not its scale: one tint in
+     light, one deep shade in dark. Text on them is derived by the component
+     (see avatar.css) and stays above 4.5:1 for every hue in both schemes. */
+  --color-red: light-dark(oklch(0.82 0.1 25), oklch(0.42 0.13 25));
+  --color-orange: light-dark(oklch(0.82 0.1 47), oklch(0.42 0.13 47));
+  --color-amber: light-dark(oklch(0.82 0.1 70), oklch(0.42 0.13 70));
+  --color-yellow: light-dark(oklch(0.82 0.1 86), oklch(0.42 0.13 86));
+  --color-lime: light-dark(oklch(0.82 0.1 131), oklch(0.42 0.13 131));
+  --color-green: light-dark(oklch(0.82 0.1 150), oklch(0.42 0.13 150));
+  --color-emerald: light-dark(oklch(0.82 0.1 163), oklch(0.42 0.13 163));
+  --color-teal: light-dark(oklch(0.82 0.1 183), oklch(0.42 0.13 183));
+  --color-cyan: light-dark(oklch(0.82 0.1 215), oklch(0.42 0.13 215));
+  --color-sky: light-dark(oklch(0.82 0.1 237), oklch(0.42 0.13 237));
+  --color-blue: light-dark(oklch(0.82 0.1 260), oklch(0.42 0.13 260));
+  --color-indigo: light-dark(oklch(0.82 0.1 277), oklch(0.42 0.13 277));
+  --color-violet: light-dark(oklch(0.82 0.1 293), oklch(0.42 0.13 293));
+  --color-purple: light-dark(oklch(0.82 0.1 304), oklch(0.42 0.13 304));
+  --color-fuchsia: light-dark(oklch(0.82 0.1 322), oklch(0.42 0.13 322));
+  --color-pink: light-dark(oklch(0.82 0.1 354), oklch(0.42 0.13 354));
+  --color-rose: light-dark(oklch(0.82 0.1 16), oklch(0.42 0.13 16));
 }
 
 /* Radius is outside @theme on purpose: it is one project-wide knob, not a

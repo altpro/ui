@@ -9,7 +9,9 @@
 </head>
 <body class="min-h-screen bg-background text-foreground">
 <header class="border-b border-border"></header>
-<main class="mx-auto max-w-5xl space-y-10 px-6 py-10">
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-3">
     <h1 class="text-3xl font-semibold tracking-tight">nui</h1>
     <p class="text-muted-foreground">An HTML and CSS component layer for Tailwind v4. Tailwind does layout. nui does the components.</p>
@@ -47,10 +49,15 @@
     <h2 class="text-xl font-semibold">Components</h2>
     <ul class="list-disc pl-5">
       <li><a class="underline" href="button.html">Button</a></li>
+      <li><a class="underline" href="join.html">Join</a></li>
+      <li><a class="underline" href="badge.html">Badge</a></li>
+      <li><a class="underline" href="avatar.html">Avatar</a></li>
+      <li><a class="underline" href="nav.html">Nav</a></li>
       <li><a class="underline" href="theme.html">Theme and colour scheme regions</a></li>
     </ul>
   </section>
 </main>
+</div>
 <script type="module" src="demo.js"></script>
 </body>
 </html>
