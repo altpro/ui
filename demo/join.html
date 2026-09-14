@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Join</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<main class="mx-auto max-w-5xl space-y-10 px-6 py-10">
+  <section class="space-y-2">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Join</h1>
+    <p class="text-muted-foreground">Wrap components in <code>.join</code> to fuse them into one bar. The radius moves to the group and a single pixel divides each member.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Buttons</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="join">
+        <button class="btn">Left</button>
+        <button class="btn">Middle</button>
+        <button class="btn">Right</button>
+      </div>
+      <div class="join">
+        <button class="btn primary">Left</button>
+        <button class="btn primary">Middle</button>
+        <button class="btn primary">Right</button>
+      </div>
+      <div class="join">
+        <button class="btn outline primary">Left</button>
+        <button class="btn outline primary">Middle</button>
+        <button class="btn outline primary">Right</button>
+      </div>
+      <div class="join">
+        <button class="btn ghost">Left</button>
+        <button class="btn ghost">Middle</button>
+        <button class="btn ghost">Right</button>
+      </div>
+    </div>
+<pre>&lt;div class="join"&gt;
+  &lt;button class="btn primary"&gt;Left&lt;/button&gt;
+  &lt;button class="btn primary"&gt;Middle&lt;/button&gt;
+  &lt;button class="btn primary"&gt;Right&lt;/button&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Mixed members</h2>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="join">
+        <button class="btn primary">Save</button>
+        <button class="btn primary" aria-label="More save options">
+          <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+        </button>
+      </div>
+      <div class="join">
+        <button class="btn outline">Bold</button>
+        <button class="btn outline">Italic</button>
+        <button class="btn outline" disabled>Underline</button>
+        <button class="btn outline danger">Clear</button>
+      </div>
+      <div class="join">
+        <a href="#" class="btn sm">1</a>
+        <a href="#" class="btn sm" aria-current="page">2</a>
+        <a href="#" class="btn sm">3</a>
+        <a href="#" class="btn sm">Next</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Sizes and utilities</h2>
+    <p class="text-sm text-muted-foreground">Sizes go on the members. Layout utilities go on the group: <code>flex w-full</code> plus <code>flex-1</code> on members fills the row.</p>
+    <div class="space-y-4">
+      <div class="join">
+        <button class="btn primary xs">xs</button>
+        <button class="btn primary xs">xs</button>
+      </div>
+      <div class="join">
+        <button class="btn primary xl">xl</button>
+        <button class="btn primary xl">xl</button>
+      </div>
+      <div class="join flex w-full">
+        <button class="btn flex-1">Day</button>
+        <button class="btn flex-1">Week</button>
+        <button class="btn flex-1">Month</button>
+        <button class="btn flex-1">Year</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Radius</h2>
+    <p class="text-sm text-muted-foreground">The group reads <code>--radius</code> through <code>--join-radius</code>. Change the header switcher, or override one group inline.</p>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="join" style="--join-radius: 0">
+        <button class="btn primary">Square</button>
+        <button class="btn primary">Group</button>
+      </div>
+      <div class="join" style="--join-radius: 9999px">
+        <button class="btn primary">Pill</button>
+        <button class="btn primary">Group</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel"><div class="join"><button class="btn">A</button><button class="btn">B</button><button class="btn primary">C</button></div></div>
+      <div class="dark panel"><div class="join"><button class="btn">A</button><button class="btn">B</button><button class="btn primary">C</button></div></div>
+      <div class="inverse panel"><div class="join"><button class="btn">A</button><button class="btn">B</button><button class="btn primary">C</button></div></div>
+    </div>
+  </section>
+</main>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

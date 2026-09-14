@@ -1,6 +1,7 @@
 const pages = [
   ["index.html", "Getting started"],
   ["button.html", "Button"],
+  ["join.html", "Join"],
   ["theme.html", "Theme"],
 ];
 const here = location.pathname.split("/").pop() || "index.html";

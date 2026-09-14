@@ -14,6 +14,7 @@
     --btn-h: 2.25rem;
     --btn-px: 1rem;
     --btn-text: var(--text-sm, 0.875rem);
+    --join-divider: color-mix(in oklab, currentColor 30%, transparent);
 
     display: inline-flex;
     align-items: center;
@@ -95,6 +96,7 @@
     }
     &.outline {
       border-color: var(--btn-outline);
+      --join-divider: var(--btn-outline);
     }
 
     /* sizes */

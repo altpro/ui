@@ -8,7 +8,7 @@ CSS-only component layer for Tailwind v4. Private library, consumed from GitHub 
 src/nui.css              entry, imports everything below
 src/theme.css            @theme default tokens, all light-dark(); --radius knob on :root
 src/scheme.css           color-scheme regions: .light .dark .inverse
-src/components/*.css     one file per component
+src/components/*.css     one file per component (button, join)
 demo/*.html              one page per component, plus index and theme
 demo/demo.js             shared header: nav links, theme and radius switchers
 skills/nui/SKILL.md      reference for agents in consuming projects
@@ -25,6 +25,7 @@ skills/nui/SKILL.md      reference for agents in consuming projects
 - Nested CSS. One top-level block per component.
 - Colour variants set `--x-*` custom properties only. Style modifiers (`outline`, `ghost`) set real properties from those vars. This keeps class order irrelevant. See `src/components/button.css`.
 - Sizes set the size vars only.
+- Any component that can sit inside `.join` sets `--join-divider` to the colour of the line between it and its neighbour (the button uses 30% currentColor, or its border colour when outlined). `.join` handles the radius and the 1px overlap.
 - Accessibility is WCAG 2.2 AA. Every text-on-fill pairing, ghost and outline text on the page background, and every hover state must reach 4.5:1 in both schemes. Focus rings are 2px with a 2px offset. Nothing interactive is smaller than 24px. `npm test` checks all of this with axe; a colour change that fails it is wrong, not the test.
 - Do not reference Tailwind palette variables such as `--color-blue-600`. Tailwind v4 only emits theme variables that are used, so use oklch literals in `theme.css`.
 

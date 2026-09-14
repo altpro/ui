@@ -1,0 +1,36 @@
+/* Join: fuse adjacent components into one bar.
+   <div class="join"><button class="btn">A</button><button class="btn">B</button></div>
+   The radius moves to the group; children lose theirs. Each child paints its
+   own left border 1px over its neighbour, using the child's --join-divider
+   (buttons set it), so the seam is always a single pixel. */
+@layer components {
+  .join {
+    --join-radius: var(--radius);
+
+    display: inline-flex;
+    align-items: stretch;
+    border-radius: var(--join-radius);
+    isolation: isolate;
+
+    > * {
+      border-radius: 0;
+
+      &:not(:first-child) {
+        margin-inline-start: -1px;
+        border-inline-start: 1px solid var(--join-divider, var(--color-border));
+      }
+      &:first-child {
+        border-start-start-radius: var(--join-radius);
+        border-end-start-radius: var(--join-radius);
+      }
+      &:last-child {
+        border-start-end-radius: var(--join-radius);
+        border-end-end-radius: var(--join-radius);
+      }
+      /* keep the focus ring above the neighbours it overlaps */
+      &:focus-visible {
+        z-index: 1;
+      }
+    }
+  }
+}

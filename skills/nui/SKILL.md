@@ -58,6 +58,22 @@ Custom properties every button reads. Set them on `.btn` in the app stylesheet f
 --btn-bg  --btn-fg  --btn-accent  --btn-outline  --btn-hover  --btn-radius  --btn-h  --btn-px  --btn-text
 ```
 
+## Join: `.join`
+
+Wraps buttons (and, later, inputs) into one bar. The radius moves to the group. A one pixel line divides members.
+
+```html
+<div class="join">
+  <button class="btn primary">Save</button>
+  <button class="btn primary" aria-label="More options">▾</button>
+</div>
+```
+
+- Members keep their own colour, style and size classes. Mixing is fine.
+- Layout utilities go on the group (`flex w-full`), and `flex-1` on members to fill.
+- `--join-radius` overrides the corner radius for one group. Defaults to `--radius`.
+- Icon-only members need `aria-label`.
+
 ## Theme tokens
 
 All colours are Tailwind theme variables, so `bg-primary`, `text-muted-foreground`, `border-border` and the rest exist as utilities. Each `X` has an `X-foreground` for text placed on it.
