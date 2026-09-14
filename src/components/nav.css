@@ -6,8 +6,10 @@
        <a href="/profile">Profile</a>
      </details>
    </nav>
-   Links, summaries and headings are styled by element, so wrapping them in
-   <ul>/<li> or a <div> changes nothing. aria-current="page" marks the
+   Links, buttons, summaries and headings are styled by element, so wrapping
+   them in <ul>/<li> or a <div> changes nothing. A <button> is an action
+   item (menus inside .dropdown); use <div class="nav"> for those so the
+   list is not a navigation landmark. aria-current="page" marks the
    current link. Sections are native <details>; the chevron is drawn in CSS
    so no icon markup is needed. Layered so Tailwind utilities win. */
 @layer components {
@@ -26,7 +28,14 @@
     gap: 2px;
     font-size: var(--nav-text);
 
-    a, summary {
+    button {
+      width: 100%;
+      border: 0;
+      background: none;
+      font: inherit;
+      text-align: start;
+    }
+    a, summary, button {
       display: flex;
       align-items: center;
       gap: 0.5rem;

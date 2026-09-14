@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, badge, avatar, nav, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, badge, avatar, nav, dropdown, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -148,7 +148,40 @@ Vertical menu for a sidebar or settings page. Put it on a `<nav>` with an `aria-
 
 Icons go first inside the link or summary, `size-4`, `aria-hidden`. Lucide fits. A trailing badge or count gets `ml-auto`. Width comes from the container or a utility (`w-56`). One level of `<details>` is supported.
 
+A `<button type="button">` is an action item and looks like a link. For a list of actions rather than links, put `.nav` on a `<div>` so it is not a navigation landmark.
+
 Custom properties: `--nav-fg --nav-active-fg --nav-hover --nav-active-bg --nav-radius --nav-h --nav-px --nav-text`.
+
+## Dropdown: `.dropdown`
+
+A panel anchored to the button that opens it. Native `popover` plus CSS anchor positioning: the browser handles open, close, Esc, click-outside and placement. No JavaScript, no wrapper element. The trigger is any button with `popovertarget` pointing at the panel's `id`.
+
+```html
+<button class="btn" popovertarget="menu">Options</button>
+<div id="menu" popover class="dropdown">
+  <div class="nav">
+    <a href="/edit">Edit</a>
+    <button type="button">Duplicate</button>
+    <hr>
+    <button type="button" class="text-danger">Delete</button>
+  </div>
+</div>
+```
+
+| Kind | Classes |
+|------|---------|
+| Placement | None = down from the trigger, left edges aligned, flipping to right-aligned, then up, when the default would leave the viewport. `left` `right` `up` `down` pin one axis; the other still flips. Pin both and it never flips. |
+| Width | `max-content`, at least 10rem, at most 24rem. Override with `w-56`, `w-72`. |
+| Padding | 1rem. A lone `.nav` child gets 0.25rem, so a menu hugs its items. Override with `p-*`. |
+
+- Menu: put a `.nav` inside, on a `<div>`. Links, buttons, `<hr>` and headings all work.
+- Form: make the popover element a `<form>` (`<form id="x" popover class="dropdown w-56">`). Radios or a couple of inputs plus a `btn primary sm w-full`.
+- Help: an icon button with `aria-label` opening a `w-72 text-sm` panel of prose. More room than a tooltip.
+- If no placement fits, the panel keeps the default side and scrolls inside rather than leaving the screen.
+- Popovers render in the top layer, outside any `.light` `.dark` `.inverse` region. Put the region class on the dropdown itself when the trigger is inside one.
+- Add `autofocus` to the first item to move keyboard focus into the panel on open. Without it, Tab from the trigger enters the panel.
+
+Custom properties: `--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius --dropdown-shadow`.
 
 ## Theme tokens
 

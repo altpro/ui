@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const pages = ["index.html", "button.html", "join.html", "badge.html", "avatar.html", "nav.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "badge.html", "avatar.html", "nav.html", "dropdown.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -25,6 +25,53 @@ for (const colorScheme of ["light", "dark"]) {
     }
 
     // cls also selects nav links, so it is wrapped in :is() where it joins another selector
+    // dropdowns are closed at load, so axe never sees them: open each, check it, and check it is on screen
+    test("dropdown.html: every open dropdown passes axe and stays inside the viewport", async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/dropdown.html");
+      const failures = [];
+      for (const t of await page.locator("main [popovertarget]").all()) {
+        await t.scrollIntoViewIfNeeded();
+        await t.click();
+        const pop = page.locator("#" + (await t.getAttribute("popovertarget")));
+        await expect(pop).toBeVisible();
+        const box = await pop.boundingBox();
+        const off = box.x < 0 || box.y < 0 || box.x + box.width > 800 || box.y + box.height > 500;
+        const { violations } = await axe(page).include("#" + (await t.getAttribute("popovertarget"))).analyze();
+        if (off || violations.length) failures.push(`${await pop.getAttribute("id")}: ${off ? JSON.stringify(box) : ""} ${summary(violations)}`);
+        await page.keyboard.press("Escape");
+      }
+      expect(failures).toEqual([]);
+    });
+
+    test("dropdown.html: a right-edge trigger opens right-aligned and a bottom-edge trigger opens upwards", async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/dropdown.html");
+      const right = page.locator("[popovertarget=menu-right]");
+      await right.evaluate((el) => el.scrollIntoView({ block: "start" }));
+      await right.click();
+      const [t, p] = [await right.boundingBox(), await page.locator("#menu-right").boundingBox()];
+      expect(Math.round(p.x + p.width)).toBe(Math.round(t.x + t.width));
+      expect(p.y).toBeGreaterThan(t.y);
+      await page.keyboard.press("Escape");
+
+      const bottom = page.locator("[popovertarget=menu-left]");
+      await bottom.evaluate((el) => el.scrollIntoView({ block: "end" }));
+      await bottom.click();
+      const [t2, p2] = [await bottom.boundingBox(), await page.locator("#menu-left").boundingBox()];
+      expect(Math.round(p2.x)).toBe(Math.round(t2.x));
+      expect(p2.y + p2.height).toBeLessThan(t2.y);
+      await page.keyboard.press("Escape");
+
+      // nothing fits: stays down and scrolls inside rather than leaving the viewport
+      await page.setViewportSize({ width: 800, height: 150 });
+      await bottom.evaluate((el) => el.scrollIntoView({ block: "start" }));
+      await bottom.click();
+      const [t3, p3] = [await bottom.boundingBox(), await page.locator("#menu-left").boundingBox()];
+      expect(p3.y).toBeGreaterThan(t3.y);
+      expect(p3.y + p3.height).toBeLessThanOrEqual(150);
+    });
+
     for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8]]) {
     test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
