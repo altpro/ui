@@ -1,0 +1,17 @@
+@import "tailwindcss";
+@import "../src/nui.css";
+
+/* demo-only */
+pre {
+  background: var(--color-muted);
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+  font-size: 0.8rem;
+  overflow-x: auto;
+}
+.panel {
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 1rem;
+}

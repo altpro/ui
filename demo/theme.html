@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Theme</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<main class="mx-auto max-w-5xl space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Theme</h1>
+    <p class="text-muted-foreground">Tokens are Tailwind <code>@theme</code> variables using <code>light-dark()</code>. Override any of them in your app's <code>@theme</code> block.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Colour tokens</h2>
+    <div id="swatches" class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"></div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <p class="text-sm text-muted-foreground">
+      <code>.light</code> and <code>.dark</code> pin a subtree. <code>.inverse</code> flips relative to its nearest region, at any depth.
+      The innermost box below is <code>.dark &gt; .light &gt; .inverse</code> and must render dark.
+    </p>
+    <div class="dark panel space-y-3">
+      <p class="text-sm font-medium">.dark</p>
+      <div class="light panel space-y-3">
+        <p class="text-sm font-medium">.light</p>
+        <div class="inverse panel space-y-3">
+          <p class="text-sm font-medium">.inverse (should be dark)</p>
+          <div class="inverse panel space-y-3">
+            <p class="text-sm font-medium">.inverse again (should be light)</p>
+            <button class="btn primary">Primary</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Radius</h2>
+    <p class="text-sm text-muted-foreground">One knob, <code>--radius</code> on <code>:root</code>. Use the switcher in the header, or set it in your app:</p>
+<pre>:root { --radius: 9999px; }   /* pill */
+:root { --radius: 0; }        /* square */
+.btn  { --btn-radius: 0; }    /* square buttons only */</pre>
+  </section>
+</main>
+<script type="module" src="demo.js"></script>
+<script type="module">
+const tokens = ["background","foreground","card","card-foreground","muted","muted-foreground","border","ring",
+  "primary","primary-foreground","secondary","secondary-foreground","info","info-foreground",
+  "success","success-foreground","warning","warning-foreground","danger","danger-foreground"];
+document.getElementById("swatches").innerHTML = tokens.map(t => `
+  <div class="flex items-center gap-3 text-sm">
+    <span class="size-10 shrink-0 rounded-[var(--radius)] border border-border" style="background: var(--color-${t})"></span>
+    <code>--color-${t}</code>
+  </div>`).join("");
+</script>
+</body>
+</html>

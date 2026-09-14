@@ -1,0 +1,43 @@
+# nui
+
+CSS-only component layer for Tailwind v4. Private library, consumed from GitHub via npm. Read `skills/nui/SKILL.md` first; it documents what exists.
+
+## Layout
+
+```
+src/nui.css              entry, imports everything below
+src/theme.css            @theme default tokens, all light-dark(); --radius knob on :root
+src/scheme.css           color-scheme regions: .light .dark .inverse
+src/components/*.css     one file per component
+demo/*.html              one page per component, plus index and theme
+demo/demo.js             shared header: nav links, theme and radius switchers
+skills/nui/SKILL.md      reference for agents in consuming projects
+```
+
+## Rules
+
+- Naming: base class plus bare modifier words. `.btn.primary.lg`, never `.btn-primary` or `.btn-lg`.
+- Before adding a modifier word, check it is not a Tailwind utility. `invert`, `contrast`, `flex`, `block`, `hidden` and similar are taken. That is why the region class is `inverse`.
+- No JavaScript in `src/`. Use native HTML: `<dialog>`, `popover`, anchor positioning, `<details>`, `:has()`, style container queries.
+- Browser target: current Chrome, Firefox, Safari. No Safari-only features. Chrome-only features need sign-off from Steve first.
+- Colours come from tokens only. Never a literal colour inside a component.
+- Everything in a component file sits in `@layer components` so Tailwind utilities override it.
+- Nested CSS. One top-level block per component.
+- Colour variants set `--x-*` custom properties only. Style modifiers (`outline`, `ghost`) set real properties from those vars. This keeps class order irrelevant. See `src/components/button.css`.
+- Sizes set the size vars only.
+- Do not reference Tailwind palette variables such as `--color-blue-600`. Tailwind v4 only emits theme variables that are used, so use oklch literals in `theme.css`.
+
+## Adding a component
+
+1. `src/components/<name>.css`, following the button file's shape.
+2. Import it from `src/nui.css`.
+3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `pages` array in `demo/demo.js`.
+4. Add a section to `skills/nui/SKILL.md` with the class table and one copy-paste example.
+5. `npm run build` must pass. Check the demo page in light, dark, pill and square.
+
+## Commands
+
+```
+npm run dev      demo site with live reload
+npm run build    production build of the demo into dist/
+```

@@ -1,0 +1,48 @@
+/* Colour scheme regions.
+   Root follows the OS. `data-theme="light|dark"` on <html> pins it.
+   `.light` / `.dark` pin any subtree. `.inverse` flips relative to the
+   nearest region above it, at any depth, via a style container query
+   on the inherited --scheme property. */
+@property --scheme {
+  syntax: "light | dark";
+  inherits: true;
+  initial-value: light;
+}
+
+:root {
+  color-scheme: light dark;
+  --scheme: light;
+  @media (prefers-color-scheme: dark) {
+    --scheme: dark;
+  }
+}
+
+.light, [data-theme="light"] {
+  color-scheme: light;
+  --scheme: light;
+}
+
+.dark, [data-theme="dark"] {
+  color-scheme: dark;
+  --scheme: dark;
+}
+
+@container style(--scheme: light) {
+  .inverse {
+    color-scheme: dark;
+    --scheme: dark;
+  }
+}
+
+@container style(--scheme: dark) {
+  .inverse {
+    color-scheme: light;
+    --scheme: light;
+  }
+}
+
+/* Regions paint their own ground so a .dark island is visibly dark. */
+.light, .dark, .inverse {
+  background-color: var(--color-background);
+  color: var(--color-foreground);
+}

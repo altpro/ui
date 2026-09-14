@@ -1,0 +1,41 @@
+/* Design tokens. `@theme default` means an app's own @theme block wins
+   whatever the import order. Every colour is light-dark() so one token
+   serves both schemes; see scheme.css for how the scheme is chosen. */
+@theme default {
+  --color-background: light-dark(oklch(1 0 0), oklch(0.145 0 0));
+  --color-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
+
+  --color-card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
+  --color-card-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
+
+  --color-muted: light-dark(oklch(0.96 0 0), oklch(0.269 0 0));
+  --color-muted-foreground: light-dark(oklch(0.5 0 0), oklch(0.708 0 0));
+
+  --color-border: light-dark(oklch(0.9 0 0), oklch(0.3 0 0));
+  --color-ring: var(--color-primary);
+
+  --color-primary: light-dark(oklch(0.55 0.2 262), oklch(0.7 0.16 262));
+  --color-primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));
+
+  --color-secondary: light-dark(oklch(0.93 0 0), oklch(0.3 0 0));
+  --color-secondary-foreground: light-dark(oklch(0.2 0 0), oklch(0.985 0 0));
+
+  --color-info: light-dark(oklch(0.6 0.15 230), oklch(0.75 0.13 230));
+  --color-info-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));
+
+  --color-success: light-dark(oklch(0.6 0.17 150), oklch(0.75 0.17 150));
+  --color-success-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));
+
+  --color-warning: light-dark(oklch(0.8 0.17 80), oklch(0.82 0.17 80));
+  --color-warning-foreground: oklch(0.2 0.02 80);
+
+  --color-danger: light-dark(oklch(0.58 0.22 27), oklch(0.7 0.19 27));
+  --color-danger-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));
+}
+
+/* Radius is outside @theme on purpose: it is one project-wide knob, not a
+   scale, and must not collide with Tailwind's --radius-* utilities.
+   Pill buttons: `:root { --radius: 9999px }`. Square: `0`. */
+:root {
+  --radius: 0.5rem;
+}

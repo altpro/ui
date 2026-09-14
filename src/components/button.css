@@ -1,0 +1,105 @@
+/* Button.
+   <button class="btn primary lg">   <a class="btn outline danger sm">
+   Colour variants set --btn-* vars only. `.outline` and `.ghost` set real
+   properties from those vars, so class order never matters. Sizes set
+   the height/padding/text vars. Layered so Tailwind utilities win. */
+@layer components {
+  .btn {
+    --btn-bg: var(--color-muted);
+    --btn-fg: var(--color-foreground);
+    --btn-accent: var(--color-foreground);
+    --btn-outline: var(--color-border);
+    --btn-hover: color-mix(in oklab, var(--btn-bg), light-dark(black, white) 10%);
+    --btn-radius: var(--radius);
+    --btn-h: 2.25rem;
+    --btn-px: 1rem;
+    --btn-text: var(--text-sm, 0.875rem);
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    height: var(--btn-h);
+    padding-inline: var(--btn-px);
+    font-size: var(--btn-text);
+    font-weight: 500;
+    line-height: 1;
+    white-space: nowrap;
+    border: 1px solid transparent;
+    border-radius: var(--btn-radius);
+    background: var(--btn-bg);
+    color: var(--btn-fg);
+    cursor: pointer;
+    user-select: none;
+    text-decoration: none;
+    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+
+    &:hover {
+      background: var(--btn-hover);
+    }
+    &:focus-visible {
+      outline: 2px solid var(--color-ring);
+      outline-offset: 2px;
+    }
+    &:disabled, &[aria-disabled="true"] {
+      opacity: 0.5;
+      pointer-events: none;
+    }
+
+    /* colour variants */
+    &.primary {
+      --btn-bg: var(--color-primary);
+      --btn-fg: var(--color-primary-foreground);
+      --btn-accent: var(--color-primary);
+      --btn-outline: var(--btn-accent);
+    }
+    &.secondary {
+      --btn-bg: var(--color-secondary);
+      --btn-fg: var(--color-secondary-foreground);
+      --btn-accent: var(--color-secondary-foreground);
+      --btn-outline: var(--color-border);
+    }
+    &.info {
+      --btn-bg: var(--color-info);
+      --btn-fg: var(--color-info-foreground);
+      --btn-accent: var(--color-info);
+      --btn-outline: var(--btn-accent);
+    }
+    &.success {
+      --btn-bg: var(--color-success);
+      --btn-fg: var(--color-success-foreground);
+      --btn-accent: var(--color-success);
+      --btn-outline: var(--btn-accent);
+    }
+    &.warning {
+      --btn-bg: var(--color-warning);
+      --btn-fg: var(--color-warning-foreground);
+      --btn-accent: var(--color-warning);
+      --btn-outline: var(--btn-accent);
+    }
+    &.danger, &.error {
+      --btn-bg: var(--color-danger);
+      --btn-fg: var(--color-danger-foreground);
+      --btn-accent: var(--color-danger);
+      --btn-outline: var(--btn-accent);
+    }
+
+    /* style modifiers */
+    &.outline, &.ghost {
+      background: transparent;
+      color: var(--btn-accent);
+      &:hover {
+        background: color-mix(in oklab, var(--btn-accent) 10%, transparent);
+      }
+    }
+    &.outline {
+      border-color: var(--btn-outline);
+    }
+
+    /* sizes */
+    &.xs { --btn-h: 1.75rem; --btn-px: 0.5rem;  --btn-text: var(--text-xs, 0.75rem); }
+    &.sm { --btn-h: 2rem;    --btn-px: 0.75rem; }
+    &.lg { --btn-h: 2.5rem;  --btn-px: 1.5rem;  --btn-text: var(--text-base, 1rem); }
+    &.xl { --btn-h: 3rem;    --btn-px: 2rem;    --btn-text: var(--text-lg, 1.125rem); }
+  }
+}
