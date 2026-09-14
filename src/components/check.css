@@ -1,0 +1,127 @@
+/* Checkbox, radio, switch.
+   <label class="checkbox"><input type="checkbox"> Remember me</label>
+   <input class="radio" id="a" type="radio" name="x"> <label for="a">A</label>
+   <label class="switch"><input type="checkbox" role="switch"> Notifications</label>
+   The class goes on the <label> when it wraps the input, or on the <input>
+   when the label sits beside it with `for`. Either way the box is drawn on
+   the input with appearance: none and the mark is its ::before. The default
+   box is 1.5rem, the 24px target minimum. A wrapping label is the target for
+   the smaller sizes. Focus, disabled and invalid follow .input. */
+@layer components {
+  :is(.checkbox, .radio, .switch) {
+    --check-border: var(--color-border);
+    --check-accent: var(--color-primary);
+    --check-fg: var(--color-primary-foreground);
+    --check-ring: var(--color-ring);
+    --check-size: 1.5rem;
+    --check-radius: min(var(--radius), var(--check-size) / 4);
+    --check-text: var(--text-sm, 0.875rem);
+
+    &:is(label) {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      /* the label is the target for the small sizes, so it stays 24px tall */
+      min-height: max(var(--check-size), 1.5rem);
+      font-size: var(--check-text);
+      line-height: 1.25;
+      cursor: pointer;
+    }
+    &:is(:disabled, :has(:disabled)) {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    &:is([aria-invalid="true"], :user-invalid, :has([aria-invalid="true"], :user-invalid)) {
+      --check-border: var(--color-danger);
+      --check-ring: var(--color-danger);
+    }
+
+    &:is(input), > input {
+      appearance: none;
+      flex: none;
+      display: inline-grid;
+      place-content: center;
+      width: var(--check-size);
+      height: var(--check-size);
+      margin: 0;
+      vertical-align: middle;
+      border: 1px solid var(--check-border);
+      border-radius: var(--check-radius);
+      background: var(--color-background);
+      color: var(--check-fg);
+      cursor: pointer;
+      transition: background-color 0.15s, border-color 0.15s;
+
+      &::before {
+        content: "";
+        width: calc(var(--check-size) * 0.7);
+        height: calc(var(--check-size) * 0.7);
+        background: currentColor;
+        scale: 0;
+        transition: scale 0.15s;
+      }
+      &:is(:checked, :indeterminate) {
+        border-color: var(--check-accent);
+        background: var(--check-accent);
+        &::before {
+          scale: 1;
+        }
+      }
+      &:disabled {
+        cursor: not-allowed;
+      }
+      &:focus-visible {
+        border-color: var(--check-ring);
+        outline: 3px solid color-mix(in oklab, var(--check-ring) 50%, transparent);
+        outline-offset: 0;
+      }
+    }
+  }
+
+  .checkbox:is(input), .checkbox > input {
+    &::before {
+      mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>') center / contain no-repeat;
+    }
+    &:indeterminate::before {
+      mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>');
+    }
+  }
+
+  .radio:is(input), .radio > input {
+    --check-radius: 50%;
+    &::before {
+      width: calc(var(--check-size) * 0.4);
+      height: calc(var(--check-size) * 0.4);
+      border-radius: 50%;
+    }
+  }
+
+  /* the track is the input, the thumb its ::before; off is muted, on is the accent */
+  .switch:is(input), .switch > input {
+    --check-radius: 9999px;
+    --check-border: var(--color-muted-foreground);
+    width: calc(var(--check-size) * 1.75);
+    padding: 2px;
+    justify-content: start;
+    background: var(--color-muted-foreground);
+
+    &::before {
+      width: calc(var(--check-size) - 6px);
+      height: calc(var(--check-size) - 6px);
+      border-radius: 50%;
+      scale: 1;
+      transition: translate 0.15s;
+    }
+    &:checked::before {
+      translate: calc(var(--check-size) * 0.75);
+    }
+  }
+
+  /* sizes */
+  :is(.checkbox, .radio, .switch) {
+    &.xs { --check-size: 1rem;    --check-text: var(--text-xs, 0.75rem); }
+    &.sm { --check-size: 1.25rem; }
+    &.lg { --check-size: 1.75rem; --check-text: var(--text-base, 1rem); }
+    &.xl { --check-size: 2rem;    --check-text: var(--text-lg, 1.125rem); }
+  }
+}

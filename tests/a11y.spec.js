@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const pages = ["index.html", "button.html", "join.html", "badge.html", "avatar.html", "nav.html", "dropdown.html", "tooltip.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "dropdown.html", "tooltip.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -93,8 +93,8 @@ for (const colorScheme of ["light", "dark"]) {
       expect(failures).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8]]) {
-    test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null]]) {
+    if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
       const buttons = page.locator("main section:nth-of-type(2) " + cls);
@@ -125,10 +125,57 @@ for (const colorScheme of ["light", "dark"]) {
       expect(outline.width).toBeGreaterThanOrEqual(2);
     });
 
+    // the invalid ring is a colour change only, so check it is also 2px and red
+    if (cls === ".input") test(`${p}: an invalid input focuses with a red ring`, async ({ page }) => {
+      await page.goto("/" + p);
+      const email = page.locator("#email");
+      await email.focus();
+      // the ring is the border colour at half opacity: paint both and compare the rgb, not the alpha
+      const ring = await email.evaluate((el) => {
+        const rgb = (c) => { const x = document.createElement("canvas").getContext("2d"); x.fillStyle = c; x.fillRect(0, 0, 1, 1); return [...x.getImageData(0, 0, 1, 1).data].slice(0, 3); };
+        const s = getComputedStyle(el);
+        return { w: parseFloat(s.outlineWidth), c: rgb(s.outlineColor), b: rgb(s.borderTopColor) };
+      });
+      expect(ring.w).toBeGreaterThanOrEqual(2);
+      for (let i = 0; i < 3; i++) expect(Math.abs(ring.c[i] - ring.b[i])).toBeLessThanOrEqual(2);
+      const { violations } = await axe(page).include("#email").analyze();
+      expect(summary(violations)).toEqual([]);
+    });
+
+    if (cls === ".input") test(`${p}: a wrapper takes the ring when its control is focused, and every size matches the button`, async ({ page }) => {
+      await page.goto("/" + p);
+      await page.locator("#price").focus();
+      const w = await page.locator("#price").evaluate((el) => parseFloat(getComputedStyle(el.parentElement).outlineWidth));
+      expect(w).toBeGreaterThanOrEqual(2);
+      const rows = await page.locator("main section:nth-of-type(6) > div > div").all();
+      expect(rows.length).toBe(5);
+      for (const row of rows) {
+        const [a, b] = await row.evaluate((el) => [...el.children].map((c) => c.getBoundingClientRect().height));
+        expect(a).toBe(b);
+      }
+    });
+
+    // the select picker is closed at load, so axe never sees it: open it, check it, and check it opens below
+    if (cls === ".input") test(`${p}: an open select picker passes axe and opens below the control`, async ({ page }) => {
+      await page.goto("/" + p);
+      const select = page.locator("#plan");
+      await select.evaluate((el) => el.scrollIntoView({ block: "center" }));
+      await select.click();
+      const r = await select.evaluate((el) => ({
+        appearance: getComputedStyle(el).appearance,
+        open: el.matches(":open"),
+        below: el.querySelector("option").getBoundingClientRect().top - el.getBoundingClientRect().bottom,
+      }));
+      expect(r).toEqual({ appearance: "base-select", open: true, below: expect.any(Number) });
+      expect(r.below).toBeGreaterThanOrEqual(0);
+      const { violations } = await axe(page).include("#plan").analyze();
+      expect(summary(violations)).toEqual([]);
+    });
+
     test(`${p}: every interactive element meets the 24px minimum target size`, async ({ page }) => {
       await page.goto("/" + p);
       const small = [];
-      for (const b of await page.locator(`main :is(a, button):is(${cls})`).all()) {
+      for (const b of await page.locator(`main :is(a, button, input, select, textarea, label):is(${cls})`).all()) {
         if (!(await b.isVisible())) continue; // e.g. inside a closed <details>
         const box = await b.boundingBox();
         if (box.width < 24 || box.height < 24) small.push(await b.textContent());

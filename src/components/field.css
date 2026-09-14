@@ -1,0 +1,54 @@
+/* Field: a label, a control, an optional hint, optional errors.
+   <div class="field">
+     <label for="x">Name</label>
+     <input class="input" id="x" aria-describedby="x-hint">
+     <p class="hint" id="x-hint">Shown on your profile.</p>
+     <p class="error">…</p>
+   </div>
+   Children are styled by element and by the bare class words hint and
+   error, so DOM order is display order. The field turns its control red
+   when it holds a non-empty .error, when the control says aria-invalid,
+   or when native validation fails after the user touched it. A disabled
+   control (or a disabled <fieldset class="field">) dims the label and hint. */
+@layer components {
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.25;
+
+    > :is(label:not(:has(input)), legend) {
+      font-weight: 500;
+    }
+    /* a legend is not a flex item, so the gap does not reach it */
+    > legend {
+      margin-block-end: 0.375rem;
+    }
+    > .hint {
+      color: var(--color-muted-foreground);
+    }
+    > .error {
+      color: var(--color-danger);
+      &:empty {
+        display: none;
+      }
+    }
+    /* a join (input plus button) fills the column; the input takes the slack */
+    > .join {
+      display: flex;
+      > .input {
+        flex: 1;
+        min-width: 0;
+      }
+    }
+
+    &:has(> .error:not(:empty)) .input {
+      --input-border: var(--color-danger);
+      --input-ring: var(--color-danger);
+    }
+    &:has(.input:disabled) > label {
+      opacity: 0.5;
+    }
+  }
+}

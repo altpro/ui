@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Check</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Checkbox, radio, switch</h1>
+    <p class="text-muted-foreground"><code>.checkbox</code>, <code>.radio</code> and <code>.switch</code> restyle the native input. No JavaScript, no extra elements: the box is the input and the mark is its <code>::before</code>.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Two ways to label</h2>
+    <p class="text-sm text-muted-foreground">Put the class on the <code>&lt;input&gt;</code> when the label sits beside it with <code>for</code>, or on a <code>&lt;label&gt;</code> that wraps the input. The wrapped form is shorter and the whole label is the click target.</p>
+    <div class="flex flex-wrap items-center gap-6 text-sm">
+      <div class="flex items-center gap-2"><input class="checkbox" id="beside" type="checkbox" checked> <label for="beside">Beside, with for</label></div>
+      <label class="checkbox"><input type="checkbox" checked> Wrapped</label>
+      <div class="flex items-center gap-2"><input class="radio" id="r-beside" type="radio" name="way" checked> <label for="r-beside">Beside</label></div>
+      <label class="radio"><input type="radio" name="way"> Wrapped</label>
+      <div class="flex items-center gap-2"><input class="switch" id="s-beside" type="checkbox" role="switch" checked> <label for="s-beside">Beside</label></div>
+      <label class="switch"><input type="checkbox" role="switch"> Wrapped</label>
+    </div>
+<pre>&lt;input class="checkbox" id="terms" type="checkbox"&gt; &lt;label for="terms"&gt;I agree&lt;/label&gt;
+
+&lt;label class="checkbox"&gt;&lt;input type="checkbox"&gt; I agree&lt;/label&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Checkbox</h2>
+    <p class="text-sm text-muted-foreground">Checked and indeterminate fill with the primary colour. <code>indeterminate</code> is a DOM property, so it is set from script. Invalid is <code>aria-invalid="true"</code>, or a <code>required</code> box left unticked after the user has touched it.</p>
+    <div class="flex flex-wrap items-center gap-6">
+      <label class="checkbox"><input type="checkbox"> Unchecked</label>
+      <label class="checkbox"><input type="checkbox" checked> Checked</label>
+      <label class="checkbox"><input type="checkbox" id="indeterminate"> Indeterminate</label>
+      <label class="checkbox"><input type="checkbox" disabled> Disabled</label>
+      <label class="checkbox"><input type="checkbox" checked disabled> Checked, disabled</label>
+      <label class="checkbox"><input type="checkbox" aria-invalid="true"> Invalid</label>
+      <label class="checkbox"><input type="checkbox" required> Required, native</label>
+    </div>
+    <div class="flex flex-wrap items-center gap-6">
+      <label class="checkbox xs"><input type="checkbox" checked> xs</label>
+      <label class="checkbox sm"><input type="checkbox" checked> sm</label>
+      <label class="checkbox"><input type="checkbox" checked> default</label>
+      <label class="checkbox lg"><input type="checkbox" checked> lg</label>
+      <label class="checkbox xl"><input type="checkbox" checked> xl</label>
+    </div>
+<pre>&lt;label class="checkbox"&gt;&lt;input type="checkbox" checked&gt; Checked&lt;/label&gt;
+&lt;label class="checkbox sm"&gt;&lt;input type="checkbox" aria-invalid="true"&gt; Invalid&lt;/label&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Radio</h2>
+    <p class="text-sm text-muted-foreground">Always round, whatever <code>--radius</code> is. Same states and sizes as the checkbox.</p>
+    <div class="flex flex-wrap items-center gap-6">
+      <label class="radio"><input type="radio" name="plan" checked> Free</label>
+      <label class="radio"><input type="radio" name="plan"> Team</label>
+      <label class="radio"><input type="radio" name="plan" disabled> Enterprise, disabled</label>
+      <label class="radio"><input type="radio" name="bad" aria-invalid="true"> Invalid</label>
+    </div>
+    <div class="flex flex-wrap items-center gap-6">
+      <label class="radio xs"><input type="radio" name="size" checked> xs</label>
+      <label class="radio sm"><input type="radio" name="size"> sm</label>
+      <label class="radio"><input type="radio" name="size"> default</label>
+      <label class="radio lg"><input type="radio" name="size"> lg</label>
+      <label class="radio xl"><input type="radio" name="size"> xl</label>
+    </div>
+<pre>&lt;label class="radio"&gt;&lt;input type="radio" name="plan" checked&gt; Free&lt;/label&gt;
+&lt;label class="radio"&gt;&lt;input type="radio" name="plan"&gt; Team&lt;/label&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Switch</h2>
+    <p class="text-sm text-muted-foreground">A checkbox with <code>role="switch"</code>, so screen readers say on and off rather than checked. Use it for a setting that takes effect at once; a checkbox for something submitted with a form.</p>
+    <div class="flex flex-wrap items-center gap-6">
+      <label class="switch"><input type="checkbox" role="switch"> Off</label>
+      <label class="switch"><input type="checkbox" role="switch" checked> On</label>
+      <label class="switch"><input type="checkbox" role="switch" disabled> Disabled</label>
+      <label class="switch"><input type="checkbox" role="switch" checked disabled> On, disabled</label>
+      <label class="switch"><input type="checkbox" role="switch" aria-invalid="true"> Invalid</label>
+    </div>
+    <div class="flex flex-wrap items-center gap-6">
+      <label class="switch xs"><input type="checkbox" role="switch" checked> xs</label>
+      <label class="switch sm"><input type="checkbox" role="switch" checked> sm</label>
+      <label class="switch"><input type="checkbox" role="switch" checked> default</label>
+      <label class="switch lg"><input type="checkbox" role="switch" checked> lg</label>
+      <label class="switch xl"><input type="checkbox" role="switch" checked> xl</label>
+    </div>
+<pre>&lt;label class="switch"&gt;&lt;input type="checkbox" role="switch" checked&gt; Email me about updates&lt;/label&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a field</h2>
+    <p class="text-sm text-muted-foreground">A group is a <code>&lt;fieldset class="field"&gt;</code> with a <code>&lt;legend&gt;</code>. Hints and errors work as for any field; point <code>aria-describedby</code> at them from the inputs. A lone switch or checkbox can sit in a field with no label of its own.</p>
+    <div class="grid max-w-3xl gap-6 md:grid-cols-2">
+      <fieldset class="field">
+        <legend>Notifications</legend>
+        <label class="checkbox"><input type="checkbox" name="n" checked> Comments</label>
+        <label class="checkbox"><input type="checkbox" name="n"> Mentions</label>
+        <label class="checkbox"><input type="checkbox" name="n"> Weekly digest</label>
+        <p class="hint">You can change these later.</p>
+      </fieldset>
+      <fieldset class="field">
+        <legend>Visibility</legend>
+        <label class="radio"><input type="radio" name="vis" aria-invalid="true" aria-describedby="vis-error"> Public</label>
+        <label class="radio"><input type="radio" name="vis" aria-invalid="true" aria-describedby="vis-error"> Private</label>
+        <p class="error" id="vis-error">Choose one.</p>
+      </fieldset>
+      <div class="field">
+        <label class="switch"><input type="checkbox" role="switch" checked aria-describedby="tfa-hint"> Two-factor authentication</label>
+        <p class="hint" id="tfa-hint">Asks for a code from your phone at sign-in.</p>
+      </div>
+      <fieldset class="field" disabled>
+        <legend>Managed by your admin</legend>
+        <label class="switch"><input type="checkbox" role="switch" checked> Single sign-on</label>
+        <label class="checkbox"><input type="checkbox" checked> Audit log</label>
+      </fieldset>
+    </div>
+<pre>&lt;fieldset class="field"&gt;
+  &lt;legend&gt;Notifications&lt;/legend&gt;
+  &lt;label class="checkbox"&gt;&lt;input type="checkbox" name="n" checked&gt; Comments&lt;/label&gt;
+  &lt;label class="checkbox"&gt;&lt;input type="checkbox" name="n"&gt; Mentions&lt;/label&gt;
+  &lt;p class="hint"&gt;You can change these later.&lt;/p&gt;
+&lt;/fieldset&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel flex flex-col gap-3">
+        <label class="checkbox"><input type="checkbox" checked> Light</label>
+        <label class="radio"><input type="radio" name="l" checked> Light</label>
+        <label class="switch"><input type="checkbox" role="switch" checked> Light</label>
+      </div>
+      <div class="dark panel flex flex-col gap-3">
+        <label class="checkbox"><input type="checkbox" checked> Dark</label>
+        <label class="radio"><input type="radio" name="d" checked> Dark</label>
+        <label class="switch"><input type="checkbox" role="switch" checked> Dark</label>
+      </div>
+      <div class="inverse panel flex flex-col gap-3">
+        <label class="checkbox"><input type="checkbox"> Inverse</label>
+        <label class="radio"><input type="radio" name="i"> Inverse</label>
+        <label class="switch"><input type="checkbox" role="switch"> Inverse</label>
+      </div>
+    </div>
+    <p class="text-sm text-muted-foreground">Custom properties, shared by all three: <code>--check-border --check-accent --check-fg --check-ring --check-size --check-radius --check-text</code>.</p>
+  </section>
+</main>
+</div>
+<script>document.getElementById("indeterminate").indeterminate = true</script>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

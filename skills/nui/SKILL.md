@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, badge, avatar, nav, dropdown, tooltip, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, dropdown, tooltip, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -60,7 +60,7 @@ Custom properties every button reads. Set them on `.btn` in the app stylesheet f
 
 ## Join: `.join`
 
-Wraps buttons (and, later, inputs) into one bar. The radius moves to the group. A one pixel line divides members.
+Wraps buttons and inputs into one bar. The radius moves to the group. A one pixel line divides members.
 
 ```html
 <div class="join">
@@ -73,6 +73,89 @@ Wraps buttons (and, later, inputs) into one bar. The radius moves to the group. 
 - Layout utilities go on the group (`flex w-full`), and `flex-1` on members to fill.
 - `--join-radius` overrides the corner radius for one group. Defaults to `--radius`.
 - Icon-only members need `aria-label`.
+
+## Input: `.input`
+
+One class for every text-like control: `<input>` of any text type, `<select>`, `<textarea>`. Not for checkboxes or radios. On its own it needs a name: a `<label for>` or an `aria-label`.
+
+| Kind | Classes / attributes |
+|------|----------------------|
+| Size | `xs` `sm` `lg` `xl`. Heights match `.btn`, so the two line up in a join. |
+| Invalid | `aria-invalid="true"`. Also automatic when native validation (`required`, `type="email"`, `pattern`) fails after the user has touched it. Border and focus ring turn red. |
+| State | `disabled`, `readonly`. Focus ring on focus. |
+
+```html
+<input class="input" type="search" placeholder="Search" aria-label="Search">
+<select class="input sm" aria-label="Sort by"><option>Newest</option></select>
+<textarea class="input" rows="3" aria-label="Notes"></textarea>
+```
+
+A textarea grows with `rows`; the size is a minimum height. Width is the browser default; use `w-full` or `w-64`.
+
+A `<select>` opts into `appearance: base-select` where the browser has it (Chrome 135+). The chevron is a Lucide stroke in muted text, the picker matches `.dropdown`, and `<option>`, `<optgroup>` and its `<legend>` are styled. Other browsers keep their native select.
+
+Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (a `<span>` symbol or unit, a `size-4` svg, a `kbd`) sits in the same border in muted text, and the focus ring goes round the whole box. Clicking an addon focuses the control. A `<select>` can be a second control inside the wrapper. A button next to an input is a `.join`, not an addon.
+
+```html
+<label class="input"><span>£</span><input type="number" aria-label="Price"></label>
+<label class="input"><input type="number" aria-label="Weight"><span>kg</span></label>
+<div class="join">
+  <input class="input sm" type="search" aria-label="Search">
+  <button class="btn primary sm">Go</button>
+</div>
+```
+
+Custom properties: `--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text`.
+
+## Field: `.field`
+
+Stacks a label, a control, an optional hint and optional errors. Children are styled by element and by the bare words `hint` and `error`; DOM order is display order. Put the `.input` directly inside, or inside a `.join` when it sits beside a button.
+
+```html
+<div class="field">
+  <label for="email">Email</label>
+  <input class="input" id="email" type="email" aria-invalid="true" aria-describedby="email-error">
+  <p class="error" id="email-error">Enter a full email address.</p>
+</div>
+```
+
+| Child | Role |
+|-------|------|
+| `<label for>` | The label. Bold. Dims when the control is disabled. |
+| `.input` or `.join` | The control, bare or as a wrapper with addons. A join stretches to the column and the input inside takes the slack. |
+| `.hint` | Help text, muted. Point `aria-describedby` at it. |
+| `.error` | Error text, red. A `<p>` for one, a `<ul>` of `<li>` for several. Hidden when empty, so a template can always render it. |
+
+The control turns red when the field holds a non-empty `.error`, when the control has `aria-invalid="true"`, or when native validation fails after interaction. Always set `aria-invalid` and `aria-describedby` alongside an `.error`; the colour alone does not reach screen readers.
+
+Disabled: `disabled` on the control, or `<fieldset class="field" disabled>` to disable everything inside it natively.
+
+## Checkbox, radio, switch: `.checkbox` `.radio` `.switch`
+
+Restyled native inputs. Two ways to label, same result: the class on a `<label>` that wraps the input, or on the `<input>` when a `<label for>` sits beside it. Wrapped is shorter and makes the whole label the click target.
+
+```html
+<label class="checkbox"><input type="checkbox" name="remember"> Remember me</label>
+<input class="checkbox" id="terms" type="checkbox"> <label for="terms">I agree</label>
+
+<label class="radio"><input type="radio" name="plan" checked> Free</label>
+<label class="radio"><input type="radio" name="plan"> Team</label>
+
+<label class="switch"><input type="checkbox" role="switch" checked> Email me about updates</label>
+```
+
+| Kind | Classes / attributes |
+|------|----------------------|
+| Size | `xs` `sm` `lg` `xl`. No size = 1.5rem box, the 24px target minimum. A wrapping label stays 24px tall for the smaller sizes. |
+| State | `checked`, `disabled`, `required`. A checkbox also shows the `indeterminate` DOM property. |
+| Invalid | `aria-invalid="true"`, or native validation failing after interaction. Border and ring turn red. |
+
+- A switch is a checkbox with `role="switch"`, so screen readers say on and off. Use it for a setting that applies at once; a checkbox for something submitted with a form.
+- A radio is always round and a switch always a pill. A checkbox follows `--radius`, capped at a quarter of its size.
+- A group goes in `<fieldset class="field">` with a `<legend>`, then `.hint` or `.error` as for any field. Point `aria-describedby` on the inputs at the message. `disabled` on the fieldset disables the lot.
+- The checked fill is `--check-accent`, primary by default. For a green switch: `[--check-accent:var(--color-success)]`.
+
+Custom properties, shared by all three: `--check-border --check-accent --check-fg --check-ring --check-size --check-radius --check-text`.
 
 ## Badge: `.badge`
 

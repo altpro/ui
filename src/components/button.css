@@ -38,10 +38,6 @@
     &:hover {
       background: var(--btn-hover);
     }
-    &:focus-visible {
-      outline: 2px solid var(--color-ring);
-      outline-offset: 2px;
-    }
     &:disabled, &[aria-disabled="true"] {
       opacity: 0.5;
       pointer-events: none;
@@ -97,6 +93,12 @@
     &.outline {
       border-color: var(--btn-outline);
       --join-divider: var(--btn-outline);
+    }
+    /* after .outline so the ring colour wins the border on every variant */
+    &:focus-visible {
+      border-color: var(--color-ring);
+      outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+      outline-offset: 0;
     }
 
     /* sizes */

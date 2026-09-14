@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Field</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Field</h1>
+    <p class="text-muted-foreground">A <code>.field</code> stacks a label, a control, a <code>.hint</code> and an <code>.error</code>. The control is any <code>.input</code>: text, number, date, select, textarea. Addons (£, kg, an icon) go inside an <code>.input</code> wrapper.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Input</h2>
+    <p class="text-sm text-muted-foreground">On its own, <code>.input</code> needs a name from somewhere: a visible <code>&lt;label for&gt;</code> or an <code>aria-label</code>. Sizes match the button so the two line up in a join. A select uses <code>appearance: base-select</code> where supported, so the chevron and the picker are styled; elsewhere it stays native.</p>
+    <div class="flex flex-wrap items-center gap-4">
+      <input class="input xs" type="search" placeholder="Search" aria-label="Search, extra small">
+      <input class="input sm" type="search" placeholder="Search" aria-label="Search, small">
+      <input class="input" type="search" placeholder="Search" aria-label="Search">
+      <input class="input lg" type="search" placeholder="Search" aria-label="Search, large">
+      <input class="input xl" type="search" placeholder="Search" aria-label="Search, extra large">
+      <select class="input" aria-label="Sort by"><option>Newest</option><option>Oldest</option></select>
+      <input class="input" type="date" aria-label="Date">
+      <input class="input" type="text" value="Read only" readonly aria-label="Read only">
+      <input class="input" type="text" value="Disabled" disabled aria-label="Disabled">
+      <input class="input" type="email" value="not an email" aria-invalid="true" aria-label="Invalid">
+    </div>
+<pre>&lt;input class="input" type="search" placeholder="Search" aria-label="Search"&gt;
+&lt;select class="input sm" aria-label="Sort by"&gt;…&lt;/select&gt;
+&lt;input class="input" type="email" aria-invalid="true" aria-label="Email"&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Field</h2>
+    <p class="text-sm text-muted-foreground">Label, control, hint. Point <code>aria-describedby</code> at the hint so it is read with the control. Children are styled by element, so the label needs no class.</p>
+    <div class="grid max-w-3xl gap-6 md:grid-cols-2">
+      <div class="field">
+        <label for="name">Display name</label>
+        <input class="input" id="name" type="text" aria-describedby="name-hint">
+        <p class="hint" id="name-hint">Shown on your profile and in comments.</p>
+      </div>
+      <div class="field">
+        <label for="plan">Plan</label>
+        <select class="input" id="plan"><option>Free</option><option>Team</option><option>Enterprise</option></select>
+      </div>
+      <div class="field md:col-span-2">
+        <label for="bio">Bio</label>
+        <textarea class="input" id="bio" rows="3" aria-describedby="bio-hint"></textarea>
+        <p class="hint" id="bio-hint">Up to 200 characters.</p>
+      </div>
+    </div>
+<pre>&lt;div class="field"&gt;
+  &lt;label for="name"&gt;Display name&lt;/label&gt;
+  &lt;input class="input" id="name" type="text" aria-describedby="name-hint"&gt;
+  &lt;p class="hint" id="name-hint"&gt;Shown on your profile and in comments.&lt;/p&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Errors</h2>
+    <p class="text-sm text-muted-foreground">Three things turn the control red: a non-empty <code>.error</code> child, <code>aria-invalid="true"</code> on the control, or native validation failing after the user has touched it. Set <code>aria-invalid</code> and <code>aria-describedby</code> too, so the state and the message reach screen readers. An empty <code>.error</code> is hidden, so a template can always render it.</p>
+    <div class="grid max-w-3xl gap-6 md:grid-cols-2">
+      <div class="field">
+        <label for="email">Email</label>
+        <input class="input" id="email" type="email" value="ada@example" aria-invalid="true" aria-describedby="email-error">
+        <p class="error" id="email-error">Enter a full email address.</p>
+      </div>
+      <div class="field">
+        <label for="pw">Password</label>
+        <input class="input" id="pw" type="password" value="abc" aria-invalid="true" aria-describedby="pw-error">
+        <ul class="error" id="pw-error">
+          <li>At least 8 characters.</li>
+          <li>At least one number.</li>
+        </ul>
+      </div>
+      <div class="field">
+        <label for="req">Required, native</label>
+        <input class="input" id="req" type="text" required aria-describedby="req-hint">
+        <p class="hint" id="req-hint">Tab through this without typing and it turns red on its own.</p>
+      </div>
+      <div class="field">
+        <label for="ok">Rendered empty</label>
+        <input class="input" id="ok" type="text" value="Fine">
+        <p class="error"></p>
+      </div>
+    </div>
+<pre>&lt;div class="field"&gt;
+  &lt;label for="email"&gt;Email&lt;/label&gt;
+  &lt;input class="input" id="email" type="email" aria-invalid="true" aria-describedby="email-error"&gt;
+  &lt;p class="error" id="email-error"&gt;Enter a full email address.&lt;/p&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Addons</h2>
+    <p class="text-sm text-muted-foreground">Put <code>.input</code> on a <code>&lt;label&gt;</code> that wraps the control. A symbol, unit or icon beside it sits inside the same border and the focus ring goes round the lot. Clicking the addon focuses the control. A button next to an input is still a <a href="join.html" class="underline">join</a>.</p>
+    <div class="grid max-w-3xl gap-6 md:grid-cols-2">
+      <div class="field">
+        <label for="price">Price</label>
+        <label class="input"><span>£</span><input id="price" type="number" step="0.01" value="12.50"></label>
+      </div>
+      <div class="field">
+        <label for="weight">Weight</label>
+        <label class="input"><input id="weight" type="number" value="70"><span>kg</span></label>
+      </div>
+      <div class="field">
+        <label for="site">Site</label>
+        <label class="input"><span>https://</span><input id="site" type="text" value="example.com"></label>
+      </div>
+      <div class="field">
+        <label for="amount">Amount</label>
+        <label class="input"><select aria-label="Currency"><option>GBP</option><option>EUR</option><option>USD</option></select><input id="amount" type="number" value="100" aria-invalid="true" aria-describedby="amount-error"></label>
+        <p class="error" id="amount-error">Over your limit of 50.</p>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-4">
+      <label class="input sm">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input type="search" placeholder="Search" aria-label="Search">
+      </label>
+      <label class="input"><span>@</span><input type="text" placeholder="handle" aria-label="Handle"></label>
+      <label class="input lg"><input type="text" placeholder="Search" aria-label="Search"><kbd class="badge sm">⌘K</kbd></label>
+      <div class="join">
+        <input class="input sm" type="search" placeholder="Search" aria-label="Search">
+        <button class="btn primary sm" type="button">Go</button>
+      </div>
+    </div>
+<pre>&lt;div class="field"&gt;
+  &lt;label for="price"&gt;Price&lt;/label&gt;
+  &lt;label class="input"&gt;&lt;span&gt;£&lt;/span&gt;&lt;input id="price" type="number"&gt;&lt;/label&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Beside a button</h2>
+    <p class="text-sm text-muted-foreground">Each size is the same height as the button of that size.</p>
+    <div class="flex flex-wrap items-end gap-4">
+      <div class="flex gap-2"><input class="input xs" placeholder="xs" aria-label="Extra small"><button class="btn xs" type="button">Button</button></div>
+      <div class="flex gap-2"><input class="input sm" placeholder="sm" aria-label="Small"><button class="btn sm" type="button">Button</button></div>
+      <div class="flex gap-2"><label class="input"><span>£</span><input placeholder="default" aria-label="Default"></label><button class="btn" type="button">Button</button></div>
+      <div class="flex gap-2"><input class="input lg" placeholder="lg" aria-label="Large"><button class="btn lg" type="button">Button</button></div>
+      <div class="flex gap-2"><label class="input xl"><input placeholder="xl" aria-label="Extra large"><span>kg</span></label><button class="btn xl" type="button">Button</button></div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Disabled</h2>
+    <p class="text-sm text-muted-foreground">A disabled control dims itself and its label. The hint stays readable, since it often says why. A <code>&lt;fieldset class="field" disabled&gt;</code> disables everything inside it natively, no per-control attribute needed.</p>
+    <div class="grid max-w-3xl gap-6 md:grid-cols-2">
+      <div class="field">
+        <label for="dis">Username</label>
+        <input class="input" id="dis" type="text" value="ada" disabled aria-describedby="dis-hint">
+        <p class="hint" id="dis-hint">Cannot be changed after sign-up.</p>
+      </div>
+      <fieldset class="field" disabled>
+        <label for="dis2">Team</label>
+        <label class="input"><span>#</span><input id="dis2" type="text" value="platform"></label>
+        <p class="hint">Managed by your admin.</p>
+      </fieldset>
+    </div>
+<pre>&lt;fieldset class="field" disabled&gt;
+  &lt;label for="team"&gt;Team&lt;/label&gt;
+  &lt;input class="input" id="team" type="text" value="platform"&gt;
+&lt;/fieldset&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel field">
+        <label for="l1">Light</label>
+        <input class="input" id="l1" type="text" placeholder="Placeholder">
+        <p class="hint">A hint.</p>
+      </div>
+      <div class="dark panel field">
+        <label for="d1">Dark</label>
+        <input class="input" id="d1" type="text" value="Wrong" aria-invalid="true" aria-describedby="d1-error">
+        <p class="error" id="d1-error">An error.</p>
+      </div>
+      <div class="inverse panel field">
+        <label for="i1">Inverse</label>
+        <input class="input" id="i1" type="text" value="Disabled" disabled>
+        <p class="hint">A hint.</p>
+      </div>
+    </div>
+    <p class="text-sm text-muted-foreground">Custom properties on the input: <code>--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text</code>.</p>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

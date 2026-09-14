@@ -1,0 +1,173 @@
+/* Input.
+   <input class="input" type="text">   <select class="input sm">   <textarea class="input">
+   <label class="input"><span>£</span><input type="number"></label>
+   One class for every text-like control. On a wrapper, the border, ring and
+   size belong to the wrapper and anything beside the control (a symbol, a
+   unit, an icon) sits inside the same box. The border, focus ring and
+   invalid colour come from --input-* vars so .field can redirect them.
+   Invalid when `aria-invalid="true"` is set, or when native validation fails
+   after the user has touched the control (:user-invalid). Sizes match .btn
+   so the two line up side by side or inside .join. Layered so Tailwind wins. */
+@layer components {
+  .input {
+    --input-bg: var(--color-background);
+    --input-fg: var(--color-foreground);
+    --input-border: var(--color-border);
+    --input-ring: var(--color-ring);
+    --input-radius: var(--radius);
+    --input-h: 2.25rem;
+    --input-px: 0.75rem;
+    --input-text: var(--text-sm, 0.875rem);
+    --join-divider: var(--input-border);
+
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    height: var(--input-h);
+    padding-inline: var(--input-px);
+    font-size: var(--input-text);
+    line-height: 1;
+    border: 1px solid var(--input-border);
+    border-radius: var(--input-radius);
+    background: var(--input-bg);
+    color: var(--input-fg);
+    transition: border-color 0.15s;
+
+    &::placeholder, ::placeholder {
+      color: var(--color-muted-foreground);
+    }
+    /* the ring hugs the border and the border takes the ring colour, as shadcn does */
+    &:is(:focus-visible, :has(:focus-visible)) {
+      border-color: var(--input-ring);
+      outline: 3px solid color-mix(in oklab, var(--input-ring) 50%, transparent);
+      outline-offset: 0;
+    }
+    &:is(:disabled, :has(:disabled)) {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    &:is([aria-invalid="true"], :user-invalid, :has([aria-invalid="true"], :user-invalid)) {
+      --input-border: var(--color-danger);
+      --input-ring: var(--color-danger);
+    }
+
+    /* select: base-select makes the button and picker ours to style, so the
+       chevron is the same Lucide stroke on every platform and the picker
+       matches .dropdown. The chevron is a mask so it takes the text colour.
+       Browsers without base-select keep their native select unchanged. */
+    @supports (appearance: base-select) {
+      &:is(select), > select {
+        appearance: base-select;
+        align-items: center;
+
+        &::picker-icon {
+          content: "";
+          flex: none;
+          width: 1.15em;
+          height: 1.15em;
+          margin-inline-start: auto;
+          background: currentColor;
+          mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>') center / contain no-repeat;
+          color: var(--color-muted-foreground);
+          transition: rotate 0.15s;
+        }
+        &:open::picker-icon {
+          rotate: 180deg;
+        }
+        &::picker(select) {
+          appearance: base-select;
+          /* the UA prefers whichever side has more room; drop down first like .dropdown */
+          position-area: block-end span-inline-end;
+          position-try-order: normal;
+          position-try-fallbacks: flip-block, flip-inline, flip-block flip-inline;
+          margin-block: 0.25rem;
+          min-width: anchor-size(width);
+          padding: 0.25rem;
+          border: 1px solid var(--color-border);
+          border-radius: min(var(--radius), 1rem);
+          background: var(--color-card);
+          color: var(--color-card-foreground);
+          font-size: var(--input-text);
+          box-shadow: 0 8px 24px -8px oklch(0 0 0 / 0.3);
+        }
+        option {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem;
+          min-height: 2rem;
+          padding-inline: 0.5rem;
+          border-radius: calc(var(--input-radius) - 2px);
+          cursor: pointer;
+
+          &:is(:hover, :focus-visible) {
+            outline: 0;
+            background: var(--color-muted);
+          }
+          &:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+          &::checkmark {
+            content: "";
+            order: 1;
+            flex: none;
+            width: 1.15em;
+            height: 1.15em;
+            margin-inline-start: auto;
+            background: currentColor;
+            mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>') center / contain no-repeat;
+          }
+        }
+        optgroup {
+          padding-block: 0.25rem;
+          > legend {
+            padding: 0.25rem 0.5rem;
+            font-size: var(--text-xs, 0.75rem);
+            font-weight: 600;
+            color: var(--color-muted-foreground);
+          }
+        }
+      }
+    }
+
+    /* a textarea grows with its rows; the height var becomes a floor */
+    &:is(textarea) {
+      height: auto;
+      min-height: var(--input-h);
+      padding-block: 0.5rem;
+      line-height: 1.5;
+    }
+
+    /* wrapper: the control inside loses its own chrome, everything else is muted.
+       The control keeps its natural one-line height rather than stretching, so
+       it and the addon are the same box centred the same way, whatever the
+       font's metrics. The wrapper is a <label>, so clicks still land. */
+    &:is(label) {
+      cursor: text;
+    }
+    > :is(input, select) {
+      flex: 1;
+      min-width: 0;
+      padding: 0;
+      border: 0;
+      outline: 0;
+      background: transparent;
+      color: inherit;
+      font: inherit;
+    }
+    /* a select beside an input keeps to its text so the chevron stays by it */
+    > select:has(~ input), > input ~ select {
+      flex: none;
+    }
+    > :not(input, select) {
+      color: var(--color-muted-foreground);
+      white-space: nowrap;
+    }
+
+    /* sizes */
+    &.xs { --input-h: 1.75rem; --input-px: 0.5rem;  --input-text: var(--text-xs, 0.75rem); }
+    &.sm { --input-h: 2rem;    --input-px: 0.625rem; }
+    &.lg { --input-h: 2.5rem;  --input-px: 0.875rem; --input-text: var(--text-base, 1rem); }
+    &.xl { --input-h: 3rem;    --input-px: 1rem;     --input-text: var(--text-lg, 1.125rem); }
+  }
+}
