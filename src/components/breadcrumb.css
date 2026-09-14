@@ -1,0 +1,97 @@
+/* Breadcrumb: the path to the current page, in muted text with chevrons.
+   <nav class="breadcrumb" aria-label="Breadcrumb">
+     <a href="/">Home</a>
+     <a href="/docs">Docs</a>
+     <span aria-current="page">Breadcrumb</span>
+   </nav>
+   Items are styled by element: links, a span or button, and the one with
+   aria-current="page" in full-strength text. An <ol>/<li> wrapper is
+   flattened away, so either markup works. The chevron between items is
+   drawn in CSS. A <button> is a link-coloured trigger for a .dropdown of
+   collapsed levels. Layered so Tailwind utilities win. */
+@layer components {
+  .breadcrumb {
+    --breadcrumb-fg: var(--color-muted-foreground);
+    --breadcrumb-active-fg: var(--color-foreground);
+    --breadcrumb-gap: 0.625rem;
+    --breadcrumb-text: var(--text-sm, 0.875rem);
+
+    display: flex;
+    align-items: center;
+    /* room between items for the chevron, which sits in the gap */
+    gap: calc(2 * var(--breadcrumb-gap) + 0.4em);
+    font-size: var(--breadcrumb-text);
+    color: var(--breadcrumb-fg);
+    /* one row; a long path scrolls sideways instead of wrapping. The
+       padding and negative margin leave room for the focus ring, which
+       the overflow would otherwise clip. */
+    white-space: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+    /* with a mouse the scrollbar shows on hover or keyboard focus only.
+       It stays in the layout, painted transparent, so nothing jumps. */
+    @media (hover: hover) {
+      scrollbar-color: transparent transparent;
+      &:is(:hover, :focus-within) { scrollbar-color: auto; }
+    }
+    padding: 5px;
+    margin: -5px;
+
+    ol, ul, li {
+      display: contents;
+      list-style: none;
+    }
+    /* direct children only, so a .nav inside a collapsed-levels dropdown keeps its own styles */
+    :is(&, & li) > :is(a, button, span) {
+      position: relative;
+      display: inline-flex;
+      flex: none;
+      align-items: center;
+      gap: 0.375rem;
+      /* each item is a target on its own, so an icon-only one still spans 24px */
+      justify-content: center;
+      min-width: 1.5rem;
+      min-height: 1.5rem;
+      color: inherit;
+      text-decoration: none;
+      transition: color 0.15s;
+    }
+    :is(&, & li) > button {
+      padding: 0;
+      border: 0;
+      background: none;
+      font: inherit;
+      cursor: pointer;
+    }
+    :is(&, & li) > :is(a, button):hover {
+      color: var(--breadcrumb-active-fg);
+    }
+    :is(&, & li) > :is(a, button):focus-visible {
+      outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+      outline-offset: 2px;
+      border-radius: 0.25rem;
+    }
+    :is(&, & li) > [aria-current] {
+      color: var(--breadcrumb-active-fg);
+    }
+
+    /* chevron in the gap before every item after the first. Positioned
+       outside the item's box so it is not part of the link's target or
+       focus ring. A popover sibling is skipped: not an item, no chevron. */
+    & > :is(a, button, span):not(:first-child)::before,
+    & li:not(:first-child) > :is(a, button, span)::before {
+      content: "";
+      position: absolute;
+      inset-inline-end: calc(100% + var(--breadcrumb-gap));
+      top: 50%;
+      width: 0.4em;
+      height: 0.4em;
+      border: solid currentColor;
+      border-width: 1.5px 1.5px 0 0;
+      translate: 0 -50%;
+      rotate: 45deg;
+      /* the chevron keeps the muted colour when its item is the current page */
+      color: var(--breadcrumb-fg);
+    }
+  }
+}

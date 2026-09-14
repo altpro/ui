@@ -12,10 +12,11 @@
    heading and a description) sits left and whatever follows it is pushed
    right. A first or last img, picture or video bleeds to the edges.
    `divided` draws a line under the header and over the footer. Padding
-   and the gap between children are --card-p. Layered so Tailwind
+   and the gap between children are --card-p. `.dialog` shares all of
+   this; dialog.css adds only the modal parts. Layered so Tailwind
    utilities win. */
 @layer components {
-  .card {
+  :is(.card, .dialog) {
     --card-bg: var(--color-card);
     --card-fg: var(--color-card-foreground);
     --card-border: var(--color-border);
@@ -49,6 +50,8 @@
         flex-basis: 100%;
       }
       hgroup {
+        /* grows to fill so a long description wraps instead of pushing the control to a new line */
+        flex: 1 1 0;
         display: grid;
         gap: 0.25rem;
       }

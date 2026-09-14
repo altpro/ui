@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Dialog</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Dialog</h1>
+    <p class="text-muted-foreground"><code>.dialog</code> on a native <code>dialog</code>. Inside, it is a card: <code>header</code>, <code>footer</code>, <code>divided</code> and media all work the same. Buttons open and close it with <code>command</code> and <code>commandfor</code>, so there is no JavaScript. Esc closes it, focus is trapped, and the page behind cannot be reached.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Modal with a close button</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn primary" command="show-modal" commandfor="d-basic">Delete project</button>
+    <dialog id="d-basic" class="dialog" aria-labelledby="d-basic-title">
+      <header>
+        <hgroup>
+          <h3 id="d-basic-title">Delete this project?</h3>
+          <p>This removes every deployment and cannot be undone.</p>
+        </hgroup>
+        <button class="btn ghost sm" command="close" commandfor="d-basic" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <p>Type the project name to confirm. Members lose access as soon as you press delete.</p>
+      <footer class="justify-end">
+        <button class="btn ghost" command="close" commandfor="d-basic">Cancel</button>
+        <button class="btn danger" command="close" commandfor="d-basic">Delete</button>
+      </footer>
+    </dialog>
+    </div>
+    <p class="text-sm text-muted-foreground">The cross is a <code>btn ghost sm</code> after the <code>hgroup</code>, so the card header pushes it to the far side. <code>aria-labelledby</code> on the dialog names it after its heading.</p>
+<pre>&lt;button class="btn primary" command="show-modal" commandfor="confirm"&gt;Delete project&lt;/button&gt;
+&lt;dialog id="confirm" class="dialog" aria-labelledby="confirm-title"&gt;
+  &lt;header&gt;
+    &lt;hgroup&gt;&lt;h3 id="confirm-title"&gt;Delete this project?&lt;/h3&gt;&lt;p&gt;This cannot be undone.&lt;/p&gt;&lt;/hgroup&gt;
+    &lt;button class="btn ghost sm" command="close" commandfor="confirm" aria-label="Close"&gt;…x…&lt;/button&gt;
+  &lt;/header&gt;
+  &lt;p&gt;Body.&lt;/p&gt;
+  &lt;footer class="justify-end"&gt;
+    &lt;button class="btn ghost" command="close" commandfor="confirm"&gt;Cancel&lt;/button&gt;
+    &lt;button class="btn danger" command="close" commandfor="confirm"&gt;Delete&lt;/button&gt;
+  &lt;/footer&gt;
+&lt;/dialog&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Long content scrolls</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" command="show-modal" commandfor="d-long">Read the terms</button>
+    <dialog id="d-long" class="dialog divided" aria-labelledby="d-long-title">
+      <header>
+        <h3 id="d-long-title">Terms of service</h3>
+        <button class="btn ghost sm" command="close" commandfor="d-long" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <p>1. These terms apply to every account. By creating one you agree to them on behalf of yourself and anyone you invite.</p>
+      <p>2. You keep ownership of what you upload. We store and serve it only to run the service.</p>
+      <p>3. Billing is monthly in arrears. A failed payment pauses the account after seven days.</p>
+      <p>4. We may change these terms with thirty days of notice by email. Continued use after that date is acceptance.</p>
+      <p>5. Either side may end the agreement at any time. Data is deleted ninety days after an account closes.</p>
+      <p>6. The service is provided as is. Liability is capped at the fees paid in the previous twelve months.</p>
+      <p>7. English law applies and the courts of England have exclusive jurisdiction.</p>
+      <p>8. Nothing here limits liability for fraud or for death or injury caused by negligence.</p>
+      <p>9. If any clause is unenforceable the rest still stands.</p>
+      <p>10. These terms are the whole agreement and replace any earlier ones.</p>
+      <p>11. Notices go to the email on the account. Keep it current.</p>
+      <p>12. Support is by email during UK office hours. There is no uptime guarantee on the free plan.</p>
+      <footer class="justify-end">
+        <button class="btn ghost" command="close" commandfor="d-long">Decline</button>
+        <button class="btn primary" command="close" commandfor="d-long">Accept</button>
+      </footer>
+    </dialog>
+    </div>
+    <p class="text-sm text-muted-foreground">The dialog is capped at the viewport minus a <code>gap</code> on each side and scrolls inside. The header and footer scroll with the body; there is no pinned header.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">A form</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" command="show-modal" commandfor="d-form">Invite a member</button>
+    <dialog id="d-form" class="dialog max-w-sm" aria-labelledby="d-form-title">
+      <header>
+        <h3 id="d-form-title">Invite a member</h3>
+        <button class="btn ghost sm" command="close" commandfor="d-form" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <form id="invite" method="dialog" class="contents">
+        <div class="field">
+          <label for="inv-email">Email</label>
+          <input class="input" id="inv-email" type="email" autocomplete="off" autofocus>
+        </div>
+        <div class="field">
+          <label for="inv-role">Role</label>
+          <select class="input" id="inv-role">
+            <option>Viewer</option>
+            <option>Editor</option>
+            <option>Admin</option>
+          </select>
+        </div>
+      </form>
+      <footer class="justify-end">
+        <button class="btn ghost" command="close" commandfor="d-form">Cancel</button>
+        <button class="btn primary" form="invite">Send invite</button>
+      </footer>
+    </dialog>
+    </div>
+    <p class="text-sm text-muted-foreground">The form wraps the fields with <code>class="contents"</code> so they stack with the card gap, and <code>method="dialog"</code> closes the dialog on submit. The footer stays a direct child of the dialog; its submit button points at the form with <code>form="invite"</code>. <code>autofocus</code> on the first field puts the cursor there on open; without it the close button takes focus. <code>max-w-sm</code> narrows it.</p>
+<pre>&lt;dialog id="d" class="dialog max-w-sm" aria-labelledby="d-title"&gt;
+  &lt;header&gt;…&lt;/header&gt;
+  &lt;form id="invite" method="dialog" class="contents"&gt;
+    &lt;div class="field"&gt;…&lt;input class="input" autofocus&gt;&lt;/div&gt;
+  &lt;/form&gt;
+  &lt;footer class="justify-end"&gt;
+    &lt;button class="btn ghost" command="close" commandfor="d"&gt;Cancel&lt;/button&gt;
+    &lt;button class="btn primary" form="invite"&gt;Send invite&lt;/button&gt;
+  &lt;/footer&gt;
+&lt;/dialog&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Closing and non-modal</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" command="show-modal" commandfor="d-any">Click outside to close</button>
+      <button class="btn" command="show-modal" commandfor="d-none">Buttons only</button>
+      <button class="btn" command="show-popover" commandfor="d-show">Non-modal</button>
+    <dialog id="d-any" class="dialog max-w-sm" closedby="any" aria-labelledby="d-any-title">
+      <header>
+        <h3 id="d-any-title">Light dismiss</h3>
+        <button class="btn ghost sm" command="close" commandfor="d-any" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <p><code>closedby="any"</code>. A click on the backdrop closes it, as does Esc.</p>
+    </dialog>
+    <dialog id="d-none" class="dialog max-w-sm" closedby="none" aria-labelledby="d-none-title">
+      <header><h3 id="d-none-title">Session expired</h3></header>
+      <p><code>closedby="none"</code>. Esc does nothing. The only way out is a button.</p>
+      <footer class="justify-end"><button class="btn primary" command="close" commandfor="d-none">Sign in again</button></footer>
+    </dialog>
+    <dialog id="d-show" class="dialog max-w-sm" popover="manual" aria-labelledby="d-show-title">
+      <header>
+        <h3 id="d-show-title">Non-modal</h3>
+        <button class="btn ghost sm" command="hide-popover" commandfor="d-show" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <p><code>popover="manual"</code> on the dialog, opened with <code>command="show-popover"</code>. No backdrop, the page stays usable, Esc does nothing. Centred in the viewport.</p>
+    </dialog>
+    </div>
+    <p class="text-sm text-muted-foreground">Default is Esc only. <code>closedby="any"</code> adds the backdrop click, <code>closedby="none"</code> removes Esc. For non-modal, make the dialog a <code>popover="manual"</code> and open it with <code>command="show-popover"</code>; close with <code>command="hide-popover"</code>. There is no non-modal command for a plain dialog.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Media</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" command="show-modal" commandfor="d-media">Preview</button>
+    <dialog id="d-media" class="dialog" aria-labelledby="d-media-title">
+      <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 2'%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%236d8bff'/%3E%3Cstop offset='1' stop-color='%23d46bff'/%3E%3C/linearGradient%3E%3Crect width='4' height='2' fill='url(%23g)'/%3E%3C/svg%3E" alt="">
+      <header>
+        <hgroup><h3 id="d-media-title">Cover image</h3><p>Bleeds to the edges like a card.</p></hgroup>
+        <button class="btn ghost sm" command="close" commandfor="d-media" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <footer class="justify-end"><button class="btn primary" command="close" commandfor="d-media">Use this</button></footer>
+    </dialog>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

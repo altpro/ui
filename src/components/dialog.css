@@ -1,0 +1,63 @@
+/* Dialog: a card in the top layer.
+   <button class="btn" command="show-modal" commandfor="d">Open</button>
+   <dialog id="d" class="dialog" aria-labelledby="d-title">
+     <header>
+       <h3 id="d-title">Title</h3>
+       <button class="btn ghost sm" command="close" commandfor="d" aria-label="Close">…x…</button>
+     </header>
+     <p>Body.</p>
+     <footer><button class="btn primary" command="close" commandfor="d">Done</button></footer>
+   </dialog>
+   Native dialog and button commands: open, close, Esc, focus trapping
+   and the backdrop need no JS. `closedby="any"` adds click-outside.
+   Non-modal: add `popover="manual"` to the dialog and open it with
+   `command="show-popover"`. Same box, centred, no backdrop, page usable.
+   The box, header, footer, media bleed and `divided` come from card.css.
+   Sized to the viewport minus a gap on each side and scrolls inside when
+   the content is taller. Layered so Tailwind utilities (w-*, max-w-*) win. */
+@layer components {
+  .dialog {
+    --dialog-w: 32rem;
+    --dialog-shadow: 0 16px 48px -12px oklch(0 0 0 / 0.4);
+    --dialog-backdrop: light-dark(oklch(0 0 0 / 0.5), oklch(0 0 0 / 0.7));
+
+    /* Tailwind preflight zeroes dialog margins; auto is what centres it.
+       A space-y-* parent would set them again, so keep the dialog out of one. */
+    margin: auto;
+    width: var(--dialog-w);
+    max-width: calc(100% - 2 * var(--spacing-gap));
+    max-height: calc(100% - 2 * var(--spacing-gap));
+    overflow: auto;
+    box-shadow: var(--dialog-shadow);
+    transition: opacity 0.15s, scale 0.15s, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
+
+    /* the cross sits on the heading's line and its padding overhangs into the card padding */
+    > header > :is([command="close"], [command="hide-popover"]) {
+      margin-block: -0.375rem;
+      margin-inline-end: calc(-1 * var(--btn-px, 0.75rem));
+    }
+
+    &::backdrop {
+      transition: opacity 0.15s, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
+    }
+
+    &:modal::backdrop {
+      background: var(--dialog-backdrop);
+    }
+
+    /* card.css sets display: flex, so the closed state must be restated */
+    &:not([open], :popover-open) {
+      display: none;
+      opacity: 0;
+      scale: 0.96;
+      &::backdrop { opacity: 0; }
+    }
+    @starting-style {
+      &:is([open], :popover-open) { opacity: 0; scale: 0.96; }
+      &:is([open], :popover-open)::backdrop { opacity: 0; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      &, &::backdrop { transition-duration: 0s; }
+    }
+  }
+}

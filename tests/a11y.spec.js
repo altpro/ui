@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "dropdown.html", "tooltip.html", "card.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -72,6 +72,30 @@ for (const colorScheme of ["light", "dark"]) {
       expect(p3.y + p3.height).toBeLessThanOrEqual(150);
     });
 
+    // dialogs are closed at load, so axe never sees them: open each, check it, and check it fits the viewport
+    test("dialog.html: every open dialog passes axe and stays inside the viewport", async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/dialog.html");
+      await page.addStyleTag({ content: "*, ::backdrop { transition: none !important }" });
+      const failures = [];
+      for (const t of await page.locator("main [command^=show]").all()) {
+        const id = "#" + (await t.getAttribute("commandfor"));
+        await t.scrollIntoViewIfNeeded();
+        await t.click();
+        const d = page.locator(id);
+        await expect(d).toBeVisible();
+        const box = await d.boundingBox();
+        const off = box.x < 0 || box.y < 0 || box.x + box.width > 800 || box.y + box.height > 500;
+        const { violations } = await axe(page).include(id).analyze();
+        if (off || violations.length) failures.push(`${id}: ${off ? JSON.stringify(box) : ""} ${summary(violations)}`);
+        await d.evaluate((el) => (el.matches(":popover-open") ? el.hidePopover() : el.close()));
+      }
+      expect(failures).toEqual([]);
+      // the long one is taller than the viewport, so it must scroll inside rather than grow
+      await page.locator("[command=show-modal][commandfor=d-long]").click();
+      expect(await page.locator("#d-long").evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
+    });
+
     // the bubble is a pseudo-element: it hit-tests as the host, so elementFromPoint above the host finds it
     test("tooltip.html: hover shows a bubble above every host, inside the viewport", async ({ page }) => {
       await page.setViewportSize({ width: 800, height: 500 });
@@ -93,7 +117,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(failures).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });

@@ -13,6 +13,8 @@
 @import "./components/badge.css";
 @import "./components/avatar.css";
 @import "./components/nav.css";
+@import "./components/breadcrumb.css";
 @import "./components/dropdown.css";
 @import "./components/tooltip.css";
 @import "./components/card.css";
+@import "./components/dialog.css";

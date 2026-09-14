@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, dropdown, tooltip, card, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -235,6 +235,31 @@ A `<button type="button">` is an action item and looks like a link. For a list o
 
 Custom properties: `--nav-fg --nav-active-fg --nav-hover --nav-active-bg --nav-radius --nav-h --nav-px --nav-text`.
 
+## Breadcrumb: `.breadcrumb`
+
+The path to the current page. Put it on a `<nav>` with `aria-label="Breadcrumb"`. Children are styled by element; chevrons are drawn in CSS, so there is no separator markup.
+
+```html
+<nav class="breadcrumb" aria-label="Breadcrumb">
+  <a href="/">Home</a>
+  <a href="/docs">Docs</a>
+  <span aria-current="page">Breadcrumb</span>
+</nav>
+```
+
+| Child | Role |
+|-------|------|
+| `<a>` | A link, muted, full-strength on hover. |
+| `<span aria-current="page">` | The current page, full-strength text, not a link. |
+| `<button>` | Looks like a link. For collapsed levels: give it `aria-label`, `popovertarget`, an ellipsis icon, and put a `.dropdown` holding a `.nav` of the hidden links straight after it. |
+| `<ol>` `<li>` | Optional list markup, flattened away. Renders the same as bare children. |
+
+- An icon-only link (a house for home) needs `aria-label`. Icons are `size-4`.
+- One row. A path wider than its container scrolls sideways; it never wraps.
+- Text is `text-sm`; each link is at least 24px tall.
+
+Custom properties: `--breadcrumb-fg --breadcrumb-active-fg --breadcrumb-gap --breadcrumb-text`.
+
 ## Dropdown: `.dropdown`
 
 A panel anchored to the button that opens it. Native `popover` plus CSS anchor positioning: the browser handles open, close, Esc, click-outside and placement. No JavaScript, no wrapper element. The trigger is any button with `popovertarget` pointing at the panel's `id`.
@@ -315,6 +340,44 @@ A bordered box on `--color-card`. Children are styled by element, so no item cla
 - The radius is `--radius` capped at 1rem, so a pill theme does not round a card into an ellipse.
 
 Custom properties: `--card-bg --card-fg --card-border --card-radius --card-p`.
+
+## Dialog: `.dialog`
+
+A card in the top layer, on a native `<dialog>`. Everything in the Card section applies inside it: `header`, `hgroup`, `footer`, media bleed, `divided`, `--card-p`. Open and close with button commands, no JavaScript. The browser handles Esc, focus trapping, the backdrop and returning focus to the trigger.
+
+```html
+<button class="btn primary" command="show-modal" commandfor="confirm">Delete project</button>
+<dialog id="confirm" class="dialog" aria-labelledby="confirm-title">
+  <header>
+    <hgroup><h3 id="confirm-title">Delete this project?</h3><p>This cannot be undone.</p></hgroup>
+    <button class="btn ghost sm" command="close" commandfor="confirm" aria-label="Close">
+      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+    </button>
+  </header>
+  <p>Members lose access as soon as you press delete.</p>
+  <footer class="justify-end">
+    <button class="btn ghost" command="close" commandfor="confirm">Cancel</button>
+    <button class="btn danger" command="close" commandfor="confirm">Delete</button>
+  </footer>
+</dialog>
+```
+
+| Kind | Attributes |
+|------|------------|
+| Open | `command="show-modal" commandfor="id"` on any button. |
+| Close | `command="close" commandfor="id"` on any button, inside or outside the dialog. |
+| Non-modal | Add `popover="manual"` to the dialog and open it with `command="show-popover"`, close with `command="hide-popover"`. Same box, centred, no backdrop, the page stays usable. There is no non-modal dialog command. |
+| Dismiss | Esc by default. `closedby="any"` on the dialog adds click on the backdrop. `closedby="none"` removes Esc, for a dialog that must end with a button. |
+| Width | 32rem, capped at the viewport minus a `gap` each side. Narrower with `max-w-sm`, wider with `w-[48rem]`. |
+| Height | Capped at the viewport minus a `gap` each side; taller content scrolls inside. The header and footer scroll with it. |
+
+- The close cross is a `btn ghost sm` with `aria-label="Close"`, placed straight after the heading or `hgroup` so the header pushes it to the far side. The dialog pulls it onto the heading line.
+- Put `aria-labelledby` on the dialog pointing at its heading. Without it the dialog has no name.
+- Form: the `<header>` and `<footer>` stay direct children of the dialog. Wrap only the fields in `<form id="f" method="dialog" class="contents">` and give the footer's submit button `form="f"`. `method="dialog"` closes on submit. Cancel is a `command="close"` button.
+- Focus goes to the first focusable thing, which is the close cross. Put `autofocus` on the first field of a form instead.
+- Place the dialog where a `div` card would go: inside `main`, `section` or another sectioned element, so its `header` is not announced as the page banner. Not as a direct child of a `space-y-*` or `space-x-*` container: those set margins on every child, and the dialog centres with `margin: auto`.
+
+Custom properties: `--dialog-w --dialog-shadow --dialog-backdrop`, plus the card ones.
 
 ## Theme tokens
 
