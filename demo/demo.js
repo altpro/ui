@@ -11,6 +11,7 @@ const icons = {
   field: '<path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/>',
   check: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="m9 12 2 2 4-4"/>',
   bubble: '<path d="M7.9 20A9 9 0 1 0 4 16.1L2 22Z"/>',
+  card: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/>',
   palette: '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
 };
 export const icon = (name) =>
@@ -26,6 +27,7 @@ const components = [
   ["nav.html", "Nav", "panel"],
   ["dropdown.html", "Dropdown", "dropdown"],
   ["tooltip.html", "Tooltip", "bubble"],
+  ["card.html", "Card", "card"],
 ];
 const here = location.pathname.split("/").pop() || "index.html";
 const html = document.documentElement;

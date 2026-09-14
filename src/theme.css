@@ -57,6 +57,19 @@
   --color-rose: light-dark(oklch(0.82 0.1 16), oklch(0.42 0.13 16));
 }
 
+/* Gap: one responsive spacing unit for padding and gutters. 1rem, then
+   1.5rem from md and 2rem from lg. Utilities emit var(), so p-gap, m-gap,
+   gap-gap, size-gap and the 2gap/3gap multiples all step up with it. */
+@theme default {
+  --spacing-gap: 1rem;
+  --spacing-2gap: calc(var(--spacing-gap) * 2);
+  --spacing-3gap: calc(var(--spacing-gap) * 3);
+}
+:root {
+  @media (width >= theme(--breakpoint-md)) { --spacing-gap: 1.5rem; }
+  @media (width >= theme(--breakpoint-lg)) { --spacing-gap: 2rem; }
+}
+
 /* Radius is outside @theme on purpose: it is one project-wide knob, not a
    scale, and must not collide with Tailwind's --radius-* utilities.
    Pill buttons: `:root { --radius: 9999px }`. Square: `0`. */

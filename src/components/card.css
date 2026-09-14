@@ -1,0 +1,107 @@
+/* Card: a bordered box with an optional header, body and footer.
+   <div class="card">
+     <header>
+       <hgroup><h3>Billing</h3><p>Where invoices are sent.</p></hgroup>
+       <button class="btn sm">Update address</button>
+     </header>
+     <p>Body.</p>
+     <footer><button class="btn primary">Save</button></footer>
+   </div>
+   Children are styled by element: header and footer are the sections,
+   anything else is body. In the header a heading (or an hgroup holding a
+   heading and a description) sits left and whatever follows it is pushed
+   right. A first or last img, picture or video bleeds to the edges.
+   `divided` draws a line under the header and over the footer. Padding
+   and the gap between children are --card-p. Layered so Tailwind
+   utilities win. */
+@layer components {
+  .card {
+    --card-bg: var(--color-card);
+    --card-fg: var(--color-card-foreground);
+    --card-border: var(--color-border);
+    /* capped: a pill-radius theme should not turn a box into an ellipse */
+    --card-radius: min(var(--radius), 1rem);
+    --card-p: 1rem;
+    /* the corner radius seen from inside the border */
+    --card-inner: calc(var(--card-radius) - 1px);
+
+    display: flex;
+    flex-direction: column;
+    gap: var(--card-p);
+    padding: var(--card-p);
+    border: 1px solid var(--card-border);
+    border-radius: var(--card-radius);
+    background: var(--card-bg);
+    color: var(--card-fg);
+
+    > header {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      gap: 0.25rem 1rem;
+
+      /* the first thing after the title goes to the far side */
+      > :is(h2, h3, h4, h5, h6, hgroup) + * {
+        margin-inline-start: auto;
+      }
+      /* a bare description takes its own line under the title */
+      > p {
+        flex-basis: 100%;
+      }
+      hgroup {
+        display: grid;
+        gap: 0.25rem;
+      }
+      :is(h2, h3, h4, h5, h6) {
+        font-weight: 600;
+        line-height: 1.25;
+      }
+      p {
+        font-size: var(--text-sm, 0.875rem);
+        color: var(--color-muted-foreground);
+      }
+    }
+
+    > footer {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* edge-to-edge media, clipped by the corners */
+    > :is(img, picture, video):is(:first-child, :last-child) {
+      width: calc(100% + 2 * var(--card-p));
+      max-width: none;
+      margin-inline: calc(-1 * var(--card-p));
+      object-fit: cover;
+      > img { width: 100%; }
+    }
+    > :is(img, picture, video):first-child {
+      margin-block-start: calc(-1 * var(--card-p));
+      border-start-start-radius: var(--card-inner);
+      border-start-end-radius: var(--card-inner);
+    }
+    > :is(img, picture, video):last-child {
+      /* stays on the bottom edge when a grid stretches the card */
+      margin-block-start: auto;
+      margin-block-end: calc(-1 * var(--card-p));
+      border-end-start-radius: var(--card-inner);
+      border-end-end-radius: var(--card-inner);
+    }
+
+    /* lines between the sections, spanning the full width */
+    &.divided > :is(header, footer) {
+      margin-inline: calc(-1 * var(--card-p));
+      padding-inline: var(--card-p);
+    }
+    &.divided > header {
+      padding-block-end: var(--card-p);
+      border-block-end: 1px solid var(--card-border);
+    }
+    &.divided > footer {
+      padding-block-start: var(--card-p);
+      border-block-start: 1px solid var(--card-border);
+    }
+  }
+}

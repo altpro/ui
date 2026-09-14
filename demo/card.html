@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Card</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Card</h1>
+    <p class="text-muted-foreground"><code>.card</code> on a <code>div</code>, <code>article</code> or <code>section</code>. Inside it, <code>header</code> and <code>footer</code> are the sections and anything else is body. The gutters between cards on this page are <code>gap-gap</code>, the responsive spacing token; the card itself pads 1rem.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Header, body, footer</h2>
+    <div class="grid gap-gap md:grid-cols-2">
+      <div class="card">
+        <header>
+          <h3>Billing</h3>
+          <p>Where invoices are sent.</p>
+        </header>
+        <p>Invoices go to <strong>accounts@example.com</strong> on the first of each month.</p>
+        <footer>
+          <button class="btn primary">Save</button>
+          <button class="btn ghost">Cancel</button>
+        </footer>
+      </div>
+      <div class="card">
+        <header>
+          <hgroup>
+            <h3>Billing</h3>
+            <p>Where invoices are sent.</p>
+          </hgroup>
+          <button class="btn sm">Update address</button>
+        </header>
+        <p>Invoices go to <strong>accounts@example.com</strong> on the first of each month.</p>
+      </div>
+    </div>
+    <p class="text-sm text-muted-foreground">Left: a bare description drops under the title. Right: the title and description share an <code>hgroup</code> so a control can sit on the far side.</p>
+<pre>&lt;div class="card"&gt;
+  &lt;header&gt;
+    &lt;hgroup&gt;&lt;h3&gt;Billing&lt;/h3&gt;&lt;p&gt;Where invoices are sent.&lt;/p&gt;&lt;/hgroup&gt;
+    &lt;button class="btn sm"&gt;Update address&lt;/button&gt;
+  &lt;/header&gt;
+  &lt;p&gt;Body.&lt;/p&gt;
+  &lt;footer&gt;&lt;button class="btn primary"&gt;Save&lt;/button&gt;&lt;/footer&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Divided</h2>
+    <div class="grid gap-gap md:grid-cols-2">
+      <div class="card divided">
+        <header>
+          <hgroup>
+            <h3>Team</h3>
+            <p>Four members, one pending.</p>
+          </hgroup>
+          <span class="badge success">Active</span>
+        </header>
+        <div class="join">
+          <span class="avatar blue">AO</span>
+          <span class="avatar green">BS</span>
+          <span class="avatar rose">CL</span>
+          <span class="avatar">+1</span>
+        </div>
+        <footer class="justify-end">
+          <button class="btn outline sm">Invite</button>
+        </footer>
+      </div>
+      <div class="card divided">
+        <header><h3>Only a header</h3></header>
+        <p>The line follows the section that is present. No footer, no second line.</p>
+      </div>
+    </div>
+    <p class="text-sm text-muted-foreground"><code>divided</code> draws a full-width line under the header and above the footer. <code>justify-end</code> on the footer right-aligns its buttons.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Media</h2>
+    <div class="grid gap-gap md:grid-cols-3">
+      <article class="card">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 2'%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%236d8bff'/%3E%3Cstop offset='1' stop-color='%23d46bff'/%3E%3C/linearGradient%3E%3Crect width='4' height='2' fill='url(%23g)'/%3E%3C/svg%3E" alt="">
+        <header>
+          <h3>Image first</h3>
+          <p>Bleeds to the edges and takes the top corners.</p>
+        </header>
+        <footer><a href="#" class="btn sm">Read more</a></footer>
+      </article>
+      <article class="card">
+        <header>
+          <h3>Image last</h3>
+          <p>Same, at the bottom.</p>
+        </header>
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 2'%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%2333c48a'/%3E%3Cstop offset='1' stop-color='%23109dff'/%3E%3C/linearGradient%3E%3Crect width='4' height='2' fill='url(%23g)'/%3E%3C/svg%3E" alt="">
+      </article>
+      <article class="card divided">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 4 2'%3E%3ClinearGradient id='g' x2='1' y2='1'%3E%3Cstop stop-color='%23ffb347'/%3E%3Cstop offset='1' stop-color='%23ff5e62'/%3E%3C/linearGradient%3E%3Crect width='4' height='2' fill='url(%23g)'/%3E%3C/svg%3E" alt="">
+        <header>
+          <hgroup><h3>Image and divided</h3><p>Both at once.</p></hgroup>
+          <span class="badge warning sm">Draft</span>
+        </header>
+        <p>Body text under the header line.</p>
+        <footer><button class="btn primary sm">Publish</button></footer>
+      </article>
+    </div>
+    <p class="text-sm text-muted-foreground">A first or last <code>img</code>, <code>picture</code> or <code>video</code> ignores the padding. Anywhere else it sits inside like any other child.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">A form</h2>
+    <form class="card divided max-w-md" onsubmit="return false">
+      <header>
+        <h3>Sign in</h3>
+        <p>Use your work email.</p>
+      </header>
+      <div class="field">
+        <label for="si-email">Email</label>
+        <input class="input" id="si-email" type="email" autocomplete="email">
+      </div>
+      <div class="field">
+        <label for="si-pass">Password</label>
+        <input class="input" id="si-pass" type="password" autocomplete="current-password">
+      </div>
+      <label class="checkbox"><input type="checkbox" name="remember"> Remember me</label>
+      <footer>
+        <button class="btn primary">Sign in</button>
+        <a href="#" class="btn ghost">Forgot password?</a>
+      </footer>
+    </form>
+    <p class="text-sm text-muted-foreground">The card can be the <code>form</code> itself. Fields stack with the card gap.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Padding</h2>
+    <div class="grid gap-gap md:grid-cols-3">
+      <div class="card [--card-p:0.75rem]"><header><h3>Tight</h3></header><p><code>[--card-p:0.75rem]</code></p></div>
+      <div class="card"><header><h3>Default</h3></header><p>1rem</p></div>
+      <div class="card [--card-p:1.5rem]"><header><h3>Roomy</h3></header><p><code>[--card-p:1.5rem]</code></p></div>
+    </div>
+    <p class="text-sm text-muted-foreground">Set <code>--card-p</code> rather than <code>p-*</code>, so the media bleed and the divider lines follow the padding.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-gap md:grid-cols-3">
+      <div class="light panel"><div class="card"><header><h3>Light</h3></header><p>Card in a light region.</p></div></div>
+      <div class="dark panel"><div class="card"><header><h3>Dark</h3></header><p>Card in a dark region.</p></div></div>
+      <div class="inverse panel"><div class="card"><header><h3>Inverse</h3></header><p>Card in an inverse region.</p></div></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>
