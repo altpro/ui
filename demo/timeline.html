@@ -7,11 +7,11 @@
   <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
   <link rel="stylesheet" href="demo.css">
 </head>
-<body class="min-h-screen bg-background text-foreground">
-<header class="border-b border-border"></header>
-<div class="mx-auto flex max-w-6xl">
-<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
-<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Timeline</h1>
     <p class="muted"><code>.timeline</code> on an <code>&lt;ol&gt;</code>. A dot per event joined by a line, for an audit history or an activity feed. Every event has happened, so unlike <a class="underline" href="steps.html">Steps</a> there is no current or done state. No JavaScript.</p>

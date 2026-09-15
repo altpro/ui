@@ -2,6 +2,9 @@
 @import "../src/nui.css";
 
 /* demo-only */
+/* the sidebar toggle is a checkbox: below lg the sidebar is an overlay that is closed by default, from lg it is inline and open by default */
+@media (width < 64rem) { body:not(:has(#menu:checked)) #sidebar { display: none; } }
+@media (width >= 64rem) { body:has(#menu:checked) #sidebar { display: none; } }
 pre {
   background: var(--color-muted);
   border: 1px solid var(--color-border);

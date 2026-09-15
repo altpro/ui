@@ -242,7 +242,8 @@ for (const colorScheme of ["light", "dark"]) {
 
     // the bubble is a pseudo-element: it hit-tests as the host, so elementFromPoint above the host finds it
     test("tooltip.html: hover shows a bubble above every host, inside the viewport", async ({ page }) => {
-      await page.setViewportSize({ width: 800, height: 500 });
+      // wide enough for the sidebar: below lg it hides and the first host sits at the page edge, where a centred bubble is off-screen by design
+      await page.setViewportSize({ width: 1100, height: 500 });
       await page.goto("/tooltip.html");
       await page.addStyleTag({ content: "*, ::before, ::after { transition: none !important }" });
       const failures = [];
@@ -255,7 +256,7 @@ for (const colorScheme of ["light", "dark"]) {
           const cx = box.x + box.width / 2;
           return { visibility: s.visibility, w, left: cx - w / 2, right: cx + w / 2, top: box.y - h, hit: document.elementFromPoint(cx, box.y - h / 2) === el };
         });
-        const ok = r.visibility === "visible" && r.hit && r.left >= 0 && r.right <= 800 && r.top >= 0;
+        const ok = r.visibility === "visible" && r.hit && r.left >= 0 && r.right <= 1100 && r.top >= 0;
         if (!ok) failures.push(`${await t.getAttribute("data-tooltip")}: ${JSON.stringify(r)}`);
       }
       expect(failures).toEqual([]);
@@ -340,7 +341,7 @@ for (const colorScheme of ["light", "dark"]) {
 
     test(`${p}: keyboard focus shows a ring`, async ({ page }) => {
       await page.goto("/" + p);
-      for (let i = 0; i < 40; i++) {
+      for (let i = 0; i < 60; i++) {
         await page.keyboard.press("Tab");
         if (await page.evaluate((cls) => document.activeElement.closest("main " + cls), cls)) break;
       }

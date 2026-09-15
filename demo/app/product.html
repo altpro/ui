@@ -6,110 +6,42 @@
   <title>Radiance Ritual Set · Acme Admin</title>
   <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
   <link rel="stylesheet" href="../demo.css">
-  <style>
-    /* the sidebar toggle is a checkbox: below lg the sidebar is an overlay that is closed by default, from lg it is inline and open by default */
-    @media (width < 64rem) { body:not(:has(#menu:checked)) #sidebar { display: none; } }
-    @media (width >= 64rem) { body:has(#menu:checked) #sidebar { display: none; } }
-  </style>
 </head>
 <body class="flex min-h-screen bg-background text-foreground">
 <svg hidden>
   <symbol id="package" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
-  <symbol id="panel" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></symbol>
   <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
   <symbol id="bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
-  <symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
-  <symbol id="moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
   <symbol id="plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
   <symbol id="pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></symbol>
   <symbol id="copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
   <symbol id="ellipsis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
-  <symbol id="dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
-  <symbol id="cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
-  <symbol id="users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
-  <symbol id="truck" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
-  <symbol id="updown" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></symbol>
 </svg>
 
-<aside id="sidebar" class="fixed inset-y-0 start-0 z-20 flex w-64 shrink-0 flex-col border-e border-border bg-background lg:sticky lg:top-0 lg:h-screen">
-  <div class="flex h-14 items-center gap-3 border-b border-border px-3">
-    <span class="avatar rounded-lg sm"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#package"/></svg></span>
-    <div class="min-w-0 text-sm leading-tight">
-      <p class="truncate font-semibold">Acme Admin</p>
-      <p class="truncate text-xs muted">Ecommerce</p>
-    </div>
-  </div>
-  <nav class="nav flex-1 overflow-y-auto p-3" aria-label="Main">
-    <h2>Ecommerce</h2>
-    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#dashboard"/></svg> Dashboard</a>
-    <details open>
-      <summary><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#package"/></svg> Products</summary>
-      <a href="#">All products</a>
-      <a href="#">Add product</a>
-      <a href="#" aria-current="page">Radiance Ritual Set</a>
-    </details>
-    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#cart"/></svg> Orders <span class="badge sm ml-auto">12</span></a>
-    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#users"/></svg> Customers</a>
-    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#truck"/></svg> Shipments</a>
-    <h2>Account</h2>
-    <a href="#">Settings</a>
-    <a href="#">Team</a>
-  </nav>
-  <div class="border-t border-border p-3">
-    <button class="btn ghost w-full justify-start px-2" popovertarget="user-menu">
-      <span class="avatar blue sm">SR</span>
-      <span class="min-w-0 text-start leading-tight">
-        <span class="block truncate">Steve Rayner</span>
-        <span class="block truncate text-xs font-normal muted">steve@example.com</span>
-      </span>
-      <svg class="size-4 ml-auto muted" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#updown"/></svg>
-    </button>
-    <div id="user-menu" popover class="dropdown up w-56">
-      <div class="nav">
-        <a href="#">Profile</a>
-        <a href="#">Billing</a>
-        <hr>
-        <button type="button">Sign out</button>
-      </div>
-    </div>
-  </div>
-</aside>
-
+<aside></aside>
 <div class="flex min-w-0 flex-1 flex-col">
-  <header class="flex h-14 items-center gap-3 border-b border-border px-gap">
-    <label class="btn ghost sm px-2"><input type="checkbox" id="menu" aria-label="Toggle sidebar"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#panel"/></svg></label>
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <a href="#">Acme Admin</a>
-      <a href="#">Products</a>
-      <span aria-current="page">Radiance Ritual Set</span>
-    </nav>
-    <div class="ml-auto flex items-center gap-2">
-      <label class="input sm hidden w-64 sm:flex">
-        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#search"/></svg>
-        <input type="search" placeholder="Search pages or run commands" aria-label="Search">
-        <kbd>⌘K</kbd>
-      </label>
-      <button class="btn ghost sm relative px-2" popovertarget="notifications" aria-label="Notifications, 2 unread">
-        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#bell"/></svg>
-        <span class="badge danger sm absolute -top-1 -right-1 [--badge-h:1rem] [--badge-px:0.3rem]" aria-hidden="true">2</span>
-      </button>
-      <div id="notifications" popover class="dropdown right w-80">
-        <div class="nav">
-          <h2>Notifications</h2>
-          <button type="button">Cloud / Gift set is down to 8 units</button>
-          <button type="button">Order 4821 is waiting for review</button>
-          <hr>
-          <a href="#">View all</a>
-        </div>
-      </div>
-      <button class="btn ghost sm px-2" id="theme">
-        <svg class="size-4 sun" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#sun"/></svg>
-        <svg class="size-4 moon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#moon"/></svg>
-      </button>
+<header>
+  <label class="input sm hidden w-64 sm:flex">
+    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#search"/></svg>
+    <input type="search" placeholder="Search pages or run commands" aria-label="Search">
+    <kbd>⌘K</kbd>
+  </label>
+  <button class="btn ghost sm relative px-2" popovertarget="notifications" aria-label="Notifications, 2 unread">
+    <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#bell"/></svg>
+    <span class="badge danger sm absolute -top-1 -right-1 [--badge-h:1rem] [--badge-px:0.3rem]" aria-hidden="true">2</span>
+  </button>
+  <div id="notifications" popover class="dropdown right w-80">
+    <div class="nav">
+      <h2>Notifications</h2>
+      <button type="button">Cloud / Gift set is down to 8 units</button>
+      <button type="button">Order 4821 is waiting for review</button>
+      <hr>
+      <a href="#">View all</a>
     </div>
-  </header>
+  </div>
+</header>
 
-  <main class="w-full space-y-gap p-gap">
+  <main>
     <div class="flex flex-wrap items-start justify-between gap-gap">
       <div>
         <h1 class="text-3xl font-semibold tracking-tight">Radiance Ritual Set</h1>
@@ -276,17 +208,6 @@
 </div>
 
 <script>
-  // theme: flip between light and dark, sharing localStorage.theme with the demo site
-  const html = document.documentElement, theme = document.getElementById("theme");
-  const isDark = () => (html.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
-  const paint = () => {
-    theme.querySelector(".sun").toggleAttribute("hidden", !isDark());
-    theme.querySelector(".moon").toggleAttribute("hidden", isDark());
-    theme.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
-  };
-  theme.onclick = () => { html.dataset.theme = localStorage.theme = isDark() ? "light" : "dark"; paint(); };
-  paint();
-
   // gallery: a thumbnail moves its colour and name onto the hero
   const thumbs = document.querySelectorAll("[data-hue]");
   thumbs.forEach((b) => (b.onclick = () => {
@@ -295,5 +216,6 @@
     hero.setAttribute("aria-label", b.getAttribute("aria-label").replace("Show ", ""));
   }));
 </script>
+<script type="module" src="../demo.js"></script>
 </body>
 </html>
