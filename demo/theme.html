@@ -14,7 +14,7 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Theme</h1>
-    <p class="text-muted-foreground">Tokens are Tailwind <code>@theme</code> variables using <code>light-dark()</code>. Override any of them in your app's <code>@theme</code> block.</p>
+    <p class="muted">Tokens are Tailwind <code>@theme</code> variables using <code>light-dark()</code>. Override any of them in your app's <code>@theme</code> block.</p>
   </section>
 
   <section class="space-y-3">
@@ -24,7 +24,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Scheme regions</h2>
-    <p class="text-sm text-muted-foreground">
+    <p class="text-sm muted">
       <code>.light</code> and <code>.dark</code> pin a subtree. <code>.inverse</code> flips relative to its nearest region, at any depth.
       The innermost box below is <code>.dark &gt; .light &gt; .inverse</code> and must render dark.
     </p>
@@ -45,7 +45,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Radius</h2>
-    <p class="text-sm text-muted-foreground">One knob, <code>--radius</code> on <code>:root</code>. Use the switcher in the header, or set it in your app:</p>
+    <p class="text-sm muted">One knob, <code>--radius</code> on <code>:root</code>. Use the switcher in the header, or set it in your app:</p>
 <pre>:root { --radius: 9999px; }   /* pill */
 :root { --radius: 0; }        /* square */
 .btn  { --btn-radius: 0; }    /* square buttons only */</pre>

@@ -8,7 +8,7 @@ CSS-only component layer for Tailwind v4. Private library, consumed from GitHub 
 src/nui.css              entry, imports everything below
 src/theme.css            @theme default tokens, all light-dark(); --radius knob and responsive --spacing-gap on :root
 src/scheme.css           color-scheme regions: .light .dark .inverse
-src/components/*.css     one file per component (button, join, input, field, check, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, range)
+src/components/*.css     one file per component (button, join, input, field, check, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, range, loading, steps)
 demo/*.html              one page per component, plus index and theme
 demo/demo.js             shared header (theme and radius switchers) and sidebar nav
 skills/nui/SKILL.md      reference for agents in consuming projects

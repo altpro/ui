@@ -14,7 +14,7 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Table</h1>
-    <p class="text-muted-foreground"><code>.table</code> on a native <code>&lt;table&gt;</code>. Children are styled by element: <code>thead</code>, <code>tbody</code>, <code>tfoot</code>, <code>caption</code>, <code>th</code>, <code>td</code>. No cell classes.</p>
+    <p class="muted"><code>.table</code> on a native <code>&lt;table&gt;</code>. Children are styled by element: <code>thead</code>, <code>tbody</code>, <code>tfoot</code>, <code>caption</code>, <code>th</code>, <code>td</code>. No cell classes.</p>
   </section>
 
   <section class="space-y-3">
@@ -39,7 +39,7 @@
         <tr><th scope="row" colspan="3">Total</th><td class="text-right tabular-nums">£1,200.00</td></tr>
       </tfoot>
     </table>
-    <p class="text-sm text-muted-foreground">A <code>button</code> in a header cell is a sort control. <code>aria-sort="ascending"</code> or <code>"descending"</code> on the <code>th</code> draws the arrow; the app does the sorting. Alignment is a utility on the cell, <code>text-right</code> here.</p>
+    <p class="text-sm muted">A <code>button</code> in a header cell is a sort control. <code>aria-sort="ascending"</code> or <code>"descending"</code> on the <code>th</code> draws the arrow; the app does the sorting. Alignment is a utility on the cell, <code>text-right</code> here.</p>
 <pre>&lt;table class="table"&gt;
   &lt;caption&gt;Invoices for the last quarter.&lt;/caption&gt;
   &lt;thead&gt;
@@ -73,7 +73,7 @@
       <tbody>
         <tr>
           <td><label class="checkbox"><input type="checkbox" aria-label="Select Ada Okafor" checked></label></td>
-          <td><div class="flex items-center gap-3"><span class="avatar blue sm">AO</span><div>Ada Okafor<div class="text-muted-foreground">ada@example.com</div></div></div></td>
+          <td><div class="flex items-center gap-3"><span class="avatar blue sm">AO</span><div>Ada Okafor<div class="muted">ada@example.com</div></div></div></td>
           <td>Owner</td>
           <td>Just now</td>
           <td><button class="btn ghost sm" popovertarget="row-1" aria-label="Actions for Ada Okafor"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
@@ -81,7 +81,7 @@
         </tr>
         <tr>
           <td><label class="checkbox"><input type="checkbox" aria-label="Select Ben Sato"></label></td>
-          <td><div class="flex items-center gap-3"><span class="avatar green sm">BS</span><div>Ben Sato<div class="text-muted-foreground">ben@example.com</div></div></div></td>
+          <td><div class="flex items-center gap-3"><span class="avatar green sm">BS</span><div>Ben Sato<div class="muted">ben@example.com</div></div></div></td>
           <td>Admin</td>
           <td>2 hours ago</td>
           <td><button class="btn ghost sm" popovertarget="row-2" aria-label="Actions for Ben Sato"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
@@ -89,7 +89,7 @@
         </tr>
         <tr aria-selected="true">
           <td><label class="checkbox"><input type="checkbox" aria-label="Select Chloe Lam"></label></td>
-          <td><div class="flex items-center gap-3"><span class="avatar rose sm">CL</span><div>Chloe Lam<div class="text-muted-foreground">chloe@example.com</div></div></div></td>
+          <td><div class="flex items-center gap-3"><span class="avatar rose sm">CL</span><div>Chloe Lam<div class="muted">chloe@example.com</div></div></div></td>
           <td>Member</td>
           <td>Yesterday</td>
           <td><button class="btn ghost sm" popovertarget="row-3" aria-label="Actions for Chloe Lam"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
@@ -97,7 +97,7 @@
         </tr>
       </tbody>
     </table>
-    <p class="text-sm text-muted-foreground"><code>hover</code> tints the row under the pointer. A row is highlighted when its first cell holds a checked checkbox (Ada) or it carries <code>aria-selected="true"</code> (Chloe, for a server-rendered selection). <code>w-px</code> on a header shrinks its column to the content.</p>
+    <p class="text-sm muted"><code>hover</code> tints the row under the pointer. A row is highlighted when its first cell holds a checked checkbox (Ada) or it carries <code>aria-selected="true"</code> (Chloe, for a server-rendered selection). <code>w-px</code> on a header shrinks its column to the content.</p>
   </section>
 
   <section class="space-y-3">
@@ -112,7 +112,7 @@
         <tr><th scope="row">Africa</th><td>1,480</td><td>2.9%</td></tr>
       </tbody>
     </table>
-    <p class="text-sm text-muted-foreground"><code>striped</code> tints every other row. <code>sm</code> tightens the cells. A <code>th</code> in the body is a row header.</p>
+    <p class="text-sm muted"><code>striped</code> tints every other row. <code>sm</code> tightens the cells. A <code>th</code> in the body is a row header.</p>
   </section>
 
   <section class="space-y-3">
@@ -132,7 +132,7 @@
         </tbody>
       </table>
     </div>
-    <p class="text-sm text-muted-foreground">A table that is a direct child of a card runs edge to edge and its cell padding becomes the inset. The last row takes the card's bottom corners.</p>
+    <p class="text-sm muted">A table that is a direct child of a card runs edge to edge and its cell padding becomes the inset. The last row takes the card's bottom corners.</p>
   </section>
 
   <section class="space-y-3">
@@ -146,7 +146,7 @@
         </tbody>
       </table>
     </div>
-    <p class="text-sm text-muted-foreground">A table never wraps its width. Put it in an <code>overflow-x-auto</code> wrapper with <code>tabindex="0"</code> and it scrolls sideways, by keyboard too. Inside a card the wrapper bleeds like the table would.</p>
+    <p class="text-sm muted">A table never wraps its width. Put it in an <code>overflow-x-auto</code> wrapper with <code>tabindex="0"</code> and it scrolls sideways, by keyboard too. Inside a card the wrapper bleeds like the table would.</p>
   </section>
 
   <section class="space-y-3">

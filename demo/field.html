@@ -14,12 +14,12 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Field</h1>
-    <p class="text-muted-foreground">A <code>.field</code> stacks a label, a control, a <code>.hint</code> and an <code>.error</code>. The control is any <code>.input</code>: text, number, date, select, textarea. Addons (£, kg, an icon) go inside an <code>.input</code> wrapper.</p>
+    <p class="muted">A <code>.field</code> stacks a label, a control, a <code>.hint</code> and an <code>.error</code>. The control is any <code>.input</code>: text, number, date, select, textarea. Addons (£, kg, an icon) go inside an <code>.input</code> wrapper.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Input</h2>
-    <p class="text-sm text-muted-foreground">On its own, <code>.input</code> needs a name from somewhere: a visible <code>&lt;label for&gt;</code> or an <code>aria-label</code>. Sizes match the button so the two line up in a join. A select uses <code>appearance: base-select</code> where supported, so the chevron and the picker are styled; elsewhere it stays native.</p>
+    <p class="text-sm muted">On its own, <code>.input</code> needs a name from somewhere: a visible <code>&lt;label for&gt;</code> or an <code>aria-label</code>. Sizes match the button so the two line up in a join. A select uses <code>appearance: base-select</code> where supported, so the chevron and the picker are styled; elsewhere it stays native.</p>
     <div class="flex flex-wrap items-center gap-4">
       <input class="input xs" type="search" placeholder="Search" aria-label="Search, extra small">
       <input class="input sm" type="search" placeholder="Search" aria-label="Search, small">
@@ -39,7 +39,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Field</h2>
-    <p class="text-sm text-muted-foreground">Label, control, hint. Point <code>aria-describedby</code> at the hint so it is read with the control. Children are styled by element, so the label needs no class.</p>
+    <p class="text-sm muted">Label, control, hint. Point <code>aria-describedby</code> at the hint so it is read with the control. Children are styled by element, so the label needs no class.</p>
     <div class="grid max-w-3xl gap-6 md:grid-cols-2">
       <div class="field">
         <label for="name">Display name</label>
@@ -65,7 +65,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Errors</h2>
-    <p class="text-sm text-muted-foreground">Three things turn the control red: a non-empty <code>.error</code> child, <code>aria-invalid="true"</code> on the control, or native validation failing after the user has touched it. Set <code>aria-invalid</code> and <code>aria-describedby</code> too, so the state and the message reach screen readers. An empty <code>.error</code> is hidden, so a template can always render it.</p>
+    <p class="text-sm muted">Three things turn the control red: a non-empty <code>.error</code> child, <code>aria-invalid="true"</code> on the control, or native validation failing after the user has touched it. Set <code>aria-invalid</code> and <code>aria-describedby</code> too, so the state and the message reach screen readers. An empty <code>.error</code> is hidden, so a template can always render it.</p>
     <div class="grid max-w-3xl gap-6 md:grid-cols-2">
       <div class="field">
         <label for="email">Email</label>
@@ -100,7 +100,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Addons</h2>
-    <p class="text-sm text-muted-foreground">Put <code>.input</code> on a <code>&lt;label&gt;</code> that wraps the control. A symbol, unit or icon beside it sits inside the same border and the focus ring goes round the lot. Clicking the addon focuses the control. A button next to an input is still a <a href="join.html" class="underline">join</a>.</p>
+    <p class="text-sm muted">Put <code>.input</code> on a <code>&lt;label&gt;</code> that wraps the control. A symbol, unit or icon beside it sits inside the same border and the focus ring goes round the lot. Clicking the addon focuses the control. A button next to an input is still a <a href="join.html" class="underline">join</a>.</p>
     <div class="grid max-w-3xl gap-6 md:grid-cols-2">
       <div class="field">
         <label for="price">Price</label>
@@ -140,7 +140,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Beside a button</h2>
-    <p class="text-sm text-muted-foreground">Each size is the same height as the button of that size.</p>
+    <p class="text-sm muted">Each size is the same height as the button of that size.</p>
     <div class="flex flex-wrap items-end gap-4">
       <div class="flex gap-2"><input class="input xs" placeholder="xs" aria-label="Extra small"><button class="btn xs" type="button">Button</button></div>
       <div class="flex gap-2"><input class="input sm" placeholder="sm" aria-label="Small"><button class="btn sm" type="button">Button</button></div>
@@ -152,7 +152,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Disabled</h2>
-    <p class="text-sm text-muted-foreground">A disabled control dims itself and its label. The hint stays readable, since it often says why. A <code>&lt;fieldset class="field" disabled&gt;</code> disables everything inside it natively, no per-control attribute needed.</p>
+    <p class="text-sm muted">A disabled control dims itself and its label. The hint stays readable, since it often says why. A <code>&lt;fieldset class="field" disabled&gt;</code> disables everything inside it natively, no per-control attribute needed.</p>
     <div class="grid max-w-3xl gap-6 md:grid-cols-2">
       <div class="field">
         <label for="dis">Username</label>
@@ -190,7 +190,7 @@
         <p class="hint">A hint.</p>
       </div>
     </div>
-    <p class="text-sm text-muted-foreground">Custom properties on the input: <code>--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text</code>.</p>
+    <p class="text-sm muted">Custom properties on the input: <code>--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text</code>.</p>
   </section>
 </main>
 </div>

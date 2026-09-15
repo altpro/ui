@@ -14,13 +14,13 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Button</h1>
-    <p class="text-muted-foreground"><code>.btn</code> plus any of: a colour, <code>outline</code> or <code>ghost</code>, and a size.</p>
+    <p class="muted"><code>.btn</code> plus any of: a colour, <code>outline</code> or <code>ghost</code>, and a size.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Colours × styles</h2>
     <div class="grid grid-cols-[auto_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 text-sm">
-      <span></span><span class="text-muted-foreground">solid</span><span class="text-muted-foreground">outline</span><span class="text-muted-foreground">ghost</span>
+      <span></span><span class="muted">solid</span><span class="muted">outline</span><span class="muted">ghost</span>
 
       <code>(none)</code>
       <div><button class="btn">Button</button></div>
@@ -57,7 +57,7 @@
       <div><button class="btn outline danger">Button</button></div>
       <div><button class="btn ghost danger">Button</button></div>
     </div>
-    <p class="text-sm text-muted-foreground"><code>error</code> is an alias for <code>danger</code>.</p>
+    <p class="text-sm muted"><code>error</code> is an alias for <code>danger</code>.</p>
   </section>
 
   <section class="space-y-3">
@@ -98,7 +98,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Tailwind overrides</h2>
-    <p class="text-sm text-muted-foreground">Components live in <code>@layer components</code>, so utilities always win.</p>
+    <p class="text-sm muted">Components live in <code>@layer components</code>, so utilities always win.</p>
     <div class="flex flex-wrap items-center gap-3">
       <button class="btn primary px-12">px-12</button>
       <button class="btn primary rounded-none">rounded-none</button>
@@ -110,7 +110,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Scheme regions</h2>
-    <p class="text-sm text-muted-foreground">Same markup in a forced light, forced dark, and inverted region.</p>
+    <p class="text-sm muted">Same markup in a forced light, forced dark, and inverted region.</p>
     <div class="grid gap-4 md:grid-cols-3">
       <div class="light panel space-y-2">
         <p class="text-sm font-medium">.light</p>
@@ -129,7 +129,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Custom properties</h2>
-    <p class="text-sm text-muted-foreground">Every button reads these. Override on <code>.btn</code> globally or inline on one element.</p>
+    <p class="text-sm muted">Every button reads these. Override on <code>.btn</code> globally or inline on one element.</p>
 <pre>.btn {
   --btn-bg       /* fill */
   --btn-fg       /* text on fill */

@@ -14,7 +14,7 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Dialog</h1>
-    <p class="text-muted-foreground"><code>.dialog</code> on a native <code>dialog</code>. Inside, it is a card: <code>header</code>, <code>footer</code>, <code>divided</code> and media all work the same. Buttons open and close it with <code>command</code> and <code>commandfor</code>, so there is no JavaScript. Esc closes it, focus is trapped, and the page behind cannot be reached.</p>
+    <p class="muted"><code>.dialog</code> on a native <code>dialog</code>. Inside, it is a card: <code>header</code>, <code>footer</code>, <code>divided</code> and media all work the same. Buttons open and close it with <code>command</code> and <code>commandfor</code>, so there is no JavaScript. Esc closes it, focus is trapped, and the page behind cannot be reached.</p>
   </section>
 
   <section class="space-y-3">
@@ -36,7 +36,7 @@
       </footer>
     </dialog>
     </div>
-    <p class="text-sm text-muted-foreground">The cross is a <code>btn ghost sm</code> after the <code>hgroup</code>, so the card header pushes it to the far side. <code>aria-labelledby</code> on the dialog names it after its heading.</p>
+    <p class="text-sm muted">The cross is a <code>btn ghost sm</code> after the <code>hgroup</code>, so the card header pushes it to the far side. <code>aria-labelledby</code> on the dialog names it after its heading.</p>
 <pre>&lt;button class="btn primary" command="show-modal" commandfor="confirm"&gt;Delete project&lt;/button&gt;
 &lt;dialog id="confirm" class="dialog" aria-labelledby="confirm-title"&gt;
   &lt;header&gt;
@@ -78,7 +78,7 @@
       </footer>
     </dialog>
     </div>
-    <p class="text-sm text-muted-foreground">The dialog is capped at the viewport minus a <code>gap</code> on each side and scrolls inside. The header and footer scroll with the body; there is no pinned header.</p>
+    <p class="text-sm muted">The dialog is capped at the viewport minus a <code>gap</code> on each side and scrolls inside. The header and footer scroll with the body; there is no pinned header.</p>
   </section>
 
   <section class="space-y-3">
@@ -110,7 +110,7 @@
       </footer>
     </dialog>
     </div>
-    <p class="text-sm text-muted-foreground">The form wraps the fields with <code>class="contents"</code> so they stack with the card gap, and <code>method="dialog"</code> closes the dialog on submit. The footer stays a direct child of the dialog; its submit button points at the form with <code>form="invite"</code>. <code>autofocus</code> on the first field puts the cursor there on open; without it the close button takes focus. <code>max-w-sm</code> narrows it.</p>
+    <p class="text-sm muted">The form wraps the fields with <code>class="contents"</code> so they stack with the card gap, and <code>method="dialog"</code> closes the dialog on submit. The footer stays a direct child of the dialog; its submit button points at the form with <code>form="invite"</code>. <code>autofocus</code> on the first field puts the cursor there on open; without it the close button takes focus. <code>max-w-sm</code> narrows it.</p>
 <pre>&lt;dialog id="d" class="dialog max-w-sm" aria-labelledby="d-title"&gt;
   &lt;header&gt;…&lt;/header&gt;
   &lt;form id="invite" method="dialog" class="contents"&gt;
@@ -149,7 +149,55 @@
       <p><code>popover="manual"</code> on the dialog, opened with <code>command="show-popover"</code>. No backdrop, the page stays usable, Esc does nothing. Centred in the viewport.</p>
     </dialog>
     </div>
-    <p class="text-sm text-muted-foreground">Default is Esc only. <code>closedby="any"</code> adds the backdrop click, <code>closedby="none"</code> removes Esc. For non-modal, make the dialog a <code>popover="manual"</code> and open it with <code>command="show-popover"</code>; close with <code>command="hide-popover"</code>. There is no non-modal command for a plain dialog.</p>
+    <p class="text-sm muted">Default is Esc only. <code>closedby="any"</code> adds the backdrop click, <code>closedby="none"</code> removes Esc. For non-modal, make the dialog a <code>popover="manual"</code> and open it with <code>command="show-popover"</code>; close with <code>command="hide-popover"</code>. There is no non-modal command for a plain dialog.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Drawer</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" command="show-modal" commandfor="d-drawer">Filters</button>
+      <button class="btn" command="show-modal" commandfor="d-drawer-start">Menu</button>
+    <dialog id="d-drawer" class="dialog drawer divided" closedby="any" aria-labelledby="d-drawer-title">
+      <header>
+        <h3 id="d-drawer-title">Filters</h3>
+        <button class="btn ghost sm" command="close" commandfor="d-drawer" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <div class="field">
+        <label for="d-drawer-status">Status</label>
+        <select class="input" id="d-drawer-status"><option>Any</option><option>Paid</option><option>Overdue</option></select>
+      </div>
+      <label class="checkbox"><input type="checkbox" checked> Show archived</label>
+      <label class="checkbox"><input type="checkbox"> Only mine</label>
+      <footer class="mt-auto justify-end">
+        <button class="btn ghost" command="close" commandfor="d-drawer">Reset</button>
+        <button class="btn primary" command="close" commandfor="d-drawer">Apply</button>
+      </footer>
+    </dialog>
+    <dialog id="d-drawer-start" class="dialog drawer start" closedby="any" aria-labelledby="d-drawer-start-title">
+      <header>
+        <h3 id="d-drawer-start-title">Menu</h3>
+        <button class="btn ghost sm" command="close" commandfor="d-drawer-start" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+      </header>
+      <nav class="nav" aria-label="Site">
+        <a href="#" aria-current="page">Dashboard</a>
+        <a href="#">Invoices</a>
+        <a href="#">Customers</a>
+        <a href="#">Settings</a>
+      </nav>
+    </dialog>
+    </div>
+    <p class="text-sm muted"><code>drawer</code> makes the dialog a full-height panel that slides in from the end edge; <code>drawer start</code> comes from the start edge. Everything else is the same: commands, <code>closedby</code>, <code>header</code>, <code>footer</code>, <code>divided</code>. Width is 24rem, so <code>w-80</code> or <code>max-w-sm</code> change it. <code>mt-auto</code> on the footer pins it to the bottom.</p>
+<pre>&lt;button class="btn" command="show-modal" commandfor="filters"&gt;Filters&lt;/button&gt;
+&lt;dialog id="filters" class="dialog drawer divided" closedby="any" aria-labelledby="filters-title"&gt;
+  &lt;header&gt;
+    &lt;h3 id="filters-title"&gt;Filters&lt;/h3&gt;
+    &lt;button class="btn ghost sm" command="close" commandfor="filters" aria-label="Close"&gt;…x…&lt;/button&gt;
+  &lt;/header&gt;
+  …fields…
+  &lt;footer class="mt-auto justify-end"&gt;
+    &lt;button class="btn primary" command="close" commandfor="filters"&gt;Apply&lt;/button&gt;
+  &lt;/footer&gt;
+&lt;/dialog&gt;</pre>
   </section>
 
   <section class="space-y-3">

@@ -14,7 +14,7 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Nav</h1>
-    <p class="text-muted-foreground"><code>.nav</code> on a <code>&lt;nav&gt;</code> makes a vertical menu out of plain links, <code>&lt;details&gt;</code> sections and headings. The sidebar on this site is one.</p>
+    <p class="muted"><code>.nav</code> on a <code>&lt;nav&gt;</code> makes a vertical menu out of plain links, <code>&lt;details&gt;</code> sections and headings. The sidebar on this site is one.</p>
   </section>
 
   <section class="space-y-3">
@@ -33,7 +33,7 @@
         <a href="#"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg> Settings</a>
       </nav>
     </div>
-    <p class="text-sm text-muted-foreground">Icons are Lucide, inline, <code>size-4</code>, with <code>aria-hidden</code>. A trailing badge gets <code>ml-auto</code>. Mark the current page with <code>aria-current="page"</code>.</p>
+    <p class="text-sm muted">Icons are Lucide, inline, <code>size-4</code>, with <code>aria-hidden</code>. A trailing badge gets <code>ml-auto</code>. Mark the current page with <code>aria-current="page"</code>.</p>
 <pre>&lt;nav class="nav" aria-label="Main"&gt;
   &lt;a href="/" aria-current="page"&gt;&lt;svg class="size-4" …&gt;&lt;/svg&gt; Home&lt;/a&gt;
   &lt;a href="/inbox"&gt;&lt;svg class="size-4" …&gt;&lt;/svg&gt; Inbox &lt;span class="badge primary sm ml-auto"&gt;12&lt;/span&gt;&lt;/a&gt;
@@ -42,7 +42,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Collapsible sections</h2>
-    <p class="text-sm text-muted-foreground">A <code>&lt;details&gt;</code> with a <code>&lt;summary&gt;</code> is a section. No JavaScript. <code>open</code> starts it expanded. The chevron is CSS.</p>
+    <p class="text-sm muted">A <code>&lt;details&gt;</code> with a <code>&lt;summary&gt;</code> is a section. No JavaScript. <code>open</code> starts it expanded. The chevron is CSS.</p>
     <nav class="nav w-64" aria-label="Example: sections">
       <a href="#"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Home</a>
       <details open>
@@ -67,7 +67,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Headings and dividers</h2>
-    <p class="text-sm text-muted-foreground">Any <code>h2</code> to <code>h6</code> inside the nav is a small section label. An <code>&lt;hr&gt;</code> divides.</p>
+    <p class="text-sm muted">Any <code>h2</code> to <code>h6</code> inside the nav is a small section label. An <code>&lt;hr&gt;</code> divides.</p>
     <nav class="nav w-56" aria-label="Example: headings">
       <h2>Workspace</h2>
       <a href="#" aria-current="page">Overview</a>
@@ -87,7 +87,7 @@
       <div class="dark panel"><nav class="nav" aria-label="Example: dark"><a href="#" aria-current="page">Current</a><a href="#">Other</a><details open><summary>More</summary><a href="#">Nested</a></details></nav></div>
       <div class="inverse panel"><nav class="nav" aria-label="Example: inverse"><a href="#" aria-current="page">Current</a><a href="#">Other</a><details open><summary>More</summary><a href="#">Nested</a></details></nav></div>
     </div>
-    <p class="text-sm text-muted-foreground">Custom properties: <code>--nav-fg --nav-active-fg --nav-hover --nav-active-bg --nav-radius --nav-h --nav-px --nav-text</code>.</p>
+    <p class="text-sm muted">Custom properties: <code>--nav-fg --nav-active-fg --nav-hover --nav-active-bg --nav-radius --nav-h --nav-px --nav-text</code>.</p>
   </section>
 </main>
 </div>

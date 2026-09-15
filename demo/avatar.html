@@ -14,7 +14,7 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Avatar</h1>
-    <p class="text-muted-foreground"><code>.avatar</code> on an <code>&lt;img&gt;</code>, or on a <code>&lt;span&gt;</code> holding initials, plus a hue and a size. Always a circle, whatever the radius knob says.</p>
+    <p class="muted"><code>.avatar</code> on an <code>&lt;img&gt;</code>, or on a <code>&lt;span&gt;</code> holding initials, plus a hue and a size. Always a circle, whatever the radius knob says.</p>
   </section>
 
   <section class="space-y-3">
@@ -27,7 +27,7 @@
       <img class="avatar xl" src="https://randomuser.me/api/portraits/women/12.jpg" alt="Eve Lindqvist">
       <span class="avatar xl"><img src="https://randomuser.me/api/portraits/men/54.jpg" alt="Finn Byrne"></span>
     </div>
-    <p class="text-sm text-muted-foreground">Sizes <code>xs sm lg xl</code>, default 2.5rem. The last one wraps the image in a span, which works the same and lets you drop the image later without changing the class.</p>
+    <p class="text-sm muted">Sizes <code>xs sm lg xl</code>, default 2.5rem. The last one wraps the image in a span, which works the same and lets you drop the image later without changing the class.</p>
 <pre>&lt;img class="avatar lg" src="…" alt="Dev Patel"&gt;</pre>
   </section>
 
@@ -53,7 +53,7 @@
       <span class="avatar pink">QZ</span>
       <span class="avatar rose">RD</span>
     </div>
-    <p class="text-sm text-muted-foreground">Every Tailwind hue name is a modifier. No hue is neutral grey. Each is a tint in light and a deep shade in dark, and the text colour is derived from the fill so it meets 4.5:1 either way.</p>
+    <p class="text-sm muted">Every Tailwind hue name is a modifier. No hue is neutral grey. Each is a tint in light and a deep shade in dark, and the text colour is derived from the fill so it meets 4.5:1 either way.</p>
 <pre>&lt;span class="avatar blue"&gt;LW&lt;/span&gt;
 &lt;span class="avatar pink lg"&gt;QZ&lt;/span&gt;</pre>
   </section>
@@ -71,7 +71,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Groups</h2>
-    <p class="text-sm text-muted-foreground">Inside <code>.join</code>, avatars overlap by a third of their width and get a 2px ring in the page colour. Later members sit on top. A plain avatar with a count makes the overflow marker.</p>
+    <p class="text-sm muted">Inside <code>.join</code>, avatars overlap by a third of their width and get a 2px ring in the page colour. Later members sit on top. A plain avatar with a count makes the overflow marker.</p>
     <div class="flex flex-wrap items-center gap-8">
       <div class="join">
         <img class="avatar" src="https://randomuser.me/api/portraits/women/44.jpg" alt="Ada Okafor">
@@ -105,7 +105,7 @@
   &lt;img class="avatar" src="…" alt="Ben Sato"&gt;
   &lt;span class="avatar"&gt;+3&lt;/span&gt;
 &lt;/div&gt;</pre>
-    <p class="text-sm text-muted-foreground">On a surface that is not the page background, set <code>--avatar-ring</code> on the group so the ring matches.</p>
+    <p class="text-sm muted">On a surface that is not the page background, set <code>--avatar-ring</code> on the group so the ring matches.</p>
     <div class="rounded-lg bg-muted p-4">
       <div class="join" style="--avatar-ring: var(--color-muted)">
         <span class="avatar sky">AO</span>
@@ -123,7 +123,7 @@
       <a href="#" class="avatar green" aria-label="Open Grace Hall's profile">GH</a>
       <p>Assigned to <img class="avatar sm" src="https://randomuser.me/api/portraits/women/68.jpg" alt="Chloe Marsh"> Chloe.</p>
     </div>
-    <p class="text-sm text-muted-foreground"><code>rounded-lg</code> or any radius utility squares one. <code>--avatar-radius</code> on <code>.avatar</code> changes the default for a whole app. A linked avatar gets a focus ring; give it an <code>aria-label</code> because initials are not a name.</p>
+    <p class="text-sm muted"><code>rounded-lg</code> or any radius utility squares one. <code>--avatar-radius</code> on <code>.avatar</code> changes the default for a whole app. A linked avatar gets a focus ring; give it an <code>aria-label</code> because initials are not a name.</p>
   </section>
 
   <section class="space-y-3">

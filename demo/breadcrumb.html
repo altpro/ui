@@ -14,7 +14,7 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Breadcrumb</h1>
-    <p class="text-muted-foreground"><code>.breadcrumb</code> on a <code>&lt;nav&gt;</code>. Links, then the current page as a <code>&lt;span aria-current="page"&gt;</code>. Chevrons are drawn in CSS, so no separator markup.</p>
+    <p class="muted"><code>.breadcrumb</code> on a <code>&lt;nav&gt;</code>. Links, then the current page as a <code>&lt;span aria-current="page"&gt;</code>. Chevrons are drawn in CSS, so no separator markup.</p>
   </section>
 
   <section class="space-y-3">
@@ -49,7 +49,7 @@
       <a href="#">Forms</a>
       <span aria-current="page">Breadcrumb</span>
     </nav>
-    <p class="text-sm text-muted-foreground">A <code>&lt;button&gt;</code> is styled like a link. Give it an <code>aria-label</code> and a <code>popovertarget</code>, and put the hidden levels in a <code>.dropdown</code> straight after it. The popover is in the top layer, so it gets no chevron.</p>
+    <p class="text-sm muted">A <code>&lt;button&gt;</code> is styled like a link. Give it an <code>aria-label</code> and a <code>popovertarget</code>, and put the hidden levels in a <code>.dropdown</code> straight after it. The popover is in the top layer, so it gets no chevron.</p>
 <pre>&lt;a href="/"&gt;Home&lt;/a&gt;
 &lt;button type="button" popovertarget="crumbs" aria-label="Show hidden pages"&gt;
   &lt;svg class="size-4" aria-hidden="true"&gt;…&lt;/svg&gt;
@@ -80,7 +80,7 @@
       <a href="#">Another long section name</a>
       <span aria-current="page">The current page, also long</span>
     </nav>
-    <p class="text-sm text-muted-foreground">An icon-only link needs an <code>aria-label</code>. An <code>&lt;ol&gt;</code> of <code>&lt;li&gt;</code> renders the same as bare children. A path wider than its container scrolls sideways rather than wrapping.</p>
+    <p class="text-sm muted">An icon-only link needs an <code>aria-label</code>. An <code>&lt;ol&gt;</code> of <code>&lt;li&gt;</code> renders the same as bare children. A path wider than its container scrolls sideways rather than wrapping.</p>
   </section>
 
   <section class="space-y-3">

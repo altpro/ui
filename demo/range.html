@@ -14,12 +14,12 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Range</h1>
-    <p class="text-muted-foreground"><code>.range</code> on a native <code>&lt;input type="range"&gt;</code>. Arrow keys, Home, End, Page Up and Page Down all work because the browser owns the control. No JavaScript.</p>
+    <p class="muted"><code>.range</code> on a native <code>&lt;input type="range"&gt;</code>. Arrow keys, Home, End, Page Up and Page Down all work because the browser owns the control. No JavaScript.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">In a field</h2>
-    <p class="text-sm text-muted-foreground">A <code>&lt;label for&gt;</code> names it. An <code>&lt;output&gt;</code> shows the value; one line of script keeps it current, since CSS cannot read the value.</p>
+    <p class="text-sm muted">A <code>&lt;label for&gt;</code> names it. An <code>&lt;output&gt;</code> shows the value; one line of script keeps it current, since CSS cannot read the value.</p>
     <div class="max-w-md space-y-4">
       <div class="field">
         <label for="volume" class="flex justify-between">Volume <output for="volume">40</output></label>
@@ -57,7 +57,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Accent</h2>
-    <p class="text-sm text-muted-foreground">The thumb is <code>--range-accent</code>, primary by default. Set it inline for one slider.</p>
+    <p class="text-sm muted">The thumb is <code>--range-accent</code>, primary by default. Set it inline for one slider.</p>
     <div class="max-w-md space-y-4">
       <input class="range" type="range" value="60" aria-label="Green" style="--range-accent: var(--color-success)">
       <input class="range" type="range" value="60" aria-label="Red" style="--range-accent: var(--color-danger)">
@@ -92,7 +92,7 @@
   --range-thumb    /* thumb diameter, 1.25rem */
   --range-radius   /* track corners, defaults to --radius */
 }</pre>
-    <p class="text-sm text-muted-foreground">There is no filled track left of the thumb: Chrome has no pseudo-element for it, so it would need a script. Ticks from a <code>&lt;datalist&gt;</code> are not drawn either.</p>
+    <p class="text-sm muted">There is no filled track left of the thumb: Chrome has no pseudo-element for it, so it would need a script. Ticks from a <code>&lt;datalist&gt;</code> are not drawn either.</p>
   </section>
 </main>
 </div>

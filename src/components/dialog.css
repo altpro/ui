@@ -12,6 +12,8 @@
    and the backdrop need no JS. `closedby="any"` adds click-outside.
    Non-modal: add `popover="manual"` to the dialog and open it with
    `command="show-popover"`. Same box, centred, no backdrop, page usable.
+   Drawer: `drawer` slides a full-height panel in from the end edge,
+   `drawer start` from the start edge. Same markup, same commands.
    The box, header, footer, media bleed and `divided` come from card.css.
    Sized to the viewport minus a gap on each side and scrolls inside when
    the content is taller. Layered so Tailwind utilities (w-*, max-w-*) win. */
@@ -41,6 +43,26 @@
       transition: opacity 0.15s, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
     }
 
+    /* drawer: full height, pinned to one inline edge, slides instead of scaling */
+    &.drawer {
+      --dialog-w: 24rem;
+      --drawer-from: 100%;
+      margin: 0;
+      margin-inline-start: auto;
+      height: 100%;
+      max-height: 100%;
+      border-radius: 0;
+      border-block: 0;
+      border-inline-end: 0;
+      transition: opacity 0.2s, translate 0.2s, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+      &.start {
+        --drawer-from: -100%;
+        margin-inline: 0 auto;
+        border-inline-start: 0;
+        border-inline-end: 1px solid var(--card-border);
+      }
+    }
+
     &:modal::backdrop {
       background: var(--dialog-backdrop);
     }
@@ -52,8 +74,10 @@
       scale: 0.96;
       &::backdrop { opacity: 0; }
     }
+    &.drawer:not([open], :popover-open) { scale: none; translate: var(--drawer-from) 0; }
     @starting-style {
       &:is([open], :popover-open) { opacity: 0; scale: 0.96; }
+      &.drawer:is([open], :popover-open) { scale: none; translate: var(--drawer-from) 0; }
       &:is([open], :popover-open)::backdrop { opacity: 0; }
     }
     @media (prefers-reduced-motion: reduce) {

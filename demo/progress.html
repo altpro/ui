@@ -14,12 +14,12 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Progress and meter</h1>
-    <p class="text-muted-foreground"><code>.progress</code> on a native <code>&lt;progress&gt;</code>, <code>.meter</code> on a native <code>&lt;meter&gt;</code>. The browser owns the value and the semantics; nui draws the track and the bar. No JavaScript.</p>
+    <p class="muted"><code>.progress</code> on a native <code>&lt;progress&gt;</code>, <code>.meter</code> on a native <code>&lt;meter&gt;</code>. The browser owns the value and the semantics; nui draws the track and the bar. No JavaScript.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Progress</h2>
-    <p class="text-sm text-muted-foreground">Every bar needs a name: a <code>&lt;label for&gt;</code> or an <code>aria-label</code>. A label with the value in an <code>&lt;output&gt;</code> gives sighted users the number too.</p>
+    <p class="text-sm muted">Every bar needs a name: a <code>&lt;label for&gt;</code> or an <code>aria-label</code>. A label with the value in an <code>&lt;output&gt;</code> gives sighted users the number too.</p>
     <div class="max-w-md space-y-4">
       <div class="field">
         <label for="upload" class="flex justify-between">Uploading photos <output for="upload">45%</output></label>
@@ -39,7 +39,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Colours</h2>
-    <p class="text-sm text-muted-foreground">The same colour words as the button. No word is primary.</p>
+    <p class="text-sm muted">The same colour words as the button. No word is primary.</p>
     <div class="grid max-w-2xl grid-cols-[auto_1fr] items-center gap-x-6 gap-y-3 text-sm">
       <code>(none)</code><progress class="progress" value="60" max="100" aria-label="Default"></progress>
       <code>secondary</code><progress class="progress secondary" value="60" max="100" aria-label="Secondary"></progress>
@@ -61,7 +61,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Meter</h2>
-    <p class="text-sm text-muted-foreground">A value within a known range: storage used, password strength, a score. <code>low</code>, <code>high</code> and <code>optimum</code> put the value in a band, and the bar colour follows: success, warning, danger. A colour word pins one colour instead.</p>
+    <p class="text-sm muted">A value within a known range: storage used, password strength, a score. <code>low</code>, <code>high</code> and <code>optimum</code> put the value in a band, and the bar colour follows: success, warning, danger. A colour word pins one colour instead.</p>
     <div class="max-w-md space-y-4">
       <div class="field">
         <label for="disk" class="flex justify-between">Disk <output for="disk">12 GB of 64 GB</output></label>
@@ -122,7 +122,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Custom properties</h2>
-    <p class="text-sm text-muted-foreground">Shared by <code>.progress</code> and <code>.meter</code>.</p>
+    <p class="text-sm muted">Shared by <code>.progress</code> and <code>.meter</code>.</p>
 <pre>.progress, .meter {
   --progress-bg      /* track */
   --progress-fg      /* bar; a meter's bands override it unless a colour word is set */

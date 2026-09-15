@@ -1,0 +1,112 @@
+/* Steps: where the user is in a sequence.
+   <ol class="steps">
+     <li><a href="/cart">Cart</a></li>
+     <li aria-current="step">Delivery</li>
+     <li>Payment</li>
+   </ol>
+   Numbered markers joined by a line. Steps before the aria-current one
+   are done (marker and the line after it in primary), the current one is
+   bold, the rest are muted. State comes from position, so there are no
+   done or todo classes. Horizontal, or `vertical` for a stacked list.
+   Layered so Tailwind utilities win. */
+@layer components {
+  .steps {
+    --steps-fg: var(--color-muted-foreground);
+    --steps-marker-bg: var(--color-muted);
+    --steps-marker-fg: var(--color-foreground);
+    --steps-active-bg: var(--color-primary);
+    --steps-active-fg: var(--color-primary-foreground);
+    --steps-line: var(--color-border);
+    --steps-marker: 2rem;
+
+    display: flex;
+    counter-reset: step;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-sm, 0.875rem);
+    color: var(--steps-fg);
+
+    > li {
+      flex: 1 1 0;
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      text-align: center;
+      counter-increment: step;
+
+      &::before {
+        content: counter(step);
+        display: grid;
+        place-items: center;
+        flex: none;
+        width: var(--steps-marker);
+        height: var(--steps-marker);
+        border-radius: 50%;
+        background: var(--steps-marker-bg);
+        color: var(--steps-marker-fg);
+        font-weight: 600;
+        z-index: 1;
+      }
+      /* the line from this marker to the next */
+      &:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: calc(var(--steps-marker) / 2 - 1px);
+        inset-inline-start: calc(50% + var(--steps-marker) / 2);
+        width: calc(100% - var(--steps-marker));
+        height: 2px;
+        background: var(--steps-line);
+      }
+
+      /* done: has the current step somewhere after it */
+      &:has(~ [aria-current]) {
+        &::before { background: var(--steps-active-bg); color: var(--steps-active-fg); }
+        &::after { background: var(--steps-active-bg); }
+      }
+      &[aria-current] {
+        color: var(--color-foreground);
+        font-weight: 600;
+        &::before { background: var(--steps-active-bg); color: var(--steps-active-fg); }
+      }
+
+      a {
+        color: inherit;
+        text-decoration: none;
+        /* the link is a flex item, so padding grows the 24px target and the negative margin keeps the label where plain text sits */
+        padding-block: 0.25rem;
+        margin-block: -0.25rem;
+        &:hover { text-decoration: underline; }
+        &:focus-visible {
+          outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+          outline-offset: 2px;
+          border-radius: 0.25rem;
+        }
+      }
+    }
+
+    &.vertical {
+      flex-direction: column;
+      > li {
+        /* marker in the first column, label and anything after it stacked in the second */
+        display: grid;
+        grid-template-columns: auto 1fr;
+        align-items: start;
+        text-align: start;
+        > * { grid-column: 2; }
+        padding-block-end: 1.5rem;
+        /* a one-line label sits on the marker's centre line; a description inside resets it with leading-normal */
+        line-height: var(--steps-marker);
+        &:last-child { padding-block-end: 0; }
+        &:not(:last-child)::after {
+          top: var(--steps-marker);
+          inset-inline-start: calc(var(--steps-marker) / 2 - 1px);
+          width: 2px;
+          height: calc(100% - var(--steps-marker));
+        }
+      }
+    }
+  }
+}

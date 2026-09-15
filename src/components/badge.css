@@ -85,6 +85,32 @@
       --badge-outline: var(--badge-accent);
     }
 
+    /* hue variants, the same names as avatar.css. Each sets the fill only:
+       the text colour, and the accent that outline/ghost draw with, are
+       derived from it, so every hue reads AA on the badge and on the page. */
+    &:is(.red, .orange, .amber, .yellow, .lime, .green, .emerald, .teal, .cyan, .sky, .blue, .indigo, .violet, .purple, .fuchsia, .pink, .rose) {
+      --badge-fg: light-dark(oklch(from var(--badge-bg) 0.3 c h), oklch(from var(--badge-bg) 0.92 c h));
+      --badge-accent: light-dark(oklch(from var(--badge-bg) 0.45 c h), oklch(from var(--badge-bg) 0.8 c h));
+      --badge-outline: var(--badge-accent);
+    }
+    &.red { --badge-bg: var(--color-red); }
+    &.orange { --badge-bg: var(--color-orange); }
+    &.amber { --badge-bg: var(--color-amber); }
+    &.yellow { --badge-bg: var(--color-yellow); }
+    &.lime { --badge-bg: var(--color-lime); }
+    &.green { --badge-bg: var(--color-green); }
+    &.emerald { --badge-bg: var(--color-emerald); }
+    &.teal { --badge-bg: var(--color-teal); }
+    &.cyan { --badge-bg: var(--color-cyan); }
+    &.sky { --badge-bg: var(--color-sky); }
+    &.blue { --badge-bg: var(--color-blue); }
+    &.indigo { --badge-bg: var(--color-indigo); }
+    &.violet { --badge-bg: var(--color-violet); }
+    &.purple { --badge-bg: var(--color-purple); }
+    &.fuchsia { --badge-bg: var(--color-fuchsia); }
+    &.pink { --badge-bg: var(--color-pink); }
+    &.rose { --badge-bg: var(--color-rose); }
+
     /* style modifiers */
     &.outline, &.ghost {
       background: transparent;

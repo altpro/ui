@@ -15,3 +15,6 @@ pre {
   border-radius: 0.5rem;
   padding: 1rem;
 }
+header .btn[aria-pressed="true"] {
+  background: color-mix(in oklab, var(--btn-accent) 15%, transparent);
+}

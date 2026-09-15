@@ -42,6 +42,21 @@
       opacity: 0.5;
       pointer-events: none;
     }
+    /* loading: a spinner in front of the label and no clicks; add aria-busy="true" */
+    &.loading {
+      pointer-events: none;
+      &::before {
+        content: "";
+        flex: none;
+        width: 1em;
+        height: 1em;
+        border: 2px solid color-mix(in oklab, currentColor 25%, transparent);
+        border-top-color: currentColor;
+        border-radius: 50%;
+        animation: spinner-turn 0.8s linear infinite;
+        @media (prefers-reduced-motion: reduce) { animation-duration: 2.5s; }
+      }
+    }
 
     /* colour variants */
     &.primary {

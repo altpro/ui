@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "stat.html", "toast.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -99,6 +99,37 @@ for (const colorScheme of ["light", "dark"]) {
       expect(p3.y + p3.height).toBeLessThanOrEqual(150);
     });
 
+    // toasts are appended after load, so axe never sees them: fire every demo button, check the toast, and check it fits the viewport
+    test("toast.html: every toast passes axe, sits inside the viewport, and the timed ones fade", async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/toast.html");
+      const failures = [];
+      for (const b of await page.locator("main [data-toast]").all()) {
+        await b.scrollIntoViewIfNeeded();
+        await b.click();
+        const t = page.locator("#toaster > .alert").last();
+        await expect(t).toBeVisible();
+        await t.evaluate((el) => Promise.all(el.getAnimations().filter((a) => a.animationName === "toast-in").map((a) => a.finished)));
+        const box = await t.boundingBox();
+        const off = box.x < 0 || box.y < 0 || box.x + box.width > 800 || box.y + box.height > 500;
+        const { violations } = await axe(page).include("#toaster").analyze();
+        if (off || violations.length) failures.push(`${await b.textContent()}: ${off ? JSON.stringify(box) : ""} ${summary(violations)}`);
+        const names = await t.evaluate((el) => getComputedStyle(el).animationName);
+        const pinned = (await t.getAttribute("class")).includes("pinned");
+        if (names.includes("toast-life") === pinned) failures.push(`${await b.textContent()}: animation ${names}`);
+        await t.evaluate((el) => el.remove());
+      }
+      expect(failures).toEqual([]);
+      // the clock runs out and the app's listener removes the toast; hover pauses it
+      await page.locator("main [data-toast]").first().evaluate((b) => { b.click(); document.querySelector("#toaster > .alert").style.setProperty("--toast-life", "0.3s"); });
+      const t = page.locator("#toaster > .alert");
+      await t.hover();
+      await page.waitForTimeout(600);
+      await expect(t).toHaveCount(1);
+      await page.mouse.move(0, 0);
+      await expect(t).toHaveCount(0);
+    });
+
     // dialogs are closed at load, so axe never sees them: open each, check it, and check it fits the viewport
     test("dialog.html: every open dialog passes axe and stays inside the viewport", async ({ page }) => {
       await page.setViewportSize({ width: 800, height: 500 });
@@ -144,6 +175,37 @@ for (const colorScheme of ["light", "dark"]) {
       expect(await shown()).toEqual([false, true, false]);
       await page.keyboard.press("ArrowRight");
       expect(await shown()).toEqual([false, false, true]);
+    });
+
+    // done and current markers are ::before pseudos coloured by position; the line after a done step is primary too
+    test("steps.html: markers before aria-current are done, the current one is bold, the rest are muted", async ({ page }) => {
+      await page.goto("/steps.html");
+      const li = page.locator("main .steps").first().locator("li");
+      const bg = (i, pseudo) => li.nth(i).evaluate((el, ps) => getComputedStyle(el, ps).backgroundColor, pseudo);
+      const primary = await page.evaluate(() => { const d = document.createElement("div"); d.style.background = "var(--color-primary)"; document.body.append(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; });
+      expect(await bg(0, "::before")).toBe(primary);
+      expect(await bg(0, "::after")).toBe(primary);
+      expect(await bg(2, "::before")).toBe(primary);
+      expect(await bg(2, "::after")).not.toBe(primary);
+      expect(await bg(3, "::before")).not.toBe(primary);
+      expect(await li.nth(2).evaluate((el) => getComputedStyle(el).fontWeight)).toBe("600");
+      const { violations } = await axe(page).include("main .steps").analyze();
+      expect(summary(violations)).toEqual([]);
+    });
+
+    // a drawer is full height and flush with one edge; the start one is flush with the other
+    test("dialog.html: drawers are full height on their edge", async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/dialog.html");
+      await page.addStyleTag({ content: "*, ::backdrop { transition: none !important }" });
+      for (const [id, edge] of [["d-drawer", "right"], ["d-drawer-start", "left"]]) {
+        await page.locator(`[commandfor=${id}]`).first().scrollIntoViewIfNeeded();
+        await page.locator(`[commandfor=${id}]`).first().click();
+        const box = await page.locator("#" + id).boundingBox();
+        expect(Math.round(box.height)).toBe(500);
+        expect(Math.round(edge === "right" ? box.x + box.width : box.x)).toBe(edge === "right" ? 800 : 0);
+        await page.locator("#" + id).evaluate((el) => el.close());
+      }
     });
 
     // the bubble is a pseudo-element: it hit-tests as the host, so elementFromPoint above the host finds it
@@ -227,7 +289,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["pagination.html", ".btn:not(span, [aria-disabled])", 5]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Toast</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Toast</h1>
+    <p class="muted">A <code>.toaster</code> region fixed in a corner, present and empty from page load. The app appends an <code>.alert</code> to it. Each one slides in, lives for six seconds, then fades; hover or focus pauses the clock. The only JavaScript is the append and the removal.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Colours</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" data-toast="" data-text="Copied to clipboard.">Neutral</button>
+      <button class="btn primary" data-toast="primary" data-text="Welcome back, Steve.">Primary</button>
+      <button class="btn info" data-toast="info" data-text="A new version is available. Reload to update.">Info</button>
+      <button class="btn success" data-toast="success" data-text="Your changes have been saved.">Success</button>
+      <button class="btn warning" data-toast="warning" data-text="You are offline. Changes will sync when you reconnect.">Warning</button>
+      <button class="btn danger" data-toast="danger" data-text="Upload failed. The file is larger than 10 MB.">Danger</button>
+    </div>
+<pre>&lt;div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"&gt;&lt;/div&gt;
+
+&lt;script&gt;
+  const toast = (html, cls = "") =&gt; {
+    const el = Object.assign(document.createElement("div"), { className: `alert ${cls}`, innerHTML: html });
+    el.addEventListener("animationend", (e) =&gt; e.animationName === "toast-life" &amp;&amp; el.remove());
+    toaster.append(el);
+  };
+  toast("&lt;p&gt;Your changes have been saved.&lt;/p&gt;", "success");
+&lt;/script&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Shapes</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" data-toast="success" data-title="Saved" data-text="Your changes are live.">With a title</button>
+      <button class="btn" data-toast="info" data-title="Update available" data-text="Version 2.4 is ready to install." data-dismiss="">Dismissible</button>
+      <button class="btn" data-toast="danger pinned" data-title="Deploy failed" data-text="Production is still on v2.3.9." data-dismiss="" data-action="Retry">Pinned, with an action</button>
+    </div>
+    <p class="text-sm muted">A toast with an action or a dismiss cross is a <code>btn ghost xs</code> inside the alert, same as a dismissible alert. <code>pinned</code> turns the clock off: anything the user must act on or read stays until they close it.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Corners</h2>
+    <div class="flex flex-wrap gap-2">
+      <button class="btn" data-toast="info" data-text="Bottom end, the default." data-corner="">Bottom end</button>
+      <button class="btn" data-toast="info" data-text="Bottom start." data-corner="start">Bottom start</button>
+      <button class="btn" data-toast="info" data-text="Top end." data-corner="top">Top end</button>
+      <button class="btn" data-toast="info" data-text="Top start." data-corner="top start">Top start</button>
+    </div>
+    <p class="text-sm muted"><code>top</code> and <code>start</code> on the region. One region per page; this demo moves it so every corner can be tried.</p>
+  </section>
+</main>
+</div>
+<div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"></div>
+<script>
+  const x = '<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>';
+  const toast = (html, cls = "") => {
+    const el = Object.assign(document.createElement("div"), { className: `alert ${cls}`, innerHTML: html });
+    el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
+    toaster.append(el);
+  };
+  for (const b of document.querySelectorAll("[data-toast]")) b.onclick = () => {
+    const d = b.dataset;
+    if (d.corner !== undefined) toaster.className = `toaster ${d.corner}`;
+    toast(
+      (d.title ? `<h4>${d.title}</h4>` : "") +
+      (d.dismiss !== undefined ? `<button class="btn ghost xs" aria-label="Dismiss" onclick="this.closest('.alert').remove()">${x}</button>` : "") +
+      `<p>${d.text}</p>` +
+      (d.action ? `<div class="flex gap-2 pt-1"><button class="btn danger sm" onclick="this.closest('.alert').remove()">${d.action}</button></div>` : ""),
+      d.toast,
+    );
+  };
+</script>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

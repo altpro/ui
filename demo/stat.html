@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Stat</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Stat</h1>
+    <p class="muted">A pattern, not a class. A <code>.card</code> holding a muted label, a big number in <code>tabular-nums</code>, and an optional change line. Put several in a <code>grid gap-gap</code>.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">A row of stats</h2>
+    <p class="text-sm muted">The label is a <code>p</code>, not a heading, so a dashboard of twelve stats does not become twelve sections. The change line says which way in words as well as colour, and the period it compares against.</p>
+    <div class="grid gap-gap sm:grid-cols-2 lg:grid-cols-4">
+      <div class="card">
+        <p class="text-sm muted">Revenue</p>
+        <p class="text-3xl font-semibold tabular-nums">£12,400</p>
+        <p class="text-sm text-success">Up 12% on last month</p>
+      </div>
+      <div class="card">
+        <p class="text-sm muted">Orders</p>
+        <p class="text-3xl font-semibold tabular-nums">318</p>
+        <p class="text-sm text-danger">Down 4% on last month</p>
+      </div>
+      <div class="card">
+        <p class="text-sm muted">Customers</p>
+        <p class="text-3xl font-semibold tabular-nums">1,204</p>
+        <p class="text-sm muted">No change</p>
+      </div>
+      <div class="card">
+        <p class="text-sm muted">Refunds</p>
+        <p class="text-3xl font-semibold tabular-nums">7</p>
+        <p class="text-sm muted">Last 30 days</p>
+      </div>
+    </div>
+<pre>&lt;div class="grid gap-gap sm:grid-cols-2 lg:grid-cols-4"&gt;
+  &lt;div class="card"&gt;
+    &lt;p class="text-sm muted"&gt;Revenue&lt;/p&gt;
+    &lt;p class="text-3xl font-semibold tabular-nums"&gt;£12,400&lt;/p&gt;
+    &lt;p class="text-sm text-success"&gt;Up 12% on last month&lt;/p&gt;
+  &lt;/div&gt;
+  …
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">With an icon and a meter</h2>
+    <p class="text-sm muted">The card header pushes an icon to the far side. A <code>.meter</code> under the number shows how much of a limit is used.</p>
+    <div class="grid max-w-2xl gap-gap sm:grid-cols-2">
+      <div class="card">
+        <header>
+          <p class="text-sm muted">Storage</p>
+          <svg class="size-5 muted" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M3 5V19A9 3 0 0 0 21 19V5"/><path d="M3 12A9 3 0 0 0 21 12"/></svg>
+        </header>
+        <p class="text-3xl font-semibold tabular-nums">45 GB <span class="text-base font-normal muted">of 64 GB</span></p>
+        <meter class="meter" value="45" min="0" max="64" low="32" high="52" optimum="0" aria-label="Storage used"></meter>
+      </div>
+      <div class="card">
+        <header>
+          <p class="text-sm muted">Active now</p>
+          <span class="spinner sm muted" role="status"><span class="sr-only">Updating</span></span>
+        </header>
+        <p class="text-3xl font-semibold tabular-nums">42</p>
+        <p class="text-sm muted">Refreshes every minute</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Loading</h2>
+    <p class="text-sm muted">The same card with skeletons where the number and change line go, sized to match, so nothing moves when the data arrives.</p>
+    <div class="grid max-w-2xl gap-gap sm:grid-cols-2">
+      <div class="card" aria-busy="true">
+        <span class="sr-only">Loading</span>
+        <p class="text-sm muted">Revenue</p>
+        <div class="skeleton h-9 w-32"></div>
+        <div class="skeleton h-5 w-40"></div>
+      </div>
+      <div class="card">
+        <p class="text-sm muted">Revenue</p>
+        <p class="text-3xl font-semibold tabular-nums">£12,400</p>
+        <p class="text-sm text-success">Up 12% on last month</p>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

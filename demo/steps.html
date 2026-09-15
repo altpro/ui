@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Steps</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Steps</h1>
+    <p class="muted"><code>.steps</code> on an <code>&lt;ol&gt;</code>. Numbered markers joined by a line. Mark the current step with <code>aria-current="step"</code>; everything before it is drawn as done, everything after as still to come. No done or todo classes, no JavaScript.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Horizontal</h2>
+    <p class="text-sm muted">Done steps can be links back. The current and later steps are plain text.</p>
+    <ol class="steps max-w-2xl">
+      <li><a href="#">Cart</a></li>
+      <li><a href="#">Delivery</a></li>
+      <li aria-current="step">Payment</li>
+      <li>Review</li>
+    </ol>
+<pre>&lt;ol class="steps"&gt;
+  &lt;li&gt;&lt;a href="/cart"&gt;Cart&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="/delivery"&gt;Delivery&lt;/a&gt;&lt;/li&gt;
+  &lt;li aria-current="step"&gt;Payment&lt;/li&gt;
+  &lt;li&gt;Review&lt;/li&gt;
+&lt;/ol&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">First and last</h2>
+    <div class="max-w-2xl space-y-6">
+      <ol class="steps">
+        <li aria-current="step">Account</li>
+        <li>Profile</li>
+        <li>Done</li>
+      </ol>
+      <ol class="steps">
+        <li><a href="#">Account</a></li>
+        <li><a href="#">Profile</a></li>
+        <li aria-current="step">Done</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Vertical</h2>
+    <p class="text-sm muted"><code>vertical</code> stacks them. A one-line label sits on the marker's centre line. For a description, put it in a <code>span class="block leading-normal muted"</code> after the label.</p>
+    <ol class="steps vertical max-w-sm">
+      <li><a href="#">Order placed</a></li>
+      <li><a href="#">Paid</a></li>
+      <li aria-current="step">Dispatched<span class="block font-normal leading-normal muted">Left the warehouse this morning.</span></li>
+      <li>Delivered</li>
+    </ol>
+<pre>&lt;ol class="steps vertical"&gt;
+  &lt;li&gt;&lt;a href="#"&gt;Order placed&lt;/a&gt;&lt;/li&gt;
+  &lt;li&gt;&lt;a href="#"&gt;Paid&lt;/a&gt;&lt;/li&gt;
+  &lt;li aria-current="step"&gt;
+    Dispatched
+    &lt;span class="block font-normal leading-normal muted"&gt;Left the warehouse this morning.&lt;/span&gt;
+  &lt;/li&gt;
+  &lt;li&gt;Delivered&lt;/li&gt;
+&lt;/ol&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a card</h2>
+    <div class="card max-w-2xl">
+      <header><h3>Checkout</h3></header>
+      <ol class="steps">
+        <li><a href="#">Cart</a></li>
+        <li aria-current="step">Delivery</li>
+        <li>Payment</li>
+      </ol>
+      <footer class="justify-end"><a href="#" class="btn ghost">Back</a><button class="btn primary">Continue</button></footer>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Custom properties</h2>
+<pre>.steps {
+  --steps-fg          /* label text, muted */
+  --steps-marker-bg   /* upcoming marker */
+  --steps-marker-fg
+  --steps-active-bg   /* done and current markers, and the line between done steps */
+  --steps-active-fg
+  --steps-line        /* the line to an upcoming step */
+  --steps-marker      /* marker size, 2rem */
+}</pre>
+    <ol class="steps max-w-2xl" style="--steps-active-bg: var(--color-success); --steps-active-fg: var(--color-success-foreground); --steps-marker: 1.5rem">
+      <li><a href="#">Cart</a></li>
+      <li aria-current="step">Delivery</li>
+      <li>Payment</li>
+    </ol>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

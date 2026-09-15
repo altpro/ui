@@ -14,12 +14,12 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Tooltip</h1>
-    <p class="text-muted-foreground">A <code>data-tooltip</code> attribute with one line of text. Shows above the element on hover and keyboard focus. No class, no JavaScript. Anything longer than a line is a <a href="dropdown.html" class="underline">dropdown</a>.</p>
+    <p class="muted">A <code>data-tooltip</code> attribute with one line of text. Shows above the element on hover and keyboard focus. No class, no JavaScript. Anything longer than a line is a <a href="dropdown.html" class="underline">dropdown</a>.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">On anything</h2>
-    <p class="text-sm text-muted-foreground">Buttons, badges, avatars, links, plain text. The tooltip is not read by screen readers, so an icon-only button still needs an <code>aria-label</code>; repeat the same words in both.</p>
+    <p class="text-sm muted">Buttons, badges, avatars, links, plain text. The tooltip is not read by screen readers, so an icon-only button still needs an <code>aria-label</code>; repeat the same words in both.</p>
     <div class="flex flex-wrap items-center gap-4">
       <button class="btn primary" data-tooltip="Saves and closes the editor">Save</button>
       <button class="btn ghost" data-tooltip="Copy to clipboard" aria-label="Copy to clipboard">
@@ -36,7 +36,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Placement</h2>
-    <p class="text-sm text-muted-foreground">Always above, centred on the element, up to <code>20rem</code> wide. It does not flip or slide, and an ancestor with <code>overflow</code> clips it. Keep tooltips off the top edge of the page and out of scroll containers; a <a href="dropdown.html" class="underline">dropdown</a> handles those.</p>
+    <p class="text-sm muted">Always above, centred on the element, up to <code>20rem</code> wide. It does not flip or slide, and an ancestor with <code>overflow</code> clips it. Keep tooltips off the top edge of the page and out of scroll containers; a <a href="dropdown.html" class="underline">dropdown</a> handles those.</p>
     <div class="flex justify-between">
       <button class="btn" data-tooltip="Short">Left edge</button>
       <button class="btn" data-tooltip="Short">Right edge</button>
@@ -51,7 +51,7 @@
       <div class="dark panel"><button class="btn" data-tooltip="Light bubble in a dark region">Dark</button></div>
       <div class="inverse panel"><button class="btn" data-tooltip="Follows the region it sits in">Inverse</button></div>
     </div>
-    <p class="text-sm text-muted-foreground">The bubble inverts the region's colours: page foreground as fill, page background as text. Custom properties: <code>--tooltip-bg --tooltip-fg --tooltip-radius --tooltip-h --tooltip-px --tooltip-text --tooltip-gap --tooltip-tail</code>.</p>
+    <p class="text-sm muted">The bubble inverts the region's colours: page foreground as fill, page background as text. Custom properties: <code>--tooltip-bg --tooltip-fg --tooltip-radius --tooltip-h --tooltip-px --tooltip-text --tooltip-gap --tooltip-tail</code>.</p>
   </section>
 </main>
 </div>

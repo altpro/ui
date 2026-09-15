@@ -1,0 +1,72 @@
+/* Loading: a skeleton and a spinner.
+   <div aria-busy="true"><span class="sr-only">Loading</span>
+     <div class="skeleton h-4 w-48"></div>
+     <div class="skeleton size-12 rounded-full"></div>
+   </div>
+   <span class="spinner" role="status"><span class="sr-only">Loading</span></span>
+   A skeleton is a muted block the shape of what it stands in for; size it
+   with utilities. It shimmers unless motion is reduced. The spinner is a
+   ring in currentColor, so text-* colours it, and sizes set --spinner-size.
+   Neither says anything on its own: put aria-busy on the region the
+   skeleton fills, and sr-only text inside the spinner.
+   Layered so Tailwind utilities win. */
+@layer components {
+  .skeleton {
+    --skeleton-bg: var(--color-muted);
+    --skeleton-shine: color-mix(in oklab, var(--color-muted), var(--color-background) 60%);
+    --skeleton-radius: min(var(--radius), 0.5rem);
+
+    position: relative;
+    display: block;
+    height: 1em;
+    border-radius: var(--skeleton-radius);
+    background: var(--skeleton-bg);
+    overflow: hidden;
+    pointer-events: none;
+
+    /* the highlight is a full-width band that slides across on translate, so it is
+       on screen the whole loop, moves at one speed and runs on the compositor */
+    &::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, var(--skeleton-shine), transparent);
+      translate: -100% 0;
+      animation: skeleton-shine 1.5s linear infinite;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      &::after { display: none; }
+    }
+  }
+
+  .spinner {
+    --spinner-size: 1.25rem;
+    --spinner-width: 2px;
+
+    display: inline-block;
+    flex: none;
+    width: var(--spinner-size);
+    height: var(--spinner-size);
+    border: var(--spinner-width) solid color-mix(in oklab, currentColor 25%, transparent);
+    border-top-color: currentColor;
+    border-radius: 50%;
+    animation: spinner-turn 0.8s linear infinite;
+
+    &.xs { --spinner-size: 0.75rem; }
+    &.sm { --spinner-size: 1rem; }
+    &.lg { --spinner-size: 2rem; --spinner-width: 3px; }
+    &.xl { --spinner-size: 3rem; --spinner-width: 4px; }
+
+    /* a spinner is the loading signal itself, so it keeps turning, slowly */
+    @media (prefers-reduced-motion: reduce) {
+      animation-duration: 2.5s;
+    }
+  }
+}
+
+@keyframes skeleton-shine {
+  to { translate: 100% 0; }
+}
+@keyframes spinner-turn {
+  to { rotate: 1turn; }
+}

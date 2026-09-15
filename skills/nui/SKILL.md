@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -41,7 +41,7 @@ Works on `<button>`, `<a>`, `<input type="submit">`.
 | Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias of `danger`). No colour = neutral grey. |
 | Style | `outline` (transparent fill, coloured border and text), `ghost` (transparent, coloured text, no border) |
 | Size | `xs` `sm` `lg` `xl`. No size = default (2.25rem tall). |
-| State | `disabled` attribute, or `aria-disabled="true"` on links. Focus ring appears on keyboard focus only. |
+| State | `disabled` attribute, or `aria-disabled="true"` on links. `loading` draws a spinner before the label and ignores clicks; pair it with `aria-busy="true"` and a label saying what is happening (`Saving`). Focus ring appears on keyboard focus only. |
 
 Icons: put an inline SVG inside the button, sized with `size-4`. The button has `gap-2` built in.
 
@@ -164,6 +164,7 @@ Small label for status, counts and tags. Same modifier words as the button. A `<
 | Kind | Classes |
 |------|---------|
 | Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias). No colour = neutral grey. |
+| Hue | Any Tailwind hue name, the same set the avatar takes: `red` `orange` `amber` `yellow` `lime` `green` `emerald` `teal` `cyan` `sky` `blue` `indigo` `violet` `purple` `fuchsia` `pink` `rose`. |
 | Style | `outline`, `ghost` |
 | Size | `sm` `lg`. No size = default (1.5rem tall, 24px, the minimum for a link or button badge). |
 
@@ -173,6 +174,8 @@ Small label for status, counts and tags. Same modifier words as the button. A `<
 ```
 
 Icons inside a badge are `size-3`. Badges can sit inside `.join`.
+
+Use a semantic colour for status and a hue for a tag or category. Hues are a tint in light and a deep shade in dark; the text and outline colours are derived from the fill, so any hue is readable in both schemes and in all three styles.
 
 Custom properties: `--badge-bg --badge-fg --badge-accent --badge-outline --badge-hover --badge-radius --badge-h --badge-px --badge-text`.
 
@@ -370,12 +373,25 @@ A card in the top layer, on a native `<dialog>`. Everything in the Card section 
 | Dismiss | Esc by default. `closedby="any"` on the dialog adds click on the backdrop. `closedby="none"` removes Esc, for a dialog that must end with a button. |
 | Width | 32rem, capped at the viewport minus a `gap` each side. Narrower with `max-w-sm`, wider with `w-[48rem]`. |
 | Height | Capped at the viewport minus a `gap` each side; taller content scrolls inside. The header and footer scroll with it. |
+| Drawer | `drawer`: a full-height panel, 24rem wide, that slides in from the end edge. `drawer start` slides from the start edge. Everything else is unchanged. `mt-auto` on the footer pins it to the bottom. |
 
 - The close cross is a `btn ghost sm` with `aria-label="Close"`, placed straight after the heading or `hgroup` so the header pushes it to the far side. The dialog pulls it onto the heading line.
 - Put `aria-labelledby` on the dialog pointing at its heading. Without it the dialog has no name.
 - Form: the `<header>` and `<footer>` stay direct children of the dialog. Wrap only the fields in `<form id="f" method="dialog" class="contents">` and give the footer's submit button `form="f"`. `method="dialog"` closes on submit. Cancel is a `command="close"` button.
 - Focus goes to the first focusable thing, which is the close cross. Put `autofocus` on the first field of a form instead.
 - Place the dialog where a `div` card would go: inside `main`, `section` or another sectioned element, so its `header` is not announced as the page banner. Not as a direct child of a `space-y-*` or `space-x-*` container: those set margins on every child, and the dialog centres with `margin: auto`.
+
+```html
+<button class="btn" command="show-modal" commandfor="filters">Filters</button>
+<dialog id="filters" class="dialog drawer divided" closedby="any" aria-labelledby="filters-title">
+  <header>
+    <h3 id="filters-title">Filters</h3>
+    <button class="btn ghost sm" command="close" commandfor="filters" aria-label="Close">…x…</button>
+  </header>
+  <div class="field">…</div>
+  <footer class="mt-auto justify-end"><button class="btn primary" command="close" commandfor="filters">Apply</button></footer>
+</dialog>
+```
 
 Custom properties: `--dialog-w --dialog-shadow --dialog-backdrop`, plus the card ones.
 
@@ -592,9 +608,112 @@ No class. A `<nav aria-label="Pagination">` of `.btn` links, in a `.join` for a 
 - Previous and next only: two `btn outline` links in a `flex justify-between`, with words instead of numbers.
 - Table footer: a `div` (not a `nav`) holding the row count, a `select class="input sm"` for page size, a `p aria-live="polite"` saying "Page 2 of 12", and a `join` of `btn outline sm` first, previous, next and last arrows.
 
+## Loading: `.skeleton` `.spinner`
+
+Skeleton: a muted block the shape of the content that has not arrived. 1em tall by default; size and round it with utilities. It shimmers unless motion is reduced. Give the region it fills `aria-busy="true"` and one `sr-only` "Loading".
+
+```html
+<div class="card" aria-busy="true">
+  <span class="sr-only">Loading</span>
+  <div class="flex items-center gap-3">
+    <div class="skeleton size-10 rounded-full"></div>
+    <div class="flex-1 space-y-2"><div class="skeleton h-4 w-2/5"></div><div class="skeleton h-3 w-1/4"></div></div>
+  </div>
+</div>
+```
+
+Spinner: a turning ring in `currentColor`, so `text-primary` colours it. It says nothing on its own: give it `role="status"` and `sr-only` text, or put it beside visible text.
+
+```html
+<span class="spinner" role="status"><span class="sr-only">Loading</span></span>
+<p class="flex items-center gap-2" role="status"><span class="spinner sm"></span>Saving changes</p>
+<button class="btn primary loading" aria-busy="true">Saving</button>
+```
+
+| Kind | Classes |
+|------|---------|
+| Spinner size | `xs` `sm` `lg` `xl`. No size = 1.25rem. |
+| Button | `loading` on `.btn`, see the Button section. |
+
+- Match skeleton sizes to the real content (`h-9` for a `text-3xl` number) so nothing moves when data lands. In a table, one skeleton per cell for as many rows as usual.
+- Reduced motion: the skeleton stops shimmering; the spinner keeps turning at a third of the speed, since it is the signal itself.
+
+Custom properties: `--skeleton-bg --skeleton-shine --skeleton-radius`, `--spinner-size --spinner-width`.
+
+## Steps: `.steps`
+
+An `<ol>` of numbered markers joined by a line. Put `aria-current="step"` on the current `<li>`; steps before it are drawn done (primary marker and line), the current one is bold, later ones are muted. No done or todo classes.
+
+```html
+<ol class="steps">
+  <li><a href="/cart">Cart</a></li>
+  <li><a href="/delivery">Delivery</a></li>
+  <li aria-current="step">Payment</li>
+  <li>Review</li>
+</ol>
+```
+
+| Kind | Classes |
+|------|---------|
+| Layout | Horizontal, each step an equal column. `vertical` stacks them. |
+
+- Done steps can hold an `<a>` back to that step. Current and later steps are plain text.
+- Vertical: a one-line label sits on the marker's centre line. A description goes in a `span class="block font-normal leading-normal muted"` after the label.
+- Width is the container's: `max-w-2xl` or a card.
+
+Custom properties: `--steps-fg --steps-marker-bg --steps-marker-fg --steps-active-bg --steps-active-fg --steps-line --steps-marker`.
+
+## Toast: `.toaster`
+
+A region fixed in a corner, in the page from load and empty. The app appends an `.alert` to it; screen readers announce each one as it lands. Each toast slides in, lives for `--toast-life` (6s), then fades. Hover or focus pauses the clock.
+
+```html
+<div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"></div>
+
+<script>
+  const toast = (html, cls = "") => {
+    const el = Object.assign(document.createElement("div"), { className: `alert ${cls}`, innerHTML: html });
+    el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
+    toaster.append(el);
+  };
+  toast("<p>Your changes have been saved.</p>", "success");
+</script>
+```
+
+| Kind | Classes |
+|------|---------|
+| Corner (on the region) | Bottom end by default. `top`, `start`, or both. |
+| Toast (on the alert) | Any alert colour. `pinned` turns the clock off: it stays until the user closes it. |
+
+- One region per page, at the end of `body`. Keep the `role`, `aria-label` and `aria-live` attributes; the region must exist before the first toast so the announcement fires. Alerts inside carry no `role` of their own.
+- The app removes the element: listen for `animationend` with the name `toast-life`, as above. Without that listener a faded toast stays in the DOM.
+- Anything with an action, or that the user must read, is `pinned` with a dismiss cross (`btn ghost xs`, `aria-label="Dismiss"`, `onclick="this.closest('.alert').remove()"`), same as a dismissible alert. Never make a toast the only way to reach an action.
+- Toasts are polite. Something that must interrupt is a dialog, not a toast.
+
+Custom properties: `--toaster-w --toaster-gap --toaster-shadow --toast-life`.
+
+## Stat (pattern)
+
+No class. A `.card` with a muted label, a big number and an optional change line, several in a grid.
+
+```html
+<div class="grid gap-gap sm:grid-cols-2 lg:grid-cols-4">
+  <div class="card">
+    <p class="text-sm muted">Revenue</p>
+    <p class="text-3xl font-semibold tabular-nums">£12,400</p>
+    <p class="text-sm text-success">Up 12% on last month</p>
+  </div>
+</div>
+```
+
+- The label is a `p`, not a heading, so a dashboard of many stats is not many sections.
+- The change line says the direction in words (`Up 12%`) and what it compares to, not colour alone. `text-success` up, `text-danger` down, `muted` for no change or a plain note.
+- An icon on the right: a `<header>` holding the label `p` and the svg, so the card pushes the svg to the far side. A limit: a `.meter` under the number.
+- Loading: a `.skeleton h-9 w-32` for the number and `h-5 w-40` for the change line, with `aria-busy="true"` on the card.
+
 ## Theme tokens
 
-All colours are Tailwind theme variables, so `bg-primary`, `text-muted-foreground`, `border-border` and the rest exist as utilities. Each `X` has an `X-foreground` for text placed on it.
+All colours are Tailwind theme variables, so `bg-primary`, `text-muted-foreground`, `border-border` and the rest exist as utilities. `muted` is short for `text-muted-foreground`. Each `X` has an `X-foreground` for text placed on it.
 
 ```
 background  foreground

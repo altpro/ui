@@ -5,22 +5,22 @@
    whatever the import order. Every colour is light-dark() so one token
    serves both schemes; see scheme.css for how the scheme is chosen. */
 @theme default {
-  --color-background: light-dark(oklch(1 0 0), oklch(0.145 0 0));
+  --color-background: light-dark(oklch(1 0 0), oklch(0.235 0.013 258)); /* dark: a step below One Dark Pro sidebar #21252b */
   --color-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
 
-  --color-card: light-dark(oklch(1 0 0), oklch(0.205 0 0));
+  --color-card: light-dark(oklch(1 0 0), oklch(0.265 0.016 264)); /* dark: a step below One Dark Pro editor #282c34 */
   --color-card-foreground: light-dark(oklch(0.145 0 0), oklch(0.985 0 0));
 
-  --color-muted: light-dark(oklch(0.96 0 0), oklch(0.269 0 0));
+  --color-muted: light-dark(oklch(0.96 0 0), oklch(0.30 0.018 262));
   --color-muted-foreground: light-dark(oklch(0.5 0 0), oklch(0.708 0 0));
 
-  --color-border: light-dark(oklch(0.9 0 0), oklch(0.3 0 0));
+  --color-border: light-dark(oklch(0.9 0 0), oklch(0.386 0.024 266)); /* dark: #3e4451 */
   --color-ring: var(--color-primary);
 
   --color-primary: light-dark(oklch(0.52 0.2 262), oklch(0.73 0.15 262));
   --color-primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));
 
-  --color-secondary: light-dark(oklch(0.93 0 0), oklch(0.3 0 0));
+  --color-secondary: light-dark(oklch(0.93 0 0), oklch(0.386 0.024 266));
   --color-secondary-foreground: light-dark(oklch(0.2 0 0), oklch(0.985 0 0));
 
   --color-info: light-dark(oklch(0.5 0.14 230), oklch(0.75 0.13 230));

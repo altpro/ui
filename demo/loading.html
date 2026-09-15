@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Loading</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Loading</h1>
+    <p class="muted"><code>.skeleton</code> stands in for content that has not arrived. <code>.spinner</code> is a turning ring for a short wait. <code>loading</code> on a <code>.btn</code> puts a spinner in front of the label. All CSS, no JavaScript.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Skeleton</h2>
+    <p class="text-sm muted">A muted block, 1em tall by default, that shimmers. Size and round it with utilities to match what it replaces. The region it fills gets <code>aria-busy="true"</code> and one <code>sr-only</code> "Loading", so a screen reader hears one word rather than a pile of empty boxes.</p>
+    <div class="grid max-w-2xl gap-gap sm:grid-cols-2">
+      <div class="card" aria-busy="true">
+        <span class="sr-only">Loading</span>
+        <div class="flex items-center gap-3">
+          <div class="skeleton size-10 rounded-full"></div>
+          <div class="flex-1 space-y-2">
+            <div class="skeleton h-4 w-2/5"></div>
+            <div class="skeleton h-3 w-1/4"></div>
+          </div>
+        </div>
+        <div class="space-y-2">
+          <div class="skeleton h-3"></div>
+          <div class="skeleton h-3"></div>
+          <div class="skeleton h-3 w-4/5"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="flex items-center gap-3">
+          <span class="avatar">SR</span>
+          <div class="flex-1">
+            <p class="font-medium">Steve Rayner</p>
+            <p class="text-sm muted">Owner</p>
+          </div>
+        </div>
+        <p class="text-sm">The card on the left is the same layout with skeletons in place of the avatar, name, role and body text.</p>
+      </div>
+    </div>
+<pre>&lt;div class="card" aria-busy="true"&gt;
+  &lt;span class="sr-only"&gt;Loading&lt;/span&gt;
+  &lt;div class="flex items-center gap-3"&gt;
+    &lt;div class="skeleton size-10 rounded-full"&gt;&lt;/div&gt;
+    &lt;div class="flex-1 space-y-2"&gt;
+      &lt;div class="skeleton h-4 w-2/5"&gt;&lt;/div&gt;
+      &lt;div class="skeleton h-3 w-1/4"&gt;&lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/div&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Skeleton in a table</h2>
+    <p class="text-sm muted">One skeleton per cell, in as many rows as the page usually shows, so the table does not jump when the data lands.</p>
+    <div class="card max-w-2xl">
+      <table class="table" aria-busy="true">
+        <caption class="sr-only">Loading invoices</caption>
+        <thead><tr><th>Invoice</th><th>Customer</th><th>Amount</th></tr></thead>
+        <tbody>
+          <tr><td><div class="skeleton h-4 w-16"></div></td><td><div class="skeleton h-4 w-32"></div></td><td><div class="skeleton h-4 w-12"></div></td></tr>
+          <tr><td><div class="skeleton h-4 w-16"></div></td><td><div class="skeleton h-4 w-24"></div></td><td><div class="skeleton h-4 w-12"></div></td></tr>
+          <tr><td><div class="skeleton h-4 w-16"></div></td><td><div class="skeleton h-4 w-40"></div></td><td><div class="skeleton h-4 w-12"></div></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Spinner</h2>
+    <p class="text-sm muted">A ring in <code>currentColor</code>, so <code>text-primary</code> colours it. It has no text of its own: give it <code>role="status"</code> and an <code>sr-only</code> label, or put it next to visible text that says what is happening.</p>
+    <div class="flex flex-wrap items-center gap-6 text-sm">
+      <span class="spinner xs" role="status"><span class="sr-only">Loading</span></span>
+      <span class="spinner sm" role="status"><span class="sr-only">Loading</span></span>
+      <span class="spinner" role="status"><span class="sr-only">Loading</span></span>
+      <span class="spinner lg text-primary" role="status"><span class="sr-only">Loading</span></span>
+      <span class="spinner xl text-success" role="status"><span class="sr-only">Loading</span></span>
+      <p class="flex items-center gap-2 muted" role="status"><span class="spinner sm"></span>Saving changes</p>
+    </div>
+<pre>&lt;span class="spinner" role="status"&gt;&lt;span class="sr-only"&gt;Loading&lt;/span&gt;&lt;/span&gt;
+&lt;span class="spinner lg text-primary" role="status"&gt;&lt;span class="sr-only"&gt;Loading&lt;/span&gt;&lt;/span&gt;
+&lt;p class="flex items-center gap-2" role="status"&gt;&lt;span class="spinner sm"&gt;&lt;/span&gt;Saving changes&lt;/p&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Loading button</h2>
+    <p class="text-sm muted"><code>loading</code> on a <code>.btn</code> draws a spinner before the label and ignores clicks. Set <code>aria-busy="true"</code> with it, and change the label to what is happening. The button keeps its colour and size, so nothing shifts around it. If the button holds an icon, drop it while loading, or two symbols sit in front of the label.</p>
+    <div class="flex flex-wrap items-center gap-3">
+      <button class="btn primary loading" aria-busy="true">Saving</button>
+      <button class="btn loading" aria-busy="true">Loading</button>
+      <button class="btn outline danger loading" aria-busy="true">Deleting</button>
+      <button class="btn ghost sm loading" aria-busy="true">Refreshing</button>
+      <button class="btn lg loading" aria-busy="true">Uploading</button>
+    </div>
+<pre>&lt;button class="btn primary loading" aria-busy="true"&gt;Saving&lt;/button&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Motion</h2>
+    <p class="text-sm muted">With reduced motion on, the skeleton stops shimmering and sits still; the spinner is the signal itself, so it keeps turning at a third of the speed.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Custom properties</h2>
+<pre>.skeleton {
+  --skeleton-bg       /* the block */
+  --skeleton-shine    /* the moving highlight */
+  --skeleton-radius   /* --radius capped at 0.5rem */
+}
+.spinner {
+  --spinner-size      /* 1.25rem; xs sm lg xl set it */
+  --spinner-width     /* ring thickness, 2px */
+}</pre>
+    <div class="flex flex-wrap items-center gap-6">
+      <div class="skeleton h-8 w-40" style="--skeleton-bg: lavender; --skeleton-shine: white; --skeleton-radius: 0" aria-hidden="true"></div>
+      <span class="spinner" role="status" style="--spinner-size: 2.5rem; --spinner-width: 6px; color: rebeccapurple"><span class="sr-only">Loading</span></span>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

@@ -14,12 +14,12 @@
 <main class="min-w-0 flex-1 space-y-10 px-6 py-10">
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Dropdown</h1>
-    <p class="text-muted-foreground"><code>.dropdown</code> on a <code>popover</code> element makes a panel anchored to the button that opens it. Native popover and CSS anchor positioning, no JavaScript. Drops down, flips to stay on screen.</p>
+    <p class="muted"><code>.dropdown</code> on a <code>popover</code> element makes a panel anchored to the button that opens it. Native popover and CSS anchor positioning, no JavaScript. Drops down, flips to stay on screen.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Menu</h2>
-    <p class="text-sm text-muted-foreground">A <code>.nav</code> inside is a menu. Use a <code>&lt;div class="nav"&gt;</code> rather than <code>&lt;nav&gt;</code> for actions; <code>&lt;button&gt;</code> items work the same as links. The left trigger opens left-aligned. The avatar trigger is pinned <code>right</code>; at the edge of the page it would flip to right-aligned even without the pin.</p>
+    <p class="text-sm muted">A <code>.nav</code> inside is a menu. Use a <code>&lt;div class="nav"&gt;</code> rather than <code>&lt;nav&gt;</code> for actions; <code>&lt;button&gt;</code> items work the same as links. The left trigger opens left-aligned. The avatar trigger is pinned <code>right</code>; at the edge of the page it would flip to right-aligned even without the pin.</p>
     <div class="flex">
       <button class="btn" popovertarget="menu-left">Options <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg></button>
       <div id="menu-left" popover class="dropdown">
@@ -56,7 +56,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Forms and help</h2>
-    <p class="text-sm text-muted-foreground">Anything else gets <code>1rem</code> padding. A small form works as a status switcher. An info button can open a longer description than a tooltip would hold. Width is <code>max-content</code> up to <code>24rem</code>; set it with <code>w-64</code> or similar.</p>
+    <p class="text-sm muted">Anything else gets <code>1rem</code> padding. A small form works as a status switcher. An info button can open a longer description than a tooltip would hold. Width is <code>max-content</code> up to <code>24rem</code>; set it with <code>w-64</code> or similar.</p>
     <div class="flex flex-wrap items-center gap-4">
       <button class="badge success" popovertarget="status">Active</button>
       <form id="status" popover class="dropdown w-56 space-y-2 text-sm">
@@ -73,7 +73,7 @@
       </span>
       <div id="help-key" popover class="dropdown w-72 text-sm">
         <p class="font-medium">API keys</p>
-        <p class="mt-1 text-muted-foreground">Keys are shown once when created. Rotate a key from the security page; the old one keeps working for 24 hours.</p>
+        <p class="mt-1 muted">Keys are shown once when created. Rotate a key from the security page; the old one keeps working for 24 hours.</p>
       </div>
     </div>
 <pre>&lt;button class="badge success" popovertarget="status"&gt;Active&lt;/button&gt;
@@ -85,7 +85,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Pinned placement</h2>
-    <p class="text-sm text-muted-foreground"><code>left right up down</code> pin one axis. The other axis still flips if it must. Pin both and it never flips. Whatever the pins, if nothing fits the panel scrolls inside rather than leaving the window. Scroll so a trigger sits at the bottom of the window and the unpinned ones open upwards.</p>
+    <p class="text-sm muted"><code>left right up down</code> pin one axis. The other axis still flips if it must. Pin both and it never flips. Whatever the pins, if nothing fits the panel scrolls inside rather than leaving the window. Scroll so a trigger sits at the bottom of the window and the unpinned ones open upwards.</p>
     <div class="flex flex-wrap gap-2">
       <button class="btn secondary" popovertarget="pin-right">right</button>
       <div id="pin-right" popover class="dropdown right"><div class="nav"><a href="#">Right-aligned</a><a href="#">Whatever the position</a></div></div>
@@ -105,8 +105,8 @@
       <div class="dark panel"><button class="btn" popovertarget="r-dark">Dark</button><div id="r-dark" popover class="dropdown dark"><div class="nav"><a href="#">One</a><a href="#">Two</a></div></div></div>
       <div class="inverse panel"><button class="btn" popovertarget="r-inverse">Inverse</button><div id="r-inverse" popover class="dropdown inverse"><div class="nav"><a href="#">One</a><a href="#">Two</a></div></div></div>
     </div>
-    <p class="text-sm text-muted-foreground">A popover sits in the top layer, outside its region, so put the region class on the dropdown itself. <code>inverse</code> flips relative to the page there, not the panel.</p>
-    <p class="text-sm text-muted-foreground">Custom properties: <code>--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius --dropdown-shadow</code>.</p>
+    <p class="text-sm muted">A popover sits in the top layer, outside its region, so put the region class on the dropdown itself. <code>inverse</code> flips relative to the page there, not the panel.</p>
+    <p class="text-sm muted">Custom properties: <code>--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius --dropdown-shadow</code>.</p>
   </section>
 </main>
 </div>

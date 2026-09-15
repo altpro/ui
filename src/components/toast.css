@@ -1,0 +1,55 @@
+/* Toast: a stack of alerts in a corner of the viewport.
+   <div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"></div>
+   …later, from the app:
+   toaster.insertAdjacentHTML("beforeend", '<div class="alert success"><p>Saved.</p></div>');
+   The region sits in the page from load, empty, so screen readers announce
+   each alert as it is appended and nothing else. Alerts inside carry no
+   role of their own. Each one slides in, lives for `--toast-life`, then
+   fades; hover or focus pauses the clock. The app removes the element on
+   the `toast-life` animationend event. `pinned` never fades: use it for
+   anything with an action or that the user must read. Default corner is
+   bottom end; `top` and `start` move it. Layered so utilities win. */
+@layer components {
+  .toaster {
+    --toaster-w: 22rem;
+    --toaster-gap: 0.5rem;
+    --toaster-shadow: 0 8px 24px -8px oklch(0 0 0 / 0.3);
+    --toast-life: 6s;
+
+    position: fixed;
+    z-index: 60;
+    inset-block-end: var(--spacing-gap);
+    inset-inline-end: var(--spacing-gap);
+    display: flex;
+    flex-direction: column;
+    gap: var(--toaster-gap);
+    width: var(--toaster-w);
+    max-width: calc(100vw - 2 * var(--spacing-gap));
+    /* an empty region must not block the corner under it */
+    pointer-events: none;
+
+    &.top { inset-block: var(--spacing-gap) auto; }
+    &.start { inset-inline: var(--spacing-gap) auto; }
+
+    > * {
+      pointer-events: auto;
+      box-shadow: var(--toaster-shadow);
+      /* a tinted alert is translucent; over page content it needs a solid card behind it */
+      background: linear-gradient(var(--alert-bg, transparent), var(--alert-bg, transparent)) var(--color-card);
+      animation: toast-in 0.2s ease-out, toast-life var(--toast-life) linear forwards;
+      &:is(:hover, :focus-within) { animation-play-state: paused; }
+      &.pinned { animation: toast-in 0.2s ease-out; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      > * { animation-duration: 0s, var(--toast-life); }
+    }
+  }
+}
+@keyframes toast-in {
+  from { opacity: 0; translate: 0 0.5rem; }
+}
+/* the missing 0% keyframe takes toast-in's value, so the two do not fight over opacity */
+@keyframes toast-life {
+  90% { opacity: 1; }
+  to { opacity: 0; }
+}
