@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "stat.html", "toast.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "stat.html", "toast.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -177,6 +177,24 @@ for (const colorScheme of ["light", "dark"]) {
       expect(await shown()).toEqual([false, false, true]);
     });
 
+    // the checked label takes the solid fill; clicking another label moves it, and so does an arrow key
+    test("segmented.html: the checked label is filled and arrow keys move the check", async ({ page }) => {
+      await page.goto("/segmented.html");
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const labels = page.locator("main [aria-label=Sort] > label");
+      const bg = (i) => labels.nth(i).evaluate((el) => getComputedStyle(el).backgroundColor);
+      const filled = await bg(0);
+      expect(filled).not.toBe("rgba(0, 0, 0, 0)");
+      expect(await bg(1)).toBe("rgba(0, 0, 0, 0)");
+      await labels.nth(1).click();
+      await page.mouse.move(0, 0);
+      expect(await bg(0)).toBe("rgba(0, 0, 0, 0)");
+      expect(await bg(1)).toBe(filled);
+      await page.keyboard.press("ArrowRight");
+      expect(await bg(2)).toBe(filled);
+      expect(await labels.nth(2).evaluate((el) => el.querySelector("input").checked)).toBe(true);
+    });
+
     // done and current markers are ::before pseudos coloured by position; the line after a done step is primary too
     test("steps.html: markers before aria-current are done, the current one is bold, the rest are muted", async ({ page }) => {
       await page.goto("/steps.html");
@@ -289,7 +307,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
@@ -310,11 +328,13 @@ for (const colorScheme of ["light", "dark"]) {
       await page.goto("/" + p);
       for (let i = 0; i < 40; i++) {
         await page.keyboard.press("Tab");
-        if (await page.evaluate((cls) => document.activeElement.matches("main " + cls), cls)) break;
+        if (await page.evaluate((cls) => document.activeElement.closest("main " + cls), cls)) break;
       }
+      // closest, not matches: a toggle label's hidden input holds focus and the label draws the ring
       const outline = await page.evaluate((cls) => {
-        const s = getComputedStyle(document.activeElement);
-        return { matches: document.activeElement.matches("main " + cls), style: s.outlineStyle, width: parseFloat(s.outlineWidth) };
+        const el = document.activeElement.closest("main " + cls);
+        const s = getComputedStyle(el ?? document.activeElement);
+        return { matches: !!el, style: s.outlineStyle, width: parseFloat(s.outlineWidth) };
       }, cls);
       expect(outline.matches).toBe(true);
       expect(outline.style).not.toBe("none");

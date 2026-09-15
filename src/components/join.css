@@ -32,7 +32,7 @@
         border-end-end-radius: var(--join-radius);
       }
       /* keep the focus ring above the neighbours it overlaps */
-      &:focus-visible {
+      &:is(:focus-visible, :has(:focus-visible)) {
         z-index: 1;
       }
     }

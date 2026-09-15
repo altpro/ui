@@ -1,5 +1,9 @@
 /* Button.
    <button class="btn primary lg">   <a class="btn outline danger sm">
+   <label class="btn outline"><input type="radio" name="view"> List</label>
+   A label holding a radio or checkbox is a toggle: the input is hidden over
+   the label and the label takes the solid look while it is checked. A .join
+   of them is a segmented control.
    Colour variants set --btn-* vars only. `.outline` and `.ghost` set real
    properties from those vars, so class order never matters. Sizes set
    the height/padding/text vars. Layered so Tailwind utilities win. */
@@ -38,7 +42,7 @@
     &:hover {
       background: var(--btn-hover);
     }
-    &:disabled, &[aria-disabled="true"] {
+    &:disabled, &[aria-disabled="true"], &:has(:disabled) {
       opacity: 0.5;
       pointer-events: none;
     }
@@ -109,8 +113,28 @@
       border-color: var(--btn-outline);
       --join-divider: var(--btn-outline);
     }
+    /* toggle: the input is the click target and the focus stop; the label is the look */
+    &:is(label) {
+      position: relative;
+      > input {
+        position: absolute;
+        inset: 0;
+        margin: 0;
+        opacity: 0;
+        appearance: none;
+        cursor: pointer;
+      }
+    }
+    /* checked wins the transparent fill of .outline and .ghost, so it sits after them */
+    &:has(:checked) {
+      background: var(--btn-bg);
+      color: var(--btn-fg);
+      &:hover {
+        background: var(--btn-hover);
+      }
+    }
     /* after .outline so the ring colour wins the border on every variant */
-    &:focus-visible {
+    &:is(:focus-visible, :has(:focus-visible)) {
       border-color: var(--color-ring);
       outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
       outline-offset: 0;

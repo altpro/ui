@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Segmented</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Segmented control</h1>
+    <p class="muted">A pattern, not a class. A <code>.join</code> of <code>label.btn</code>, each wrapping a radio. The checked label takes the solid look. No script: arrow keys move between radios and the form submits the value.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Colours and styles</h2>
+    <p class="text-sm muted">Use <code>outline</code> or <code>ghost</code> members so the checked one stands out. A solid colour has nowhere to go.</p>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="join" role="radiogroup" aria-label="Sort">
+        <label class="btn outline"><input type="radio" name="sort" checked> Newest</label>
+        <label class="btn outline"><input type="radio" name="sort"> Oldest</label>
+        <label class="btn outline"><input type="radio" name="sort"> Top</label>
+      </div>
+      <div class="join" role="radiogroup" aria-label="Period">
+        <label class="btn outline primary"><input type="radio" name="period" checked> Day</label>
+        <label class="btn outline primary"><input type="radio" name="period"> Week</label>
+        <label class="btn outline primary"><input type="radio" name="period"> Month</label>
+      </div>
+      <div class="join" role="radiogroup" aria-label="Status">
+        <label class="btn ghost"><input type="radio" name="status" checked> All</label>
+        <label class="btn ghost"><input type="radio" name="status"> Open</label>
+        <label class="btn ghost"><input type="radio" name="status"> Closed</label>
+      </div>
+      <div class="join" role="radiogroup" aria-label="Danger">
+        <label class="btn outline danger"><input type="radio" name="danger"> Off</label>
+        <label class="btn outline danger"><input type="radio" name="danger" checked> On</label>
+      </div>
+    </div>
+<pre>&lt;div class="join" role="radiogroup" aria-label="Sort"&gt;
+  &lt;label class="btn outline"&gt;&lt;input type="radio" name="sort" checked&gt; Newest&lt;/label&gt;
+  &lt;label class="btn outline"&gt;&lt;input type="radio" name="sort"&gt; Oldest&lt;/label&gt;
+  &lt;label class="btn outline"&gt;&lt;input type="radio" name="sort"&gt; Top&lt;/label&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Sizes and icons</h2>
+    <p class="text-sm muted">Sizes are the button sizes. An icon-only member puts its <code>aria-label</code> on the input, since that is what screen readers read.</p>
+    <div class="flex flex-wrap items-center gap-4">
+      <div class="join" role="radiogroup" aria-label="Size xs">
+        <label class="btn outline xs"><input type="radio" name="xs" checked> Day</label>
+        <label class="btn outline xs"><input type="radio" name="xs"> Week</label>
+      </div>
+      <div class="join" role="radiogroup" aria-label="Size sm">
+        <label class="btn outline sm"><input type="radio" name="sm" checked> Day</label>
+        <label class="btn outline sm"><input type="radio" name="sm"> Week</label>
+      </div>
+      <div class="join" role="radiogroup" aria-label="Size lg">
+        <label class="btn outline lg"><input type="radio" name="lg" checked> Day</label>
+        <label class="btn outline lg"><input type="radio" name="lg"> Week</label>
+      </div>
+      <div class="join" role="radiogroup" aria-label="View">
+        <label class="btn outline px-2"><input type="radio" name="view" aria-label="List" checked><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/></svg></label>
+        <label class="btn outline px-2"><input type="radio" name="view" aria-label="Grid"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="7" height="7" x="3" y="3" rx="1"/><rect width="7" height="7" x="14" y="3" rx="1"/><rect width="7" height="7" x="14" y="14" rx="1"/><rect width="7" height="7" x="3" y="14" rx="1"/></svg></label>
+        <label class="btn outline px-2"><input type="radio" name="view" aria-label="Map"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.106 5.553a2 2 0 0 0 1.788 0l3.659-1.83A1 1 0 0 1 21 4.619v12.764a1 1 0 0 1-.553.894l-4.553 2.277a2 2 0 0 1-1.788 0l-4.212-2.106a2 2 0 0 0-1.788 0l-3.659 1.83A1 1 0 0 1 3 19.381V6.618a1 1 0 0 1 .553-.894l4.553-2.277a2 2 0 0 1 1.788 0z"/><path d="M15 5.764v15"/><path d="M9 3.236v15"/></svg></label>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Multiple</h2>
+    <p class="text-sm muted">Checkboxes instead of radios: any number can be on. The group is <code>role="group"</code>.</p>
+    <div class="join" role="group" aria-label="Format">
+      <label class="btn outline"><input type="checkbox" name="bold" checked> Bold</label>
+      <label class="btn outline"><input type="checkbox" name="italic"> Italic</label>
+      <label class="btn outline"><input type="checkbox" name="underline" checked> Underline</label>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a field, disabled, full width</h2>
+    <div class="flex flex-wrap items-start gap-6">
+      <fieldset class="field">
+        <legend>Billing</legend>
+        <div class="join" role="radiogroup" aria-describedby="billing-hint">
+          <label class="btn outline"><input type="radio" name="billing" checked> Monthly</label>
+          <label class="btn outline"><input type="radio" name="billing"> Yearly</label>
+        </div>
+        <p class="hint" id="billing-hint">Yearly saves two months.</p>
+      </fieldset>
+      <div class="join" role="radiogroup" aria-label="Locked">
+        <label class="btn outline"><input type="radio" name="locked" checked disabled> Locked</label>
+        <label class="btn outline"><input type="radio" name="locked" disabled> Off</label>
+      </div>
+    </div>
+    <div class="join flex w-full max-w-md" role="radiogroup" aria-label="Plan">
+      <label class="btn outline flex-1"><input type="radio" name="plan"> Free</label>
+      <label class="btn outline flex-1"><input type="radio" name="plan" checked> Team</label>
+      <label class="btn outline flex-1"><input type="radio" name="plan"> Business</label>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel"><div class="join" role="radiogroup" aria-label="Light"><label class="btn outline"><input type="radio" name="r-light" checked> A</label><label class="btn outline"><input type="radio" name="r-light"> B</label><label class="btn outline primary"><input type="radio" name="r-light"> C</label></div></div>
+      <div class="dark panel"><div class="join" role="radiogroup" aria-label="Dark"><label class="btn outline"><input type="radio" name="r-dark" checked> A</label><label class="btn outline"><input type="radio" name="r-dark"> B</label><label class="btn outline primary"><input type="radio" name="r-dark"> C</label></div></div>
+      <div class="inverse panel"><div class="join" role="radiogroup" aria-label="Inverse"><label class="btn outline"><input type="radio" name="r-inverse" checked> A</label><label class="btn outline"><input type="radio" name="r-inverse"> B</label><label class="btn outline primary"><input type="radio" name="r-inverse"> C</label></div></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

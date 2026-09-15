@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -41,6 +41,7 @@ Works on `<button>`, `<a>`, `<input type="submit">`.
 | Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias of `danger`). No colour = neutral grey. |
 | Style | `outline` (transparent fill, coloured border and text), `ghost` (transparent, coloured text, no border) |
 | Size | `xs` `sm` `lg` `xl`. No size = default (2.25rem tall). |
+| Toggle | `<label class="btn outline"><input type="checkbox"> Bold</label>`. The input is hidden over the label and the label takes the solid fill while checked. See the segmented control below. |
 | State | `disabled` attribute, or `aria-disabled="true"` on links. `loading` draws a spinner before the label and ignores clicks; pair it with `aria-busy="true"` and a label saying what is happening (`Saving`). Focus ring appears on keyboard focus only. |
 
 Icons: put an inline SVG inside the button, sized with `size-4`. The button has `gap-2` built in.
@@ -73,6 +74,25 @@ Wraps buttons and inputs into one bar. The radius moves to the group. A one pixe
 - Layout utilities go on the group (`flex w-full`), and `flex-1` on members to fill.
 - `--join-radius` overrides the corner radius for one group. Defaults to `--radius`.
 - Icon-only members need `aria-label`.
+
+## Segmented control (pattern)
+
+No class. A `.join` of `label.btn`, each wrapping a radio with the same `name`. The checked label takes the solid look. No script: arrow keys move between the radios and a form submits the value.
+
+```html
+<div class="join" role="radiogroup" aria-label="Sort">
+  <label class="btn outline"><input type="radio" name="sort" checked> Newest</label>
+  <label class="btn outline"><input type="radio" name="sort"> Oldest</label>
+  <label class="btn outline"><input type="radio" name="sort"> Top</label>
+</div>
+```
+
+- Members are `outline` or `ghost`, in any colour and size, so the checked one has somewhere to go. `outline primary` fills primary when checked; plain `outline` fills muted.
+- The group is `role="radiogroup"` with an `aria-label`, or the `.join` sits in a `<fieldset class="field">` with a `<legend>`.
+- Checkboxes instead of radios make a multi-select group (bold, italic, underline). Then it is `role="group"`.
+- An icon-only member puts `aria-label` on the input, not the label.
+- `disabled` on an input dims its label. `flex w-full` on the group and `flex-1` on members fills a column.
+- Two options with a single on and off meaning are a `.switch`, not a segmented control.
 
 ## Input: `.input`
 
