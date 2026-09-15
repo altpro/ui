@@ -1,0 +1,94 @@
+/* Progress and meter.
+   <progress class="progress" value="45" max="100" aria-label="Upload"></progress>
+   <progress class="progress" aria-label="Loading"></progress>        (no value: indeterminate, sweeps)
+   <meter class="meter" value="0.8" low="0.25" high="0.75" optimum="0.1" aria-label="Disk used"></meter>
+   Native elements, so the value, range and name reach assistive tech with
+   no ARIA. Both draw a track in --progress-bg and a bar in --progress-fg.
+   A meter picks its bar colour from the band the value sits in (success,
+   warning, danger) unless a colour word fixes it. Colour words set
+   --progress-fg only, sizes set --progress-h. Layered so Tailwind wins. */
+@layer components {
+  :is(.progress, .meter) {
+    --progress-bg: var(--color-muted);
+    --progress-fg: var(--color-primary);
+    --progress-h: 0.5rem;
+    --progress-radius: var(--radius);
+
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: var(--progress-h);
+    border: 0;
+    border-radius: var(--progress-radius);
+    background: var(--progress-bg);
+    color: var(--progress-fg);
+    overflow: hidden;
+
+    /* colour variants; warning is darkened on a light page as the button does */
+    &.primary { --progress-fg: var(--color-primary); }
+    &.secondary { --progress-fg: var(--color-secondary-foreground); }
+    &.info { --progress-fg: var(--color-info); }
+    &.success { --progress-fg: var(--color-success); }
+    &.warning { --progress-fg: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning)); }
+    &.danger, &.error { --progress-fg: var(--color-danger); }
+
+    /* sizes */
+    &.sm { --progress-h: 0.25rem; }
+    &.lg { --progress-h: 0.75rem; }
+  }
+
+  /* one vendor pseudo per rule: a list mixing -webkit- and -moz- is dropped whole by both engines */
+  .progress {
+    &::-webkit-progress-bar {
+      background: transparent;
+    }
+    &::-webkit-progress-value {
+      border-radius: inherit;
+      background: var(--progress-fg);
+      transition: width 0.3s;
+    }
+    &::-moz-progress-bar {
+      border-radius: inherit;
+      background: var(--progress-fg);
+      transition: width 0.3s;
+    }
+    /* no value: hide the UA bar and sweep a stripe along the track */
+    &:indeterminate {
+      background: linear-gradient(to right, var(--progress-fg), var(--progress-fg)) -70% 0 / 40% 100% no-repeat var(--progress-bg);
+      animation: progress-sweep 1.5s ease-in-out infinite;
+      &::-webkit-progress-value { background: transparent; }
+      &::-moz-progress-bar { background: transparent; }
+      @media (prefers-reduced-motion: reduce) {
+        animation: none;
+        background-position: 30% 0;
+      }
+    }
+  }
+
+  .meter {
+    --progress-fg: var(--color-success);
+    --progress-warn: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
+
+    &::-webkit-meter-bar {
+      border: 0;
+      border-radius: inherit;
+      background: transparent;
+    }
+    &::-webkit-meter-optimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+    &::-webkit-meter-suboptimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+    &::-webkit-meter-even-less-good-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+    &::-moz-meter-bar { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+
+    /* bands: the colour follows the value unless a colour word is set */
+    &:not(.primary, .secondary, .info, .success, .warning, .danger, .error) {
+      &::-webkit-meter-suboptimum-value { background: var(--progress-warn); }
+      &::-webkit-meter-even-less-good-value { background: var(--color-danger); }
+      &:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--progress-warn); }
+      &:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--color-danger); }
+    }
+  }
+}
+
+@keyframes progress-sweep {
+  to { background-position: 170% 0; }
+}

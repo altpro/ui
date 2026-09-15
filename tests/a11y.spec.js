@@ -3,8 +3,35 @@
 // The extra tests cover what axe does not: hover contrast, focus visibility, target size.
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { inflateSync } from "node:zlib";
 
-const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "theme.html"];
+// vendor pseudo-elements (::-webkit-progress-value, ::-webkit-slider-thumb) are invisible to getComputedStyle,
+// so those components are checked by reading pixels back from a screenshot. Playwright PNGs are 8-bit RGBA, unfiltered here.
+const pixels = (png) => {
+  let i = 8, w, h, bpp, idat = [];
+  while (i < png.length) {
+    const len = png.readUInt32BE(i), type = png.toString("ascii", i + 4, i + 8), data = png.subarray(i + 8, i + 8 + len);
+    if (type === "IHDR") { w = data.readUInt32BE(0); h = data.readUInt32BE(4); bpp = data[9] === 6 ? 4 : 3; }
+    if (type === "IDAT") idat.push(data);
+    i += 12 + len;
+  }
+  const raw = inflateSync(Buffer.concat(idat)), stride = w * bpp, out = Buffer.alloc(h * stride);
+  for (let y = 0; y < h; y++) {
+    const f = raw[y * (stride + 1)], line = raw.subarray(y * (stride + 1) + 1), o = y * stride;
+    for (let x = 0; x < stride; x++) {
+      const a = x >= bpp ? out[o + x - bpp] : 0, b = y ? out[o - stride + x] : 0, c = x >= bpp && y ? out[o - stride + x - bpp] : 0;
+      const pa = Math.abs(b - c), pb = Math.abs(a - c), pc = Math.abs(a + b - 2 * c);
+      const p = [0, a, b, (a + b) >> 1, pa <= pb && pa <= pc ? a : pb <= pc ? b : c][f];
+      out[o + x] = (line[x] + p) & 255;
+    }
+  }
+  return (fx, fy) => { const k = (Math.round(fy * (h - 1)) * w + Math.round(fx * (w - 1))) * bpp; return [...out.subarray(k, k + 3)]; };
+};
+// a gradient and a solid fill of the same colour can round a channel apart
+const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
+const shot = async (loc) => pixels(await loc.screenshot());
+
+const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -157,7 +184,50 @@ for (const colorScheme of ["light", "dark"]) {
       expect(failures).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6]]) {
+    // the bar is a vendor pseudo: its width must follow value/max, and a valueless progress must animate
+    test("progress.html: bars are value/max wide, indeterminate sweeps, meter bands colour the bar", async ({ page }) => {
+      await page.goto("/progress.html");
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const up = await shot(page.locator("#upload"));
+      expect(same(up(0.02, 0.5), up(0.42, 0.5))).toBe(true); // bar runs to 45%
+      expect(same(up(0.48, 0.5), up(0.98, 0.5))).toBe(true); // track after it
+      expect(same(up(0.42, 0.5), up(0.48, 0.5))).toBe(false);
+      // indeterminate: park the stripe in the middle; the UA's own bar must be hidden at the left
+      const busy = page.locator("main progress:not([value])").first();
+      expect(await busy.evaluate((el) => getComputedStyle(el).animationName)).toBe("progress-sweep");
+      await busy.evaluate((el) => { el.style.animation = "none"; el.style.backgroundPosition = "50% 0"; });
+      const sweep = await shot(busy);
+      expect(same(sweep(0.5, 0.5), up(0.02, 0.5))).toBe(true); // stripe is the fill colour
+      expect(same(sweep(0.02, 0.5), up(0.98, 0.5))).toBe(true); // left edge is bare track
+      const fill = async (id) => (await shot(page.locator(id)))(0.02, 0.5);
+      // bands are nui's own colours, not the UA's green/yellow/red; a colour word pins one colour whatever the band
+      expect(same(await fill("#disk"), await fill("main .progress.success"))).toBe(true);
+      expect(same(await fill("#disk2"), await fill("main .progress.warning"))).toBe(true);
+      expect(same(await fill("#disk3"), await fill("main .progress.danger"))).toBe(true);
+      expect(same(await fill("#score"), await fill("main .progress.info"))).toBe(true);
+    });
+
+    // the ring is on the thumb pseudo, not the input, so the shared focus test below cannot see it
+    test("range.html: the input is a 24px target and keyboard focus rings the thumb", async ({ page }) => {
+      await page.goto("/range.html");
+      const r = page.locator("#volume");
+      const box = await r.boundingBox();
+      expect(box.height).toBeGreaterThanOrEqual(24);
+      // thumb is 20px on a 24px strip at value 40: sample its centre, the track beside it, and 2px above it where a ring would be
+      const cx = (10 + 0.4 * (box.width - 20)) / box.width, above = (box.height / 2 - 12) / box.height;
+      const blurred = await shot(r);
+      expect(same(blurred(cx, 0.5), blurred(0.9, 0.5))).toBe(false); // thumb differs from track
+      expect(same(blurred(0.9, 0.5), blurred(0.9, 0))).toBe(false); // track differs from the strip's background
+      await r.focus();
+      const focused = await shot(r);
+      expect(same(focused(cx, above), blurred(cx, above))).toBe(false); // ring appears round the thumb
+      await page.keyboard.press("ArrowRight");
+      expect(await r.inputValue()).toBe("41");
+      const { violations } = await axe(page).include("#volume").analyze();
+      expect(summary(violations)).toEqual([]);
+    });
+
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["pagination.html", ".btn:not(span, [aria-disabled])", 5]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
@@ -176,7 +246,7 @@ for (const colorScheme of ["light", "dark"]) {
 
     test(`${p}: keyboard focus shows a ring`, async ({ page }) => {
       await page.goto("/" + p);
-      for (let i = 0; i < 30; i++) {
+      for (let i = 0; i < 40; i++) {
         await page.keyboard.press("Tab");
         if (await page.evaluate((cls) => document.activeElement.matches("main " + cls), cls)) break;
       }

@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Range</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Range</h1>
+    <p class="text-muted-foreground"><code>.range</code> on a native <code>&lt;input type="range"&gt;</code>. Arrow keys, Home, End, Page Up and Page Down all work because the browser owns the control. No JavaScript.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a field</h2>
+    <p class="text-sm text-muted-foreground">A <code>&lt;label for&gt;</code> names it. An <code>&lt;output&gt;</code> shows the value; one line of script keeps it current, since CSS cannot read the value.</p>
+    <div class="max-w-md space-y-4">
+      <div class="field">
+        <label for="volume" class="flex justify-between">Volume <output for="volume">40</output></label>
+        <input class="range" id="volume" type="range" min="0" max="100" value="40" oninput="this.previousElementSibling.lastElementChild.value = this.value">
+      </div>
+      <div class="field">
+        <label for="budget" class="flex justify-between">Monthly budget <output for="budget">£250</output></label>
+        <input class="range" id="budget" type="range" min="0" max="1000" step="50" value="250" aria-describedby="budget-hint" oninput="this.previousElementSibling.lastElementChild.value = '£' + this.value">
+        <p class="hint" id="budget-hint">In steps of £50.</p>
+      </div>
+    </div>
+<pre>&lt;div class="field"&gt;
+  &lt;label for="volume" class="flex justify-between"&gt;Volume &lt;output for="volume"&gt;40&lt;/output&gt;&lt;/label&gt;
+  &lt;input class="range" id="volume" type="range" min="0" max="100" value="40"
+         oninput="this.previousElementSibling.lastElementChild.value = this.value"&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">States</h2>
+    <div class="max-w-md space-y-4">
+      <input class="range" type="range" value="30" aria-label="Enabled">
+      <input class="range" type="range" value="70" aria-label="Disabled" disabled>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Sizes</h2>
+    <div class="grid max-w-2xl grid-cols-[auto_1fr] items-center gap-x-6 gap-y-3 text-sm">
+      <code>sm</code><input class="range sm" type="range" value="40" aria-label="Small">
+      <code>(default)</code><input class="range" type="range" value="40" aria-label="Default size">
+      <code>lg</code><input class="range lg" type="range" value="40" aria-label="Large">
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Accent</h2>
+    <p class="text-sm text-muted-foreground">The thumb is <code>--range-accent</code>, primary by default. Set it inline for one slider.</p>
+    <div class="max-w-md space-y-4">
+      <input class="range" type="range" value="60" aria-label="Green" style="--range-accent: var(--color-success)">
+      <input class="range" type="range" value="60" aria-label="Red" style="--range-accent: var(--color-danger)">
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel space-y-2">
+        <p class="text-sm font-medium">.light</p>
+        <input class="range" type="range" value="40" aria-label="Light">
+      </div>
+      <div class="dark panel space-y-2">
+        <p class="text-sm font-medium">.dark</p>
+        <input class="range" type="range" value="40" aria-label="Dark">
+      </div>
+      <div class="inverse panel space-y-2">
+        <p class="text-sm font-medium">.inverse</p>
+        <input class="range" type="range" value="40" aria-label="Inverse">
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Custom properties</h2>
+<pre>.range {
+  --range-track    /* track fill, muted */
+  --range-accent   /* thumb, primary */
+  --range-ring     /* focus ring, --color-ring */
+  --range-h        /* track height, 0.5rem */
+  --range-thumb    /* thumb diameter, 1.25rem */
+  --range-radius   /* track corners, defaults to --radius */
+}</pre>
+    <p class="text-sm text-muted-foreground">There is no filled track left of the thumb: Chrome has no pseudo-element for it, so it would need a script. Ticks from a <code>&lt;datalist&gt;</code> are not drawn either.</p>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

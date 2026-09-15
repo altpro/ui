@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -94,7 +94,7 @@ A textarea grows with `rows`; the size is a minimum height. Width is the browser
 
 A `<select>` opts into `appearance: base-select` where the browser has it (Chrome 135+). The chevron is a Lucide stroke in muted text, the picker matches `.dropdown`, and `<option>`, `<optgroup>` and its `<legend>` are styled. Other browsers keep their native select.
 
-Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (a `<span>` symbol or unit, a `size-4` svg, a `kbd`) sits in the same border in muted text, and the focus ring goes round the whole box. Clicking an addon focuses the control. A `<select>` can be a second control inside the wrapper. A button next to an input is a `.join`, not an addon.
+Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (a `<span>` symbol or unit, a `size-4` svg, a `<kbd>` drawn as a key cap) sits in the same border in muted text, and the focus ring goes round the whole box. Clicking an addon focuses the control. A `<select>` can be a second control inside the wrapper. A button next to an input is a `.join`, not an addon.
 
 ```html
 <label class="input"><span>£</span><input type="number" aria-label="Price"></label>
@@ -518,6 +518,79 @@ Panels, switched in place:
 - The active bar is `--tabs-active`, the primary colour by default. Text stays the page foreground.
 
 Custom properties: `--tabs-fg --tabs-active-fg --tabs-active --tabs-hover --tabs-border --tabs-radius --tabs-h --tabs-px --tabs-text`.
+
+## Progress and meter: `.progress` `.meter`
+
+Native `<progress>` and `<meter>`, restyled. The browser owns the value and announces it, so no ARIA beyond a name. Both share one set of custom properties.
+
+```html
+<div class="field">
+  <label for="upload" class="flex justify-between">Uploading <output for="upload">45%</output></label>
+  <progress class="progress" id="upload" value="45" max="100"></progress>
+</div>
+
+<progress class="progress" aria-label="Loading"></progress>
+
+<meter class="meter" value="45" min="0" max="64" low="32" high="52" optimum="0" aria-label="Disk used"></meter>
+```
+
+| Kind | Classes / attributes |
+|------|----------------------|
+| Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias). No colour = primary for a progress; the band colour for a meter. |
+| Size | `sm` (0.25rem), `lg` (0.75rem). No size = 0.5rem tall. |
+| Indeterminate | A `<progress>` with no `value` sweeps a stripe along the track. Still under `prefers-reduced-motion`. |
+| Meter bands | `low`, `high` and `optimum` place the value in a band. Optimum band is success, the next is warning, the furthest is danger. `optimum="0"` means low is good (disk used); `optimum` equal to `max` means high is good (battery). A colour word pins one colour instead. |
+
+- Name it: `<label for>` or `aria-label`. Put the number in an `<output for>` inside the label so sighted users see it too.
+- Width is the container's. Use `w-48`, `max-w-md` or a grid column.
+- Works inside `.field` and `.card`; a `label class="flex justify-between"` puts the value on the right.
+
+Custom properties, shared by both: `--progress-bg --progress-fg --progress-h --progress-radius`.
+
+## Range: `.range`
+
+A restyled native `<input type="range">`. Keyboard, touch and `step` come from the browser.
+
+```html
+<div class="field">
+  <label for="volume" class="flex justify-between">Volume <output for="volume">40</output></label>
+  <input class="range" id="volume" type="range" min="0" max="100" value="40"
+         oninput="this.previousElementSibling.lastElementChild.value = this.value">
+</div>
+```
+
+| Kind | Classes / attributes |
+|------|----------------------|
+| Size | `sm`, `lg`. No size = 0.5rem track, 1.25rem thumb. |
+| State | `disabled`. Focus ring on the thumb. |
+
+- The input is at least 1.5rem tall, so the whole strip is a 24px target.
+- CSS cannot read the value, so an `<output>` needs the one-line `oninput` above.
+- No filled track left of the thumb, and `<datalist>` ticks are not drawn. The thumb is `--range-accent`; `[--range-accent:var(--color-success)]` for a green one.
+
+Custom properties: `--range-track --range-accent --range-ring --range-h --range-thumb --range-radius`.
+
+## Pagination (pattern)
+
+No class. A `<nav aria-label="Pagination">` of `.btn` links, in a `.join` for a bar or `flex gap-1` with `ghost` buttons for a lighter row.
+
+```html
+<nav class="join" aria-label="Pagination">
+  <a href="?page=1" class="btn outline" aria-label="Previous page" aria-disabled="true"><svg class="size-4" aria-hidden="true">…</svg></a>
+  <a href="?page=1" class="btn primary" aria-current="page">1</a>
+  <a href="?page=2" class="btn outline">2</a>
+  <a href="?page=3" class="btn outline">3</a>
+  <span class="btn outline pointer-events-none">…</span>
+  <a href="?page=12" class="btn outline">12</a>
+  <a href="?page=2" class="btn outline" aria-label="Next page"><svg class="size-4" aria-hidden="true">…</svg></a>
+</nav>
+```
+
+- Current page: `aria-current="page"` and the `primary` colour. The other pages are `outline` (joined) or `ghost` (spaced).
+- Arrows are icon-only, so each link has an `aria-label`. On the first or last page the arrow gets `aria-disabled="true"`; a script-driven `<button>` uses `disabled`.
+- Ellipsis: a `<span class="btn outline pointer-events-none">…</span>`, so it lines up but is not a control.
+- Previous and next only: two `btn outline` links in a `flex justify-between`, with words instead of numbers.
+- Table footer: a `div` (not a `nav`) holding the row count, a `select class="input sm"` for page size, a `p aria-live="polite"` saying "Page 2 of 12", and a `join` of `btn outline sm` first, previous, next and last arrows.
 
 ## Theme tokens
 

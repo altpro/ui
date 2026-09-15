@@ -1,0 +1,76 @@
+/* Range.
+   <input class="range" type="range" min="0" max="100" value="40" aria-label="Volume">
+   A restyled native slider: the track is the input's runnable track, the
+   thumb a circle in --range-accent. The input is 1.5rem tall so the whole
+   strip is a 24px target, whatever the track height. Focus ring on the
+   thumb, like the checkbox. Layered so Tailwind wins.
+   ponytail: no filled track left of the thumb. Chrome has no pseudo for
+   it; add a script that writes --range-value and a gradient track if an
+   app needs one. */
+@layer components {
+  .range {
+    --range-track: var(--color-muted);
+    --range-accent: var(--color-primary);
+    --range-ring: var(--color-ring);
+    --range-h: 0.5rem;
+    --range-thumb: 1.25rem;
+    --range-radius: var(--radius);
+
+    appearance: none;
+    display: block;
+    width: 100%;
+    height: max(var(--range-thumb), 1.5rem);
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    &:focus-visible {
+      outline: 0;
+    }
+
+    &::-webkit-slider-runnable-track {
+      height: var(--range-h);
+      border-radius: var(--range-radius);
+      background: var(--range-track);
+    }
+    &::-moz-range-track {
+      height: var(--range-h);
+      border-radius: var(--range-radius);
+      background: var(--range-track);
+    }
+    &::-webkit-slider-thumb {
+      appearance: none;
+      width: var(--range-thumb);
+      height: var(--range-thumb);
+      margin-top: calc((var(--range-h) - var(--range-thumb)) / 2);
+      border: 0;
+      border-radius: 50%;
+      background: var(--range-accent);
+      transition: outline-color 0.15s;
+    }
+    &::-moz-range-thumb {
+      width: var(--range-thumb);
+      height: var(--range-thumb);
+      border: 0;
+      border-radius: 50%;
+      background: var(--range-accent);
+    }
+    &:focus-visible::-webkit-slider-thumb {
+      outline: 3px solid color-mix(in oklab, var(--range-ring) 50%, transparent);
+      outline-offset: 0;
+    }
+    &:focus-visible::-moz-range-thumb {
+      outline: 3px solid color-mix(in oklab, var(--range-ring) 50%, transparent);
+      outline-offset: 0;
+    }
+
+    /* sizes */
+    &.sm { --range-h: 0.25rem; --range-thumb: 1rem; }
+    &.lg { --range-h: 0.75rem; --range-thumb: 1.5rem; }
+  }
+}

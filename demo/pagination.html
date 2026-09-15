@@ -1,0 +1,142 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Pagination</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Pagination</h1>
+    <p class="text-muted-foreground">A pattern, not a class. A <code>&lt;nav aria-label="Pagination"&gt;</code> holding <code>.btn</code> links, joined or spaced. The current page is <code>aria-current="page"</code> plus <code>primary</code>; the first and last page disable their arrow with <code>aria-disabled="true"</code>.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Joined</h2>
+    <p class="text-sm text-muted-foreground">One bar of <code>outline</code> buttons in a <code>.join</code>. Arrow links are icon-only, so they carry an <code>aria-label</code>. Ellipsis is a plain <code>span</code> with <code>pointer-events-none</code>.</p>
+    <nav class="join" aria-label="Pagination">
+      <a href="#" class="btn outline" aria-label="Previous page" aria-disabled="true"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a>
+      <a href="#" class="btn primary" aria-current="page">1</a>
+      <a href="#" class="btn outline">2</a>
+      <a href="#" class="btn outline">3</a>
+      <span class="btn outline pointer-events-none">…</span>
+      <a href="#" class="btn outline">12</a>
+      <a href="#" class="btn outline" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    </nav>
+<pre>&lt;nav class="join" aria-label="Pagination"&gt;
+  &lt;a href="?page=1" class="btn outline" aria-label="Previous page" aria-disabled="true"&gt;
+    &lt;svg class="size-4" aria-hidden="true"&gt;…&lt;/svg&gt;
+  &lt;/a&gt;
+  &lt;a href="?page=1" class="btn primary" aria-current="page"&gt;1&lt;/a&gt;
+  &lt;a href="?page=2" class="btn outline"&gt;2&lt;/a&gt;
+  &lt;a href="?page=3" class="btn outline"&gt;3&lt;/a&gt;
+  &lt;span class="btn outline pointer-events-none"&gt;…&lt;/span&gt;
+  &lt;a href="?page=12" class="btn outline"&gt;12&lt;/a&gt;
+  &lt;a href="?page=2" class="btn outline" aria-label="Next page"&gt;
+    &lt;svg class="size-4" aria-hidden="true"&gt;…&lt;/svg&gt;
+  &lt;/a&gt;
+&lt;/nav&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Spaced</h2>
+    <p class="text-sm text-muted-foreground">The same links as <code>ghost</code> buttons in a <code>flex gap-1</code>. Lighter, suits a page footer.</p>
+    <nav class="flex flex-wrap items-center gap-1" aria-label="Pagination">
+      <a href="#" class="btn ghost" aria-label="Previous page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a>
+      <a href="#" class="btn ghost">1</a>
+      <a href="#" class="btn ghost">2</a>
+      <a href="#" class="btn primary" aria-current="page">3</a>
+      <a href="#" class="btn ghost">4</a>
+      <a href="#" class="btn ghost">5</a>
+      <span class="btn ghost pointer-events-none">…</span>
+      <a href="#" class="btn ghost">12</a>
+      <a href="#" class="btn ghost" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    </nav>
+<pre>&lt;nav class="flex flex-wrap items-center gap-1" aria-label="Pagination"&gt;
+  &lt;a href="?page=2" class="btn ghost" aria-label="Previous page"&gt;…&lt;/a&gt;
+  &lt;a href="?page=1" class="btn ghost"&gt;1&lt;/a&gt;
+  &lt;a href="?page=3" class="btn primary" aria-current="page"&gt;3&lt;/a&gt;
+  …
+&lt;/nav&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Previous and next only</h2>
+    <p class="text-sm text-muted-foreground">For a feed or a blog where the page count does not matter. Labels instead of numbers, <code>justify-between</code> pushes them to the edges.</p>
+    <nav class="flex justify-between" aria-label="Pagination">
+      <a href="#" class="btn outline"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Newer posts</a>
+      <a href="#" class="btn outline">Older posts <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+    </nav>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Table footer</h2>
+    <p class="text-sm text-muted-foreground">A row count, a page size <code>select</code> and a compact first, previous, next, last bar. Small sizes match a <code>table sm</code>. This is a <code>div</code>, not a <code>nav</code>, because the select is a control rather than a link.</p>
+    <div class="flex flex-wrap items-center gap-4 text-sm">
+      <p class="text-muted-foreground">Showing 21 to 40 of 236</p>
+      <label class="ml-auto flex items-center gap-2">Rows per page
+        <select class="input sm"><option>10</option><option selected>20</option><option>50</option></select>
+      </label>
+      <p aria-live="polite">Page 2 of 12</p>
+      <nav class="join" aria-label="Pagination">
+        <a href="#" class="btn outline sm" aria-label="First page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg></a>
+        <a href="#" class="btn outline sm" aria-label="Previous page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a>
+        <a href="#" class="btn outline sm" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a href="#" class="btn outline sm" aria-label="Last page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg></a>
+      </nav>
+    </div>
+<pre>&lt;div class="flex flex-wrap items-center gap-4 text-sm"&gt;
+  &lt;p class="text-muted-foreground"&gt;Showing 21 to 40 of 236&lt;/p&gt;
+  &lt;label class="ml-auto flex items-center gap-2"&gt;
+    Rows per page &lt;select class="input sm"&gt;…&lt;/select&gt;
+  &lt;/label&gt;
+  &lt;p aria-live="polite"&gt;Page 2 of 12&lt;/p&gt;
+  &lt;nav class="join" aria-label="Pagination"&gt;
+    &lt;a href="?page=1" class="btn outline sm" aria-label="First page"&gt;…&lt;/a&gt;
+    &lt;a href="?page=1" class="btn outline sm" aria-label="Previous page"&gt;…&lt;/a&gt;
+    &lt;a href="?page=3" class="btn outline sm" aria-label="Next page"&gt;…&lt;/a&gt;
+    &lt;a href="?page=12" class="btn outline sm" aria-label="Last page"&gt;…&lt;/a&gt;
+  &lt;/nav&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Buttons instead of links</h2>
+    <p class="text-sm text-muted-foreground">When a script fetches the page in place, use <code>&lt;button type="button"&gt;</code> and the real <code>disabled</code> attribute. Same classes. Keep the <code>nav</code> so the landmark survives.</p>
+    <nav class="join" aria-label="Pagination">
+      <button type="button" class="btn outline" aria-label="Previous page" disabled><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+      <button type="button" class="btn primary" aria-current="page">1</button>
+      <button type="button" class="btn outline">2</button>
+      <button type="button" class="btn outline">3</button>
+      <button type="button" class="btn outline" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+    </nav>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel space-y-2">
+        <p class="text-sm font-medium">.light</p>
+        <nav class="join" aria-label="Pagination"><a href="#" class="btn outline sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outline sm">3</a></nav>
+      </div>
+      <div class="dark panel space-y-2">
+        <p class="text-sm font-medium">.dark</p>
+        <nav class="join" aria-label="Pagination"><a href="#" class="btn outline sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outline sm">3</a></nav>
+      </div>
+      <div class="inverse panel space-y-2">
+        <p class="text-sm font-medium">.inverse</p>
+        <nav class="join" aria-label="Pagination"><a href="#" class="btn outline sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outline sm">3</a></nav>
+      </div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

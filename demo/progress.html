@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Progress and meter</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Progress and meter</h1>
+    <p class="text-muted-foreground"><code>.progress</code> on a native <code>&lt;progress&gt;</code>, <code>.meter</code> on a native <code>&lt;meter&gt;</code>. The browser owns the value and the semantics; nui draws the track and the bar. No JavaScript.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Progress</h2>
+    <p class="text-sm text-muted-foreground">Every bar needs a name: a <code>&lt;label for&gt;</code> or an <code>aria-label</code>. A label with the value in an <code>&lt;output&gt;</code> gives sighted users the number too.</p>
+    <div class="max-w-md space-y-4">
+      <div class="field">
+        <label for="upload" class="flex justify-between">Uploading photos <output for="upload">45%</output></label>
+        <progress class="progress" id="upload" value="45" max="100"></progress>
+      </div>
+      <progress class="progress" value="0" max="100" aria-label="Not started"></progress>
+      <progress class="progress" value="100" max="100" aria-label="Complete"></progress>
+      <progress class="progress" aria-label="Loading"></progress>
+    </div>
+<pre>&lt;div class="field"&gt;
+  &lt;label for="upload" class="flex justify-between"&gt;Uploading photos &lt;output for="upload"&gt;45%&lt;/output&gt;&lt;/label&gt;
+  &lt;progress class="progress" id="upload" value="45" max="100"&gt;&lt;/progress&gt;
+&lt;/div&gt;
+
+&lt;progress class="progress" aria-label="Loading"&gt;&lt;/progress&gt;   &lt;!-- no value: indeterminate --&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Colours</h2>
+    <p class="text-sm text-muted-foreground">The same colour words as the button. No word is primary.</p>
+    <div class="grid max-w-2xl grid-cols-[auto_1fr] items-center gap-x-6 gap-y-3 text-sm">
+      <code>(none)</code><progress class="progress" value="60" max="100" aria-label="Default"></progress>
+      <code>secondary</code><progress class="progress secondary" value="60" max="100" aria-label="Secondary"></progress>
+      <code>info</code><progress class="progress info" value="60" max="100" aria-label="Info"></progress>
+      <code>success</code><progress class="progress success" value="60" max="100" aria-label="Success"></progress>
+      <code>warning</code><progress class="progress warning" value="60" max="100" aria-label="Warning"></progress>
+      <code>danger</code><progress class="progress danger" value="60" max="100" aria-label="Danger"></progress>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Sizes</h2>
+    <div class="grid max-w-2xl grid-cols-[auto_1fr] items-center gap-x-6 gap-y-3 text-sm">
+      <code>sm</code><progress class="progress sm" value="60" max="100" aria-label="Small"></progress>
+      <code>(default)</code><progress class="progress" value="60" max="100" aria-label="Default size"></progress>
+      <code>lg</code><progress class="progress lg" value="60" max="100" aria-label="Large"></progress>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Meter</h2>
+    <p class="text-sm text-muted-foreground">A value within a known range: storage used, password strength, a score. <code>low</code>, <code>high</code> and <code>optimum</code> put the value in a band, and the bar colour follows: success, warning, danger. A colour word pins one colour instead.</p>
+    <div class="max-w-md space-y-4">
+      <div class="field">
+        <label for="disk" class="flex justify-between">Disk <output for="disk">12 GB of 64 GB</output></label>
+        <meter class="meter" id="disk" value="12" min="0" max="64" low="32" high="52" optimum="0"></meter>
+      </div>
+      <div class="field">
+        <label for="disk2" class="flex justify-between">Disk <output for="disk2">45 GB of 64 GB</output></label>
+        <meter class="meter" id="disk2" value="45" min="0" max="64" low="32" high="52" optimum="0"></meter>
+      </div>
+      <div class="field">
+        <label for="disk3" class="flex justify-between">Disk <output for="disk3">60 GB of 64 GB</output></label>
+        <meter class="meter" id="disk3" value="60" min="0" max="64" low="32" high="52" optimum="0"></meter>
+      </div>
+      <div class="field">
+        <label for="score" class="flex justify-between">Score <output for="score">7 of 10</output></label>
+        <meter class="meter info" id="score" value="7" min="0" max="10"></meter>
+      </div>
+    </div>
+<pre>&lt;!-- optimum="0": low values are good, so past `high` the bar turns red --&gt;
+&lt;meter class="meter" id="disk" value="45" min="0" max="64" low="32" high="52" optimum="0"&gt;&lt;/meter&gt;
+
+&lt;!-- one colour, whatever the value --&gt;
+&lt;meter class="meter info" value="7" min="0" max="10" aria-label="Score"&gt;&lt;/meter&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a card</h2>
+    <div class="card max-w-sm">
+      <header><hgroup><h3>Storage</h3><p>Files, backups and attachments.</p></hgroup></header>
+      <div class="field">
+        <label for="card-disk" class="flex justify-between">Used <output for="card-disk">45 GB of 64 GB</output></label>
+        <meter class="meter" id="card-disk" value="45" min="0" max="64" low="32" high="52" optimum="0"></meter>
+      </div>
+      <footer class="justify-end"><button class="btn sm">Manage</button></footer>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 md:grid-cols-3">
+      <div class="light panel space-y-3">
+        <p class="text-sm font-medium">.light</p>
+        <progress class="progress" value="60" max="100" aria-label="Light"></progress>
+        <meter class="meter" value="60" max="100" low="40" high="80" optimum="0" aria-label="Light meter"></meter>
+      </div>
+      <div class="dark panel space-y-3">
+        <p class="text-sm font-medium">.dark</p>
+        <progress class="progress" value="60" max="100" aria-label="Dark"></progress>
+        <meter class="meter" value="60" max="100" low="40" high="80" optimum="0" aria-label="Dark meter"></meter>
+      </div>
+      <div class="inverse panel space-y-3">
+        <p class="text-sm font-medium">.inverse</p>
+        <progress class="progress" value="60" max="100" aria-label="Inverse"></progress>
+        <meter class="meter" value="60" max="100" low="40" high="80" optimum="0" aria-label="Inverse meter"></meter>
+      </div>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Custom properties</h2>
+    <p class="text-sm text-muted-foreground">Shared by <code>.progress</code> and <code>.meter</code>.</p>
+<pre>.progress, .meter {
+  --progress-bg      /* track */
+  --progress-fg      /* bar; a meter's bands override it unless a colour word is set */
+  --progress-h       /* height, 0.5rem */
+  --progress-radius  /* defaults to --radius */
+}</pre>
+    <div class="max-w-md space-y-3">
+      <progress class="progress" value="60" max="100" aria-label="Custom colour" style="--progress-fg: rebeccapurple; --progress-bg: lavender"></progress>
+      <progress class="progress" value="60" max="100" aria-label="Custom height" style="--progress-h: 1.5rem; --progress-radius: 0"></progress>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>
