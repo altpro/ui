@@ -1,0 +1,73 @@
+/* Timeline: a list of events in order, an audit history for instance.
+   <ol class="timeline">
+     <li>
+       <span class="avatar xs">SR</span>
+       <p><b>Steve</b> changed the price from £12 to £14</p>
+       <time datetime="2026-09-15T09:30">Today, 09:30</time>
+     </li>
+     <li class="danger"><p><b>Ann</b> deleted the draft</p><time>Yesterday</time></li>
+   </ol>
+   A dot per event joined by a line. An .avatar as the first child of an
+   item takes the dot's place. Colour words on the item recolour the dot.
+   Unlike .steps there is no current or done state; every event has
+   happened. Layered so Tailwind utilities win. */
+@layer components {
+  .timeline {
+    --timeline-dot: var(--color-muted-foreground);
+    --timeline-line: var(--color-border);
+    --timeline-marker: 1.5rem;
+
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--text-sm, 0.875rem);
+
+    > li {
+      position: relative;
+      display: grid;
+      grid-template-columns: var(--timeline-marker) 1fr;
+      column-gap: 0.75rem;
+      align-items: start;
+      padding-block-end: 1.5rem;
+      /* a one-line entry sits on the marker's centre line */
+      line-height: var(--timeline-marker);
+      &:last-child { padding-block-end: 0; }
+      > * { grid-column: 2; margin: 0; }
+      > time { display: block; color: var(--color-muted-foreground); }
+
+      /* the dot, centred in the marker square */
+      &::before {
+        content: "";
+        grid-area: 1 / 1;
+        justify-self: center;
+        width: 0.625rem;
+        height: 0.625rem;
+        margin-block-start: calc((var(--timeline-marker) - 0.625rem) / 2);
+        border-radius: 50%;
+        background: var(--timeline-dot);
+      }
+      /* the line from this marker to the next */
+      &:not(:last-child)::after {
+        content: "";
+        position: absolute;
+        top: var(--timeline-marker);
+        inset-inline-start: calc(var(--timeline-marker) / 2 - 1px);
+        width: 2px;
+        height: calc(100% - var(--timeline-marker));
+        background: var(--timeline-line);
+      }
+
+      > .avatar:first-child {
+        grid-area: 1 / 1;
+        --avatar-size: var(--timeline-marker);
+      }
+      &:has(> .avatar:first-child)::before { display: none; }
+
+      &.primary { --timeline-dot: var(--color-primary); }
+      &.info    { --timeline-dot: var(--color-info); }
+      &.success { --timeline-dot: var(--color-success); }
+      &.warning { --timeline-dot: var(--color-warning); }
+      &.danger, &.error { --timeline-dot: var(--color-danger); }
+    }
+  }
+}

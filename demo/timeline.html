@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Timeline</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Timeline</h1>
+    <p class="muted"><code>.timeline</code> on an <code>&lt;ol&gt;</code>. A dot per event joined by a line, for an audit history or an activity feed. Every event has happened, so unlike <a class="underline" href="steps.html">Steps</a> there is no current or done state. No JavaScript.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Audit history</h2>
+    <p class="text-sm muted">Each item is what happened and a <code>&lt;time&gt;</code> for when. A one-line entry sits on the dot's centre line; longer text wraps under it.</p>
+    <ol class="timeline max-w-md">
+      <li><p><b>Steve Rayner</b> changed the price from £12.00 to £14.00</p><time datetime="2026-09-15T09:30">Today, 09:30</time></li>
+      <li><p><b>Ann Okafor</b> added the product to the Autumn collection</p><time datetime="2026-09-14T16:05">Yesterday, 16:05</time></li>
+      <li><p><b>Ann Okafor</b> updated the description. The new copy mentions the recycled packaging and drops the line about limited stock.</p><time datetime="2026-09-12T11:20">12 Sep, 11:20</time></li>
+      <li><p><b>Steve Rayner</b> created the product</p><time datetime="2026-09-01T08:00">1 Sep, 08:00</time></li>
+    </ol>
+<pre>&lt;ol class="timeline"&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;b&gt;Steve Rayner&lt;/b&gt; changed the price from £12.00 to £14.00&lt;/p&gt;
+    &lt;time datetime="2026-09-15T09:30"&gt;Today, 09:30&lt;/time&gt;
+  &lt;/li&gt;
+  &lt;li&gt;
+    &lt;p&gt;&lt;b&gt;Ann Okafor&lt;/b&gt; added the product to the Autumn collection&lt;/p&gt;
+    &lt;time datetime="2026-09-14T16:05"&gt;Yesterday, 16:05&lt;/time&gt;
+  &lt;/li&gt;
+&lt;/ol&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">With avatars</h2>
+    <p class="text-sm muted">An <code>.avatar</code> as the first child of an item takes the dot's place and is sized to the marker.</p>
+    <ol class="timeline max-w-md">
+      <li><span class="avatar blue">SR</span><p><b>Steve Rayner</b> changed the price from £12.00 to £14.00</p><time datetime="2026-09-15T09:30">Today, 09:30</time></li>
+      <li><span class="avatar teal">AO</span><p><b>Ann Okafor</b> added the product to the Autumn collection</p><time datetime="2026-09-14T16:05">Yesterday, 16:05</time></li>
+      <li><span class="avatar blue">SR</span><p><b>Steve Rayner</b> created the product</p><time datetime="2026-09-01T08:00">1 Sep, 08:00</time></li>
+    </ol>
+<pre>&lt;li&gt;
+  &lt;span class="avatar blue"&gt;SR&lt;/span&gt;
+  &lt;p&gt;&lt;b&gt;Steve Rayner&lt;/b&gt; changed the price from £12.00 to £14.00&lt;/p&gt;
+  &lt;time datetime="2026-09-15T09:30"&gt;Today, 09:30&lt;/time&gt;
+&lt;/li&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Colours</h2>
+    <p class="text-sm muted"><code>primary</code>, <code>info</code>, <code>success</code>, <code>warning</code> or <code>danger</code> on an item recolours its dot.</p>
+    <ol class="timeline max-w-md">
+      <li class="danger"><p><b>Ann Okafor</b> archived the product</p><time datetime="2026-09-15T10:00">Today, 10:00</time></li>
+      <li class="warning"><p>Stock fell below the reorder level</p><time datetime="2026-09-14T03:00">Yesterday, 03:00</time></li>
+      <li class="success"><p><b>Steve Rayner</b> published the product</p><time datetime="2026-09-02T09:00">2 Sep, 09:00</time></li>
+      <li class="primary"><p><b>Steve Rayner</b> created the product</p><time datetime="2026-09-01T08:00">1 Sep, 08:00</time></li>
+    </ol>
+<pre>&lt;li class="danger"&gt;…&lt;/li&gt;
+&lt;li class="success"&gt;…&lt;/li&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a card</h2>
+    <div class="card max-w-md">
+      <header><h3>History</h3></header>
+      <ol class="timeline">
+        <li><p><b>Steve Rayner</b> changed the price from £12.00 to £14.00</p><time datetime="2026-09-15T09:30">Today, 09:30</time></li>
+        <li><p><b>Ann Okafor</b> added the product to the Autumn collection</p><time datetime="2026-09-14T16:05">Yesterday, 16:05</time></li>
+        <li><p><b>Steve Rayner</b> created the product</p><time datetime="2026-09-01T08:00">1 Sep, 08:00</time></li>
+      </ol>
+      <footer><a href="#" class="btn ghost sm">Show all</a></footer>
+    </div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Custom properties</h2>
+<pre>.timeline {
+  --timeline-dot      /* the dot, muted-foreground; colour words on an item set it */
+  --timeline-line     /* the line between dots, border */
+  --timeline-marker   /* marker square and one-line height, 1.5rem */
+}</pre>
+    <ol class="timeline max-w-md" style="--timeline-dot: var(--color-primary); --timeline-line: var(--color-primary); --timeline-marker: 2rem">
+      <li><span class="avatar blue">SR</span><p>Larger marker, primary line</p><time>Now</time></li>
+      <li><p>Plain dot at the same size</p><time>Earlier</time></li>
+    </ol>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

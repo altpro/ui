@@ -683,6 +683,34 @@ An `<ol>` of numbered markers joined by a line. Put `aria-current="step"` on the
 
 Custom properties: `--steps-fg --steps-marker-bg --steps-marker-fg --steps-active-bg --steps-active-fg --steps-line --steps-marker`.
 
+## Timeline: `.timeline`
+
+An `<ol>` of events, a dot each joined by a line. For an audit history or activity feed. Every event has happened, so there is no current or done state; use `.steps` for that.
+
+```html
+<ol class="timeline">
+  <li>
+    <span class="avatar blue">SR</span>
+    <p><b>Steve Rayner</b> changed the price from £12.00 to £14.00</p>
+    <time datetime="2026-09-15T09:30">Today, 09:30</time>
+  </li>
+  <li class="danger">
+    <p><b>Ann Okafor</b> archived the product</p>
+    <time datetime="2026-09-14T16:05">Yesterday, 16:05</time>
+  </li>
+</ol>
+```
+
+| Kind | Classes |
+|------|---------|
+| Dot colour, on the `<li>` | `primary` `info` `success` `warning` `danger` |
+
+- An `.avatar` as the first child of an item replaces the dot and is sized to the marker.
+- A `<time>` is drawn muted on its own line. Anything else inside the item is ordinary content.
+- Width is the container's: `max-w-md` or a card.
+
+Custom properties: `--timeline-dot --timeline-line --timeline-marker`.
+
 ## Toast: `.toaster`
 
 A region fixed in a corner, in the page from load and empty. The app appends an `.alert` to it; screen readers announce each one as it lands. Each toast slides in, lives for `--toast-life` (6s), then fades. Hover or focus pauses the clock.

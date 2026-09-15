@@ -29,6 +29,7 @@
 @import "./components/range.css";
 @import "./components/loading.css";
 @import "./components/steps.css";
+@import "./components/timeline.css";
 @import "./components/toast.css";
 
 /* Muted text, short for text-muted-foreground. */

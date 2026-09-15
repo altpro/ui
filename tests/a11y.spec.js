@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "stat.html", "toast.html", "theme.html", "app/product.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -208,6 +208,20 @@ for (const colorScheme of ["light", "dark"]) {
       expect(await bg(3, "::before")).not.toBe(primary);
       expect(await li.nth(2).evaluate((el) => getComputedStyle(el).fontWeight)).toBe("600");
       const { violations } = await axe(page).include("main .steps").analyze();
+      expect(summary(violations)).toEqual([]);
+    });
+
+    // the dot is a ::before pseudo; an avatar first child hides it, colour words recolour it
+    test("timeline.html: dots, avatar in place of the dot, coloured dots", async ({ page }) => {
+      await page.goto("/timeline.html");
+      const lists = page.locator("main .timeline");
+      const before = (list, i, prop) => lists.nth(list).locator("li").nth(i).evaluate((el, p) => getComputedStyle(el, "::before")[p], prop);
+      const token = (name) => page.evaluate((n) => { const d = document.createElement("div"); d.style.background = `var(--color-${n})`; document.body.append(d); const c = getComputedStyle(d).backgroundColor; d.remove(); return c; }, name);
+      expect(await before(0, 0, "backgroundColor")).toBe(await token("muted-foreground"));
+      expect(await before(1, 0, "display")).toBe("none");
+      expect(await before(2, 0, "backgroundColor")).toBe(await token("danger"));
+      expect(await before(2, 2, "backgroundColor")).toBe(await token("success"));
+      const { violations } = await axe(page).include("main .timeline").analyze();
       expect(summary(violations)).toEqual([]);
     });
 
