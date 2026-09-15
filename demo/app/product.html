@@ -1,0 +1,299 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Radiance Ritual Set · Acme Admin</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="../demo.css">
+  <style>
+    /* the sidebar toggle is a checkbox: below lg the sidebar is an overlay that is closed by default, from lg it is inline and open by default */
+    @media (width < 64rem) { body:not(:has(#menu:checked)) #sidebar { display: none; } }
+    @media (width >= 64rem) { body:has(#menu:checked) #sidebar { display: none; } }
+  </style>
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<svg hidden>
+  <symbol id="package" viewBox="0 0 24 24"><path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/></symbol>
+  <symbol id="panel" viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M9 3v18"/></symbol>
+  <symbol id="search" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></symbol>
+  <symbol id="bell" viewBox="0 0 24 24"><path d="M10.268 21a2 2 0 0 0 3.464 0"/><path d="M3.262 15.326A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"/></symbol>
+  <symbol id="sun" viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></symbol>
+  <symbol id="moon" viewBox="0 0 24 24"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></symbol>
+  <symbol id="plus" viewBox="0 0 24 24"><path d="M5 12h14"/><path d="M12 5v14"/></symbol>
+  <symbol id="pencil" viewBox="0 0 24 24"><path d="M12 20h9"/><path d="M16.376 3.622a1 1 0 0 1 3.002 3.002L7.368 18.635a2 2 0 0 1-.855.506l-2.872.838a.5.5 0 0 1-.62-.62l.838-2.872a2 2 0 0 1 .506-.854z"/></symbol>
+  <symbol id="copy" viewBox="0 0 24 24"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></symbol>
+  <symbol id="ellipsis" viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></symbol>
+  <symbol id="dashboard" viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></symbol>
+  <symbol id="cart" viewBox="0 0 24 24"><circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/></symbol>
+  <symbol id="users" viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></symbol>
+  <symbol id="truck" viewBox="0 0 24 24"><path d="M14 18V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v11a1 1 0 0 0 1 1h2"/><path d="M15 18H9"/><path d="M19 18h2a1 1 0 0 0 1-1v-3.65a1 1 0 0 0-.22-.62l-3.48-4.35A1 1 0 0 0 17.52 8H14"/><circle cx="17" cy="18" r="2"/><circle cx="7" cy="18" r="2"/></symbol>
+  <symbol id="updown" viewBox="0 0 24 24"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></symbol>
+</svg>
+
+<aside id="sidebar" class="fixed inset-y-0 start-0 z-20 flex w-64 shrink-0 flex-col border-e border-border bg-background lg:sticky lg:top-0 lg:h-screen">
+  <div class="flex h-14 items-center gap-3 border-b border-border px-3">
+    <span class="avatar rounded-lg sm"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#package"/></svg></span>
+    <div class="min-w-0 text-sm leading-tight">
+      <p class="truncate font-semibold">Acme Admin</p>
+      <p class="truncate text-xs muted">Ecommerce</p>
+    </div>
+  </div>
+  <nav class="nav flex-1 overflow-y-auto p-3" aria-label="Main">
+    <h2>Ecommerce</h2>
+    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#dashboard"/></svg> Dashboard</a>
+    <details open>
+      <summary><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#package"/></svg> Products</summary>
+      <a href="#">All products</a>
+      <a href="#">Add product</a>
+      <a href="#" aria-current="page">Radiance Ritual Set</a>
+    </details>
+    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#cart"/></svg> Orders <span class="badge sm ml-auto">12</span></a>
+    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#users"/></svg> Customers</a>
+    <a href="#"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#truck"/></svg> Shipments</a>
+    <h2>Account</h2>
+    <a href="#">Settings</a>
+    <a href="#">Team</a>
+  </nav>
+  <div class="border-t border-border p-3">
+    <button class="btn ghost w-full justify-start px-2" popovertarget="user-menu">
+      <span class="avatar blue sm">SR</span>
+      <span class="min-w-0 text-start leading-tight">
+        <span class="block truncate">Steve Rayner</span>
+        <span class="block truncate text-xs font-normal muted">steve@example.com</span>
+      </span>
+      <svg class="size-4 ml-auto muted" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#updown"/></svg>
+    </button>
+    <div id="user-menu" popover class="dropdown up w-56">
+      <div class="nav">
+        <a href="#">Profile</a>
+        <a href="#">Billing</a>
+        <hr>
+        <button type="button">Sign out</button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<div class="flex min-w-0 flex-1 flex-col">
+  <header class="flex h-14 items-center gap-3 border-b border-border px-gap">
+    <label class="btn ghost sm px-2"><input type="checkbox" id="menu" aria-label="Toggle sidebar"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#panel"/></svg></label>
+    <nav class="breadcrumb" aria-label="Breadcrumb">
+      <a href="#">Acme Admin</a>
+      <a href="#">Products</a>
+      <span aria-current="page">Radiance Ritual Set</span>
+    </nav>
+    <div class="ml-auto flex items-center gap-2">
+      <label class="input sm hidden w-64 sm:flex">
+        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#search"/></svg>
+        <input type="search" placeholder="Search pages or run commands" aria-label="Search">
+        <kbd>⌘K</kbd>
+      </label>
+      <button class="btn ghost sm relative px-2" popovertarget="notifications" aria-label="Notifications, 2 unread">
+        <svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#bell"/></svg>
+        <span class="badge danger sm absolute -top-1 -right-1 [--badge-h:1rem] [--badge-px:0.3rem]" aria-hidden="true">2</span>
+      </button>
+      <div id="notifications" popover class="dropdown right w-80">
+        <div class="nav">
+          <h2>Notifications</h2>
+          <button type="button">Cloud / Gift set is down to 8 units</button>
+          <button type="button">Order 4821 is waiting for review</button>
+          <hr>
+          <a href="#">View all</a>
+        </div>
+      </div>
+      <button class="btn ghost sm px-2" id="theme">
+        <svg class="size-4 sun" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#sun"/></svg>
+        <svg class="size-4 moon" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#moon"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <main class="w-full space-y-gap p-gap">
+    <div class="flex flex-wrap items-start justify-between gap-gap">
+      <div>
+        <h1 class="text-3xl font-semibold tracking-tight">Radiance Ritual Set</h1>
+        <p class="mt-2 flex flex-wrap items-center gap-2 text-sm muted">
+          <span class="badge primary sm">Active</span>
+          <span>6 variants · Wellness · Stocked product</span>
+        </p>
+      </div>
+      <div class="flex flex-wrap items-center gap-2">
+        <label class="switch mr-2"><input type="checkbox" role="switch" checked> Active</label>
+        <button class="btn primary"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#plus"/></svg> Add variant</button>
+        <a href="#" class="btn outline"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#pencil"/></svg> Edit</a>
+        <button class="btn outline"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#copy"/></svg> Clone</button>
+        <button class="btn outline px-2" popovertarget="more" aria-label="More actions"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button>
+        <div id="more" popover class="dropdown right">
+          <div class="nav">
+            <button type="button">Archive</button>
+            <button type="button">Export CSV</button>
+            <hr>
+            <button type="button" class="text-danger">Delete product</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <label><input type="radio" name="tab" checked> Overview</label>
+      <label><input type="radio" name="tab"> Variants</label>
+      <label><input type="radio" name="tab"> Inventory</label>
+      <label><input type="radio" name="tab"> Activity</label>
+
+      <div class="grid gap-gap pt-gap xl:grid-cols-5">
+        <div class="min-w-0 space-y-gap xl:col-span-2">
+          <div class="card">
+            <div class="relative">
+              <div id="hero" class="flex aspect-square items-center justify-center rounded-lg bg-teal" role="img" aria-label="Ocean / 3-piece set">
+                <svg class="size-16 opacity-50" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#package"/></svg>
+              </div>
+              <span class="badge absolute top-3 left-3">Primary</span>
+            </div>
+            <div class="grid grid-cols-5 gap-2" role="group" aria-label="Gallery">
+              <button class="aspect-square rounded-md bg-teal aria-pressed:ring-2 aria-pressed:ring-primary aria-pressed:ring-offset-2 aria-pressed:ring-offset-card" data-hue="bg-teal" aria-label="Show Ocean / 3-piece set" aria-pressed="true"></button>
+              <button class="aspect-square rounded-md bg-amber aria-pressed:ring-2 aria-pressed:ring-primary aria-pressed:ring-offset-2 aria-pressed:ring-offset-card" data-hue="bg-amber" aria-label="Show Sand / 3-piece set" aria-pressed="false"></button>
+              <button class="aspect-square rounded-md bg-orange aria-pressed:ring-2 aria-pressed:ring-primary aria-pressed:ring-offset-2 aria-pressed:ring-offset-card" data-hue="bg-orange" aria-label="Show Stone / Travel trio" aria-pressed="false"></button>
+              <button class="aspect-square rounded-md bg-rose aria-pressed:ring-2 aria-pressed:ring-primary aria-pressed:ring-offset-2 aria-pressed:ring-offset-card" data-hue="bg-rose" aria-label="Show Rose / Travel trio" aria-pressed="false"></button>
+              <button class="aspect-square rounded-md bg-sky aria-pressed:ring-2 aria-pressed:ring-primary aria-pressed:ring-offset-2 aria-pressed:ring-offset-card" data-hue="bg-sky" aria-label="Show Cloud / Gift set" aria-pressed="false"></button>
+            </div>
+          </div>
+
+          <div class="card divided">
+            <header>
+              <h2 class="text-base">Product family profile</h2>
+              <p>A short read on the assortment behind this product.</p>
+            </header>
+            <dl class="grid grid-cols-2 gap-gap text-sm">
+              <div><dt class="muted">Primary variant</dt><dd class="mt-1 font-medium">Ocean / 3-piece set</dd></div>
+              <div><dt class="muted">Retail price band</dt><dd class="mt-1 font-medium tabular-nums">£179 to £429</dd></div>
+              <div><dt class="muted">Material</dt><dd class="mt-1 font-medium">Gift-boxed skin-care kit</dd></div>
+              <div><dt class="muted">Vendor</dt><dd class="mt-1 font-medium">Acme Retail</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="min-w-0 space-y-gap xl:col-span-3">
+          <div class="grid gap-gap sm:grid-cols-3">
+            <div class="card">
+              <p class="text-sm muted">Total stock</p>
+              <p class="text-3xl font-semibold tabular-nums">120</p>
+              <p class="text-sm muted">Across 6 active variants</p>
+            </div>
+            <div class="card">
+              <p class="text-sm muted">Low stock</p>
+              <p class="text-3xl font-semibold tabular-nums">4</p>
+              <p class="text-sm text-danger">Variants below the 20-unit threshold</p>
+            </div>
+            <div class="card">
+              <p class="text-sm muted">Average stock</p>
+              <p class="text-3xl font-semibold tabular-nums">20</p>
+              <p class="text-sm muted">Units held per variant</p>
+            </div>
+          </div>
+
+          <section class="space-y-3">
+            <div>
+              <h2 class="font-semibold">Variant lineup</h2>
+              <p class="text-sm muted">Every SKU in this family, with stock and both price lists.</p>
+            </div>
+            <div class="card">
+              <div class="relative overflow-x-auto" tabindex="0">
+                <table class="table hover">
+                  <thead>
+                    <tr>
+                      <th>Variant</th>
+                      <th class="text-right">Stock</th>
+                      <th class="text-right">Retail</th>
+                      <th class="text-right">Wholesale</th>
+                      <th class="w-px"><span class="sr-only">Actions</span></th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td><div class="flex items-center gap-3"><span class="avatar teal rounded-lg" aria-hidden="true"></span><div><p class="font-medium">Ocean / 3-piece set <span class="badge sm ml-1">Primary</span></p><p class="text-xs muted">SKU-SKIN-4006-OCN</p></div></div></td>
+                      <td class="text-right tabular-nums">48</td>
+                      <td class="text-right tabular-nums">£389</td>
+                      <td class="text-right tabular-nums">£249</td>
+                      <td><button class="btn ghost sm px-2" popovertarget="row-menu" aria-label="Actions for Ocean / 3-piece set"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><div class="flex items-center gap-3"><span class="avatar amber rounded-lg" aria-hidden="true"></span><div><p class="font-medium">Sand / 3-piece set</p><p class="text-xs muted">SKU-SKIN-4006-SND</p></div></div></td>
+                      <td class="text-right tabular-nums">22</td>
+                      <td class="text-right tabular-nums">£389</td>
+                      <td class="text-right tabular-nums">£249</td>
+                      <td><button class="btn ghost sm px-2" popovertarget="row-menu" aria-label="Actions for Sand / 3-piece set"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><div class="flex items-center gap-3"><span class="avatar orange rounded-lg" aria-hidden="true"></span><div><p class="font-medium">Stone / Travel trio</p><p class="text-xs muted">SKU-SKIN-4006-STN</p></div></div></td>
+                      <td class="text-right tabular-nums">18 <span class="badge danger sm ml-1">Low</span></td>
+                      <td class="text-right tabular-nums">£179</td>
+                      <td class="text-right tabular-nums">£116</td>
+                      <td><button class="btn ghost sm px-2" popovertarget="row-menu" aria-label="Actions for Stone / Travel trio"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><div class="flex items-center gap-3"><span class="avatar rose rounded-lg" aria-hidden="true"></span><div><p class="font-medium">Rose / Travel trio</p><p class="text-xs muted">SKU-SKIN-4006-RSE</p></div></div></td>
+                      <td class="text-right tabular-nums">10 <span class="badge danger sm ml-1">Low</span></td>
+                      <td class="text-right tabular-nums">£179</td>
+                      <td class="text-right tabular-nums">£116</td>
+                      <td><button class="btn ghost sm px-2" popovertarget="row-menu" aria-label="Actions for Rose / Travel trio"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><div class="flex items-center gap-3"><span class="avatar indigo rounded-lg" aria-hidden="true"></span><div><p class="font-medium">Slate / Duo set</p><p class="text-xs muted">SKU-SKIN-4006-SLT</p></div></div></td>
+                      <td class="text-right tabular-nums">14 <span class="badge danger sm ml-1">Low</span></td>
+                      <td class="text-right tabular-nums">£259</td>
+                      <td class="text-right tabular-nums">£168</td>
+                      <td><button class="btn ghost sm px-2" popovertarget="row-menu" aria-label="Actions for Slate / Duo set"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button></td>
+                    </tr>
+                    <tr>
+                      <td><div class="flex items-center gap-3"><span class="avatar sky rounded-lg" aria-hidden="true"></span><div><p class="font-medium">Cloud / Gift set</p><p class="text-xs muted">SKU-SKIN-4006-CLD</p></div></div></td>
+                      <td class="text-right tabular-nums">8 <span class="badge danger sm ml-1">Low</span></td>
+                      <td class="text-right tabular-nums">£429</td>
+                      <td class="text-right tabular-nums">£278</td>
+                      <td><button class="btn ghost sm px-2" popovertarget="row-menu" aria-label="Actions for Cloud / Gift set"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+            <div id="row-menu" popover class="dropdown right">
+              <div class="nav">
+                <button type="button">Edit variant</button>
+                <button type="button">Adjust stock</button>
+                <hr>
+                <button type="button" class="text-danger">Remove</button>
+              </div>
+            </div>
+          </section>
+        </div>
+      </div>
+
+      <div class="pt-gap"><p class="muted">Variants are not built yet.</p></div>
+      <div class="pt-gap"><p class="muted">Inventory is not built yet.</p></div>
+      <div class="pt-gap"><p class="muted">Activity is not built yet.</p></div>
+    </div>
+  </main>
+</div>
+
+<script>
+  // theme: flip between light and dark, sharing localStorage.theme with the demo site
+  const html = document.documentElement, theme = document.getElementById("theme");
+  const isDark = () => (html.dataset.theme || (matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")) === "dark";
+  const paint = () => {
+    theme.querySelector(".sun").toggleAttribute("hidden", !isDark());
+    theme.querySelector(".moon").toggleAttribute("hidden", isDark());
+    theme.setAttribute("aria-label", isDark() ? "Switch to light theme" : "Switch to dark theme");
+  };
+  theme.onclick = () => { html.dataset.theme = localStorage.theme = isDark() ? "light" : "dark"; paint(); };
+  paint();
+
+  // gallery: a thumbnail moves its colour and name onto the hero
+  const thumbs = document.querySelectorAll("[data-hue]");
+  thumbs.forEach((b) => (b.onclick = () => {
+    thumbs.forEach((x) => x.setAttribute("aria-pressed", x === b));
+    hero.className = hero.className.replace(/bg-\S+/, b.dataset.hue);
+    hero.setAttribute("aria-label", b.getAttribute("aria-label").replace("Show ", ""));
+  }));
+</script>
+</body>
+</html>

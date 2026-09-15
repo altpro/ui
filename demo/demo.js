@@ -90,6 +90,7 @@ document.querySelector("aside").innerHTML = `
       ${components.map(link).join("")}
     </details>
     ${link(["theme.html", "Theme", "palette"])}
+    ${link(["app/product.html", "Sample app", "monitor"])}
   </nav>`;
 
 const themeBtns = document.querySelectorAll("header [data-value]");

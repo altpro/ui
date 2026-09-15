@@ -5,7 +5,7 @@ import tailwindcss from "@tailwindcss/vite";
 
 const demo = resolve(import.meta.dirname, "demo");
 const pages = Object.fromEntries(
-  readdirSync(demo)
+  readdirSync(demo, { recursive: true })
     .filter((f) => f.endsWith(".html"))
     .map((f) => [f.replace(".html", ""), resolve(demo, f)]),
 );
