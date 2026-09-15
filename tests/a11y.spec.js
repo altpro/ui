@@ -416,3 +416,25 @@ for (const colorScheme of ["light", "dark"]) {
     }
   });
 }
+
+test("disabled links have no URL and loading buttons cannot activate", async ({ page }) => {
+  await page.goto("/button.html");
+  const disabledLink = page.locator('main a[aria-disabled="true"]');
+  await expect(disabledLink).not.toHaveAttribute("href", /.+/);
+  await expect(disabledLink).toHaveAttribute("role", "link");
+
+  await page.goto("/loading.html");
+  const loading = page.locator("main button.loading");
+  await expect(loading).toHaveCount(5);
+  for (const button of await loading.all()) {
+    await expect(button).toBeDisabled();
+    await expect(button).toHaveAttribute("aria-busy", "true");
+    const activations = await button.evaluate((el) => {
+      let count = 0;
+      el.addEventListener("click", () => count++);
+      el.click();
+      return count;
+    });
+    expect(activations).toBe(0);
+  }
+});

@@ -3,9 +3,6 @@
      @import "tailwindcss";
      @import "nui";
 */
-/* `outline` is a nui modifier word and a Tailwind utility (1px solid outline);
-   the utility would beat the component focus ring, so never emit it. */
-@source not inline("outline");
 @import "./theme.css";
 @import "./scheme.css";
 @import "./components/button.css";

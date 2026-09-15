@@ -1,4 +1,4 @@
-/* Design tokens. Every text-on-fill pairing, ghost/outline text on the page
+/* Design tokens. Every text-on-fill pairing, text in the ghost/outlined variants on the page
    background, and their hover states meet WCAG AA 4.5:1; tests/a11y.spec.js
    checks this with axe. Keep that true when changing a value.
  `@theme default` means an app's own @theme block wins

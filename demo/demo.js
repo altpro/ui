@@ -42,31 +42,31 @@ export const icon = (name) =>
   `<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>`;
 
 const components = [
-  ["button.html", "Button", "rectangle"],
-  ["join.html", "Join", "columns"],
-  ["segmented.html", "Segmented", "segmented"],
-  ["field.html", "Field", "field"],
-  ["check.html", "Check", "check"],
-  ["badge.html", "Badge", "tag"],
-  ["avatar.html", "Avatar", "user"],
-  ["nav.html", "Nav", "panel"],
-  ["breadcrumb.html", "Breadcrumb", "path"],
-  ["dropdown.html", "Dropdown", "dropdown"],
-  ["tooltip.html", "Tooltip", "bubble"],
-  ["card.html", "Card", "card"],
-  ["dialog.html", "Dialog", "window"],
   ["accordion.html", "Accordion", "collapse"],
-  ["table.html", "Table", "table"],
   ["alert.html", "Alert", "alert"],
-  ["tabs.html", "Tabs", "tabs"],
+  ["avatar.html", "Avatar", "user"],
+  ["badge.html", "Badge", "tag"],
+  ["breadcrumb.html", "Breadcrumb", "path"],
+  ["button.html", "Button", "rectangle"],
+  ["card.html", "Card", "card"],
+  ["check.html", "Check", "check"],
+  ["dialog.html", "Dialog", "window"],
+  ["dropdown.html", "Dropdown", "dropdown"],
+  ["field.html", "Field", "field"],
+  ["join.html", "Join", "columns"],
+  ["loading.html", "Loading", "loader"],
+  ["nav.html", "Nav", "panel"],
+  ["pagination.html", "Pagination", "ellipsis"],
   ["progress.html", "Progress", "gauge"],
   ["range.html", "Range", "sliders"],
-  ["pagination.html", "Pagination", "ellipsis"],
-  ["loading.html", "Loading", "loader"],
+  ["segmented.html", "Segmented", "segmented"],
+  ["stat.html", "Stat", "trend"],
   ["steps.html", "Steps", "steps"],
+  ["table.html", "Table", "table"],
+  ["tabs.html", "Tabs", "tabs"],
   ["timeline.html", "Timeline", "timeline"],
   ["toast.html", "Toast", "bell"],
-  ["stat.html", "Stat", "trend"],
+  ["tooltip.html", "Tooltip", "bubble"],
 ];
 /* Shells. Every href is relative to demo/; `root` fixes them up from app/.
    Menu items: a string is a heading, [href, label, icon?, extra?] a link,
@@ -161,7 +161,7 @@ header.innerHTML = `
     ${extras}
     <div class="join" role="group" aria-label="Theme">
       ${[["", "System", "monitor"], ["light", "Light", "sun"], ["dark", "Dark", "moon"]]
-        .map(([v, l, ic]) => `<button class="btn outline sm px-2" data-value="${v}" title="${l}" aria-label="${l}">${icon(ic)}</button>`)
+        .map(([v, l, ic]) => `<button class="btn outlined sm px-2" data-value="${v}" title="${l}" aria-label="${l}">${icon(ic)}</button>`)
         .join("")}
     </div>
     <label class="hidden sm:block">Radius

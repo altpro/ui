@@ -1,6 +1,6 @@
 /* Badge.
-   <span class="badge primary">   <span class="badge outline danger sm">
-   Same model as .btn: colour variants set --badge-* vars only, `.outline`
+   <span class="badge primary">   <span class="badge outlined danger sm">
+   Same model as .btn: colour variants set --badge-* vars only, `.outlined`
    and `.ghost` set real properties from those vars, sizes set the size
    vars. A <span> is static; an <a> or <button> gets hover, focus ring and
    pointer. Layered so Tailwind utilities win. */
@@ -74,7 +74,7 @@
     &.warning {
       --badge-bg: var(--color-warning);
       --badge-fg: var(--color-warning-foreground);
-      /* amber is too light to read as text on a light page: darken it for outline/ghost */
+      /* amber is too light to read as text on a light page: darken it for outlined/ghost */
       --badge-accent: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
       --badge-outline: var(--badge-accent);
     }
@@ -86,7 +86,7 @@
     }
 
     /* hue variants, the same names as avatar.css. Each sets the fill only:
-       the text colour, and the accent that outline/ghost draw with, are
+       the text colour, and the accent that outlined/ghost draw with, are
        derived from it, so every hue reads AA on the badge and on the page. */
     &:is(.red, .orange, .amber, .yellow, .lime, .green, .emerald, .teal, .cyan, .sky, .blue, .indigo, .violet, .purple, .fuchsia, .pink, .rose) {
       --badge-fg: light-dark(oklch(from var(--badge-bg) 0.3 c h), oklch(from var(--badge-bg) 0.92 c h));
@@ -112,18 +112,18 @@
     &.rose { --badge-bg: var(--color-rose); }
 
     /* style modifiers */
-    &.outline, &.ghost {
+    &.outlined, &.ghost {
       background: transparent;
       color: var(--badge-accent);
       &:is(a, button):hover {
         background: color-mix(in oklab, var(--badge-accent) 10%, transparent);
       }
     }
-    &.outline {
+    &.outlined {
       border-color: var(--badge-outline);
       --join-divider: var(--badge-outline);
     }
-    /* after .outline so the ring colour wins the border on every variant */
+    /* after .outlined so the ring colour wins the border on every variant */
     &:is(a, button):focus-visible {
       border-color: var(--color-ring);
       outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);

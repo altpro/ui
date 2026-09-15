@@ -53,9 +53,9 @@
       <div class="flex flex-wrap items-center gap-2">
         <label class="switch mr-2"><input type="checkbox" role="switch" checked> Active</label>
         <button class="btn primary"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#plus"/></svg> Add variant</button>
-        <a href="#" class="btn outline"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#pencil"/></svg> Edit</a>
-        <button class="btn outline"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#copy"/></svg> Clone</button>
-        <button class="btn outline px-2" popovertarget="more" aria-label="More actions"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button>
+        <a href="#" class="btn outlined"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#pencil"/></svg> Edit</a>
+        <button class="btn outlined"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#copy"/></svg> Clone</button>
+        <button class="btn outlined px-2" popovertarget="more" aria-label="More actions"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><use href="#ellipsis"/></svg></button>
         <div id="more" popover class="dropdown right">
           <div class="nav">
             <button type="button">Archive</button>
@@ -73,7 +73,8 @@
       <label><input type="radio" name="tab"> Inventory</label>
       <label><input type="radio" name="tab"> Activity</label>
 
-      <div class="grid gap-gap pt-gap xl:grid-cols-5">
+      <div class="pt-gap">
+      <div class="grid gap-gap xl:grid-cols-5">
         <div class="min-w-0 space-y-gap xl:col-span-2">
           <div class="card">
             <div class="relative">
@@ -134,7 +135,7 @@
                 <table class="table hover">
                   <thead>
                     <tr>
-                      <th>Variant</th>
+                      <th class="min-w-52">Variant</th>
                       <th class="text-right">Stock</th>
                       <th class="text-right">Retail</th>
                       <th class="text-right">Wholesale</th>
@@ -199,10 +200,60 @@
           </section>
         </div>
       </div>
+      </div>
 
-      <div class="pt-gap"><p class="muted">Variants are not built yet.</p></div>
-      <div class="pt-gap"><p class="muted">Inventory is not built yet.</p></div>
-      <div class="pt-gap"><p class="muted">Activity is not built yet.</p></div>
+      <div class="space-y-gap pt-gap">
+        <div class="flex flex-wrap items-end justify-between gap-3">
+          <div><h2 class="font-semibold">Variants</h2><p class="text-sm muted">Search the family, then open a row to edit its commercial details.</p></div>
+          <button class="btn primary sm"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="#plus"/></svg> Add variant</button>
+        </div>
+        <div class="alert success"><p>All six variants are synced with the catalogue.</p></div>
+        <div class="card divided">
+          <header>
+            <hgroup><h3>Catalogue</h3><p>Filter by SKU or variant name.</p></hgroup>
+            <label class="input sm w-full sm:w-64"><svg class="size-4" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><use href="#search"/></svg><input type="search" aria-label="Search variants" placeholder="Search variants"></label>
+          </header>
+          <div class="overflow-x-auto" tabindex="0">
+            <table class="table hover">
+              <thead><tr><th class="min-w-52">Variant</th><th>SKU</th><th>Status</th><th class="text-right">Retail</th></tr></thead>
+              <tbody>
+                <tr><th scope="row">Ocean / 3-piece set</th><td class="muted">SKU-SKIN-4006-OCN</td><td><span class="badge success sm">Active</span></td><td class="text-right tabular-nums">£389</td></tr>
+                <tr><th scope="row">Cloud / Gift set</th><td class="muted">SKU-SKIN-4006-CLD</td><td><span class="badge warning sm">Low stock</span></td><td class="text-right tabular-nums">£429</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-gap">
+      <div class="grid gap-gap lg:grid-cols-5">
+        <form class="card divided lg:col-span-3" action="#" onsubmit="event.preventDefault()">
+          <header><hgroup><h2>Adjust inventory</h2><p>Record a stock movement against one variant.</p></hgroup></header>
+          <div class="grid gap-4 sm:grid-cols-2">
+            <div class="field sm:col-span-2"><label for="inventory-variant">Variant</label><select class="input w-full" id="inventory-variant"><option>Ocean / 3-piece set</option><option>Cloud / Gift set</option></select></div>
+            <div class="field"><label for="inventory-change">Quantity change</label><input class="input w-full" id="inventory-change" type="number" value="12"><p class="hint">Use a negative number to remove stock.</p></div>
+            <div class="field"><label for="inventory-reason">Reason</label><select class="input w-full" id="inventory-reason"><option>Delivery received</option><option>Stock correction</option><option>Damaged stock</option></select></div>
+          </div>
+          <footer class="justify-end"><button class="btn primary" type="submit">Record movement</button></footer>
+        </form>
+        <div class="card lg:col-span-2">
+          <header><h2>Stock health</h2><p>120 units across six variants.</p></header>
+          <div class="field"><label for="healthy-stock" class="flex justify-between">Healthy stock <output for="healthy-stock">68%</output></label><progress class="progress success" id="healthy-stock" value="68" max="100"></progress></div>
+          <div class="alert warning"><p>Four variants are below the 20-unit threshold.</p></div>
+        </div>
+      </div>
+      </div>
+
+      <div class="pt-gap">
+        <div class="card divided max-w-2xl">
+          <header><hgroup><h2>Activity</h2><p>Recent changes to this product family.</p></hgroup></header>
+          <ol class="timeline">
+            <li class="success"><span class="avatar blue">SR</span><p><b>Steve Rayner</b> received 24 Ocean sets into stock</p><time datetime="2026-09-15T09:30">Today, 09:30</time></li>
+            <li><span class="avatar green">AO</span><p><b>Ada Okafor</b> changed the wholesale price of Cloud / Gift set to £278</p><time datetime="2026-09-14T16:05">Yesterday, 16:05</time></li>
+            <li class="warning"><p><b>Inventory monitor</b> marked four variants as low stock</p><time datetime="2026-09-13T08:00">13 September, 08:00</time></li>
+          </ol>
+        </div>
+      </div>
     </div>
   </main>
 </div>

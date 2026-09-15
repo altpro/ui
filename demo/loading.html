@@ -93,15 +93,15 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Loading button</h2>
-    <p class="text-sm muted"><code>loading</code> on a <code>.btn</code> draws a spinner before the label and ignores clicks. Set <code>aria-busy="true"</code> with it, and change the label to what is happening. The button keeps its colour and size, so nothing shifts around it. If the button holds an icon, drop it while loading, or two symbols sit in front of the label.</p>
+    <p class="text-sm muted"><code>loading</code> on a <code>.btn</code> draws a spinner before the label. Add native <code>disabled</code> to stop pointer and keyboard activation, set <code>aria-busy="true"</code>, and change the label to what is happening. The button keeps its colour and size, so nothing shifts around it. If the button holds an icon, drop it while loading, or two symbols sit in front of the label.</p>
     <div class="flex flex-wrap items-center gap-3">
-      <button class="btn primary loading" aria-busy="true">Saving</button>
-      <button class="btn loading" aria-busy="true">Loading</button>
-      <button class="btn outline danger loading" aria-busy="true">Deleting</button>
-      <button class="btn ghost sm loading" aria-busy="true">Refreshing</button>
-      <button class="btn lg loading" aria-busy="true">Uploading</button>
+      <button class="btn primary loading" disabled aria-busy="true">Saving</button>
+      <button class="btn loading" disabled aria-busy="true">Loading</button>
+      <button class="btn outlined danger loading" disabled aria-busy="true">Deleting</button>
+      <button class="btn ghost sm loading" disabled aria-busy="true">Refreshing</button>
+      <button class="btn lg loading" disabled aria-busy="true">Uploading</button>
     </div>
-<pre>&lt;button class="btn primary loading" aria-busy="true"&gt;Saving&lt;/button&gt;</pre>
+<pre>&lt;button class="btn primary loading" disabled aria-busy="true"&gt;Saving&lt;/button&gt;</pre>
   </section>
 
   <section class="space-y-3">

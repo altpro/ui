@@ -14,47 +14,47 @@
 <main>
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Button</h1>
-    <p class="muted"><code>.btn</code> plus any of: a colour, <code>outline</code> or <code>ghost</code>, and a size.</p>
+    <p class="muted"><code>.btn</code> plus any of: a colour, <code>outlined</code> or <code>ghost</code>, and a size.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Colours × styles</h2>
     <div class="grid grid-cols-[auto_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 text-sm">
-      <span></span><span class="muted">solid</span><span class="muted">outline</span><span class="muted">ghost</span>
+      <span></span><span class="muted">solid</span><span class="muted">outlined</span><span class="muted">ghost</span>
 
       <code>(none)</code>
       <div><button class="btn">Button</button></div>
-      <div><button class="btn outline">Button</button></div>
+      <div><button class="btn outlined">Button</button></div>
       <div><button class="btn ghost">Button</button></div>
 
       <code>primary</code>
       <div><button class="btn primary">Button</button></div>
-      <div><button class="btn outline primary">Button</button></div>
+      <div><button class="btn outlined primary">Button</button></div>
       <div><button class="btn ghost primary">Button</button></div>
 
       <code>secondary</code>
       <div><button class="btn secondary">Button</button></div>
-      <div><button class="btn outline secondary">Button</button></div>
+      <div><button class="btn outlined secondary">Button</button></div>
       <div><button class="btn ghost secondary">Button</button></div>
 
       <code>info</code>
       <div><button class="btn info">Button</button></div>
-      <div><button class="btn outline info">Button</button></div>
+      <div><button class="btn outlined info">Button</button></div>
       <div><button class="btn ghost info">Button</button></div>
 
       <code>success</code>
       <div><button class="btn success">Button</button></div>
-      <div><button class="btn outline success">Button</button></div>
+      <div><button class="btn outlined success">Button</button></div>
       <div><button class="btn ghost success">Button</button></div>
 
       <code>warning</code>
       <div><button class="btn warning">Button</button></div>
-      <div><button class="btn outline warning">Button</button></div>
+      <div><button class="btn outlined warning">Button</button></div>
       <div><button class="btn ghost warning">Button</button></div>
 
       <code>danger</code>
       <div><button class="btn danger">Button</button></div>
-      <div><button class="btn outline danger">Button</button></div>
+      <div><button class="btn outlined danger">Button</button></div>
       <div><button class="btn ghost danger">Button</button></div>
     </div>
     <p class="text-sm muted"><code>error</code> is an alias for <code>danger</code>.</p>
@@ -75,8 +75,8 @@
     <h2 class="text-xl font-semibold">States</h2>
     <div class="flex flex-wrap items-center gap-3">
       <button class="btn primary" disabled>disabled</button>
-      <button class="btn outline primary" disabled>disabled outline</button>
-      <a href="#" class="btn primary" aria-disabled="true">aria-disabled link</a>
+      <button class="btn outlined primary" disabled>disabled outlined</button>
+      <a class="btn primary" role="link" aria-disabled="true">aria-disabled link</a>
       <button class="btn primary">focus ring (Tab to it)</button>
     </div>
   </section>
@@ -89,7 +89,7 @@
         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
         New item
       </a>
-      <button class="btn outline">
+      <button class="btn outlined">
         Next
         <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
       </button>
@@ -114,15 +114,15 @@
     <div class="grid gap-4 md:grid-cols-3">
       <div class="light panel space-y-2">
         <p class="text-sm font-medium">.light</p>
-        <div class="flex flex-wrap gap-2"><button class="btn">Button</button><button class="btn primary">Primary</button><button class="btn outline danger">Danger</button></div>
+        <div class="flex flex-wrap gap-2"><button class="btn">Button</button><button class="btn primary">Primary</button><button class="btn outlined danger">Danger</button></div>
       </div>
       <div class="dark panel space-y-2">
         <p class="text-sm font-medium">.dark</p>
-        <div class="flex flex-wrap gap-2"><button class="btn">Button</button><button class="btn primary">Primary</button><button class="btn outline danger">Danger</button></div>
+        <div class="flex flex-wrap gap-2"><button class="btn">Button</button><button class="btn primary">Primary</button><button class="btn outlined danger">Danger</button></div>
       </div>
       <div class="inverse panel space-y-2">
         <p class="text-sm font-medium">.inverse</p>
-        <div class="flex flex-wrap gap-2"><button class="btn">Button</button><button class="btn primary">Primary</button><button class="btn outline danger">Danger</button></div>
+        <div class="flex flex-wrap gap-2"><button class="btn">Button</button><button class="btn primary">Primary</button><button class="btn outlined danger">Danger</button></div>
       </div>
     </div>
   </section>
@@ -133,8 +133,8 @@
 <pre>.btn {
   --btn-bg       /* fill */
   --btn-fg       /* text on fill */
-  --btn-accent   /* text + border for outline and ghost */
-  --btn-outline  /* outline border colour */
+  --btn-accent   /* text + border for outlined and ghost */
+  --btn-outline   /* outlined variant's border colour */
   --btn-hover    /* hover fill, derived from --btn-bg by default */
   --btn-radius   /* defaults to --radius */
   --btn-h --btn-px --btn-text

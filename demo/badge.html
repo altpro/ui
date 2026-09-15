@@ -14,52 +14,52 @@
 <main>
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Badge</h1>
-    <p class="muted"><code>.badge</code> plus any of: a colour, <code>outline</code> or <code>ghost</code>, and a size. Same modifier words as the button.</p>
+    <p class="muted"><code>.badge</code> plus any of: a colour, <code>outlined</code> or <code>ghost</code>, and a size. Same modifier words as the button.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Colours × styles</h2>
     <div class="grid grid-cols-[auto_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 text-sm">
-      <span></span><span class="muted">solid</span><span class="muted">outline</span><span class="muted">ghost</span>
+      <span></span><span class="muted">solid</span><span class="muted">outlined</span><span class="muted">ghost</span>
 
       <code>(none)</code>
       <div><button class="badge">Badge</button></div>
-      <div><button class="badge outline">Badge</button></div>
+      <div><button class="badge outlined">Badge</button></div>
       <div><button class="badge ghost">Badge</button></div>
 
       <code>primary</code>
       <div><button class="badge primary">Badge</button></div>
-      <div><button class="badge outline primary">Badge</button></div>
+      <div><button class="badge outlined primary">Badge</button></div>
       <div><button class="badge ghost primary">Badge</button></div>
 
       <code>secondary</code>
       <div><button class="badge secondary">Badge</button></div>
-      <div><button class="badge outline secondary">Badge</button></div>
+      <div><button class="badge outlined secondary">Badge</button></div>
       <div><button class="badge ghost secondary">Badge</button></div>
 
       <code>info</code>
       <div><button class="badge info">Badge</button></div>
-      <div><button class="badge outline info">Badge</button></div>
+      <div><button class="badge outlined info">Badge</button></div>
       <div><button class="badge ghost info">Badge</button></div>
 
       <code>success</code>
       <div><button class="badge success">Badge</button></div>
-      <div><button class="badge outline success">Badge</button></div>
+      <div><button class="badge outlined success">Badge</button></div>
       <div><button class="badge ghost success">Badge</button></div>
 
       <code>warning</code>
       <div><button class="badge warning">Badge</button></div>
-      <div><button class="badge outline warning">Badge</button></div>
+      <div><button class="badge outlined warning">Badge</button></div>
       <div><button class="badge ghost warning">Badge</button></div>
 
       <code>danger</code>
       <div><button class="badge danger">Badge</button></div>
-      <div><button class="badge outline danger">Badge</button></div>
+      <div><button class="badge outlined danger">Badge</button></div>
       <div><button class="badge ghost danger">Badge</button></div>
     </div>
     <p class="text-sm muted"><code>error</code> is an alias for <code>danger</code>. These are <code>&lt;button&gt;</code>s so you can see hover and focus; a <code>&lt;span&gt;</code> badge is static.</p>
 <pre>&lt;span class="badge success"&gt;Active&lt;/span&gt;
-&lt;span class="badge outline danger"&gt;Overdue&lt;/span&gt;</pre>
+&lt;span class="badge outlined danger"&gt;Overdue&lt;/span&gt;</pre>
   </section>
 
   <section class="space-y-3">
@@ -85,27 +85,27 @@
       <span class="badge rose">rose</span>
     </div>
     <div class="flex flex-wrap items-center gap-2">
-      <span class="badge outline red">red</span>
-      <span class="badge outline orange">orange</span>
-      <span class="badge outline amber">amber</span>
-      <span class="badge outline yellow">yellow</span>
-      <span class="badge outline lime">lime</span>
-      <span class="badge outline green">green</span>
-      <span class="badge outline emerald">emerald</span>
-      <span class="badge outline teal">teal</span>
-      <span class="badge outline cyan">cyan</span>
-      <span class="badge outline sky">sky</span>
-      <span class="badge outline blue">blue</span>
-      <span class="badge outline indigo">indigo</span>
-      <span class="badge outline violet">violet</span>
-      <span class="badge outline purple">purple</span>
-      <span class="badge outline fuchsia">fuchsia</span>
-      <span class="badge outline pink">pink</span>
-      <span class="badge outline rose">rose</span>
+      <span class="badge outlined red">red</span>
+      <span class="badge outlined orange">orange</span>
+      <span class="badge outlined amber">amber</span>
+      <span class="badge outlined yellow">yellow</span>
+      <span class="badge outlined lime">lime</span>
+      <span class="badge outlined green">green</span>
+      <span class="badge outlined emerald">emerald</span>
+      <span class="badge outlined teal">teal</span>
+      <span class="badge outlined cyan">cyan</span>
+      <span class="badge outlined sky">sky</span>
+      <span class="badge outlined blue">blue</span>
+      <span class="badge outlined indigo">indigo</span>
+      <span class="badge outlined violet">violet</span>
+      <span class="badge outlined purple">purple</span>
+      <span class="badge outlined fuchsia">fuchsia</span>
+      <span class="badge outlined pink">pink</span>
+      <span class="badge outlined rose">rose</span>
     </div>
     <p class="text-sm muted">A hue is a tint in light and a deep shade in dark. Text and outline colours are derived from the fill, so every hue stays above 4.5:1 in both schemes and in every style.</p>
 <pre>&lt;span class="badge teal"&gt;Design&lt;/span&gt;
-&lt;span class="badge outline violet sm"&gt;Beta&lt;/span&gt;</pre>
+&lt;span class="badge outlined violet sm"&gt;Beta&lt;/span&gt;</pre>
   </section>
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Sizes</h2>
@@ -123,13 +123,13 @@
         <svg class="size-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><path d="M5 12l5 5L20 7"/></svg>
         Verified
       </span>
-      <span class="badge outline">
+      <span class="badge outlined">
         <svg class="size-3" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="6"/></svg>
         Draft
       </span>
       <p>Release notes <span class="badge info">v2.1</span> are out.</p>
       <a href="#" class="badge primary">Link badge</a>
-      <button class="badge outline" popovertarget="status">Status ▾</button>
+      <button class="badge outlined" popovertarget="status">Status ▾</button>
       <div id="status" popover class="rounded-md border border-border bg-background p-2 shadow"><button class="btn ghost sm">Set active</button></div>
     </div>
     <p class="text-sm muted">Icons are <code>size-3</code>. A link or button badge gets hover, a focus ring and a pointer. Keep it at the default size or larger so it meets the 24px target minimum.</p>
@@ -139,16 +139,16 @@
     <h2 class="text-xl font-semibold">Joined</h2>
     <div class="flex flex-wrap items-center gap-4">
       <div class="join"><span class="badge">Status</span><span class="badge success">Active</span></div>
-      <div class="join"><span class="badge outline">Env</span><span class="badge outline warning">Staging</span></div>
+      <div class="join"><span class="badge outlined">Env</span><span class="badge outlined warning">Staging</span></div>
     </div>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Scheme regions</h2>
     <div class="grid gap-4 md:grid-cols-3">
-      <div class="light panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outline danger">C</span></div>
-      <div class="dark panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outline danger">C</span></div>
-      <div class="inverse panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outline danger">C</span></div>
+      <div class="light panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outlined danger">C</span></div>
+      <div class="dark panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outlined danger">C</span></div>
+      <div class="inverse panel flex flex-wrap gap-2"><span class="badge">A</span><span class="badge primary">B</span><span class="badge outlined danger">C</span></div>
     </div>
   </section>
 </main>

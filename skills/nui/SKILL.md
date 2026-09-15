@@ -26,7 +26,7 @@ One base class, then bare modifier words in any order. No prefixes.
 
 ```html
 <button class="btn primary lg">Save</button>
-<a href="/x" class="btn outline danger sm">Delete</a>
+<a href="/x" class="btn outlined danger sm">Delete</a>
 <button class="btn primary w-full rounded-none">utilities still win</button>
 ```
 
@@ -39,10 +39,10 @@ Works on `<button>`, `<a>`, `<input type="submit">`.
 | Kind | Classes |
 |------|---------|
 | Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias of `danger`). No colour = neutral grey. |
-| Style | `outline` (transparent fill, coloured border and text), `ghost` (transparent, coloured text, no border) |
+| Style | `outlined` (transparent fill, coloured border and text), `ghost` (transparent, coloured text, no border) |
 | Size | `xs` `sm` `lg` `xl`. No size = default (2.25rem tall). |
-| Toggle | `<label class="btn outline"><input type="checkbox"> Bold</label>`. The input is hidden over the label and the label takes the solid fill while checked. See the segmented control below. |
-| State | `disabled` attribute, or `aria-disabled="true"` on links. `loading` draws a spinner before the label and ignores clicks; pair it with `aria-busy="true"` and a label saying what is happening (`Saving`). Focus ring appears on keyboard focus only. |
+| Toggle | `<label class="btn outlined"><input type="checkbox"> Bold</label>`. The input is hidden over the label and the label takes the solid fill while checked. See the segmented control below. |
+| State | Use the native `disabled` attribute on buttons. A disabled link has no `href` and uses `role="link"` with `aria-disabled="true"`; if an app must retain its `href`, the app must also cancel activation. `loading` draws a spinner; pair it with `disabled`, `aria-busy="true"`, and a label saying what is happening (`Saving`). Focus rings appear on keyboard focus only. |
 
 Icons: put an inline SVG inside the button, sized with `size-4`. The button has `gap-2` built in.
 
@@ -81,13 +81,13 @@ No class. A `.join` of `label.btn`, each wrapping a radio with the same `name`. 
 
 ```html
 <div class="join" role="radiogroup" aria-label="Sort">
-  <label class="btn outline"><input type="radio" name="sort" checked> Newest</label>
-  <label class="btn outline"><input type="radio" name="sort"> Oldest</label>
-  <label class="btn outline"><input type="radio" name="sort"> Top</label>
+  <label class="btn outlined"><input type="radio" name="sort" checked> Newest</label>
+  <label class="btn outlined"><input type="radio" name="sort"> Oldest</label>
+  <label class="btn outlined"><input type="radio" name="sort"> Top</label>
 </div>
 ```
 
-- Members are `outline` or `ghost`, in any colour and size, so the checked one has somewhere to go. `outline primary` fills primary when checked; plain `outline` fills muted.
+- Members are `outlined` or `ghost`, in any colour and size, so the checked one has somewhere to go. `outlined primary` fills primary when checked; plain `outlined` fills muted.
 - The group is `role="radiogroup"` with an `aria-label`, or the `.join` sits in a `<fieldset class="field">` with a `<legend>`.
 - Checkboxes instead of radios make a multi-select group (bold, italic, underline). Then it is `role="group"`.
 - An icon-only member puts `aria-label` on the input, not the label.
@@ -185,12 +185,12 @@ Small label for status, counts and tags. Same modifier words as the button. A `<
 |------|---------|
 | Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias). No colour = neutral grey. |
 | Hue | Any Tailwind hue name, the same set the avatar takes: `red` `orange` `amber` `yellow` `lime` `green` `emerald` `teal` `cyan` `sky` `blue` `indigo` `violet` `purple` `fuchsia` `pink` `rose`. |
-| Style | `outline`, `ghost` |
+| Style | `outlined`, `ghost` |
 | Size | `sm` `lg`. No size = default (1.5rem tall, 24px, the minimum for a link or button badge). |
 
 ```html
 <span class="badge success">Active</span>
-<span class="badge outline danger sm">Overdue</span>
+<span class="badge outlined danger sm">Overdue</span>
 ```
 
 Icons inside a badge are `size-3`. Badges can sit inside `.join`.
@@ -309,14 +309,14 @@ A panel anchored to the button that opens it. Native `popover` plus CSS anchor p
 - Form: make the popover element a `<form>` (`<form id="x" popover class="dropdown w-56">`). Radios or a couple of inputs plus a `btn primary sm w-full`.
 - Help: an icon button with `aria-label` opening a `w-72 text-sm` panel of prose. More room than a tooltip.
 - If no placement fits, the panel keeps the default side and scrolls inside rather than leaving the screen.
-- Popovers render in the top layer, outside any `.light` `.dark` `.inverse` region. Put the region class on the dropdown itself when the trigger is inside one.
+- Popovers render in the top layer visually, but remain in their DOM position and inherit the scheme region around them. If a popover is mounted elsewhere in the DOM, put the appropriate `light`, `dark`, or `inverse` class on it.
 - Add `autofocus` to the first item to move keyboard focus into the panel on open. Without it, Tab from the trigger enters the panel.
 
 Custom properties: `--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius --dropdown-shadow`.
 
 ## Tooltip: `data-tooltip`
 
-One line of text in a bubble above an element, on hover and keyboard focus. An attribute, not a class, and no JavaScript. Works on any element; for something that is not focusable, add `tabindex="0"` so keyboard users can reach it.
+One line of supplementary text in a bubble above an element, on hover and keyboard focus. An attribute, not a class, and no JavaScript. Works on any element; for something that is not focusable, add `tabindex="0"` so keyboard users can reach it.
 
 ```html
 <button class="btn" data-tooltip="Saves and closes the editor">Save</button>
@@ -324,8 +324,9 @@ One line of text in a bubble above an element, on hover and keyboard focus. An a
 ```
 
 - Screen readers do not read the tooltip. An icon-only control still needs `aria-label`; use the same words in both.
+- Keep the tooltip redundant with a visible label or accessible name; never put essential instructions in it.
 - One line, up to `20rem`, then an ellipsis. Anything longer, or anything with markup, is a `.dropdown`.
-- Always above and centred. It does not flip or slide, and an ancestor with `overflow` clips it. Keep tooltips off the top edge of the page and out of scroll containers.
+- Always above and centred. It does not flip, slide, or respond to Escape because CSS has no keyboard event handling. Use it only where the reserved space above means it cannot cover other content. Otherwise use a `.dropdown`, which has native Escape dismissal and viewport-aware placement.
 - The bubble inverts the region's colours (page foreground as fill), so it is correct inside `.light` `.dark` `.inverse` without extra classes.
 
 Custom properties: `--tooltip-bg --tooltip-fg --tooltip-radius --tooltip-h --tooltip-px --tooltip-text --tooltip-gap --tooltip-tail`.
@@ -550,6 +551,7 @@ Panels, switched in place:
 | Panels | Any elements after the labels, in the same order: the first non-label child belongs to the first label. Hidden until their radio is checked. Up to eight tabs. |
 
 - One radio `name` per group. Arrow keys move between tabs like a tablist.
+- Keep `display` utilities such as `grid` and `flex` on a child inside each panel. A display utility on the direct panel overrides its hidden state because Tailwind utilities win over component styles.
 - Tabs wrap when the row is too narrow. Add `overflow-x-auto flex-nowrap` for a scrolling row instead.
 - The active bar is `--tabs-active`, the primary colour by default. Text stays the page foreground.
 
@@ -612,21 +614,21 @@ No class. A `<nav aria-label="Pagination">` of `.btn` links, in a `.join` for a 
 
 ```html
 <nav class="join" aria-label="Pagination">
-  <a href="?page=1" class="btn outline" aria-label="Previous page" aria-disabled="true"><svg class="size-4" aria-hidden="true">…</svg></a>
+  <a class="btn outlined" role="link" aria-label="Previous page" aria-disabled="true"><svg class="size-4" aria-hidden="true">…</svg></a>
   <a href="?page=1" class="btn primary" aria-current="page">1</a>
-  <a href="?page=2" class="btn outline">2</a>
-  <a href="?page=3" class="btn outline">3</a>
-  <span class="btn outline pointer-events-none">…</span>
-  <a href="?page=12" class="btn outline">12</a>
-  <a href="?page=2" class="btn outline" aria-label="Next page"><svg class="size-4" aria-hidden="true">…</svg></a>
+  <a href="?page=2" class="btn outlined">2</a>
+  <a href="?page=3" class="btn outlined">3</a>
+  <span class="btn outlined pointer-events-none">…</span>
+  <a href="?page=12" class="btn outlined">12</a>
+  <a href="?page=2" class="btn outlined" aria-label="Next page"><svg class="size-4" aria-hidden="true">…</svg></a>
 </nav>
 ```
 
-- Current page: `aria-current="page"` and the `primary` colour. The other pages are `outline` (joined) or `ghost` (spaced).
-- Arrows are icon-only, so each link has an `aria-label`. On the first or last page the arrow gets `aria-disabled="true"`; a script-driven `<button>` uses `disabled`.
-- Ellipsis: a `<span class="btn outline pointer-events-none">…</span>`, so it lines up but is not a control.
-- Previous and next only: two `btn outline` links in a `flex justify-between`, with words instead of numbers.
-- Table footer: a `div` (not a `nav`) holding the row count, a `select class="input sm"` for page size, a `p aria-live="polite"` saying "Page 2 of 12", and a `join` of `btn outline sm` first, previous, next and last arrows.
+- Current page: `aria-current="page"` and the `primary` colour. The other pages are `outlined` (joined) or `ghost` (spaced).
+- Arrows are icon-only, so each link has an `aria-label`. On the first or last page remove the disabled arrow's `href`, then add `role="link"` and `aria-disabled="true"`; a script-driven `<button>` uses `disabled`.
+- Ellipsis: a `<span class="btn outlined pointer-events-none">…</span>`, so it lines up but is not a control.
+- Previous and next only: two `btn outlined` links in a `flex justify-between`, with words instead of numbers.
+- Table footer: a `div` (not a `nav`) holding the row count, a `select class="input sm"` for page size, a `p aria-live="polite"` saying "Page 2 of 12", and a `join` of `btn outlined sm` first, previous, next and last arrows.
 
 ## Loading: `.skeleton` `.spinner`
 
@@ -647,7 +649,7 @@ Spinner: a turning ring in `currentColor`, so `text-primary` colours it. It says
 ```html
 <span class="spinner" role="status"><span class="sr-only">Loading</span></span>
 <p class="flex items-center gap-2" role="status"><span class="spinner sm"></span>Saving changes</p>
-<button class="btn primary loading" aria-busy="true">Saving</button>
+<button class="btn primary loading" disabled aria-busy="true">Saving</button>
 ```
 
 | Kind | Classes |

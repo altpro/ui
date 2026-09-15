@@ -1,10 +1,10 @@
 /* Button.
-   <button class="btn primary lg">   <a class="btn outline danger sm">
-   <label class="btn outline"><input type="radio" name="view"> List</label>
+   <button class="btn primary lg">   <a class="btn outlined danger sm">
+   <label class="btn outlined"><input type="radio" name="view"> List</label>
    A label holding a radio or checkbox is a toggle: the input is hidden over
    the label and the label takes the solid look while it is checked. A .join
    of them is a segmented control.
-   Colour variants set --btn-* vars only. `.outline` and `.ghost` set real
+   Colour variants set --btn-* vars only. `.outlined` and `.ghost` set real
    properties from those vars, so class order never matters. Sizes set
    the height/padding/text vars. Layered so Tailwind utilities win. */
 @layer components {
@@ -46,7 +46,7 @@
       opacity: 0.5;
       pointer-events: none;
     }
-    /* loading: a spinner in front of the label and no clicks; add aria-busy="true" */
+    /* loading: a spinner in front of the label; also use disabled and aria-busy="true" */
     &.loading {
       pointer-events: none;
       &::before {
@@ -90,7 +90,7 @@
     &.warning {
       --btn-bg: var(--color-warning);
       --btn-fg: var(--color-warning-foreground);
-      /* amber is too light to read as text on a light page: darken it for outline/ghost */
+      /* amber is too light to read as text on a light page: darken it for outlined/ghost */
       --btn-accent: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
       --btn-outline: var(--btn-accent);
     }
@@ -102,14 +102,14 @@
     }
 
     /* style modifiers */
-    &.outline, &.ghost {
+    &.outlined, &.ghost {
       background: transparent;
       color: var(--btn-accent);
       &:hover {
         background: color-mix(in oklab, var(--btn-accent) 10%, transparent);
       }
     }
-    &.outline {
+    &.outlined {
       border-color: var(--btn-outline);
       --join-divider: var(--btn-outline);
     }
@@ -125,7 +125,7 @@
         cursor: pointer;
       }
     }
-    /* checked wins the transparent fill of .outline and .ghost, so it sits after them */
+    /* checked wins the transparent fill of .outlined and .ghost, so it sits after them */
     &:has(:checked) {
       background: var(--btn-bg);
       color: var(--btn-fg);
@@ -133,7 +133,7 @@
         background: var(--btn-hover);
       }
     }
-    /* after .outline so the ring colour wins the border on every variant */
+    /* after .outlined so the ring colour wins the border on every variant */
     &:is(:focus-visible, :has(:focus-visible)) {
       border-color: var(--color-ring);
       outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);

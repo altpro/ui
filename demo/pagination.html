@@ -19,26 +19,26 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Joined</h2>
-    <p class="text-sm muted">One bar of <code>outline</code> buttons in a <code>.join</code>. Arrow links are icon-only, so they carry an <code>aria-label</code>. Ellipsis is a plain <code>span</code> with <code>pointer-events-none</code>.</p>
+    <p class="text-sm muted">One bar of <code>outlined</code> buttons in a <code>.join</code>. Arrow links are icon-only, so they carry an <code>aria-label</code>. Ellipsis is a plain <code>span</code> with <code>pointer-events-none</code>.</p>
     <nav class="join" aria-label="Pagination">
-      <a href="#" class="btn outline" aria-label="Previous page" aria-disabled="true"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a>
+      <a class="btn outlined" role="link" aria-label="Previous page" aria-disabled="true"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a>
       <a href="#" class="btn primary" aria-current="page">1</a>
-      <a href="#" class="btn outline">2</a>
-      <a href="#" class="btn outline">3</a>
-      <span class="btn outline pointer-events-none">…</span>
-      <a href="#" class="btn outline">12</a>
-      <a href="#" class="btn outline" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+      <a href="#" class="btn outlined">2</a>
+      <a href="#" class="btn outlined">3</a>
+      <span class="btn outlined pointer-events-none">…</span>
+      <a href="#" class="btn outlined">12</a>
+      <a href="#" class="btn outlined" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
     </nav>
 <pre>&lt;nav class="join" aria-label="Pagination"&gt;
-  &lt;a href="?page=1" class="btn outline" aria-label="Previous page" aria-disabled="true"&gt;
+  &lt;a class="btn outlined" role="link" aria-label="Previous page" aria-disabled="true"&gt;
     &lt;svg class="size-4" aria-hidden="true"&gt;…&lt;/svg&gt;
   &lt;/a&gt;
   &lt;a href="?page=1" class="btn primary" aria-current="page"&gt;1&lt;/a&gt;
-  &lt;a href="?page=2" class="btn outline"&gt;2&lt;/a&gt;
-  &lt;a href="?page=3" class="btn outline"&gt;3&lt;/a&gt;
-  &lt;span class="btn outline pointer-events-none"&gt;…&lt;/span&gt;
-  &lt;a href="?page=12" class="btn outline"&gt;12&lt;/a&gt;
-  &lt;a href="?page=2" class="btn outline" aria-label="Next page"&gt;
+  &lt;a href="?page=2" class="btn outlined"&gt;2&lt;/a&gt;
+  &lt;a href="?page=3" class="btn outlined"&gt;3&lt;/a&gt;
+  &lt;span class="btn outlined pointer-events-none"&gt;…&lt;/span&gt;
+  &lt;a href="?page=12" class="btn outlined"&gt;12&lt;/a&gt;
+  &lt;a href="?page=2" class="btn outlined" aria-label="Next page"&gt;
     &lt;svg class="size-4" aria-hidden="true"&gt;…&lt;/svg&gt;
   &lt;/a&gt;
 &lt;/nav&gt;</pre>
@@ -70,8 +70,8 @@
     <h2 class="text-xl font-semibold">Previous and next only</h2>
     <p class="text-sm muted">For a feed or a blog where the page count does not matter. Labels instead of numbers, <code>justify-between</code> pushes them to the edges.</p>
     <nav class="flex justify-between" aria-label="Pagination">
-      <a href="#" class="btn outline"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Newer posts</a>
-      <a href="#" class="btn outline">Older posts <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+      <a href="#" class="btn outlined"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg> Newer posts</a>
+      <a href="#" class="btn outlined">Older posts <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
     </nav>
   </section>
 
@@ -85,10 +85,10 @@
       </label>
       <p aria-live="polite">Page 2 of 12</p>
       <nav class="join" aria-label="Pagination">
-        <a href="#" class="btn outline sm" aria-label="First page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg></a>
-        <a href="#" class="btn outline sm" aria-label="Previous page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a>
-        <a href="#" class="btn outline sm" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
-        <a href="#" class="btn outline sm" aria-label="Last page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg></a>
+        <a href="#" class="btn outlined sm" aria-label="First page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m11 17-5-5 5-5"/><path d="m18 17-5-5 5-5"/></svg></a>
+        <a href="#" class="btn outlined sm" aria-label="Previous page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></a>
+        <a href="#" class="btn outlined sm" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></a>
+        <a href="#" class="btn outlined sm" aria-label="Last page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/></svg></a>
       </nav>
     </div>
 <pre>&lt;div class="flex flex-wrap items-center gap-4 text-sm"&gt;
@@ -98,10 +98,10 @@
   &lt;/label&gt;
   &lt;p aria-live="polite"&gt;Page 2 of 12&lt;/p&gt;
   &lt;nav class="join" aria-label="Pagination"&gt;
-    &lt;a href="?page=1" class="btn outline sm" aria-label="First page"&gt;…&lt;/a&gt;
-    &lt;a href="?page=1" class="btn outline sm" aria-label="Previous page"&gt;…&lt;/a&gt;
-    &lt;a href="?page=3" class="btn outline sm" aria-label="Next page"&gt;…&lt;/a&gt;
-    &lt;a href="?page=12" class="btn outline sm" aria-label="Last page"&gt;…&lt;/a&gt;
+    &lt;a href="?page=1" class="btn outlined sm" aria-label="First page"&gt;…&lt;/a&gt;
+    &lt;a href="?page=1" class="btn outlined sm" aria-label="Previous page"&gt;…&lt;/a&gt;
+    &lt;a href="?page=3" class="btn outlined sm" aria-label="Next page"&gt;…&lt;/a&gt;
+    &lt;a href="?page=12" class="btn outlined sm" aria-label="Last page"&gt;…&lt;/a&gt;
   &lt;/nav&gt;
 &lt;/div&gt;</pre>
   </section>
@@ -110,11 +110,11 @@
     <h2 class="text-xl font-semibold">Buttons instead of links</h2>
     <p class="text-sm muted">When a script fetches the page in place, use <code>&lt;button type="button"&gt;</code> and the real <code>disabled</code> attribute. Same classes. Keep the <code>nav</code> so the landmark survives.</p>
     <nav class="join" aria-label="Pagination">
-      <button type="button" class="btn outline" aria-label="Previous page" disabled><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
+      <button type="button" class="btn outlined" aria-label="Previous page" disabled><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6"/></svg></button>
       <button type="button" class="btn primary" aria-current="page">1</button>
-      <button type="button" class="btn outline">2</button>
-      <button type="button" class="btn outline">3</button>
-      <button type="button" class="btn outline" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
+      <button type="button" class="btn outlined">2</button>
+      <button type="button" class="btn outlined">3</button>
+      <button type="button" class="btn outlined" aria-label="Next page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6"/></svg></button>
     </nav>
   </section>
 
@@ -123,15 +123,15 @@
     <div class="grid gap-4 md:grid-cols-3">
       <div class="light panel space-y-2">
         <p class="text-sm font-medium">.light</p>
-        <nav class="join" aria-label="Pagination"><a href="#" class="btn outline sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outline sm">3</a></nav>
+        <nav class="join" aria-label="Pagination"><a href="#" class="btn outlined sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outlined sm">3</a></nav>
       </div>
       <div class="dark panel space-y-2">
         <p class="text-sm font-medium">.dark</p>
-        <nav class="join" aria-label="Pagination"><a href="#" class="btn outline sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outline sm">3</a></nav>
+        <nav class="join" aria-label="Pagination"><a href="#" class="btn outlined sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outlined sm">3</a></nav>
       </div>
       <div class="inverse panel space-y-2">
         <p class="text-sm font-medium">.inverse</p>
-        <nav class="join" aria-label="Pagination"><a href="#" class="btn outline sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outline sm">3</a></nav>
+        <nav class="join" aria-label="Pagination"><a href="#" class="btn outlined sm">1</a><a href="#" class="btn primary sm" aria-current="page">2</a><a href="#" class="btn outlined sm">3</a></nav>
       </div>
     </div>
   </section>
