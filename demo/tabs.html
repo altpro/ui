@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Tabs</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Tabs</h1>
+    <p class="text-muted-foreground"><code>.tabs</code> on a <code>nav</code> of links, one page per tab, or on a <code>div</code> of <code>label</code>s with radios that switch panels below. No JavaScript. The active bar is <code>--tabs-active</code>, the primary colour by default.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Links</h2>
+    <nav class="tabs" aria-label="Repository">
+      <a href="#" aria-current="page">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 18 6-6-6-6"/><path d="m8 6-6 6 6 6"/></svg>
+        Code
+      </a>
+      <a href="#pulls">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="18" cy="18" r="3"/><circle cx="6" cy="6" r="3"/><path d="M13 6h3a2 2 0 0 1 2 2v7"/><line x1="6" x2="6" y1="9" y2="21"/></svg>
+        Pull requests <span class="badge">1</span>
+      </a>
+      <a href="#agents">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+        Agents
+      </a>
+      <a href="#actions">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="10 8 16 12 10 16 10 8"/></svg>
+        Actions
+      </a>
+      <a href="#security">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/></svg>
+        Security and quality
+      </a>
+      <a href="#insights">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg>
+        Insights
+      </a>
+    </nav>
+<pre>&lt;nav class="tabs" aria-label="Repository"&gt;
+  &lt;a href="/code" aria-current="page"&gt;&lt;svg class="size-4" aria-hidden="true"&gt;…&lt;/svg&gt; Code&lt;/a&gt;
+  &lt;a href="/pulls"&gt;Pull requests &lt;span class="badge"&gt;1&lt;/span&gt;&lt;/a&gt;
+&lt;/nav&gt;</pre>
+    <p class="text-sm text-muted-foreground"><code>aria-current="page"</code> marks the current tab. An icon before the text and a <code>.badge</code> count after it are optional.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Panels</h2>
+    <div class="tabs">
+      <label><input type="radio" name="plan" checked> Overview</label>
+      <label><input type="radio" name="plan"> Pricing <span class="badge">3</span></label>
+      <label><input type="radio" name="plan"> FAQ</label>
+      <div class="py-4 text-sm">
+        <p>The overview panel. Click a tab or focus one and press the arrow keys; the panels swap in place.</p>
+      </div>
+      <div class="py-4 text-sm">
+        <p>Three plans. The count in the tab is a <code>.badge</code>.</p>
+      </div>
+      <p class="py-4 text-sm">A panel can be any element, as long as it comes after the labels.</p>
+    </div>
+<pre>&lt;div class="tabs"&gt;
+  &lt;label&gt;&lt;input type="radio" name="plan" checked&gt; Overview&lt;/label&gt;
+  &lt;label&gt;&lt;input type="radio" name="plan"&gt; Pricing&lt;/label&gt;
+  &lt;div&gt;Overview panel&lt;/div&gt;
+  &lt;div&gt;Pricing panel&lt;/div&gt;
+&lt;/div&gt;</pre>
+    <p class="text-sm text-muted-foreground">Radios in labels, one <code>name</code> per group, <code>checked</code> on the starting tab. Panels follow the labels in the same order: the first non-label child belongs to the first label. Up to eight tabs.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Active colour</h2>
+    <nav class="tabs [--tabs-active:var(--color-warning)]" aria-label="Example">
+      <a href="#" aria-current="page">Warning bar</a>
+      <a href="#b">Second</a>
+      <a href="#c">Third</a>
+    </nav>
+<pre>&lt;nav class="tabs [--tabs-active:var(--color-warning)]"&gt;</pre>
+    <p class="text-sm text-muted-foreground">Only the bar changes colour. The text stays the page foreground so it reads on any bar.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-gap md:grid-cols-3">
+      <div class="light panel"><nav class="tabs" aria-label="Light"><a href="#" aria-current="page">Light</a><a href="#l2">Second</a></nav></div>
+      <div class="dark panel"><nav class="tabs" aria-label="Dark"><a href="#" aria-current="page">Dark</a><a href="#d2">Second</a></nav></div>
+      <div class="inverse panel"><nav class="tabs" aria-label="Inverse"><a href="#" aria-current="page">Inverse</a><a href="#i2">Second</a></nav></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

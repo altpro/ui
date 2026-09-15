@@ -93,6 +93,23 @@
       border-end-end-radius: var(--card-inner);
     }
 
+    /* a table, or a scroll wrapper holding one, runs edge to edge; its
+       cell padding is the inset. The last row takes the bottom corners
+       so a striped or hovered row does not poke out of the border. */
+    > :is(.table, :has(> .table)) {
+      width: calc(100% + 2 * var(--card-p));
+      margin-inline: calc(-1 * var(--card-p));
+      --table-px: var(--card-p);
+    }
+    > :is(.table, :has(> .table)):first-child {
+      margin-block-start: calc(-1 * var(--card-p));
+    }
+    > :is(.table, :has(> .table)):last-child {
+      margin-block-end: calc(-1 * var(--card-p));
+      tr:last-child > :first-child { border-end-start-radius: var(--card-inner); }
+      tr:last-child > :last-child { border-end-end-radius: var(--card-inner); }
+    }
+
     /* lines between the sections, spanning the full width */
     &.divided > :is(header, footer) {
       margin-inline: calc(-1 * var(--card-p));

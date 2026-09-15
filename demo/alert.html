@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Alert</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Alert</h1>
+    <p class="text-muted-foreground"><code>.alert</code> on a <code>div</code>. An optional leading <code>svg</code> is the icon, a heading is the title, a <code>p</code> is the body. Colour words match the button. The text stays the page foreground so it reads on the tint in both schemes.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Colours</h2>
+    <div class="grid gap-gap md:grid-cols-2">
+      <div class="alert">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <h4>Neutral</h4>
+        <p>No colour word. A bordered box on the card colour.</p>
+      </div>
+      <div class="alert primary">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+        <h4>Primary</h4>
+        <p>A brand-coloured note.</p>
+      </div>
+      <div class="alert info">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+        <h4>Info</h4>
+        <p>Your trial ends in nine days.</p>
+      </div>
+      <div class="alert success">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <h4>Success</h4>
+        <p>Your changes have been saved.</p>
+      </div>
+      <div class="alert warning">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <h4>Warning</h4>
+        <p>Payment for March is a week overdue.</p>
+      </div>
+      <div class="alert danger">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        <h4>Danger</h4>
+        <p>The deploy failed. Production is still on v2.3.9.</p>
+      </div>
+    </div>
+<pre>&lt;div class="alert warning"&gt;
+  &lt;svg class="size-4" aria-hidden="true"&gt;…&lt;/svg&gt;
+  &lt;h4&gt;Warning&lt;/h4&gt;
+  &lt;p&gt;Payment for March is a week overdue.&lt;/p&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Shapes</h2>
+    <div class="space-y-3 max-w-2xl">
+      <div class="alert success" role="status">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+        <p>Saved. One line, no title: the text shares the icon's row.</p>
+      </div>
+      <div class="alert info">
+        <h4>No icon</h4>
+        <p>The title and body simply stack.</p>
+      </div>
+      <div class="alert">
+        <p>Body only. Plain text in a box.</p>
+      </div>
+      <div class="alert warning">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+        <h4>Dismissible</h4>
+        <button class="btn ghost xs" aria-label="Dismiss" onclick="this.closest('.alert').remove()"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
+        <p>A direct-child button is pinned to the far side of the title row. The app removes the element; the markup is a one-line <code>onclick</code>.</p>
+      </div>
+      <div class="alert danger">
+        <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m15 9-6 6"/><path d="m9 9 6 6"/></svg>
+        <h4>With actions</h4>
+        <p>The deploy failed on the migration step. The previous release is still serving traffic.</p>
+        <ul class="list-disc list-inside">
+          <li>Migration 0042 timed out after 30s.</li>
+          <li>No rows were changed.</li>
+        </ul>
+        <div class="flex gap-2 pt-1">
+          <button class="btn danger sm">Retry</button>
+          <button class="btn ghost sm">View log</button>
+        </div>
+      </div>
+    </div>
+    <p class="text-sm text-muted-foreground">Anything after the title takes its own line, indented past the icon: paragraphs, lists, a row of buttons.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-gap md:grid-cols-3">
+      <div class="light panel space-y-3"><div class="alert info"><h4>Light</h4><p>Info in a light region.</p></div><div class="alert danger"><h4>Light</h4><p>Danger in a light region.</p></div></div>
+      <div class="dark panel space-y-3"><div class="alert info"><h4>Dark</h4><p>Info in a dark region.</p></div><div class="alert danger"><h4>Dark</h4><p>Danger in a dark region.</p></div></div>
+      <div class="inverse panel space-y-3"><div class="alert info"><h4>Inverse</h4><p>Info in an inverse region.</p></div><div class="alert danger"><h4>Inverse</h4><p>Danger in an inverse region.</p></div></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

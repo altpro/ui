@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>nui · Table</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="min-h-screen bg-background text-foreground">
+<header class="border-b border-border"></header>
+<div class="mx-auto flex max-w-6xl">
+<aside class="sticky top-0 hidden max-h-screen w-56 shrink-0 self-start overflow-y-auto border-r border-border p-3 md:block"></aside>
+<main class="min-w-0 flex-1 space-y-10 px-6 py-10">
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Table</h1>
+    <p class="text-muted-foreground"><code>.table</code> on a native <code>&lt;table&gt;</code>. Children are styled by element: <code>thead</code>, <code>tbody</code>, <code>tfoot</code>, <code>caption</code>, <code>th</code>, <code>td</code>. No cell classes.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Sortable header, footer, caption</h2>
+    <table class="table">
+      <caption>Invoices for the last quarter.</caption>
+      <thead>
+        <tr>
+          <th><button type="button">Invoice</button></th>
+          <th aria-sort="ascending"><button type="button">Date</button></th>
+          <th>Status</th>
+          <th class="text-right"><button type="button">Amount</button></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>INV-001</td><td>1 Jul 2026</td><td><span class="badge success sm">Paid</span></td><td class="text-right tabular-nums">£250.00</td></tr>
+        <tr><td>INV-002</td><td>14 Jul 2026</td><td><span class="badge warning sm">Pending</span></td><td class="text-right tabular-nums">£150.00</td></tr>
+        <tr><td>INV-003</td><td>2 Aug 2026</td><td><span class="badge danger sm">Overdue</span></td><td class="text-right tabular-nums">£350.00</td></tr>
+        <tr><td>INV-004</td><td>29 Aug 2026</td><td><span class="badge success sm">Paid</span></td><td class="text-right tabular-nums">£450.00</td></tr>
+      </tbody>
+      <tfoot>
+        <tr><th scope="row" colspan="3">Total</th><td class="text-right tabular-nums">£1,200.00</td></tr>
+      </tfoot>
+    </table>
+    <p class="text-sm text-muted-foreground">A <code>button</code> in a header cell is a sort control. <code>aria-sort="ascending"</code> or <code>"descending"</code> on the <code>th</code> draws the arrow; the app does the sorting. Alignment is a utility on the cell, <code>text-right</code> here.</p>
+<pre>&lt;table class="table"&gt;
+  &lt;caption&gt;Invoices for the last quarter.&lt;/caption&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;&lt;button type="button"&gt;Invoice&lt;/button&gt;&lt;/th&gt;
+      &lt;th aria-sort="ascending"&gt;&lt;button type="button"&gt;Date&lt;/button&gt;&lt;/th&gt;
+      &lt;th class="text-right"&gt;Amount&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;&lt;td&gt;INV-001&lt;/td&gt;&lt;td&gt;1 Jul 2026&lt;/td&gt;&lt;td class="text-right"&gt;£250.00&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tbody&gt;
+  &lt;tfoot&gt;
+    &lt;tr&gt;&lt;th scope="row" colspan="2"&gt;Total&lt;/th&gt;&lt;td class="text-right"&gt;£250.00&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tfoot&gt;
+&lt;/table&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Hover, selection, row actions</h2>
+    <table class="table hover">
+      <thead>
+        <tr>
+          <th class="w-px"><label class="checkbox"><input type="checkbox" aria-label="Select all"></label></th>
+          <th>Member</th>
+          <th>Role</th>
+          <th>Last active</th>
+          <th class="w-px"><span class="sr-only">Actions</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><label class="checkbox"><input type="checkbox" aria-label="Select Ada Okafor" checked></label></td>
+          <td><div class="flex items-center gap-3"><span class="avatar blue sm">AO</span><div>Ada Okafor<div class="text-muted-foreground">ada@example.com</div></div></div></td>
+          <td>Owner</td>
+          <td>Just now</td>
+          <td><button class="btn ghost sm" popovertarget="row-1" aria-label="Actions for Ada Okafor"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+            <div id="row-1" popover class="dropdown right"><div class="nav"><button type="button">Edit</button><button type="button">Reset password</button><hr><button type="button" class="text-danger">Remove</button></div></div></td>
+        </tr>
+        <tr>
+          <td><label class="checkbox"><input type="checkbox" aria-label="Select Ben Sato"></label></td>
+          <td><div class="flex items-center gap-3"><span class="avatar green sm">BS</span><div>Ben Sato<div class="text-muted-foreground">ben@example.com</div></div></div></td>
+          <td>Admin</td>
+          <td>2 hours ago</td>
+          <td><button class="btn ghost sm" popovertarget="row-2" aria-label="Actions for Ben Sato"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+            <div id="row-2" popover class="dropdown right"><div class="nav"><button type="button">Edit</button><button type="button">Reset password</button><hr><button type="button" class="text-danger">Remove</button></div></div></td>
+        </tr>
+        <tr aria-selected="true">
+          <td><label class="checkbox"><input type="checkbox" aria-label="Select Chloe Lam"></label></td>
+          <td><div class="flex items-center gap-3"><span class="avatar rose sm">CL</span><div>Chloe Lam<div class="text-muted-foreground">chloe@example.com</div></div></div></td>
+          <td>Member</td>
+          <td>Yesterday</td>
+          <td><button class="btn ghost sm" popovertarget="row-3" aria-label="Actions for Chloe Lam"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></button>
+            <div id="row-3" popover class="dropdown right"><div class="nav"><button type="button">Edit</button><button type="button">Reset password</button><hr><button type="button" class="text-danger">Remove</button></div></div></td>
+        </tr>
+      </tbody>
+    </table>
+    <p class="text-sm text-muted-foreground"><code>hover</code> tints the row under the pointer. A row is highlighted when its first cell holds a checked checkbox (Ada) or it carries <code>aria-selected="true"</code> (Chloe, for a server-rendered selection). <code>w-px</code> on a header shrinks its column to the content.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Striped and small</h2>
+    <table class="table striped sm">
+      <thead><tr><th>Region</th><th>Sessions</th><th>Conversion</th></tr></thead>
+      <tbody>
+        <tr><th scope="row">Europe</th><td>12,400</td><td>3.1%</td></tr>
+        <tr><th scope="row">North America</th><td>9,870</td><td>2.8%</td></tr>
+        <tr><th scope="row">Asia Pacific</th><td>7,230</td><td>3.5%</td></tr>
+        <tr><th scope="row">South America</th><td>2,110</td><td>2.2%</td></tr>
+        <tr><th scope="row">Africa</th><td>1,480</td><td>2.9%</td></tr>
+      </tbody>
+    </table>
+    <p class="text-sm text-muted-foreground"><code>striped</code> tints every other row. <code>sm</code> tightens the cells. A <code>th</code> in the body is a row header.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a card</h2>
+    <div class="card divided max-w-2xl">
+      <header>
+        <hgroup><h3>Deployments</h3><p>The last four releases.</p></hgroup>
+        <button class="btn sm">Deploy</button>
+      </header>
+      <table class="table hover">
+        <thead><tr><th>Version</th><th>Environment</th><th>Status</th><th>When</th></tr></thead>
+        <tbody>
+          <tr><td>v2.4.0</td><td>Production</td><td><span class="badge success sm">Live</span></td><td>10 minutes ago</td></tr>
+          <tr><td>v2.4.0</td><td>Staging</td><td><span class="badge success sm">Live</span></td><td>1 hour ago</td></tr>
+          <tr><td>v2.3.9</td><td>Production</td><td><span class="badge sm">Rolled back</span></td><td>Yesterday</td></tr>
+          <tr><td>v2.3.8</td><td>Production</td><td><span class="badge sm">Superseded</span></td><td>3 days ago</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-sm text-muted-foreground">A table that is a direct child of a card runs edge to edge and its cell padding becomes the inset. The last row takes the card's bottom corners.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Wide</h2>
+    <div class="overflow-x-auto max-w-lg" tabindex="0">
+      <table class="table">
+        <thead><tr><th>Id</th><th>Customer</th><th>Email</th><th>Country</th><th>Plan</th><th>Seats</th><th>MRR</th><th>Since</th></tr></thead>
+        <tbody>
+          <tr><td>1042</td><td>Acme Ltd</td><td>ops@acme.example</td><td>United Kingdom</td><td>Team</td><td>24</td><td>£480</td><td>Mar 2024</td></tr>
+          <tr><td>1043</td><td>Globex</td><td>it@globex.example</td><td>Germany</td><td>Business</td><td>120</td><td>£2,400</td><td>Jun 2024</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="text-sm text-muted-foreground">A table never wraps its width. Put it in an <code>overflow-x-auto</code> wrapper with <code>tabindex="0"</code> and it scrolls sideways, by keyboard too. Inside a card the wrapper bleeds like the table would.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-gap md:grid-cols-3">
+      <div class="light panel"><table class="table striped hover sm"><thead><tr><th>Light</th><th>Value</th></tr></thead><tbody><tr><td>One</td><td>1</td></tr><tr><td>Two</td><td>2</td></tr><tr><td>Three</td><td>3</td></tr></tbody></table></div>
+      <div class="dark panel"><table class="table striped hover sm"><thead><tr><th>Dark</th><th>Value</th></tr></thead><tbody><tr><td>One</td><td>1</td></tr><tr><td>Two</td><td>2</td></tr><tr><td>Three</td><td>3</td></tr></tbody></table></div>
+      <div class="inverse panel"><table class="table striped hover sm"><thead><tr><th>Inverse</th><th>Value</th></tr></thead><tbody><tr><td>One</td><td>1</td></tr><tr><td>Two</td><td>2</td></tr><tr><td>Three</td><td>3</td></tr></tbody></table></div>
+    </div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

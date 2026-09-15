@@ -19,3 +19,6 @@
 @import "./components/card.css";
 @import "./components/dialog.css";
 @import "./components/accordion.css";
+@import "./components/table.css";
+@import "./components/alert.css";
+@import "./components/tabs.css";

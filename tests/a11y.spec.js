@@ -4,7 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 
-const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "theme.html"];
+const pages = ["index.html", "button.html", "join.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "theme.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -108,6 +108,17 @@ for (const colorScheme of ["light", "dark"]) {
       expect(await h(1)).toBeGreaterThan(0);
     });
 
+    // panels are display:none until their label's radio is checked; checking the second label shows the second panel only
+    test("tabs.html: checking a radio shows its panel and hides the rest", async ({ page }) => {
+      await page.goto("/tabs.html");
+      const shown = () => page.locator("main div.tabs").first().evaluate((el) => [...el.children].filter((c) => c.tagName !== "LABEL").map((c) => getComputedStyle(c).display !== "none"));
+      expect(await shown()).toEqual([true, false, false]);
+      await page.locator("main div.tabs label").nth(1).click();
+      expect(await shown()).toEqual([false, true, false]);
+      await page.keyboard.press("ArrowRight");
+      expect(await shown()).toEqual([false, false, true]);
+    });
+
     // the bubble is a pseudo-element: it hit-tests as the host, so elementFromPoint above the host finds it
     test("tooltip.html: hover shows a bubble above every host, inside the viewport", async ({ page }) => {
       await page.setViewportSize({ width: 800, height: 500 });
@@ -129,7 +140,24 @@ for (const colorScheme of ["light", "dark"]) {
       expect(failures).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null]]) {
+    // row hover is a tint on the cells: hover every body row of a .hover table and check the text still reads
+    test("table.html: every hovered row keeps contrast", async ({ page }) => {
+      await page.goto("/table.html");
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const rows = page.locator("main .table.hover tbody tr");
+      expect(await rows.count()).toBeGreaterThan(3);
+      const failures = [];
+      for (const r of await rows.all()) {
+        await r.hover();
+        await r.evaluate((el) => el.setAttribute("data-hover", ""));
+        const { violations } = await axe(page).include("[data-hover]").analyze();
+        if (violations.length) failures.push(`${await r.textContent()}: ${summary(violations)}`);
+        await r.evaluate((el) => el.removeAttribute("data-hover"));
+      }
+      expect(failures).toEqual([]);
+    });
+
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });

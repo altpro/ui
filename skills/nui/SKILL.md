@@ -1,6 +1,6 @@
 ---
 name: nui
-description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # nui
@@ -407,6 +407,117 @@ A stack of native `<details>`, each a bordered row that slides open. The `<summa
 - The slide and the chevron turn stop under `prefers-reduced-motion`.
 
 Custom properties: `--accordion-fg --accordion-border --accordion-py --accordion-text --accordion-duration`.
+
+## Table: `.table`
+
+A data table on a native `<table>`. Children are styled by element, so no cell classes exist.
+
+```html
+<table class="table hover">
+  <caption>Invoices for the last quarter.</caption>
+  <thead>
+    <tr>
+      <th><button type="button">Invoice</button></th>
+      <th aria-sort="ascending"><button type="button">Date</button></th>
+      <th class="text-right">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>INV-001</td><td>1 Jul 2026</td><td class="text-right tabular-nums">£250.00</td></tr>
+  </tbody>
+  <tfoot>
+    <tr><th scope="row" colspan="2">Total</th><td class="text-right tabular-nums">£250.00</td></tr>
+  </tfoot>
+</table>
+```
+
+| Child | Role |
+|-------|------|
+| `thead th` | Column header, muted, medium weight, line underneath. |
+| `tbody th` | Row header, give it `scope="row"`. |
+| `tfoot` | Totals row, medium weight, line above. |
+| `caption` | A muted note under the table. |
+| `th > button` | A sort control. `aria-sort="ascending"` or `"descending"` on the `th` draws the arrow; the app sorts. |
+| `tr[aria-selected="true"]` | A highlighted row. Also automatic when the row's first cell holds a checked checkbox. |
+
+| Kind | Classes |
+|------|---------|
+| Style | `striped` (every other row tinted), `hover` (the row under the pointer tinted). |
+| Size | `sm`. No size = 2.25rem rows, matching the default button. |
+
+- Alignment is a utility on the cell: `text-right tabular-nums` for numbers. `w-px` on a header shrinks its column to the content, for a checkbox or action column.
+- A checkbox column is a `label class="checkbox"` in every first cell with an `aria-label`. An action column is a `btn ghost sm` opening a `.dropdown right`.
+- A table never wraps its width. Put it in an `overflow-x-auto` wrapper with `tabindex="0"` to scroll sideways; the tabindex lets keyboard users scroll it.
+- As a direct child of a `.card` (or a scroll wrapper that is), it runs edge to edge and its cell padding becomes the card inset. The last row takes the card's bottom corners.
+- Row backgrounds are on the cells, so `bg-*` goes on `td`, not `tr`.
+
+Custom properties: `--table-fg --table-head-fg --table-border --table-stripe --table-hover --table-selected --table-px --table-py --table-text`.
+
+## Alert: `.alert`
+
+A callout box. Children are styled by element and position.
+
+```html
+<div class="alert warning">
+  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">…</svg>
+  <h4>Payment overdue</h4>
+  <p>The invoice for March was due a week ago.</p>
+</div>
+```
+
+| Child | Role |
+|-------|------|
+| leading `<svg>` | The icon, in the accent colour. `size-4`, `aria-hidden`. |
+| `<h2>` to `<h6>`, `<strong>` | The title. |
+| direct-child `<button>` | Pinned to the far side of the title row. For a dismiss cross: `btn ghost xs` with `aria-label="Dismiss"` and `onclick="this.closest('.alert').remove()"`. |
+| anything else | Body, on its own line, indented past the icon. Paragraphs, a list, a `div class="flex gap-2"` of buttons. |
+
+The first thing after the icon shares its row, so `<svg>` then `<p>` is a one-line alert.
+
+| Kind | Classes |
+|------|---------|
+| Colour | `primary` `info` `success` `warning` `danger` (`error` is an alias). Tints the box and colours the border and icon. No colour = a bordered box on the card colour. Text is always the page foreground. |
+
+- Content present at page load needs no role. Something that appears after an action gets `role="status"` (polite) or `role="alert"` (interrupts); the role goes on the box so screen readers announce it.
+- The radius is `--radius` capped at 1rem, like a card.
+
+Custom properties: `--alert-accent --alert-bg --alert-fg --alert-border --alert-radius --alert-p --alert-text --alert-icon`.
+
+## Tabs: `.tabs`
+
+A row of underlined tabs like GitHub's repository header. Two modes, no JavaScript.
+
+Links, one page per tab:
+
+```html
+<nav class="tabs" aria-label="Repository">
+  <a href="/code" aria-current="page"><svg class="size-4" aria-hidden="true">…</svg> Code</a>
+  <a href="/pulls">Pull requests <span class="badge">1</span></a>
+</nav>
+```
+
+Panels, switched in place:
+
+```html
+<div class="tabs">
+  <label><input type="radio" name="repo" checked> Code</label>
+  <label><input type="radio" name="repo"> Pull requests</label>
+  <div>Code panel</div>
+  <div>Pull requests panel</div>
+</div>
+```
+
+| Kind | How |
+|------|-----|
+| Tab | A direct-child `<a>`, `<label>` or `<button>`. An `svg` before the text and a `.badge` after it are optional. |
+| Active | `aria-current="page"` on a link, `checked` on the radio in a label, `aria-selected="true"` on a script-driven button. |
+| Panels | Any elements after the labels, in the same order: the first non-label child belongs to the first label. Hidden until their radio is checked. Up to eight tabs. |
+
+- One radio `name` per group. Arrow keys move between tabs like a tablist.
+- Tabs wrap when the row is too narrow. Add `overflow-x-auto flex-nowrap` for a scrolling row instead.
+- The active bar is `--tabs-active`, the primary colour by default. Text stays the page foreground.
+
+Custom properties: `--tabs-fg --tabs-active-fg --tabs-active --tabs-hover --tabs-border --tabs-radius --tabs-h --tabs-px --tabs-text`.
 
 ## Theme tokens
 

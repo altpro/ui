@@ -1,0 +1,77 @@
+/* Alert: a callout box.
+   <div class="alert warning" role="status">
+     <svg class="size-4">…</svg>
+     <h4>Payment overdue</h4>
+     <p>The invoice for March was due a week ago.</p>
+   </div>
+   Children are styled by element and position: a leading svg is the icon,
+   a heading or <strong> is the title, a direct-child <button> is pinned to
+   the far side (a dismiss cross), and anything else is body text on its
+   own line, indented past the icon. The first thing after the icon shares
+   its row, so `<svg> <p>Saved.</p>` is one line. Colour words follow the
+   button: the tint, border and icon take the accent; text stays the page
+   foreground so it reads on the tint in both schemes. Layered so Tailwind
+   utilities win. */
+@layer components {
+  .alert {
+    --alert-accent: var(--color-foreground);
+    --alert-bg: var(--color-card);
+    --alert-fg: var(--color-foreground);
+    --alert-border: var(--color-border);
+    --alert-radius: min(var(--radius), 1rem);
+    --alert-p: 1rem;
+    --alert-text: var(--text-sm, 0.875rem);
+    --alert-icon: 1rem;
+
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+    gap: 0.25rem 0.75rem;
+    padding: var(--alert-p);
+    border: 1px solid var(--alert-border);
+    border-radius: var(--alert-radius);
+    background: var(--alert-bg);
+    color: var(--alert-fg);
+    font-size: var(--alert-text);
+    line-height: 1.25rem;
+
+    > svg {
+      flex: none;
+      width: var(--alert-icon);
+      height: var(--alert-icon);
+      margin-block-start: 0.125rem;
+      color: var(--alert-accent);
+    }
+    > :is(h2, h3, h4, h5, h6, strong) {
+      font-weight: 600;
+    }
+    /* whatever follows the icon shares its row; the title always does */
+    > :is(h2, h3, h4, h5, h6, strong), > svg + :not(button) {
+      flex: 1 1 0;
+    }
+    /* everything else takes its own line, indented past the icon */
+    > :not(svg, h2, h3, h4, h5, h6, strong, button, svg + *) {
+      flex-basis: 100%;
+    }
+    &:has(> svg) > :not(svg, h2, h3, h4, h5, h6, strong, button, svg + *) {
+      padding-inline-start: calc(var(--alert-icon) + 0.75rem);
+    }
+    /* a dismiss cross sits in the padding on the far side */
+    > button {
+      margin-inline-start: auto;
+      margin-block: -0.375rem;
+      margin-inline-end: -0.5rem;
+    }
+
+    /* colour variants */
+    &.primary { --alert-accent: var(--color-primary); }
+    &.info    { --alert-accent: var(--color-info); }
+    &.success { --alert-accent: var(--color-success); }
+    &.warning { --alert-accent: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning)); }
+    &.danger, &.error { --alert-accent: var(--color-danger); }
+    &:is(.primary, .info, .success, .warning, .danger, .error) {
+      --alert-bg: color-mix(in oklab, var(--alert-accent) 10%, transparent);
+      --alert-border: color-mix(in oklab, var(--alert-accent) 30%, transparent);
+    }
+  }
+}
