@@ -57,3 +57,21 @@ for (const radius of ["0", "9999px"]) {
     expect(widths.document).toBe(widths.viewport);
   });
 }
+
+test('product panels and pack editor fit on mobile', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/app/product.html');
+  for (const tab of await page.locator('main .tabs > label').all()) {
+    await tab.click();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  }
+  await page.locator('main .tabs > label').first().click();
+  await page.getByRole('button', { name: 'Edit 32 tablets', exact: true }).click();
+  const dialog = page.locator('#variant-dialog');
+  await expect(dialog).toHaveCSS('opacity', '1');
+  await dialog.locator('details').evaluateAll((els) => els.forEach((el) => el.open = true));
+  const widths = await dialog.evaluate((el) => ({ client: el.clientWidth, scroll: el.scrollWidth }));
+  expect(widths.scroll).toBe(widths.client);
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('button', { name: 'Edit 32 tablets', exact: true })).toBeFocused();
+});

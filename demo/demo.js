@@ -83,11 +83,11 @@ const shells = {
     main: "w-full max-w-5xl space-y-10 p-gap",
   },
   app: {
-    brand: ["Acme Admin", "Ecommerce", "package"],
+    brand: ["Weldricks", "Product management", "package"],
     menu: [
       "Ecommerce",
       ["#", "Dashboard", "dashboard"],
-      ["Products", "package", [["#", "All products"], ["#", "Add product"], ["app/product.html", "Radiance Ritual Set"]]],
+      ["Products", "package", [["#", "All products"], ["#", "Add product"], ["app/product.html", "Paracetamol 500mg Tablets"]]],
       ["#", "Orders", "cart", '<span class="badge sm ml-auto">12</span>'],
       ["#", "Customers", "users"],
       ["#", "Shipments", "truck"],
@@ -98,10 +98,10 @@ const shells = {
     main: "w-full space-y-gap p-gap",
     footer: `
       <button class="btn ghost w-full justify-start px-2" popovertarget="user-menu">
-        <span class="avatar blue sm">SR</span>
+        <span class="avatar blue sm">AM</span>
         <span class="min-w-0 text-start leading-tight">
-          <span class="block truncate">Steve Rayner</span>
-          <span class="block truncate text-xs font-normal muted">steve@example.com</span>
+          <span class="block truncate">Alex Morgan</span>
+          <span class="block truncate text-xs font-normal muted">Pharmacist · demo session</span>
         </span>
         <span class="ml-auto muted">${icon("updown")}</span>
       </button>
