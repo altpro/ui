@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>nui · Segmented</title>
-  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
   <link rel="stylesheet" href="demo.css">
 </head>
 <body class="flex min-h-screen bg-background text-foreground">

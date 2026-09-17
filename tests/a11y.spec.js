@@ -51,6 +51,23 @@ for (const colorScheme of ["light", "dark"]) {
       });
     }
 
+    // the theme drawer is closed at load: open it, check it, and check an edit reaches the page and survives a reload
+    test("the theme drawer passes axe, its edits persist and Copy CSS copies them", async ({ page, context }) => {
+      await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+      await page.goto("/button.html");
+      await page.getByRole("button", { name: "Theme" }).click();
+      await expect(page.locator("#theme")).toBeVisible();
+      const { violations } = await axe(page).include("#theme").analyze();
+      expect(summary(violations)).toEqual([]);
+      await page.getByLabel("primary, light").fill("#ff0000");
+      await page.getByLabel("Pill").check();
+      await page.getByRole("button", { name: "Copy CSS" }).click();
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^@theme \{\n  --color-primary: light-dark\(#ff0000, #[0-9a-f]{6}\);\n\}\n:root \{\n  --radius: 9999px;\n\}\n$/);
+      await page.reload();
+      expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--radius"))).toBe("9999px");
+      expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--color-primary"))).toMatch(/^light-dark\(#ff0000, #[0-9a-f]{6}\)$/);
+    });
+
     // cls also selects nav links, so it is wrapped in :is() where it joins another selector
     // dropdowns are closed at load, so axe never sees them: open each, check it, and check it is on screen
     test("dropdown.html: every open dropdown passes axe and stays inside the viewport", async ({ page }) => {

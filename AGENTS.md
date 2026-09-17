@@ -10,8 +10,8 @@ src/theme.css            @theme default tokens, all light-dark(); --radius knob 
 src/scheme.css           color-scheme regions: .light .dark .inverse
 src/components/*.css     one file per component (button, join, input, field, check, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, range, loading, steps, timeline)
 demo/*.html              one page per component, plus index and theme
-demo/app/*.html          sample app pages; same skeleton and demo.js, which gives them the app menu instead of the docs one
-demo/demo.js             shared shell: sidebar with the docs or app menu, header with breadcrumb, theme and radius switchers
+demo/app/*.html          e-commerce sample pages; same skeleton and demo.js, listed under E-commerce in the menu
+demo/demo.js             shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 skills/nui/SKILL.md      reference for agents in consuming projects
 ```
 

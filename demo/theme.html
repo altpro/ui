@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>nui · Theme</title>
-  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;const r=localStorage.radius;if(r)document.documentElement.style.setProperty("--radius",r)</script>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
   <link rel="stylesheet" href="demo.css">
 </head>
 <body class="flex min-h-screen bg-background text-foreground">
@@ -45,7 +45,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Radius</h2>
-    <p class="text-sm muted">One knob, <code>--radius</code> on <code>:root</code>. Use the switcher in the header, or set it in your app:</p>
+    <p class="text-sm muted">One knob, <code>--radius</code> on <code>:root</code>. Use the theme drawer in the header, or set it in your app:</p>
 <pre>:root { --radius: 9999px; }   /* pill */
 :root { --radius: 0; }        /* square */
 .btn  { --btn-radius: 0; }    /* square buttons only */</pre>
@@ -54,9 +54,8 @@
 </div>
 <script type="module" src="demo.js"></script>
 <script type="module">
-const tokens = ["background","foreground","card","card-foreground","muted","muted-foreground","border","ring",
-  "primary","primary-foreground","secondary","secondary-foreground","info","info-foreground",
-  "success","success-foreground","warning","warning-foreground","danger","danger-foreground"];
+import { tokens as groups } from "./demo.js";
+const tokens = [...groups.Base, ...groups.Intent];
 document.getElementById("swatches").innerHTML = tokens.map(t => `
   <div class="flex items-center gap-3 text-sm">
     <span class="size-10 shrink-0 rounded-[var(--radius)] border border-border" style="background: var(--color-${t})"></span>
