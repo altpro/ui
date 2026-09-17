@@ -75,3 +75,40 @@ test('product panels and pack editor fit on mobile', async ({ page }) => {
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Edit 32 tablets', exact: true })).toBeFocused();
 });
+
+test('coloured divided card sections reach the edges and keep their content inset', async ({ page }) => {
+  await page.goto('/card.html');
+  for (const radius of ['0', '0.5rem', '9999px']) {
+    for (const padding of ['1rem', '1.5rem']) {
+      const boxes = await page.evaluate(({ radius, padding }) => {
+        const card = document.createElement('div');
+        card.className = 'card divided';
+        card.style.cssText = `--radius: ${radius}; --card-p: ${padding};`;
+        card.innerHTML = '<header class="bg-muted"><h3>Title</h3></header><p>Body</p><footer class="bg-muted"><span>Footer</span></footer>';
+        document.querySelector('main').append(card);
+        const rect = el => {
+          const r = el.getBoundingClientRect();
+          return { top: r.top, bottom: r.bottom, left: r.left, right: r.right };
+        };
+        const header = card.querySelector('header'), footer = card.querySelector('footer');
+        const result = {
+          card: rect(card), header: rect(header), footer: rect(footer),
+          title: rect(header.firstElementChild), label: rect(footer.firstElementChild),
+          padding: parseFloat(getComputedStyle(card).paddingTop),
+          headerRadius: getComputedStyle(header).borderTopLeftRadius,
+          footerRadius: getComputedStyle(footer).borderBottomLeftRadius,
+        };
+        card.remove(); return result;
+      }, { radius, padding });
+      expect(boxes.header.top).toBeCloseTo(boxes.card.top + 1);
+      expect(boxes.footer.bottom).toBeCloseTo(boxes.card.bottom - 1);
+      for (const section of [boxes.header, boxes.footer]) {
+        expect(section.left).toBeCloseTo(boxes.card.left + 1);
+        expect(section.right).toBeCloseTo(boxes.card.right - 1);
+      }
+      expect(boxes.title.top - boxes.header.top).toBeCloseTo(boxes.padding);
+      expect(boxes.footer.bottom - boxes.label.bottom).toBeCloseTo(boxes.padding);
+      expect(boxes.headerRadius).toBe(boxes.footerRadius);
+    }
+  }
+});

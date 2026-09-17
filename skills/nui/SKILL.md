@@ -365,6 +365,8 @@ A bordered box on `--color-card`. Children are styled by element, so no item cla
 
 Custom properties: `--card-bg --card-fg --card-border --card-radius --card-p`.
 
+In a `divided` card, a first-child header and last-child footer extend to the outer border and inherit its inner corners. Their contents keep the `--card-p` inset, so `bg-muted` on either section fills the edge without a padding strip. This also applies to divided dialogs.
+
 ## Dialog: `.dialog`
 
 A card in the top layer, on a native `<dialog>`. Everything in the Card section applies inside it: `header`, `hgroup`, `footer`, media bleed, `divided`, `--card-p`. Open and close with button commands, no JavaScript. The browser handles Esc, focus trapping, the backdrop and returning focus to the trigger.

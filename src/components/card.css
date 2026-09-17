@@ -111,7 +111,8 @@
       :is(&, & > .table) > :last-child > tr:last-child > :last-child { border-end-end-radius: var(--card-inner); }
     }
 
-    /* lines between the sections, spanning the full width */
+    /* Divided sections reach the border; their own padding keeps content inset.
+       Only the outermost header/footer takes the card corners. */
     &.divided > :is(header, footer) {
       margin-inline: calc(-1 * var(--card-p));
       padding-inline: var(--card-p);
@@ -119,10 +120,22 @@
     &.divided > header {
       padding-block-end: var(--card-p);
       border-block-end: 1px solid var(--card-border);
+      &:first-child {
+        margin-block-start: calc(-1 * var(--card-p));
+        padding-block-start: var(--card-p);
+        border-start-start-radius: var(--card-inner);
+        border-start-end-radius: var(--card-inner);
+      }
     }
     &.divided > footer {
       padding-block-start: var(--card-p);
       border-block-start: 1px solid var(--card-border);
+      &:last-child {
+        margin-block-end: calc(-1 * var(--card-p));
+        padding-block-end: var(--card-p);
+        border-end-start-radius: var(--card-inner);
+        border-end-end-radius: var(--card-inner);
+      }
     }
   }
 }
