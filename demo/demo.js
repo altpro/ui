@@ -1,3 +1,5 @@
+import { presets, presetStyles, presetMigrations } from "./presets.js";
+
 // Lucide icons (lucide.dev, ISC). Paths only; the svg wrapper is shared.
 const icons = {
   house: '<path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
@@ -93,13 +95,13 @@ const nav = menu.map(item).join("");
 
 const aside = document.querySelector("aside");
 aside.id = "sidebar";
-aside.className = "fixed inset-y-0 start-0 z-20 flex w-64 shrink-0 flex-col border-e border-border bg-background lg:sticky lg:top-0 lg:h-screen";
+aside.className = "fixed inset-y-0 start-0 z-20 flex w-64 shrink-0 flex-col border-e border-border lg:sticky lg:top-0 lg:h-screen";
 aside.innerHTML = `
   <div class="flex h-14 items-center gap-3 border-b border-border px-3">
     <span class="avatar rounded-lg sm">${icon("blocks")}</span>
     <div class="min-w-0 text-sm leading-tight">
       <p class="truncate font-semibold">nui</p>
-      <p class="truncate text-xs muted">Tailwind v4 components</p>
+      <p class="truncate text-xs demo-sidebar-description">Tailwind v4 components</p>
     </div>
   </div>
   <nav class="nav flex-1 overflow-y-auto p-3" aria-label="Main">${nav}</nav>`;
@@ -107,7 +109,7 @@ aside.innerHTML = `
 // a page can put its own controls inside <header>; they keep their place before the scheme switcher and theme button
 const header = document.querySelector("header");
 const extras = header.innerHTML;
-header.className = "flex h-14 items-center gap-3 border-b border-border px-gap";
+header.className = "demo-header flex h-14 items-center gap-3 border-b border-border px-gap";
 header.innerHTML = `
   <label class="btn ghost sm px-2"><input type="checkbox" id="menu" aria-label="Toggle sidebar">${icon("panel")}</label>
   <nav class="breadcrumb" aria-label="Breadcrumb">
@@ -135,12 +137,22 @@ const setTheme = (v) => {
 themeBtns.forEach((b) => (b.onclick = () => setTheme(b.dataset.value)));
 setTheme(localStorage.theme || "");
 
+const presetStyle = document.createElement("style");
+presetStyle.textContent = presetStyles;
+document.head.appendChild(presetStyle);
+let activePreset = Object.hasOwn(presets, localStorage.preset) ? localStorage.preset : "default";
+for (const [property, previous] of Object.entries(presetMigrations[activePreset] || {})) {
+  if (html.style.getPropertyValue(property).trim() === previous) {
+    html.style.setProperty(property, presets[activePreset].values[property]);
+    localStorage.tokens = html.style.cssText;
+  }
+}
+
 // theme drawer: every colour token as a light and a dark picker, plus the radius; overrides live in <html style> and localStorage.tokens
 export const tokens = {
   Base: ["background", "foreground", "card", "card-foreground", "muted", "muted-foreground", "border", "ring"],
   Intent: ["primary", "primary-foreground", "secondary", "secondary-foreground", "info", "info-foreground",
     "success", "success-foreground", "warning", "warning-foreground", "danger", "danger-foreground"],
-  Hues: ["red", "orange", "amber", "yellow", "lime", "green", "emerald", "teal", "cyan", "sky", "blue", "indigo", "violet", "purple", "fuchsia", "pink", "rose"],
 };
 document.body.insertAdjacentHTML("beforeend", `
   <dialog id="theme" class="dialog drawer divided" closedby="any" aria-labelledby="theme-title">
@@ -148,10 +160,17 @@ document.body.insertAdjacentHTML("beforeend", `
       <h3 id="theme-title">Theme</h3>
       <button class="btn ghost sm" command="close" commandfor="theme" aria-label="Close">${icon("x")}</button>
     </header>
+    <div class="field">
+      <label for="theme-preset">Preset</label>
+      <select id="theme-preset" class="input" aria-describedby="preset-description">
+        ${Object.entries(presets).map(([value, preset]) => `<option value="${value}">${preset.name}</option>`).join("")}
+      </select>
+      <p class="hint" id="preset-description"></p>
+    </div>
     <div class="space-y-2">
       <p id="radius-label" class="text-sm font-medium">Radius</p>
       <div class="join" role="radiogroup" aria-labelledby="radius-label">
-        ${[["0", "Square"], ["", "Default"], ["9999px", "Pill"]]
+        ${[["0", "Square"], ["", "Preset radius"], ["9999px", "Pill"]]
           .map(([v, l]) => `<label class="btn outlined sm"><input type="radio" name="radius" value="${v}"> ${l}</label>`).join("")}
       </div>
     </div>
@@ -181,18 +200,29 @@ const read = (token, scheme) => {
   return "#" + [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)].map((n) => n.toString(16).padStart(2, "0")).join("");
 };
 const sync = () => {
+  drawer.querySelector("#theme-preset").value = activePreset;
+  drawer.querySelector("#preset-description").textContent = presets[activePreset].description;
   drawer.querySelectorAll("[data-token]").forEach((c, i) => (c.value = read(c.dataset.token, i % 2 ? "dark" : "light")));
-  drawer.querySelectorAll("[name=radius]").forEach((r) => (r.checked = r.value === html.style.getPropertyValue("--radius")));
+  drawer.querySelectorAll("[name=radius]").forEach((r) => (r.checked = r.value === (["0", "9999px"].includes(html.style.getPropertyValue("--radius")) ? html.style.getPropertyValue("--radius") : "")));
 };
 drawer.oninput = ({ target: t }) => {
-  if (t.name === "radius") html.style.setProperty("--radius", t.value || null);
-  else {
+  if (t.id === "theme-preset") {
+    activePreset = t.value;
+    localStorage.preset = activePreset;
+    html.removeAttribute("style");
+    Object.entries(presets[activePreset].values).forEach(([key, value]) => html.style.setProperty(key, value));
+    sync();
+  }
+  else if (t.name === "radius") html.style.setProperty("--radius", t.value || presets[activePreset].values["--radius"] || null);
+  else if (t.dataset.token) {
     const [light, dark] = drawer.querySelectorAll(`[data-token="${t.dataset.token}"]`);
     html.style.setProperty(`--color-${t.dataset.token}`, `light-dark(${light.value}, ${dark.value})`);
   }
   localStorage.tokens = html.style.cssText;
 };
 document.getElementById("theme-reset").onclick = () => {
+  activePreset = "default";
+  localStorage.removeItem("preset");
   html.removeAttribute("style");
   localStorage.removeItem("tokens");
   sync();
@@ -202,9 +232,13 @@ document.getElementById("theme-copy").onclick = async ({ currentTarget: b }) => 
   const decl = (p) => `  ${p}: ${html.style.getPropertyValue(p)};\n`;
   const props = [...html.style];
   const colors = props.filter((p) => p.startsWith("--color-")).map(decl).join("");
-  const css = (colors && `@theme {\n${colors}}\n`) + (props.includes("--radius") ? `:root {\n${decl("--radius")}}\n` : "");
+  const other = props.filter((p) => !p.startsWith("--color-")).map(decl).join("");
+  const css = (colors && `@theme {\n${colors}}\n`) + (other ? `:root {\n${other}}\n` : "")
+    + (activePreset !== "default" ? `\n${presetStyles}\n` : "");
   await navigator.clipboard.writeText(css || "/* no changes from the defaults */\n");
   b.textContent = "Copied";
   setTimeout(() => (b.textContent = "Copy CSS"), 1500);
 };
 document.querySelector('[command="show-modal"][commandfor="theme"]').onclick = sync;
+
+sync();
