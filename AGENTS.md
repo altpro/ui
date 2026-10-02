@@ -14,7 +14,7 @@ resources/js/                Vue components (Name.vue) and the custom elements t
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs it
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 demo/*.html                  one page per component, plus index and theme
-demo/app/*.html              e-commerce sample pages; same skeleton and demo.js, listed under E-commerce in the menu
+demo/app/*.html              e-commerce sample pages; same skeleton and demo.js, listed under Application in the menu
 demo/demo.js                 shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 tests/blade.php              renders a Blade string through Testbench, for the browser tests
 ```
@@ -41,7 +41,7 @@ tests/blade.php              renders a Blade string through Testbench, for the b
 
 1. `resources/css/components/<name>.css`, following the button file's shape.
 2. Import it from `resources/css/ui.css`.
-3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name.
+3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name, or to `scripted` if it has a custom element in `resources/js/`.
 4. Add a section to `resources/boost/skills/altpro-ui/SKILL.md` with the class table and one copy-paste example.
 5. Add the page to `pages` in `tests/a11y.spec.js` and give it a hover-contrast loop if it has hover states.
 6. If it gets Blade and Vue versions: `resources/views/components/<name>.blade.php`, `resources/js/<Name>.vue`, any shared `resources/js/<name>.js`, a Vue instance on the demo page, and a parity test in `tests/browsers.spec.js`. See multiselect.

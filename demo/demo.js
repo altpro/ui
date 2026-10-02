@@ -30,10 +30,10 @@ const icons = {
   timeline: '<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="4" cy="6" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="4" cy="18" r="1.5"/>',
   trend: '<path d="M16 7h6v6"/><path d="m22 7-8.5 8.5-5-5L2 17"/>',
   ellipsis: '<circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/>',
-  cart: '<circle cx="8" cy="21" r="1"/><circle cx="19" cy="21" r="1"/><path d="M2.05 2.05h2l2.66 12.42a2 2 0 0 0 2 1.58h9.78a2 2 0 0 0 1.95-1.57l1.65-7.43H5.12"/>',
   monitor: '<rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/>',
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
   moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+  braces: '<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   palette: '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
 };
@@ -54,7 +54,6 @@ const components = [
   ["field.html", "Field", "field"],
   ["join.html", "Join", "columns"],
   ["loading.html", "Loading", "loader"],
-  ["multiselect.html", "Multiselect", "listChecks"],
   ["nav.html", "Nav", "panel"],
   ["pagination.html", "Pagination", "ellipsis"],
   ["progress.html", "Progress", "gauge"],
@@ -68,14 +67,19 @@ const components = [
   ["toast.html", "Toast", "bell"],
   ["tooltip.html", "Tooltip", "bubble"],
 ];
+// components with a custom element in resources/js/
+const scripted = [
+  ["multiselect.html", "Multiselect", "listChecks"],
+];
 /* Every href is relative to demo/; `root` fixes them up from app/.
    Menu items: a string is a heading, [href, label, icon?, extra?] a link,
    [label, icon, items] a collapsible group. */
 const menu = [
   ["index.html", "Getting started", "house"],
-  ["Components", "blocks", components],
+  ["CSS only", "blocks", components],
+  ["JavaScript", "braces", scripted],
   ["theme.html", "Theme", "palette"],
-  ["E-commerce", "cart", [["app/product.html", "Product"]]],
+  ["Application", "monitor", [["app/product.html", "Product"]]],
 ];
 
 const inApp = location.pathname.includes("/app/");

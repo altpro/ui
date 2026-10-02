@@ -36,8 +36,11 @@
     /* the label, its count, then the chevron */
     > button {
       cursor: pointer;
-      /* .input mutes its non-control children; the label is the button's text */
+      /* .input mutes its non-control children; the label is the button's text.
+         Flex so the taller count badge cannot lift the text off centre. */
       > span {
+        display: inline-flex;
+        align-items: center;
         color: inherit;
       }
       > span[data-count]:not([data-count="0"])::after {
