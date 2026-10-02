@@ -119,7 +119,7 @@ export const presets = {
       '--demo-backdrop-blue': pair('#6b92a4', '#223f4c'),
       '--demo-backdrop-middle': pair('#ced0cf', '#30363b'),
       '--demo-backdrop-rose': pair('#bd9390', '#483035'),
-      '--demo-backdrop': 'linear-gradient(125deg in srgb, var(--demo-backdrop-blue), var(--demo-backdrop-middle) 52%, var(--demo-backdrop-rose))',
+      '--demo-backdrop': 'radial-gradient(farthest-side ellipse at 10% 0, rgba(74, 121, 147, .89), rgba(204, 204, 204, .85) 80%, rgba(185, 135, 131, .87) 120%)',
       '--demo-chrome-bg': pair('#282b2c', '#171d21'),
       '--demo-chrome-fg': '#e1e8ec', '--demo-chrome-border': '#68767e',
       '--demo-panel-heading': 'var(--color-muted)',
@@ -159,5 +159,6 @@ export const presetMigrations = {
     '--color-danger': pair('#8d2938', '#f2a4ad'),
     '--demo-warning-ink': pair('#713d00', '#f4cb7b'),
     '--demo-badge-ink-lightness': '',
+    '--demo-backdrop': 'linear-gradient(125deg in srgb, var(--demo-backdrop-blue), var(--demo-backdrop-middle) 52%, var(--demo-backdrop-rose))',
   },
 };
