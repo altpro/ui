@@ -46,3 +46,10 @@
   background-color: var(--color-background);
   color: var(--color-foreground);
 }
+
+/* Scrollbars: a muted thumb on no track. scrollbar-color inherits, so every
+   scroll area takes it; it is set again on each region because the
+   light-dark() inside resolves where it is declared. */
+:root, .light, .dark, .inverse, [data-theme] {
+  scrollbar-color: color-mix(in oklab, var(--color-muted-foreground) 40%, transparent) transparent;
+}

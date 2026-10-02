@@ -31,6 +31,8 @@ Elsewhere it is the npm package `@altpro/ui`:
 
 Components with a Blade or Vue version say so in their section. Their JavaScript is one small file per component in `resources/js/`. Vue components import it themselves. With Blade, import it once in `resources/js/app.js`, e.g. `import "../../vendor/altpro/ui/resources/js/multiselect.js";`.
 
+Every scrollbar gets a muted thumb on no track, set once with the inherited `scrollbar-color`, and it follows `.light` `.dark` `.inverse`. Add `scrollbar-thin` (Tailwind) to a scroll area for the slim width that `.nav`, dropdown panels and dialogs already have.
+
 ## How classes compose
 
 One base class, then bare modifier words in any order. No prefixes.

@@ -27,6 +27,7 @@
     min-width: 10rem;
     max-width: min(24rem, calc(100vw - 1rem));
     overflow: auto;
+    scrollbar-width: thin;
     padding: 1rem;
     border: 1px solid var(--color-border);
     border-radius: var(--dropdown-radius);

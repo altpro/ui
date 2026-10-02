@@ -18,6 +18,8 @@
     --nav-active-fg: var(--color-foreground);
     --nav-hover: color-mix(in oklab, var(--color-muted) 60%, transparent);
     --nav-active-bg: var(--color-muted);
+    /* a sidebar nav usually scrolls */
+    scrollbar-width: thin;
     --nav-radius: var(--radius);
     --nav-h: 2.25rem;
     --nav-px: 0.75rem;

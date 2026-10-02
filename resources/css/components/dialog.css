@@ -30,6 +30,7 @@
     max-width: calc(100% - 2 * var(--spacing-gap));
     max-height: calc(100% - 2 * var(--spacing-gap));
     overflow: auto;
+    scrollbar-width: thin;
     box-shadow: var(--dialog-shadow);
     transition: opacity 0.15s, scale 0.15s, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
 

@@ -32,7 +32,7 @@
        It stays in the layout, painted transparent, so nothing jumps. */
     @media (hover: hover) {
       scrollbar-color: transparent transparent;
-      &:is(:hover, :focus-within) { scrollbar-color: auto; }
+      &:is(:hover, :focus-within) { scrollbar-color: inherit; }
     }
     padding: 5px;
     margin: -5px;
