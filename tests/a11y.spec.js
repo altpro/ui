@@ -312,7 +312,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(same(sweep(0.5, 0.5), up(0.02, 0.5))).toBe(true); // stripe is the fill colour
       expect(same(sweep(0.02, 0.5), up(0.98, 0.5))).toBe(true); // left edge is bare track
       const fill = async (id) => (await shot(page.locator(id)))(0.02, 0.5);
-      // bands are nui's own colours, not the UA's green/yellow/red; a colour word pins one colour whatever the band
+      // bands are the library's own colours, not the UA's green/yellow/red; a colour word pins one colour whatever the band
       expect(same(await fill("#disk"), await fill("main .progress.success"))).toBe(true);
       expect(same(await fill("#disk2"), await fill("main .progress.warning"))).toBe(true);
       expect(same(await fill("#disk3"), await fill("main .progress.danger"))).toBe(true);

@@ -1,24 +1,35 @@
 ---
-name: nui
-description: Use nui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) when writing HTML in a project that imports "nui". Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+name: altpro-ui
+description: Use altpro/ui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
-# nui
+# altpro/ui
 
-nui is a CSS-only component layer on top of Tailwind v4. Tailwind handles layout and spacing. nui classes replace the long utility strings for common components.
+altpro/ui is a CSS component layer on top of Tailwind v4. Tailwind handles layout and spacing. altpro/ui classes replace the long utility strings for common components. A few components that need repeated markup or state also come as a Blade component and a Vue component that render the same markup.
 
 Rule of thumb when writing markup:
 
-1. Reach for a nui class first if one exists for the component.
+1. Reach for an altpro/ui class (or its Blade or Vue component) first if one exists for the component.
 2. Use Tailwind utilities for layout around it and for one-off tweaks on it.
-3. Never rebuild a nui component out of utilities.
+3. Never rebuild an altpro/ui component out of utilities.
 
-## Setup (already done if the project imports nui)
+## Setup (already done if the project uses altpro/ui)
+
+Laravel installs it with Composer (`composer require altpro/ui`). The Blade components register themselves. In `resources/css/app.css`:
 
 ```css
 @import "tailwindcss";
-@import "nui";
+@import "../../vendor/altpro/ui/resources/css/ui.css";
 ```
+
+Elsewhere it is the npm package `@altpro/ui`:
+
+```css
+@import "tailwindcss";
+@import "@altpro/ui";
+```
+
+Components with a Blade or Vue version say so in their section. Their JavaScript is one small file per component in `resources/js/`. Vue components import it themselves. With Blade, import it once in `resources/js/app.js`, e.g. `import "../../vendor/altpro/ui/resources/js/multiselect.js";`.
 
 ## How classes compose
 
@@ -781,7 +792,7 @@ Every token is `light-dark()`, so the same class is correct in both schemes. Do 
 
 Spacing: `--spacing-gap` is one responsive unit, 1rem, then 1.5rem from `md` and 2rem from `lg`. It gives `p-gap`, `m-gap`, `gap-gap`, `size-gap` and the rest, plus `2gap` and `3gap` multiples (`p-2gap`, `mt-3gap`). Use it for the padding of panels and the gutters between them so the whole page loosens together on wider screens.
 
-Override in the app's stylesheet, after the nui import:
+Override in the app's stylesheet, after the altpro/ui import:
 
 ```css
 @theme {
@@ -811,4 +822,4 @@ Tailwind's `dark:` variant follows the OS media query and ignores these regions.
 
 ## Demo
 
-Run `npm run dev` inside the nui package to browse every component with a theme and radius switcher.
+Run `npm run dev` inside the altpro/ui repository to browse every component with a theme and radius switcher.

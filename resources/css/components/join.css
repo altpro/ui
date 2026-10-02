@@ -13,9 +13,9 @@
     isolation: isolate;
 
     > * {
-      /* Every nui component derives its radius from --radius, so zeroing
+      /* Every altpro/ui component derives its radius from --radius, so zeroing
          the var here beats it whatever the import order. The plain
-         property covers children that are not nui components. */
+         property covers children that are not altpro/ui components. */
       --radius: 0;
       border-radius: 0;
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>nui</title>
+  <title>altpro/ui</title>
   <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
   <link rel="stylesheet" href="demo.css">
 </head>
@@ -13,16 +13,20 @@
 <header></header>
 <main>
   <section class="space-y-3">
-    <h1 class="text-3xl font-semibold tracking-tight">nui</h1>
-    <p class="muted">An HTML and CSS component layer for Tailwind v4. Tailwind does layout. nui does the components.</p>
+    <h1 class="text-3xl font-semibold tracking-tight">altpro/ui</h1>
+    <p class="muted">An HTML and CSS component layer for Tailwind v4, with Blade and Vue versions of the components that need them. Tailwind does layout. altpro/ui does the components.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Install</h2>
-<pre>npm install github:&lt;owner&gt;/nui</pre>
-    <p>Then in your app stylesheet:</p>
+    <p>In a Laravel app, add the repository to <code>composer.json</code>, then:</p>
+<pre>composer require altpro/ui</pre>
+    <p>Then in <code>resources/css/app.css</code>:</p>
 <pre>@import "tailwindcss";
-@import "nui";
+@import "../../vendor/altpro/ui/resources/css/ui.css";</pre>
+    <p>Anywhere else: <code>npm install github:&lt;owner&gt;/ui</code>, then:</p>
+<pre>@import "tailwindcss";
+@import "@altpro/ui";
 
 /* optional overrides */
 @theme {

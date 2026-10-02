@@ -4,3 +4,5 @@ dist
 *.png
 test-results
 playwright-report
+vendor
+composer.lock

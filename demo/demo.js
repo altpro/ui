@@ -81,7 +81,7 @@ const root = inApp ? "../" : "";
 const here = (inApp ? "app/" : "") + (location.pathname.split("/").pop() || "index.html");
 const html = document.documentElement;
 
-const crumbs = ["nui"];
+const crumbs = ["altpro/ui"];
 const link = ([href, label, ic, extra = ""], group) => {
   const current = href === here;
   if (current) crumbs.push(...(group ? [group] : []), label);
@@ -100,7 +100,7 @@ aside.innerHTML = `
   <div class="flex h-14 items-center gap-3 border-b border-border px-3">
     <span class="avatar rounded-lg sm">${icon("blocks")}</span>
     <div class="min-w-0 text-sm leading-tight">
-      <p class="truncate font-semibold">nui</p>
+      <p class="truncate font-semibold">altpro/ui</p>
       <p class="truncate text-xs demo-sidebar-description">Tailwind v4 components</p>
     </div>
   </div>

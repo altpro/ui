@@ -45,7 +45,7 @@ export const presetStyles = `@layer components {
   }
 }`;
 export const presets = {
-  default: { name: 'Default', description: 'The original nui palette and typography.', values: {} },
+  default: { name: 'Default', description: 'The original altpro/ui palette and typography.', values: {} },
   aurora: {
     name: 'Aurora', description: 'Violet and blue gradients, cool surfaces and soft corners.',
     values: {

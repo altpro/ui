@@ -2,6 +2,7 @@ import { readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vite";
 import tailwindcss from "@tailwindcss/vite";
+import vue from "@vitejs/plugin-vue";
 
 const demo = resolve(import.meta.dirname, "demo");
 const pages = Object.fromEntries(
@@ -12,7 +13,7 @@ const pages = Object.fromEntries(
 
 export default defineConfig({
   root: demo,
-  plugins: [tailwindcss()],
+  plugins: [tailwindcss(), vue()],
   build: {
     outDir: resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,

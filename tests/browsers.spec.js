@@ -1,4 +1,4 @@
-// Small engine matrix for the native HTML and CSS features nui depends on.
+// Small engine matrix for the native HTML and CSS features altpro/ui depends on.
 // Chromium runs this alongside the detailed accessibility suite; Firefox and
 // WebKit run this file only so browser-specific pixel checks stay meaningful.
 import { test, expect } from "@playwright/test";

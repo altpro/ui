@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@import "../src/nui.css";
+@import "../resources/css/ui.css";
 
 /* demo-only */
 /* the sidebar toggle is a checkbox: below lg the sidebar is an overlay that is closed by default, from lg it is inline and open by default */

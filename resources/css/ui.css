@@ -1,7 +1,7 @@
-/* nui: HTML + CSS component layer for Tailwind v4.
+/* altpro/ui: HTML + CSS component layer for Tailwind v4.
    Usage in an app stylesheet:
      @import "tailwindcss";
-     @import "nui";
+     @import "@altpro/ui";
 */
 @import "./theme.css";
 @import "./scheme.css";
