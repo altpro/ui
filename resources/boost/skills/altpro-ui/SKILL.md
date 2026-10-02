@@ -161,6 +161,52 @@ The control turns red when the field holds a non-empty `.error`, when the contro
 
 Disabled: `disabled` on the control, or `<fieldset class="field" disabled>` to disable everything inside it natively.
 
+### Field component: `<x-ui::field>` and `Field.vue`
+
+Writes the whole `.field` from a name and a type: the label, generated ids tying label, hint and errors to the control, and the errors for that name. Prefer it over hand-written fields in forms.
+
+```blade
+<x-ui::field name="email" type="email" required autocomplete="email" hint="We never share it." />
+<x-ui::field name="category_id" type="select" :options="$categories" :value="$post->category" placeholder="Choose one" />
+<x-ui::field name="tags" type="multiselect" :options="$tags" :value="$post->tags" max="3" hint="Up to three." />
+<x-ui::field name="price" type="number" prepend="£" step="0.01" :value="$product->price" />
+<x-ui::field name="published" type="switch" :value="$post->published" />
+```
+
+```vue
+<script setup>
+import Field from "../../vendor/altpro/ui/resources/js/Field.vue"; // or "@altpro/ui/js/Field.vue" from npm
+const form = useForm({ category_id: props.post.category_id, tags: props.post.tags });
+</script>
+
+<Field v-model="form.tags" name="tags" type="multiselect" :options="tags" :errors="form.errors" :max="3" />
+```
+
+| Prop | Blade | Vue |
+|------|-------|-----|
+| `name` | Field name. Brackets work: `post[title]`, `tags[]`. | Same; optional, but the label guess and error lookup need it. |
+| `type` | Any input type (`text` by default), or `textarea`, `select`, `multiselect`, `switch`. `radio`, or `checkbox` with options, renders a `<fieldset>` group. `checkbox` without options is one box. | Same. |
+| `label` | Defaults to the name: `category_id`, `post[categoryId]` both read "Category". | Same. |
+| `hint` | Text under the control, read with it. A `<x-slot:hint>` takes markup. | Same; `#hint` slot. |
+| `prepend` / `append` | Text inside the input's border (`£`, `kg`). A slot goes in as written, for a select or an icon. Inputs only. | Same; `#prepend` / `#append` slots. |
+| `options` | `value => label`, a list of strings (value is the string), or a collection of models or arrays: value from `id` (else `value`), label from `name` (else `label`). | `[{ value, label }]`, `{ value: label }`, strings, or models as above. |
+| `value` / `v-model` | Current value. `old()` wins automatically. A model or collection of models becomes its ids. | `v-model` with `useForm`; models are handed straight back as ids. `value` without v-model, in Inertia's `<Form>`. `type="number"` emits a number, `file` a `File` (an array when `multiple`). |
+| `errors` | Defaults to the page's `$errors`. Also takes a `MessageBag`, an array keyed by field (`tags.0` counts for `tags`), or a string or list for this field. `bag` picks a named error bag. | A string, an array, or Laravel's errors object keyed by field: Inertia's `form.errors`, or a 422 body's `errors`. |
+| `id` | Generated when left off. | Same. |
+| `now` | On a `date`, `time`, `datetime-local` or `month`, an empty value becomes the current one, in the app's timezone. | Same, in the browser's timezone; the value goes into v-model too. |
+
+- `class` lands on the `.field`; every other attribute (`required`, `placeholder`, `min`, `rows`, `autocomplete`, `max`, `disabled`…) on the control. On a `multiselect` they go to `<x-ui::multiselect>` / `Multiselect.vue`.
+- `placeholder` on a select adds an empty first option, so `required` works on it.
+- After a failed submit, an unticked box or empty multiselect stays empty rather than falling back to `value`, since the browser sends nothing for it.
+- Errors set `aria-invalid` and turn the control red; one shows as a `<p class="error">`, several as a `<ul>`.
+- A single checkbox or switch submits `1`, which Laravel's `boolean` rule accepts. Unticked, it submits nothing: read it with `$request->boolean('name')`.
+
+Inertia, Vue:
+
+- `useForm`: `<Field v-model="form.title" name="title" :errors="form.errors" />`. Model ids and `now` are written into the form after `useForm` took its defaults, so `isDirty` starts true. Call `onMounted(() => form.defaults())` if you show it.
+- `<Form>`: no v-model. Give the start as `value` and pass the slot's `errors`: `<Form #default="{ errors }"><Field name="title" :value="post.title" :errors="errors" /></Form>`. Values come from the inputs, so every field needs a `name`. `reset()` works, including the multiselect.
+- Precognition: listeners land on the control, so `@change="form.validate('title')"` works. On a multiselect they land on the wrapper: use `@change` or `@focusout`, since `blur` does not bubble.
+
 ## Checkbox, radio, switch: `.checkbox` `.radio` `.switch`
 
 Restyled native inputs. Two ways to label, same result: the class on a `<label>` that wraps the input, or on the `<input>` when a `<label for>` sits beside it. Wrapped is shorter and makes the whole label the click target.
@@ -373,7 +419,7 @@ const sizes = ref(["m"]);
 | `disabled` | Cannot open; nothing is submitted, as a disabled select. | Same. |
 | `autofocus` | Focuses the button on page load. | Same. |
 
-- Other Blade attributes (`class="w-48"`) land on the wrapper.
+- Other attributes (`class="w-48"`) land on the wrapper, except `aria-*` (`aria-describedby` for a hint), which goes on the button.
 - Hand-written markup: one `<span>` per box inside the button's last span, same order, no whitespace between them (it would show), `hidden` on the unticked ones, and `data-count` on the button.
 - The visible label is plain text such as `<label>Size</label>` with no `for`. A `<label for>` pointing at the button becomes its whole accessible name, so screen readers would no longer hear the ticked items.
 - `<ui-multiselect>` (`resources/js/multiselect.js`) keeps the items and `data-count` in step with the boxes and sets `:state(overflow)` when they do not fit, which shows the count. Without that script everything else still works but the button keeps the server's ticks and never shows the count. A box ticked from code fires no change event: dispatch one.

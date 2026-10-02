@@ -268,3 +268,95 @@ test("multiselect: Vue v-model follows the boxes and the count follows v-model",
   expect(await ms.evaluate((el) => el.matches(":invalid"))).toBe(true);
   expect(warnings).toEqual([]);
 });
+
+// The Blade field rendered with the same props as each Vue field on field.html, in the same order.
+const fieldErrors = `['tags.1' => ['The selected tag is invalid.'], 'bio' => ['At least 20 characters.', 'Mention where you work.']]`;
+const cats = `[['id' => 1, 'name' => 'News'], ['id' => 2, 'name' => 'Sport'], ['id' => 3, 'name' => 'Culture']]`;
+const tagList = `[['id' => 1, 'name' => 'Laravel', 'slug' => 'laravel'], ['id' => 2, 'name' => 'Vue', 'slug' => 'vue'], ['id' => 3, 'name' => 'Tailwind', 'slug' => 'tailwind']]`;
+const bladeFields = render([
+  `<x-ui::field name="email" type="email" required autocomplete="email" hint="We never share it." />`,
+  `<x-ui::field name="category_id" type="select" :options="${cats}" :value="['id' => 2, 'name' => 'Sport']" placeholder="Choose one" />`,
+  `<x-ui::field name="tags" type="multiselect" :options="${tagList}" :value="collect(${tagList})->only([0, 2])" max="2" hint="Up to two." />`,
+  `<x-ui::field name="price" type="number" prepend="£" step="0.01" value="12.50" />`,
+  `<x-ui::field name="size" type="radio" :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']" value="m" />`,
+  `<x-ui::field name="extras[]" type="checkbox" :options="['gift' => 'Gift wrap', 'card' => 'Card']" :value="['gift']" />`,
+  `<x-ui::field name="newsletter" type="switch" label="Send me the newsletter" :value="true" />`,
+  `<x-ui::field name="bio" type="textarea" rows="3" value="Hi" />`,
+  `<x-ui::field name="published_on" type="date" now />`,
+].map((tag) => tag.replace(" />", ` :errors="${fieldErrors}" />`)).join(""));
+
+// `now` is today in the app's timezone for Blade (UTC under Testbench) and in the browser's for Vue
+test.describe(() => { test.use({ timezoneId: "UTC" });
+test("field: the Blade and Vue components render the same markup", async ({ page }) => {
+  await page.goto("/field.html");
+  await page.locator("#vue-demo .multiselect").waitFor();
+  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<div id="blade">${html}</div>`), bladeFields);
+  const shapes = (selector) => page.locator(selector).evaluateAll((fields) => fields.map((field) => {
+    // generated ids become #0, #1… in order of appearance, so a label still has to point at its control
+    const ids = [...field.querySelectorAll("[id]")].map((el) => el.id);
+    if (field.id) ids.unshift(field.id);
+    const token = (v) => v.split(" ").map((w) => (ids.includes(w) ? `#${ids.indexOf(w)}` : w)).join(" ");
+    // live state rather than attributes: Vue sets value, checked and selected as properties
+    const shape = (n) => n.nodeType === 3 ? n.data.trim() || null : n.nodeType !== 1 ? null : [
+      n.localName,
+      [...n.attributes].filter((a) => !["value", "checked", "selected"].includes(a.name))
+        .map((a) => `${a.name}=${a.value === a.name ? "" : ["id", "for", "aria-describedby", "popovertarget"].includes(a.name) ? token(a.value) : a.value}`).sort(),
+      ["input", "select", "textarea", "option"].includes(n.localName) ? [n.value, n.checked, n.selected] : [],
+      n.localName === "textarea" ? [] : [...n.childNodes].map(shape).filter((x) => x !== null),
+    ];
+    return shape(field);
+  }));
+  const [blade, vue] = await Promise.all([shapes("#blade > .field"), shapes("#vue-demo > .field")]);
+  expect(blade.length).toBe(9);
+  for (const [i, shape] of vue.entries()) expect(blade[i], `field ${i + 1}`).toEqual(shape);
+});
+});
+
+test("field: labels, hints and errors reach the control, and models go out as ids", async ({ page }) => {
+  await page.goto("/field.html");
+  const demo = page.locator("#vue-demo"), output = demo.locator("output");
+  await expect(demo.getByLabel("Email")).toHaveAccessibleDescription("We never share it.");
+  await expect(demo.getByRole("textbox", { name: "Bio" })).toHaveAccessibleDescription("At least 20 characters. Mention where you work.");
+  await expect(demo.getByRole("textbox", { name: "Bio" })).toHaveAttribute("aria-invalid", "true");
+  await expect(demo.getByRole("button", { name: /^Tags Laravel ?, Tailwind$/ })).toHaveAccessibleDescription("Up to two. The selected tag is invalid.");
+  await expect(demo.getByRole("group", { name: "Size" })).toBeVisible();
+  await expect(demo.getByRole("switch", { name: "Send me the newsletter" })).toBeChecked();
+
+  await demo.getByLabel("Category").selectOption("Culture");
+  await expect(output).toContainText('"category_id":3');
+  await demo.getByRole("button", { name: /^Tags/ }).click();
+  await demo.getByLabel("Laravel").uncheck();
+  await page.keyboard.press("Escape");
+  await expect(output).toContainText('"tags":[3]');
+  await demo.getByLabel("Card").check();
+  await expect(output).toContainText('"extras":["gift","card"]');
+  await demo.getByLabel("Price").fill("9");
+  await expect(output).toContainText('"price":9');
+  // `now` shows today and puts it in the model, not just the input
+  const today = await page.evaluate(() => new Date().toLocaleDateString("sv"));
+  await expect(demo.getByLabel("Published on")).toHaveValue(today);
+  await expect(output).toContainText(`"published_on":"${today}"`);
+});
+
+test("field: inside Inertia's <Form>, reset() sticks when the fields render again", async ({ page }) => {
+  await page.goto("/field.html");
+  const form = page.locator("#inertia-demo form"), topics = form.getByRole("button", { name: /^Topics/ });
+  await expect(form.getByLabel("Headline")).toHaveValue("Hello");
+  await expect(topics).toHaveAttribute("data-count", "1");
+  await form.getByLabel("Headline").fill("Changed");
+  await topics.click();
+  await form.getByLabel("Vue").check();
+  await page.keyboard.press("Escape");
+  await form.getByRole("switch").check();
+  const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
+  expect(await data()).toEqual(["headline=Changed", "topics[]=1", "topics[]=2", "featured=1"]);
+
+  await form.getByRole("button", { name: "Reset" }).click();
+  await expect(topics).toHaveAttribute("data-count", "1");
+  // the error renders every field again: v-model must not put "Changed" back
+  await form.getByRole("button", { name: "Show an error" }).click();
+  await expect(form.locator(".error")).toHaveText("An error from setError.");
+  await expect(form.getByLabel("Headline")).toHaveValue("Hello");
+  await expect(topics).toHaveAttribute("data-count", "1");
+  expect(await data()).toEqual(["headline=Hello", "topics[]=1"]);
+});
