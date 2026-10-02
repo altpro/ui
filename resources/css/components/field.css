@@ -47,7 +47,9 @@
       --input-border: var(--color-danger);
       --input-ring: var(--color-danger);
     }
-    &:has(.input:disabled) > label {
+    /* only a label tied to the control: WCAG exempts that one from contrast,
+       not a plain one such as a multiselect's */
+    &:has(.input:disabled) > label[for] {
       opacity: 0.5;
     }
   }

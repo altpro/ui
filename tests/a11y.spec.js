@@ -122,7 +122,7 @@ for (const colorScheme of ["light", "dark"]) {
       await page.goto("/multiselect.html");
       await page.addStyleTag({ content: "* { transition: none !important }" });
       const failures = [];
-      for (const t of await page.locator("main .multiselect > button").all()) {
+      for (const t of await page.locator("main .multiselect > button:enabled").all()) {
         await t.scrollIntoViewIfNeeded();
         await t.click();
         const pop = t.locator("xpath=..").locator("[popover]");

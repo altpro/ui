@@ -114,11 +114,13 @@ test('coloured divided card sections reach the edges and keep their content inse
   }
 });
 
-// The Blade component rendered by PHP, with the same props as the Vue instance on multiselect.html.
-const blade = execFileSync("php", ["tests/blade.php", `<x-ui::multiselect name="size" label="Size" :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']" :selected="['m']" />`], { encoding: "utf8" });
+// The Blade component rendered by PHP, with the same props as the Vue instances on multiselect.html.
+const render = (tag) => execFileSync("php", ["tests/blade.php", tag], { encoding: "utf8" });
+const blade = render(`<x-ui::multiselect name="size" label="Size" required max="2" :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']" :selected="['m']" />`);
+const bladeDisabled = render(`<x-ui::multiselect name="colour" label="Colour" form="elsewhere" disabled :options="['b' => 'Black', 'w' => 'White']" :selected="['b']" />`);
 const withBlade = async (page) => {
   await page.goto("/multiselect.html");
-  await page.locator("#vue-demo .multiselect").waitFor();
+  await page.locator("#vue-demo .multiselect").first().waitFor();
   await page.addStyleTag({ content: "* { transition: none !important }" });
   await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<form id="blade">${html}<button class="btn">Save</button></form>`), blade);
   return page.locator("#blade .multiselect");
@@ -126,7 +128,9 @@ const withBlade = async (page) => {
 
 test("multiselect: the Blade and Vue components render the same markup", async ({ page }) => {
   await withBlade(page);
-  const [b, v] = await Promise.all(["#blade", "#vue-demo"].map((form) => page.locator(form + " .multiselect").evaluate((el) => {
+  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<div id="blade-disabled">${html}</div>`), bladeDisabled);
+  for (const [blade, vue] of [["#blade .multiselect", "#vue-demo .multiselect >> nth=0"], ["#blade-disabled .multiselect", "#vue-demo .multiselect >> nth=1"]]) {
+  const [b, v] = await Promise.all([blade, vue].map((selector) => page.locator(selector).evaluate((el) => {
     // attributes minus the generated id pair, plus live input state (Vue sets checked as a property)
     const shape = (n) => n.nodeType === 3 ? n.data.trim() || null : n.nodeType !== 1 ? null : [
       n.localName,
@@ -138,34 +142,84 @@ test("multiselect: the Blade and Vue components render the same markup", async (
   })));
   expect([b.linked, v.linked]).toEqual([true, true]);
   expect(b.shape).toEqual(v.shape);
+  }
 });
 
-test("multiselect: the button counts ticks and the form sends name[]", async ({ page }) => {
+test("multiselect: required, max, form and disabled work as on a select", async ({ page }) => {
   const ms = await withBlade(page);
   const [button, panel, save] = [ms.locator("button"), ms.locator("[popover]"), page.locator("#blade > .btn")];
-  // a second render with two ticks, outside the form
-  const two = execFileSync("php", ["tests/blade.php", `<x-ui::multiselect name="other" label="Size" :options="['s' => 'Small', 'm' => 'Medium']" :selected="['s', 'm']" />`], { encoding: "utf8" });
-  await page.locator("#blade").evaluate((form, html) => form.insertAdjacentHTML("afterend", `<div id="two">${html}</div>`), two);
+  const userInvalid = () => ms.evaluate((el) => el.matches(":state(touched):invalid"));
   await button.scrollIntoViewIfNeeded();
-  // the count badge: inset past the border and its rounded corners (they take the ring colour on focus), short of the chevron
-  const badge = async (b = button) => { const r = await b.boundingBox(); return page.screenshot({ clip: { x: r.x + 8, y: r.y + 2, width: r.width - 40, height: r.height - 4 } }); };
-  const one = await badge(), twoTicks = await badge(page.locator("#two button"));
-  expect(one.equals(twoTicks)).toBe(false); // WebKit drew the same wrong number for both with a CSS counter
-  // ticked from code while closed: the change event is what recounts
+  expect(await userInvalid()).toBe(false);
+
+  // max="2": at two ticks the third box is disabled, at one it is back
+  await button.click();
+  await panel.getByLabel("Small").check();
+  await expect(panel.getByLabel("Large")).toBeDisabled();
+  await panel.getByLabel("Small").uncheck();
+  await expect(panel.getByLabel("Large")).toBeEnabled();
+
+  // required: nothing ticked stops the submit with the browser's message, on the button
+  await panel.getByLabel("Medium").uncheck();
+  await page.keyboard.press("Escape");
+  await save.click();
+  await expect(button).toBeFocused();
+  expect(await userInvalid()).toBe(true);
+  expect(await ms.evaluate((el) => el.matches(":invalid") && document.querySelector("#blade").checkValidity())).toBe(false);
+  // the panel still takes clicks after the bubble (Firefox stopped when it pointed into the panel)
+  await button.click();
+  await panel.getByLabel("Large").check();
+  await page.keyboard.press("Escape");
+  expect(await userInvalid()).toBe(false);
+  await Promise.all([page.waitForURL(/size%5B%5D=l$/), save.click()]);
+
+  // form="…": an empty required multiselect outside its form still stops that form
+  await page.goto("/multiselect.html");
+  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `${html}<form id="other"><button class="btn">Send</button></form>`),
+    render(`<x-ui::multiselect name="colour" label="Colour" form="other" required :options="['b' => 'Black', 'w' => 'White']" />`));
+  const outside = page.locator("main > .multiselect");
+  await page.locator("#other .btn").click();
+  await expect(outside.locator("button")).toBeFocused();
+  await outside.locator("button").click();
+  await outside.getByLabel("White").check();
+  await page.keyboard.press("Escape");
+  await Promise.all([page.waitForURL(/colour%5B%5D=w$/), page.locator("#other .btn").click()]);
+
+  // disabled: the button cannot open the panel and the boxes are not submitted
+  await page.goto("/multiselect.html");
+  const disabled = page.locator("#vue-demo .multiselect").nth(1);
+  await expect(disabled.locator("button")).toBeDisabled();
+  await expect(disabled.locator("input").first()).toBeDisabled();
+});
+
+test("multiselect: the button shows the ticked items, and the count once they overflow", async ({ page }) => {
+  const ms = await withBlade(page);
+  const [button, panel, save] = [ms.locator("button"), ms.locator("[popover]"), page.locator("#blade > .btn")];
+  const overflows = () => ms.evaluate((el) => el.matches(":state(overflow)"));
+  const count = () => button.evaluate((b) => getComputedStyle(b, "::before").display);
+  await expect(button).toHaveAccessibleName("Size Medium");
+  expect([await overflows(), await count()]).toEqual([false, "none"]);
+  // ticked from code while closed: the change event is what updates the button
   await panel.evaluate((p) => { const box = p.querySelector("[value=s]"); box.checked = true; box.dispatchEvent(new Event("change", { bubbles: true })); });
-  expect((await badge()).equals(twoTicks)).toBe(true);
+  await expect(button).toHaveAccessibleName("Size Small, Medium");
+  await expect(button).toHaveAttribute("data-count", "2");
+  // narrower than the items: an ellipsis, then the count
+  await ms.evaluate((el) => (el.style.width = "7rem"));
+  await expect.poll(overflows).toBe(true);
+  expect(await count()).not.toBe("none");
+  await ms.evaluate((el) => (el.style.width = ""));
+  await expect.poll(overflows).toBe(false);
+
   await button.click();
   await expect(panel).toBeVisible();
   await panel.getByLabel("Small").uncheck();
-  await page.keyboard.press("Escape");
-  expect((await badge()).equals(one)).toBe(true);
-
-  await button.click();
   await panel.getByLabel("Medium").uncheck();
-  await expect(button.locator("span")).toHaveAttribute("data-count", "0");
+  await expect(button).toHaveAttribute("data-count", "0");
+  await expect(button).toHaveAccessibleName("Size"); // nothing ticked: empty, as a select with no value
   await panel.getByLabel("Large").check();
   await page.keyboard.press("Escape");
   await expect(panel).toBeHidden();
+  await expect(button).toHaveAccessibleName("Size Large");
   await Promise.all([page.waitForURL(/size%5B%5D=l$/), save.click()]);
 });
 
@@ -190,16 +244,18 @@ test("multiselect: Vue v-model follows the boxes and the count follows v-model",
   const warnings = [];
   page.on("console", (m) => ["warning", "error"].includes(m.type()) && warnings.push(m.text()));
   await page.goto("/multiselect.html");
-  const ms = page.locator("#vue-demo .multiselect"), count = ms.locator("button > span"), output = page.locator("#vue-demo output");
+  const ms = page.locator("#vue-demo .multiselect").first(), count = ms.locator("button"), output = page.locator("#vue-demo output");
   await expect(count).toHaveAttribute("data-count", "1"); // v-model ticks its boxes after the element connects
   await ms.locator("button").click();
   await ms.getByLabel("Small").check();
   await expect(output).toHaveText('v-model: ["m","s"]');
   await expect(count).toHaveAttribute("data-count", "2");
+  await expect(count).toHaveAccessibleName("Size Small, Medium");
   await page.keyboard.press("Escape");
   await page.locator("#vue-demo").getByRole("button", { name: "Clear" }).click();
   await expect(output).toHaveText("v-model: []");
   await expect(ms.locator("input:checked")).toHaveCount(0);
   await expect(count).toHaveAttribute("data-count", "0");
+  await expect(count).toHaveAccessibleName("Size");
   expect(warnings).toEqual([]);
 });

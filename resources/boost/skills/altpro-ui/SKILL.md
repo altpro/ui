@@ -327,12 +327,17 @@ Custom properties: `--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius -
 
 ## Multiselect: `.multiselect`
 
-A button that opens a `.dropdown` of checkboxes, in place of `<select multiple>`. One click ticks a box, the panel stays open while you tick more, and the button shows how many are ticked. The form submits the same `name[]` values a multiple select would. Prefer the Blade or Vue component; they render exactly this markup.
+A button that opens a `.dropdown` of checkboxes, in place of `<select multiple>`. One click ticks a box and the panel stays open while you tick more. The button shows what is ticked, as a select shows its value: empty when nothing is, the items separated by commas, then an ellipsis and a count once they no longer fit its fixed width (`12rem`; a `w-*` utility on the wrapper changes it). The visible label goes outside, in a `.field`, as it would for a select. The form submits the same `name[]` values a multiple select would. Prefer the Blade or Vue component; they render exactly this markup.
 
 ```blade
-<x-ui::multiselect name="size" label="Size"
-    :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']"
-    :selected="old('size', $product->sizes)" />
+<div class="field">
+  <label>Size</label>
+  <x-ui::multiselect name="size" label="Size"
+      :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']"
+      :selected="old('size', $product->sizes)"
+      required max="2" />
+  <p class="hint">Up to two.</p>
+</div>
 ```
 
 ```vue
@@ -346,24 +351,34 @@ const sizes = ref(["m"]);
 
 ```html
 <ui-multiselect class="multiselect">
-  <button type="button" class="input" popovertarget="size"><span>Size</span></button>
+  <button type="button" class="input" popovertarget="size" data-count="1">
+    <span class="sr-only">Size</span><span><span hidden>Small</span><span>Medium</span></span>
+  </button>
   <fieldset id="size" popover class="dropdown" aria-label="Size">
     <label class="checkbox"><input type="checkbox" name="size[]" value="s"> Small</label>
-    <label class="checkbox"><input type="checkbox" name="size[]" value="m"> Medium</label>
+    <label class="checkbox"><input type="checkbox" name="size[]" value="m" checked> Medium</label>
   </fieldset>
 </ui-multiselect>
 ```
 
 | Prop | Blade | Vue |
 |------|-------|-----|
-| `label` | Button text and the panel's accessible name. Required. | Same. |
+| `label` | `sr-only` text in the button and the panel's accessible name. Required. It does not show: put the visible label outside. | Same. |
 | `options` | `value => label` array or collection. | `[{ value, label }]`. |
 | `name` | Field name; `[]` is added so PHP receives every value. | Same; leave it off when no real form submits it. |
 | `selected` / `v-model` | Ticked values. Pass `old('name', $current)` to refill after a failed validation. | An array of ticked values. |
+| `required` | Stops the submit while nothing is ticked, as a required select does. | Same. |
+| `max` | Disables the unticked boxes once this many are ticked. Say so in a `.hint`. | Same; a number, `:max="2"`. |
+| `form` | Id of a form elsewhere on the page that submits it. | Same. |
+| `disabled` | Cannot open; nothing is submitted, as a disabled select. | Same. |
+| `autofocus` | Focuses the button on page load. | Same. |
 
 - Other Blade attributes (`class="w-48"`) land on the wrapper.
-- The count is set by `<ui-multiselect>` (`resources/js/multiselect.js`). Without that script everything else still works but the count does not update. A box ticked from code fires no change event: dispatch one.
-- There is no client-side `required`. Validate on the server and put the multiselect in a `.field` with a `<p class="error">`; the button turns red like any `.input`.
+- Hand-written markup: one `<span>` per box inside the button's last span, same order, no whitespace between them (it would show), `hidden` on the unticked ones, and `data-count` on the button.
+- The visible label is plain text such as `<label>Size</label>` with no `for`. A `<label for>` pointing at the button becomes its whole accessible name, so screen readers would no longer hear the ticked items.
+- `<ui-multiselect>` (`resources/js/multiselect.js`) keeps the items and `data-count` in step with the boxes and sets `:state(overflow)` when they do not fit, which shows the count. Without that script everything else still works but the button keeps the server's ticks and never shows the count. A box ticked from code fires no change event: dispatch one.
+- Hand-written markup takes the same attributes, where a select would have them: `required`, `max` and `form` on `<ui-multiselect>`, `form` and `name` on each box as well, `disabled` on the button and the `<fieldset>`, `autofocus` on the button.
+- `required` uses the browser's own validation: the message sits on the button, and `:state(touched):invalid` turns the button red once the user has changed it or tried to submit. `required` and `max` need the script. Validate on the server as well, and show its message in a `.field` with a `<p class="error">`; the button turns red like any `.input`.
 - Override one component in an app by copying it to `resources/views/vendor/ui/components/multiselect.blade.php` (`php artisan vendor:publish --tag=ui-views` copies all of them). A copy stops receiving package updates.
 
 ## Tooltip: `data-tooltip`

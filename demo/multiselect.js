@@ -7,8 +7,16 @@ createApp({
   setup() {
     const sizes = ref(["m"]);
     const options = [{ value: "s", label: "Small" }, { value: "m", label: "Medium" }, { value: "l", label: "Large" }];
-    return () => h("div", { class: "flex flex-wrap items-center gap-3" }, [
-      h(Multiselect, { modelValue: sizes.value, "onUpdate:modelValue": (v) => (sizes.value = v), name: "size", label: "Size", options }),
+    const colours = [{ value: "b", label: "Black" }, { value: "w", label: "White" }];
+    return () => h("div", { class: "flex flex-wrap items-end gap-3" }, [
+      h("div", { class: "field" }, [
+        h("label", "Size"),
+        h(Multiselect, { modelValue: sizes.value, "onUpdate:modelValue": (v) => (sizes.value = v), name: "size", label: "Size", options, required: true, max: 2 }),
+      ]),
+      h("div", { class: "field" }, [
+        h("label", "Colour"),
+        h(Multiselect, { modelValue: ["b"], name: "colour", label: "Colour", options: colours, form: "elsewhere", disabled: true }),
+      ]),
       h("button", { type: "button", class: "btn ghost", onClick: () => (sizes.value = []) }, "Clear"),
       h("output", { class: "text-sm" }, `v-model: ${JSON.stringify(sizes.value)}`),
     ]);
