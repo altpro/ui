@@ -1,0 +1,105 @@
+/* DataTable: the frame DataTable.vue puts round a .table.
+   <div class="datatable">
+     <div class="controls">search, filters, Columns</div>
+     <div class="bulk">only while rows are selected</div>
+     <div class="scroll" tabindex="0" role="region"><table class="table hover">…</table></div>
+     <div class="foot">count, page size, pagination</div>
+   </div>
+   The empty state is a lone body row with one cell spanning every column,
+   so it is read off the markup rather than a class. Layered so Tailwind
+   utilities win. */
+@layer components {
+  .datatable {
+    > .controls {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: end;
+      gap: var(--spacing-gap);
+      margin-block-end: var(--spacing-gap);
+
+      > .search {
+        flex: 1 1 12rem;
+        max-width: 24rem;
+      }
+
+      /* the Columns panel: one row per box, as in the multiselect panel */
+      > .dropdown {
+        padding: 0.25rem;
+        /* not on the closed panel: the UA hides that with display */
+        &:popover-open {
+          display: grid;
+        }
+        > label {
+          min-height: 2rem;
+          padding-inline: 0.5rem;
+          border-radius: calc(min(var(--radius), 1rem) - 2px);
+          &:hover {
+            background: var(--color-muted);
+          }
+        }
+      }
+    }
+
+    > .bulk {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem var(--spacing-gap);
+      margin-block-end: var(--spacing-gap);
+      padding: 0.5rem var(--spacing-gap);
+      border: 1px solid var(--color-border);
+      border-radius: min(var(--radius), 1rem);
+      font-size: var(--text-sm, 0.875rem);
+
+      > p {
+        font-weight: 600;
+      }
+    }
+
+    > .scroll {
+      overflow-x: auto;
+      border-radius: 0.25rem;
+      &:focus-visible {
+        outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+      }
+    }
+
+    .select {
+      width: 1px;
+    }
+
+    table[aria-busy="true"] tbody {
+      opacity: 0.5;
+      transition: opacity 150ms ease-in;
+    }
+
+    tbody > tr:only-child > td[colspan] {
+      padding-block: var(--spacing-gap);
+      color: var(--color-muted-foreground);
+      text-align: center;
+    }
+    /* not a row to point at; matches the .table.hover rule's weight and comes later */
+    tbody > tr:only-child:hover > td[colspan] {
+      background: none;
+    }
+
+    > .foot {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem var(--spacing-gap);
+      margin-block-start: var(--spacing-gap);
+      font-size: var(--text-sm, 0.875rem);
+      color: var(--color-muted-foreground);
+
+      > [role="status"] {
+        margin-inline-end: auto;
+      }
+      > label {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+    }
+  }
+}

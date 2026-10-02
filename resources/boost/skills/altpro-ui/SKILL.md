@@ -1,6 +1,6 @@
 ---
 name: altpro-ui
-description: Use altpro/ui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, multiselect, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use altpro/ui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, multiselect, tooltip, card, dialog, accordion, table, DataTable, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # altpro/ui
@@ -606,6 +606,82 @@ A data table on a native `<table>`. Children are styled by element, so no cell c
 - Row backgrounds are on the cells, so `bg-*` goes on `td`, not `tr`.
 
 Custom properties: `--table-fg --table-head-fg --table-border --table-stripe --table-hover --table-selected --table-px --table-py --table-text`.
+
+## DataTable: `DataTable.vue` and `TableQuery`
+
+A Vue component for Inertia apps: search, sortable columns, declared filters, page size, hideable columns, row selection with bulk actions, and empty states. Hand it an array and it does the work in the browser. Hand it a Laravel paginator and the server did it, through `Altpro\Ui\TableQuery`. Search, sort, page and filters live in the query string, so the view is a link you can send and the back button works; page size and hidden columns are kept in `localStorage`. It needs `@inertiajs/vue3`. There is no Blade version.
+
+```vue
+<script setup lang="ts">
+import DataTable from "../../vendor/altpro/ui/resources/js/DataTable.vue"; // or "@altpro/ui/js/DataTable.vue" from npm
+import type { DataTableColumn, DataTableFilter } from "../../vendor/altpro/ui/resources/js/dataTable";
+
+defineProps<{ brands: Brand[] }>();
+
+const columns: DataTableColumn<Brand>[] = [
+  { key: "name", label: "Name", sortable: true, tdClass: "font-medium" },
+  { key: "created_at", label: "Added", sortable: true, format: "date" },
+  { key: "actions", label: "Actions", virtual: true, thClass: "w-px" },
+];
+const filters: DataTableFilter<Brand>[] = [
+  { key: "featured", label: "Featured only", type: "boolean" },
+];
+</script>
+
+<template>
+  <DataTable caption="Brands" name="brands" :columns="columns" :rows="brands" :filters="filters" sort="name" empty-message="No brands yet.">
+    <template #cell-actions="{ row }">
+      <Link :href="`/brands/${row.id}/edit`" class="btn ghost sm">Edit <span class="sr-only">{{ row.name }}</span></Link>
+    </template>
+  </DataTable>
+</template>
+```
+
+Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string and a typo is not caught.
+
+| Prop | Meaning |
+|------|---------|
+| `columns` | `{ key, label, sortable?, hideable?, thClass?, tdClass?, format?, currency? }`. `format` is `date`, `datetime`, `currency` or `boolean`, in the page's `<html lang>`; `currency` is an ISO code, default `GBP`. A column with no field behind it (actions, a status built from several fields) sets `virtual: true`; search skips it, and `sortValue: (row) => …` makes it sortable. |
+| `rows` | An array (client mode) or a Laravel paginator, flat or under `meta` (server mode). |
+| `caption` | Required. Names the table (sr-only caption), the search box and the pagination. |
+| `name` | Prefixes the query parameters (`brands_sort`) and the stored preferences. Required when two tables share a page. |
+| `searchable` | Keys to search. Defaults to every data column. Client mode only; the server searches what `TableQuery` is given. |
+| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean", options?: [{ value, label }], default?, field?, match? }`. `default` applies when the URL says nothing; a select with a default needs its own "All" option. `match(row, values)` covers what a field comparison cannot. |
+| `sort`, `direction` | Default sort. Without `sort`, the first sortable column, ascending. |
+| `paginate` | Rows per page until the user picks another (10, 25, 50, 100). Default 25. |
+| `selectable` | Adds the checkbox column and the bulk bar. `@update:selection` gives `null`, `{ mode: "ids", ids }` or `{ mode: "matching", search, filters, count }`. |
+| `empty-message`, `no-matches-message` | "Nothing yet" and "nothing matches", which show differently: the second offers to clear the search. |
+| `unfiltered-total` | Server mode: the count before search and filters, so the table can say "filtered from" and pick the right empty message. |
+| `only` | Server mode: the props a change reloads, e.g. `['brands']`. |
+| `search-placeholder` | Defaults to "Search…". |
+
+| Slot | Gets |
+|------|------|
+| `cell-<key>` | `{ row, value }`. Replaces the cell, and wins over `format`. |
+| `bulk-actions` | `{ selection, count, clear }`. Buttons for the bar shown while rows are selected. |
+| `filters` | Extra controls in the toolbar. Filtering in the parent works, but then the table cannot count what was hidden. |
+| `empty` | Under `empty-message`, e.g. a "Create one" link. |
+
+- The header checkbox ticks the visible page only. Once the page is ticked and more rows match, the bar offers "Select all N matching", which hands over the query instead of ids: run it again on the server with `TableQuery::search()`.
+- Any change except a page change goes back to page one and clears the selection.
+- Markup: `.datatable` wraps `.controls`, `.bulk`, a scrolling `.scroll` region holding a `.table.hover`, and `.foot` (count, page size, pagination). Utilities on `thClass`/`tdClass` handle alignment and wrapping (`text-right tabular-nums`, `whitespace-nowrap`).
+
+Server mode, in the controller:
+
+```php
+use Altpro\Ui\TableQuery;
+
+$query = Brand::query()->when($request->boolean('brands_featured'), fn ($q) => $q->where('featured', true));
+
+return Inertia::render('Brands/Index', [
+    'brands' => TableQuery::paginate($query, $request, name: 'brands', searchable: ['name', 'slug'], sortable: ['name', 'added' => 'created_at'], defaultSort: 'name'),
+    'unfilteredTotal' => Brand::count(),
+]);
+```
+
+- `sortable` is the allow-list: a sort column from the URL that is not on it is ignored, so user input never reaches `order by`. `['added' => 'created_at']` maps the column key to a database column.
+- Filters stay in the controller as `when()` clauses, reading `{name}_{key}` (and `{name}_{key}[]` for `multiple`).
+- `per_page` is honoured only for 10, 25, 50 or 100.
 
 ## Alert: `.alert`
 

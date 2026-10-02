@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { execFileSync } from "node:child_process";
 
-const pages = ["button.html", "field.html", "dropdown.html", "multiselect.html", "dialog.html", "tabs.html", "app/product.html"];
+const pages = ["button.html", "field.html", "dropdown.html", "multiselect.html", "datatable.html", "dialog.html", "tabs.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 for (const colorScheme of ["light", "dark"]) {
@@ -359,4 +359,126 @@ test("field: inside Inertia's <Form>, reset() sticks when the fields render agai
   await expect(form.getByLabel("Headline")).toHaveValue("Hello");
   await expect(topics).toHaveAttribute("data-count", "1");
   expect(await data()).toEqual(["headline=Hello", "topics[]=1"]);
+});
+
+// DataTable: what the URL, filters and selection do, none of which axe can see.
+// Each table is found by its caption, so inserting an example cannot shift a selector onto another table.
+const datatable = (page, caption) => page.locator(".datatable").filter({ has: page.getByRole("table", { name: caption, exact: true }) });
+const bodyRows = (dt) => dt.locator("tbody tr");
+
+test("datatable: sorting writes the URL under the table's name, and aria-sort is on one column", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Team members");
+  await expect(dt.locator("th[aria-sort]")).toHaveText("Name");
+  await dt.getByRole("button", { name: "Email" }).click();
+  await expect(page).toHaveURL(/[?&]basic_sort=email/);
+  expect(page.url()).not.toContain("products_sort");
+  await expect(dt.locator("th[aria-sort]")).toHaveCount(1);
+  await expect(dt.locator("th[aria-sort]")).toHaveAttribute("aria-sort", "ascending");
+  await expect(bodyRows(dt).first()).toContainText("ada@example.com");
+  await dt.getByRole("button", { name: "Email" }).click();
+  await expect(dt.locator("th[aria-sort]")).toHaveAttribute("aria-sort", "descending");
+  await expect(bodyRows(dt).first()).toContainText("margaret@example.com");
+  // the URL is the state: a reload, or a link sent to someone, shows the same view
+  await page.reload();
+  await expect(datatable(page, "Team members").locator("th[aria-sort]")).toHaveAttribute("aria-sort", "descending");
+  // sorting back to the default takes it out of the URL
+  await datatable(page, "Team members").getByRole("button", { name: "Name" }).click();
+  await expect(page).not.toHaveURL(/basic_sort/);
+});
+
+test("datatable: pages move through the URL, and the page size is kept on the device", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Team members");
+  const nav = dt.getByRole("navigation", { name: "Team members pagination" });
+  await expect(nav.getByRole("button", { name: "Previous page" })).toBeDisabled();
+  await nav.getByRole("button", { name: "Next page" }).click();
+  await expect(page).toHaveURL(/basic_page=2/);
+  await expect(nav.getByRole("button", { name: "2" })).toHaveAttribute("aria-current", "page");
+  await expect(dt.getByRole("status")).toHaveText("Showing 6–7 of 7");
+  await expect(bodyRows(dt)).toHaveCount(2);
+
+  const products = datatable(page, "Products");
+  await products.getByRole("combobox", { name: "Per page" }).selectOption("25");
+  await expect(bodyRows(products)).toHaveCount(12);
+  // a preference, not the view: kept on the device, out of the URL
+  expect(page.url()).not.toContain("per_page");
+  await page.reload();
+  await expect(bodyRows(datatable(page, "Products"))).toHaveCount(12);
+});
+
+test("datatable: declared filters narrow the rows, sit in the URL and say how many they hid", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Products");
+  await expect(dt.getByRole("status")).toHaveText("Showing 1–10 of 12");
+  await dt.getByLabel("Availability").selectOption("out_of_stock");
+  await expect(page).toHaveURL(/products_availability=out_of_stock/);
+  await expect(bodyRows(dt)).toHaveCount(4);
+  await expect(dt.getByRole("status")).toHaveText("Showing 1–4 of 4, filtered from 12");
+
+  await dt.locator(".controls").getByRole("button", { name: /^Size/ }).click();
+  await dt.getByRole("checkbox", { name: "L" }).check();
+  await expect(page).toHaveURL(/products_size%5B%5D=L/);
+  await expect(bodyRows(dt)).toHaveCount(2);
+  await page.keyboard.press("Escape");
+  await expect(dt.locator(".controls").getByRole("button", { name: /^Size/ })).toContainText("L");
+});
+
+test("datatable: a search that matches nothing says so in the table and offers to clear itself", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Team members");
+  await dt.getByRole("searchbox", { name: "Search Team members" }).fill("zzzz");
+  const cell = dt.locator("tbody > tr:only-child > td[colspan]");
+  await expect(cell).toContainText("No team members match your search.");
+  // the count is what changes, so it is what a screen reader hears; the message is a different sentence
+  await expect(dt.getByRole("status")).toHaveText("Showing 0 of 0, filtered from 7");
+  await expect(page).toHaveURL(/basic_search=zzzz/);
+  await cell.getByRole("button", { name: "Clear filters" }).click();
+  await expect(bodyRows(dt)).toHaveCount(5);
+  await expect(dt.getByRole("searchbox")).toHaveValue("");
+  await expect(page).not.toHaveURL(/basic_search/);
+});
+
+test("datatable: an empty table carries its message in one spanning cell, and every table keeps a status", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Archived team members");
+  await expect(bodyRows(dt)).toHaveCount(1);
+  const cell = dt.locator("tbody td");
+  await expect(cell).toHaveText("No archived members.");
+  await expect(cell.getByRole("button")).toHaveCount(0);
+  await expect(cell).toHaveAttribute("colspan", String(await dt.locator("thead th").count()));
+  await expect(dt.getByRole("status")).toHaveText("Showing 0 of 0");
+  // a live region inserted with its text announces nothing, so it must be there before anything is empty
+  for (const table of await page.locator(".datatable").all()) await expect(table.getByRole("status")).not.toHaveText("");
+});
+
+test("datatable: the header box selects the page, and the rest of the matches is a separate offer", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Products under review"), output = page.locator("output");
+  await dt.getByRole("checkbox", { name: "Select every Products under review row on this page" }).check();
+  await expect(dt.locator("tbody input:checked")).toHaveCount(10);
+  await expect(dt.locator(".bulk p")).toHaveText("10 selected");
+  await expect(output).toContainText('"mode":"ids"');
+  await dt.getByRole("button", { name: "Select all 12 matching" }).click();
+  await expect(dt.locator(".bulk p")).toHaveText("12 selected");
+  await expect(output).toContainText('"mode":"matching"');
+  // a selection describes a list: change the list and it goes
+  await dt.getByRole("searchbox").fill("tee");
+  await expect(dt.locator(".bulk")).toHaveCount(0);
+  await expect(output).toHaveText("selection: null");
+  await dt.getByRole("checkbox", { name: "Select Trail Tee" }).first().check();
+  await dt.getByRole("button", { name: "Discontinue" }).click();
+  await expect(output).toHaveText("1 discontinued.");
+  await expect(dt.locator("tbody input:checked")).toHaveCount(0);
+});
+
+test("datatable: hiding a column removes it from every row and survives a reload", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Team members");
+  await dt.getByRole("button", { name: "Columns" }).click();
+  await dt.getByRole("group", { name: "Team members columns" }).getByRole("checkbox", { name: "Email" }).uncheck();
+  await expect(dt.locator("thead th")).toHaveText(["Name", "Role"]);
+  for (const row of await bodyRows(dt).all()) await expect(row.locator("td")).toHaveCount(2);
+  await page.reload();
+  await expect(datatable(page, "Team members").locator("thead th")).toHaveText(["Name", "Role"]);
 });

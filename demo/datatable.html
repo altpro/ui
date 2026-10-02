@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · DataTable</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">DataTable</h1>
+    <p class="muted"><code>DataTable.vue</code>, for Inertia apps. Hand it an array and it searches, sorts and pages the rows itself. Hand it a Laravel paginator and the server has done that, through <code>Altpro\Ui\TableQuery</code>, so it renders what it was given and asks the server for the next page. Search, sort, page and filters live in the query string, so a table you are looking at is a link you can send. Page size and hidden columns are preferences and stay on the device.</p>
+  </section>
+  <div id="app" class="space-y-10"></div>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="datatable.js"></script>
+</body>
+</html>

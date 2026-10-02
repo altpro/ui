@@ -20,6 +20,7 @@ const icons = {
   path: '<path d="m6 17 5-5-5-5"/><path d="m13 17 5-5-5-5"/>',
   window: '<rect x="2" y="4" width="20" height="16" rx="2"/><path d="M10 4v4"/><path d="M2 8h20"/><path d="M6 4v4"/>',
   collapse: '<path d="m3 10 2.5-2.5L3 5"/><path d="m3 19 2.5-2.5L3 14"/><path d="M10 6h11"/><path d="M10 12h11"/><path d="M10 18h11"/>',
+  sheet: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/><path d="M9 9v12"/><path d="M15 9v12"/>',
   table: '<path d="M12 3v18"/><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18"/><path d="M3 15h18"/>',
   alert: '<circle cx="12" cy="12" r="10"/><line x1="12" x2="12" y1="8" y2="12"/><line x1="12" x2="12.01" y1="16" y2="16"/>',
   tabs: '<path d="M3 9a2 2 0 0 1 2-2h3l2-2h4l2 2h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
@@ -69,6 +70,7 @@ const components = [
 ];
 // components with a custom element in resources/js/
 const scripted = [
+  ["datatable.html", "DataTable", "sheet"],
   ["multiselect.html", "Multiselect", "listChecks"],
 ];
 /* Every href is relative to demo/; `root` fixes them up from app/.

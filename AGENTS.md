@@ -8,15 +8,17 @@ CSS component layer for Tailwind v4, with Blade and Vue versions of the componen
 resources/css/ui.css         entry, imports everything below; @source points Tailwind at the Blade and Vue templates
 resources/css/theme.css      @theme default tokens, all light-dark(); --radius knob and responsive --spacing-gap on :root
 resources/css/scheme.css     color-scheme regions: .light .dark .inverse
-resources/css/components/    one file per component (button, join, input, field, check, badge, avatar, nav, breadcrumb, dropdown, multiselect, tooltip, card, dialog, accordion, table, alert, tabs, progress, range, loading, steps, timeline, toast)
+resources/css/components/    one file per component (button, join, input, field, check, badge, avatar, nav, breadcrumb, dropdown, multiselect, tooltip, card, dialog, accordion, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast)
 resources/views/components/  Blade components, rendered as <x-ui::name>
-resources/js/                Vue components (Name.vue) and the custom elements they share with Blade (name.js)
+resources/js/                Vue components (Name.vue) and the custom elements they share with Blade (name.js); DataTable.vue is Vue only, TypeScript, and needs Inertia
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs it
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
+src/TableQuery.php           server half of DataTable.vue: search, allow-listed sort and page size from the query string
 demo/*.html                  one page per component, plus index and theme
 demo/app/*.html              e-commerce sample pages; same skeleton and demo.js, listed under Application in the menu
 demo/demo.js                 shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 tests/blade.php              renders a Blade string through Testbench, for the browser tests
+tests/table-query.php        TableQuery against in-memory SQLite; npm test runs it first
 ```
 
 ## Rules
@@ -53,5 +55,5 @@ tests/blade.php              renders a Blade string through Testbench, for the b
 composer install  Testbench, so the tests can render Blade (needs PHP 8.3+)
 npm run dev       demo site with live reload
 npm run build     production build of the demo into dist/
-npm test          axe WCAG 2.2 AA scan of every demo page in light and dark, plus hover, focus and target-size checks, and the Firefox/WebKit matrix
+npm test          TableQuery checks, then axe WCAG 2.2 AA scan of every demo page in light and dark, plus hover, focus and target-size checks, and the Firefox/WebKit matrix
 ```

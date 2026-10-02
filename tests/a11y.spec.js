@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "multiselect.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "multiselect.html", "datatable.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -307,8 +307,8 @@ for (const colorScheme of ["light", "dark"]) {
     });
 
     // row hover is a tint on the cells: hover every body row of a .hover table and check the text still reads
-    test("table.html: every hovered row keeps contrast", async ({ page }) => {
-      await page.goto("/table.html");
+    for (const p of ["table.html", "datatable.html"]) test(`${p}: every hovered row keeps contrast`, async ({ page }) => {
+      await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
       const rows = page.locator("main .table.hover tbody tr");
       expect(await rows.count()).toBeGreaterThan(3);
@@ -321,6 +321,21 @@ for (const colorScheme of ["light", "dark"]) {
         await r.evaluate((el) => el.removeAttribute("data-hover"));
       }
       expect(failures).toEqual([]);
+    });
+
+    // the columns panel, a filter panel and the bulk bar are hidden at load, so axe never sees them
+    test("datatable.html: the open panels and the bulk bar pass axe", async ({ page }) => {
+      await page.goto("/datatable.html");
+      for (const name of ["Columns", "Size"]) {
+        const button = page.locator(".datatable .controls").getByRole("button", { name: new RegExp(`^${name}`) }).first();
+        await button.click();
+        const { violations } = await axe(page).include(`[id="${await button.getAttribute("popovertarget")}"]`).analyze();
+        expect(summary(violations)).toEqual([]);
+        await page.keyboard.press("Escape");
+      }
+      await page.getByRole("checkbox", { name: /^Select every Products under review/ }).check();
+      const { violations } = await axe(page).include(".bulk").analyze();
+      expect(summary(violations)).toEqual([]);
     });
 
     // the bar is a vendor pseudo: its width must follow value/max, and a valueless progress must animate
@@ -366,7 +381,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["multiselect.html", ".multiselect > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["multiselect.html", ".multiselect > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
