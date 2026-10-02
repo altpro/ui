@@ -158,6 +158,13 @@ test("multiselect: required, max, form and disabled work as on a select", async 
   await expect(panel.getByLabel("Large")).toBeDisabled();
   await panel.getByLabel("Small").uncheck();
   await expect(panel.getByLabel("Large")).toBeEnabled();
+  // removing max frees the boxes it disabled, and only those
+  await panel.getByLabel("Small").check();
+  await ms.evaluate((el) => { el.querySelector("[value=m]").disabled = true; el.removeAttribute("max"); });
+  await expect(panel.getByLabel("Large")).toBeEnabled();
+  await expect(panel.getByLabel("Medium")).toBeDisabled();
+  await ms.evaluate((el) => { el.querySelector("[value=m]").disabled = false; el.setAttribute("max", "2"); });
+  await panel.getByLabel("Small").uncheck();
 
   // required: nothing ticked stops the submit with the browser's message, on the button
   await panel.getByLabel("Medium").uncheck();
@@ -257,5 +264,7 @@ test("multiselect: Vue v-model follows the boxes and the count follows v-model",
   await expect(ms.locator("input:checked")).toHaveCount(0);
   await expect(count).toHaveAttribute("data-count", "0");
   await expect(count).toHaveAccessibleName("Size");
+  // a required one emptied from code is invalid, as if the user had unticked it
+  expect(await ms.evaluate((el) => el.matches(":invalid"))).toBe(true);
   expect(warnings).toEqual([]);
 });
