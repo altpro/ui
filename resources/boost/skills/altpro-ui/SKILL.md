@@ -1,6 +1,6 @@
 ---
 name: altpro-ui
-description: Use altpro/ui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use altpro/ui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, multiselect, tooltip, card, dialog, accordion, table, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # altpro/ui
@@ -324,6 +324,47 @@ A panel anchored to the button that opens it. Native `popover` plus CSS anchor p
 - Add `autofocus` to the first item to move keyboard focus into the panel on open. Without it, Tab from the trigger enters the panel.
 
 Custom properties: `--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius --dropdown-shadow`.
+
+## Multiselect: `.multiselect`
+
+A button that opens a `.dropdown` of checkboxes, in place of `<select multiple>`. One click ticks a box, the panel stays open while you tick more, and the button shows how many are ticked. The form submits the same `name[]` values a multiple select would. Prefer the Blade or Vue component; they render exactly this markup.
+
+```blade
+<x-ui::multiselect name="size" label="Size"
+    :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']"
+    :selected="old('size', $product->sizes)" />
+```
+
+```vue
+<script setup>
+import Multiselect from "../../vendor/altpro/ui/resources/js/Multiselect.vue"; // or "@altpro/ui/js/Multiselect.vue" from npm
+const sizes = ref(["m"]);
+</script>
+
+<Multiselect v-model="sizes" name="size" label="Size" :options="[{ value: 's', label: 'Small' }, { value: 'm', label: 'Medium' }]" />
+```
+
+```html
+<ui-multiselect class="multiselect">
+  <button type="button" class="input" popovertarget="size"><span>Size</span></button>
+  <fieldset id="size" popover class="dropdown" aria-label="Size">
+    <label class="checkbox"><input type="checkbox" name="size[]" value="s"> Small</label>
+    <label class="checkbox"><input type="checkbox" name="size[]" value="m"> Medium</label>
+  </fieldset>
+</ui-multiselect>
+```
+
+| Prop | Blade | Vue |
+|------|-------|-----|
+| `label` | Button text and the panel's accessible name. Required. | Same. |
+| `options` | `value => label` array or collection. | `[{ value, label }]`. |
+| `name` | Field name; `[]` is added so PHP receives every value. | Same; leave it off when no real form submits it. |
+| `selected` / `v-model` | Ticked values. Pass `old('name', $current)` to refill after a failed validation. | An array of ticked values. |
+
+- Other Blade attributes (`class="w-48"`) land on the wrapper.
+- The count is set by `<ui-multiselect>` (`resources/js/multiselect.js`). Without that script everything else still works but the count does not update. A box ticked from code fires no change event: dispatch one.
+- There is no client-side `required`. Validate on the server and put the multiselect in a `.field` with a `<p class="error">`; the button turns red like any `.input`.
+- Override one component in an app by copying it to `resources/views/vendor/ui/components/multiselect.blade.php` (`php artisan vendor:publish --tag=ui-views` copies all of them). A copy stops receiving package updates.
 
 ## Tooltip: `data-tooltip`
 

@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "multiselect.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -114,6 +114,33 @@ for (const colorScheme of ["light", "dark"]) {
       const [t3, p3] = [await bottom.boundingBox(), await page.locator("#menu-left").boundingBox()];
       expect(p3.y).toBeGreaterThan(t3.y);
       expect(p3.y + p3.height).toBeLessThanOrEqual(150);
+    });
+
+    // panels are closed at load, so axe never sees them: open each, check it, hover every row, and check it is on screen
+    test("multiselect.html: every open panel passes axe, stays inside the viewport and its rows keep contrast on hover", async ({ page }) => {
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/multiselect.html");
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const failures = [];
+      for (const t of await page.locator("main .multiselect > button").all()) {
+        await t.scrollIntoViewIfNeeded();
+        await t.click();
+        const pop = t.locator("xpath=..").locator("[popover]");
+        await expect(pop).toBeVisible();
+        const box = await pop.boundingBox();
+        if (box.x < 0 || box.y < 0 || box.x + box.width > 800 || box.y + box.height > 500) failures.push(`${await t.textContent()}: ${JSON.stringify(box)}`);
+        const { violations } = await axe(page).include(".multiselect > :popover-open").analyze();
+        if (violations.length) failures.push(`${await t.textContent()}: ${summary(violations)}`);
+        for (const row of await pop.locator("label").all()) {
+          await row.hover();
+          await row.evaluate((el) => el.setAttribute("data-hover", ""));
+          const { violations } = await axe(page).include("[data-hover]").analyze();
+          if (violations.length) failures.push(`${await row.textContent()} hovered: ${summary(violations)}`);
+          await row.evaluate((el) => el.removeAttribute("data-hover"));
+        }
+        await page.keyboard.press("Escape");
+      }
+      expect(failures).toEqual([]);
     });
 
     // toasts are appended after load, so axe never sees them: fire every demo button, check the toast, and check it fits the viewport
@@ -339,7 +366,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["multiselect.html", ".multiselect > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });

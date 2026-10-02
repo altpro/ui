@@ -3,8 +3,9 @@
 // WebKit run this file only so browser-specific pixel checks stay meaningful.
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
+import { execFileSync } from "node:child_process";
 
-const pages = ["button.html", "field.html", "dropdown.html", "dialog.html", "tabs.html", "app/product.html"];
+const pages = ["button.html", "field.html", "dropdown.html", "multiselect.html", "dialog.html", "tabs.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 for (const colorScheme of ["light", "dark"]) {
@@ -111,4 +112,94 @@ test('coloured divided card sections reach the edges and keep their content inse
       expect(boxes.headerRadius).toBe(boxes.footerRadius);
     }
   }
+});
+
+// The Blade component rendered by PHP, with the same props as the Vue instance on multiselect.html.
+const blade = execFileSync("php", ["tests/blade.php", `<x-ui::multiselect name="size" label="Size" :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']" :selected="['m']" />`], { encoding: "utf8" });
+const withBlade = async (page) => {
+  await page.goto("/multiselect.html");
+  await page.locator("#vue-demo .multiselect").waitFor();
+  await page.addStyleTag({ content: "* { transition: none !important }" });
+  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<form id="blade">${html}<button class="btn">Save</button></form>`), blade);
+  return page.locator("#blade .multiselect");
+};
+
+test("multiselect: the Blade and Vue components render the same markup", async ({ page }) => {
+  await withBlade(page);
+  const [b, v] = await Promise.all(["#blade", "#vue-demo"].map((form) => page.locator(form + " .multiselect").evaluate((el) => {
+    // attributes minus the generated id pair, plus live input state (Vue sets checked as a property)
+    const shape = (n) => n.nodeType === 3 ? n.data.trim() || null : n.nodeType !== 1 ? null : [
+      n.localName,
+      [...n.attributes].filter((a) => !["id", "popovertarget", "value", "checked"].includes(a.name)).map((a) => `${a.name}=${a.value}`).sort(),
+      n.localName === "input" ? [n.value, n.checked] : [],
+      [...n.childNodes].map(shape).filter((x) => x !== null),
+    ];
+    return { linked: el.querySelector("button").popoverTargetElement === el.querySelector("[popover]"), shape: shape(el) };
+  })));
+  expect([b.linked, v.linked]).toEqual([true, true]);
+  expect(b.shape).toEqual(v.shape);
+});
+
+test("multiselect: the button counts ticks and the form sends name[]", async ({ page }) => {
+  const ms = await withBlade(page);
+  const [button, panel, save] = [ms.locator("button"), ms.locator("[popover]"), page.locator("#blade > .btn")];
+  // a second render with two ticks, outside the form
+  const two = execFileSync("php", ["tests/blade.php", `<x-ui::multiselect name="other" label="Size" :options="['s' => 'Small', 'm' => 'Medium']" :selected="['s', 'm']" />`], { encoding: "utf8" });
+  await page.locator("#blade").evaluate((form, html) => form.insertAdjacentHTML("afterend", `<div id="two">${html}</div>`), two);
+  await button.scrollIntoViewIfNeeded();
+  // the count badge: inset past the border and its rounded corners (they take the ring colour on focus), short of the chevron
+  const badge = async (b = button) => { const r = await b.boundingBox(); return page.screenshot({ clip: { x: r.x + 8, y: r.y + 2, width: r.width - 40, height: r.height - 4 } }); };
+  const one = await badge(), twoTicks = await badge(page.locator("#two button"));
+  expect(one.equals(twoTicks)).toBe(false); // WebKit drew the same wrong number for both with a CSS counter
+  // ticked from code while closed: the change event is what recounts
+  await panel.evaluate((p) => { const box = p.querySelector("[value=s]"); box.checked = true; box.dispatchEvent(new Event("change", { bubbles: true })); });
+  expect((await badge()).equals(twoTicks)).toBe(true);
+  await button.click();
+  await expect(panel).toBeVisible();
+  await panel.getByLabel("Small").uncheck();
+  await page.keyboard.press("Escape");
+  expect((await badge()).equals(one)).toBe(true);
+
+  await button.click();
+  await panel.getByLabel("Medium").uncheck();
+  await expect(button.locator("span")).toHaveAttribute("data-count", "0");
+  await panel.getByLabel("Large").check();
+  await page.keyboard.press("Escape");
+  await expect(panel).toBeHidden();
+  await Promise.all([page.waitForURL(/size%5B%5D=l$/), save.click()]);
+});
+
+test("multiselect: keyboard moves between the button and the panel", async ({ page }) => {
+  await page.goto("/multiselect.html");
+  const button = page.locator("[popovertarget=f-size]");
+  await button.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Tab");
+  expect(await page.evaluate(() => document.activeElement.value)).toBe("s");
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Shift+Tab");
+  await expect(button).toBeFocused();
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Escape");
+  await expect(page.locator("#f-size")).toBeHidden();
+  await expect(button).toBeFocused();
+  await expect(page.locator("#f-size [value=s]")).toBeChecked();
+});
+
+test("multiselect: Vue v-model follows the boxes and the count follows v-model", async ({ page }) => {
+  const warnings = [];
+  page.on("console", (m) => ["warning", "error"].includes(m.type()) && warnings.push(m.text()));
+  await page.goto("/multiselect.html");
+  const ms = page.locator("#vue-demo .multiselect"), count = ms.locator("button > span"), output = page.locator("#vue-demo output");
+  await expect(count).toHaveAttribute("data-count", "1"); // v-model ticks its boxes after the element connects
+  await ms.locator("button").click();
+  await ms.getByLabel("Small").check();
+  await expect(output).toHaveText('v-model: ["m","s"]');
+  await expect(count).toHaveAttribute("data-count", "2");
+  await page.keyboard.press("Escape");
+  await page.locator("#vue-demo").getByRole("button", { name: "Clear" }).click();
+  await expect(output).toHaveText("v-model: []");
+  await expect(ms.locator("input:checked")).toHaveCount(0);
+  await expect(count).toHaveAttribute("data-count", "0");
+  expect(warnings).toEqual([]);
 });

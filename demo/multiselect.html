@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Multiselect</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Multiselect</h1>
+    <p class="muted"><code>.multiselect</code>: a button opening a <code>.dropdown</code> of checkboxes, in place of <code>&lt;select multiple&gt;</code>. One click ticks a box, the panel stays open, the button counts what is ticked, and the form submits the same values a multiple select would. Works without JavaScript; <code>&lt;ui-multiselect&gt;</code> keeps the count current.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Filters</h2>
+    <p class="text-sm muted">The panel is at least as wide as the button. A long list stops at <code>20rem</code> and scrolls.</p>
+    <div class="flex flex-wrap gap-2">
+      <ui-multiselect class="multiselect">
+        <button type="button" class="input" popovertarget="f-size"><span>Size</span></button>
+        <fieldset id="f-size" popover class="dropdown" aria-label="Size">
+          <label class="checkbox"><input type="checkbox" name="size[]" value="s"> Small</label>
+          <label class="checkbox"><input type="checkbox" name="size[]" value="m"> Medium</label>
+          <label class="checkbox"><input type="checkbox" name="size[]" value="l"> Large</label>
+        </fieldset>
+      </ui-multiselect>
+      <ui-multiselect class="multiselect">
+        <button type="button" class="input" popovertarget="f-colour"><span>Colour</span></button>
+        <fieldset id="f-colour" popover class="dropdown" aria-label="Colour">
+          <label class="checkbox"><input type="checkbox" name="colour[]" value="black" checked> Black</label>
+          <label class="checkbox"><input type="checkbox" name="colour[]" value="white"> White</label>
+          <label class="checkbox"><input type="checkbox" name="colour[]" value="navy" checked> Navy</label>
+          <label class="checkbox"><input type="checkbox" name="colour[]" value="olive"> Olive</label>
+        </fieldset>
+      </ui-multiselect>
+      <ui-multiselect class="multiselect">
+        <button type="button" class="input" popovertarget="f-brand"><span>Brand</span></button>
+        <fieldset id="f-brand" popover class="dropdown" aria-label="Brand">
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="1"> Acme</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="2"> Birchwood</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="3"> Cobalt &amp; Co</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="4"> Driftline</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="5"> Ember</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="6"> Fieldhouse</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="7"> Granite</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="8"> Harbour</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="9"> Ironbark</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="10"> Juniper</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="11"> Kestrel</label>
+          <label class="checkbox"><input type="checkbox" name="brand[]" value="12"> Lowland</label>
+        </fieldset>
+      </ui-multiselect>
+    </div>
+<pre>&lt;ui-multiselect class="multiselect"&gt;
+  &lt;button type="button" class="input" popovertarget="size"&gt;&lt;span&gt;Size&lt;/span&gt;&lt;/button&gt;
+  &lt;fieldset id="size" popover class="dropdown" aria-label="Size"&gt;
+    &lt;label class="checkbox"&gt;&lt;input type="checkbox" name="size[]" value="s"&gt; Small&lt;/label&gt;
+    &lt;label class="checkbox"&gt;&lt;input type="checkbox" name="size[]" value="m"&gt; Medium&lt;/label&gt;
+  &lt;/fieldset&gt;
+&lt;/ui-multiselect&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Errors</h2>
+    <p class="text-sm muted">There is no client-side <code>required</code>: Firefox stops taking clicks in the panel once its validation message points into it. Validate on the server. In a <code>.field</code>, a non-empty <code>.error</code> turns the button red as it does any <code>.input</code>.</p>
+    <form class="field items-start">
+      <ui-multiselect class="multiselect">
+        <button type="button" class="input" popovertarget="r-days" aria-describedby="r-days-error"><span>Delivery days</span></button>
+        <fieldset id="r-days" popover class="dropdown" aria-label="Delivery days">
+          <label class="checkbox"><input type="checkbox" name="days[]" value="mon"> Monday</label>
+          <label class="checkbox"><input type="checkbox" name="days[]" value="wed"> Wednesday</label>
+          <label class="checkbox"><input type="checkbox" name="days[]" value="fri"> Friday</label>
+        </fieldset>
+      </ui-multiselect>
+      <p class="error" id="r-days-error">Choose at least one delivery day.</p>
+    </form>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Blade</h2>
+    <p class="text-sm muted"><code>options</code> is <code>value =&gt; label</code>. <code>name</code> gets <code>[]</code> added so PHP receives every ticked value. Pass <code>old()</code> to <code>selected</code> to refill the boxes after a failed validation. Other attributes, such as <code>class</code>, land on the wrapper.</p>
+<pre>&lt;x-ui::multiselect name="size" label="Size"
+    :options="['s' =&gt; 'Small', 'm' =&gt; 'Medium', 'l' =&gt; 'Large']"
+    :selected="old('size', $product-&gt;sizes)" /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Vue</h2>
+    <p class="text-sm muted"><code>v-model</code> is an array of the ticked values. <code>options</code> is <code>[{ value, label }]</code>. <code>name</code> is only needed when a real form submits it.</p>
+    <div id="vue-demo"></div>
+<pre>&lt;script setup&gt;
+import Multiselect from "@altpro/ui/js/Multiselect.vue";
+const sizes = ref(["m"]);
+&lt;/script&gt;
+
+&lt;Multiselect v-model="sizes" name="size" label="Size" :options="[
+  { value: 's', label: 'Small' },
+  { value: 'm', label: 'Medium' },
+  { value: 'l', label: 'Large' },
+]" /&gt;</pre>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="multiselect.js"></script>
+</body>
+</html>
