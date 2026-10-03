@@ -8,9 +8,9 @@ CSS component layer for Tailwind v4, with Vue components for anything that needs
 resources/css/ui.css         entry, imports everything below; @source points Tailwind at the Blade and Vue templates
 resources/css/theme.css      @theme default tokens, all light-dark(); --radius knob and responsive --spacing-gap on :root
 resources/css/scheme.css     color-scheme regions: .light .dark .inverse
-resources/css/components/    one file per component (button, join, input, field, dropzone, check, badge, dl, avatar, nav, breadcrumb, dropdown, multiselect, combobox, tooltip, card, dialog, accordion, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast, repeater)
+resources/css/components/    one file per component (button, join, input, field, dropzone, check, badge, dl, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast, repeater)
 resources/views/components/  Blade components, rendered as <x-ui::name>
-resources/js/                Vue components (Name.vue); multiselect.js is the one custom element, shared with Blade, and goes when the combobox replaces it; DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
+resources/js/                Vue components (Name.vue); domModel.js lets Field.vue work without v-model inside a form; DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs it
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 src/TableQuery.php           server half of DataTable.vue: reads the view and filters from the query string as dataTable.ts does, then searches, sorts and pages
@@ -28,7 +28,7 @@ tests/table-urls.json        URL-to-view cases both of the above read, so the PH
 - Naming: base class plus bare modifier words. `.btn.primary.lg`, never `.btn-primary` or `.btn-lg`.
 - Before adding a modifier word, check it is not a Tailwind utility. `invert`, `contrast`, `flex`, `block`, `hidden` and similar are taken. That is why the region class is `inverse`.
 - No JavaScript in `resources/css/`. Use native HTML first: `<dialog>`, `popover`, anchor positioning, `<details>`, `:has()`, style container queries.
-- When CSS cannot do it, the behaviour goes in a Vue component, `resources/js/<Name>.vue`. JavaScript components are Vue only: no new custom elements and no Blade version of them. Blade pages get the CSS and native HTML.
+- When CSS cannot do it, the behaviour goes in a Vue component, `resources/js/<Name>.vue`. JavaScript components are Vue only: no custom elements and no Blade version of them. Blade pages get the CSS and native HTML.
 - A Blade component only where it saves real markup and needs no JavaScript. A button does not need `<x-ui::button>`. Where a Blade component has a Vue twin (field), both render the same markup and `tests/browsers.spec.js` compares them.
 - Browser target: current Chrome, Firefox, Safari. No Safari-only features. Chrome-only features need sign-off from Steve first.
 - Colours come from tokens only. Never a literal colour inside a component.

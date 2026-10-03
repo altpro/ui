@@ -92,12 +92,16 @@ const searchTags = async (q) => {
   mount("#urls", () => row(field("Supplier", customer, { name: "supplier_id", src: "api/suppliers", create: "api/suppliers" })));
 }
 
-// a plain form that owns its data: no v-model, and its Reset button puts the starting values back
-mount("#native", () => h("form", { class: "flex flex-wrap items-start gap-4", onSubmit: (e) => e.preventDefault() }, [
-  h("div", { class: "field" }, [h("label", "Status"), h(Combobox, { label: "Status", name: "status", options: statuses, modelValue: 1 })]),
-  h("div", { class: "field" }, [h("label", "Sizes"), h(Combobox, { label: "Sizes", name: "sizes", options: sizes, multiple: true, modelValue: [1, 2] })]),
-  h("div", { class: "field" }, [h("label", "Tags"), h(Combobox, { label: "Tags", name: "tags", options: tags, multiple: true, modelValue: [3] })]),
-  h("button", { type: "reset", class: "btn ghost mt-6" }, "Reset"),
+// a plain form that owns its data: no v-model, and its Reset button puts the starting values back.
+// Owner sits outside the form and joins it with form="…"
+mount("#native", () => h("div", { class: "space-y-4" }, [
+  h("form", { id: "native-form", class: "flex flex-wrap items-start gap-4", onSubmit: (e) => e.preventDefault() }, [
+    h("div", { class: "field" }, [h("label", "Status"), h(Combobox, { label: "Status", name: "status", options: statuses, modelValue: 1 })]),
+    h("div", { class: "field" }, [h("label", "Sizes"), h(Combobox, { label: "Sizes", name: "sizes", options: sizes, multiple: true, modelValue: [1, 2] })]),
+    h("div", { class: "field" }, [h("label", "Tags"), h(Combobox, { label: "Tags", name: "tags", options: tags, multiple: true, modelValue: [3] })]),
+    h("button", { type: "reset", class: "btn ghost mt-6" }, "Reset"),
+  ]),
+  h("div", { class: "field" }, [h("label", "Owner"), h(Combobox, { label: "Owner", name: "owner_id", form: "native-form", options: people, modelValue: 2 })]),
 ]));
 
 // Inertia's <Form>: reset() writes the inputs and fires reset
@@ -106,6 +110,8 @@ mount("#inertia", () => h(Form, { action: "#", method: "post", class: "flex flex
     h("div", { class: "field" }, [h("label", "Assignee"), h(Combobox, { label: "Assignee", name: "assignee_id", options: people, modelValue: 3 })]),
     h("div", { class: "field" }, [h("label", "Tags"), h(Combobox, { label: "Tags", name: "tags", options: tags, multiple: true, modelValue: [1] })]),
     h("button", { type: "button", class: "btn ghost mt-6", onClick: () => reset() }, "Reset"),
+    // reset("tags[]") writes that select alone and fires no event
+    h("button", { type: "button", class: "btn ghost mt-6", onClick: () => reset("tags[]") }, "Reset tags"),
     h("output", { class: "mt-8 text-xs muted" }, isDirty ? "Changed" : "Unchanged"),
   ],
 }));

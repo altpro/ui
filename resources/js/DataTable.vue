@@ -5,7 +5,7 @@
 -->
 <script setup lang="ts" generic="TRow extends object">
 import { computed, onMounted, ref, useId, watch } from "vue";
-import Multiselect from "./Multiselect.vue";
+import Combobox from "./Combobox.vue";
 import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZES,
@@ -190,7 +190,7 @@ const rowLabel = (row: TRow, index: number) => {
         </fieldset>
         <div v-else class="field">
           <label>{{ filter.label }}</label>
-          <Multiselect :label="filter.label" :options="[...(filter.options ?? [])]" :model-value="state.filters.value[filter.key] ?? []" @update:model-value="setFilter(filter.key, $event)" />
+          <Combobox multiple :label="filter.label" :options="[...(filter.options ?? [])]" :model-value="state.filters.value[filter.key] ?? []" @update:model-value="setFilter(filter.key, $event)" />
         </div>
       </template>
 

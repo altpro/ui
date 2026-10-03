@@ -1,7 +1,8 @@
 <!--
   <Field v-model="form.email" name="email" type="email" :errors="form.errors" required />
-  <Field v-model="form.tags" name="tags" type="multiselect" :options="tags" hint="Up to three." :max="3" />
+  <Field v-model="form.tags" name="tags" type="combobox" multiple :options="tags" hint="Up to three." :max="3" />
   Same markup as resources/views/components/field.blade.php; tests/browsers.spec.js checks they match.
+  `combobox` is Vue only: the Blade field has no twin for it. Its other attributes (multiple, max, src, create) go to Combobox.vue.
   Options take [{ value, label }], { value: label }, a list of strings, or models with id and name.
   A model or a list of models in v-model is handed straight back as ids, so an untouched field never submits models.
   Without v-model (Inertia's <Form>), `value` is the starting value and the inputs are the truth.
@@ -11,7 +12,7 @@
 -->
 <script setup>
 import { computed, ref, useAttrs, useId, useSlots, watch } from "vue";
-import Multiselect from "./Multiselect.vue";
+import Combobox from "./Combobox.vue";
 import { useDomModel } from "./domModel.js";
 
 defineOptions({ inheritAttrs: false });
@@ -56,7 +57,7 @@ const options = computed(() => (Array.isArray(props.options)
   ? props.options.map((o) => (isObject(o) ? { value: toId(o), label: o.name ?? o.label } : { value: o, label: o }))
   : Object.entries(props.options).map(([value, label]) => ({ value, label }))));
 const group = computed(() => options.value.length > 0 && ["radio", "checkbox"].includes(props.type));
-const multi = computed(() => props.type === "multiselect" || (group.value && props.type === "checkbox"));
+const multi = computed(() => (props.type === "combobox" && ![undefined, false].includes(attrs.multiple)) || (group.value && props.type === "checkbox"));
 const boolean = computed(() => !group.value && ["checkbox", "switch"].includes(props.type));
 
 // the model as option values: models become ids, and 1 matches the "1" an object key gives
@@ -70,6 +71,8 @@ watch(model, () => options.value.length && [model.value].flat().some(isObject) &
 
 const root = ref();
 useDomModel(model, root, (el) => {
+  // the combobox reads its own resets into the model
+  if (props.type === "combobox") return model.value;
   const boxes = [...el.querySelectorAll("input:is([type=checkbox], [type=radio])")];
   if (multi.value) return boxes.filter((b) => b.checked).map((b) => match(b.value));
   if (group.value) return boxes.some((b) => b.checked) ? match(boxes.find((b) => b.checked).value) : null;
@@ -101,10 +104,10 @@ const file = (e) => (model.value = e.target.multiple ? [...e.target.files] : e.t
       <label v-for="o in options" :key="o.value" :class="type"><input v-model="picked" :type="type" :name="multi ? `${base}[]` : name" :value="o.value" :aria-invalid="invalid" v-bind="control()"> {{ o.label }}</label>
     </template>
     <label v-else-if="boolean" :class="type === 'switch' ? 'switch' : 'checkbox'"><input v-model="model" type="checkbox" value="1" :role="type === 'switch' ? 'switch' : null" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()"> {{ label }}</label>
-    <template v-else-if="type === 'multiselect'">
-      <!-- no `for`: it would become the button's whole name and hide the ticked items -->
+    <template v-else-if="type === 'combobox'">
+      <!-- no `for`: the trigger is named by its own aria-label, and its text is the value -->
       <label>{{ label }}</label>
-      <Multiselect v-model="picked" :name="base" :label="label" :options="options" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()" />
+      <Combobox v-model="picked" :name="base" :label="label" :options="options" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()" />
     </template>
     <template v-else>
       <label :for="id">{{ label }}</label>

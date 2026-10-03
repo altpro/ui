@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { execFileSync } from "node:child_process";
 
-const pages = ["button.html", "field.html", "dropdown.html", "multiselect.html", "combobox.html", "datatable.html", "dialog.html", "tabs.html", "app/product.html"];
+const pages = ["button.html", "field.html", "dropdown.html", "combobox.html", "datatable.html", "dialog.html", "tabs.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 for (const colorScheme of ["light", "dark"]) {
@@ -114,169 +114,15 @@ test('coloured divided card sections reach the edges and keep their content inse
   }
 });
 
-// The Blade component rendered by PHP, with the same props as the Vue instances on multiselect.html.
+// Blade rendered by PHP through Testbench.
 const render = (tag) => execFileSync("php", ["tests/blade.php", tag], { encoding: "utf8" });
-const blade = render(`<x-ui::multiselect name="size" label="Size" required max="2" :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']" :selected="['m']" />`);
-const bladeDisabled = render(`<x-ui::multiselect name="colour" label="Colour" form="elsewhere" disabled :options="['b' => 'Black', 'w' => 'White']" :selected="['b']" />`);
-const withBlade = async (page) => {
-  await page.goto("/multiselect.html");
-  await page.locator("#vue-demo .multiselect").first().waitFor();
-  await page.addStyleTag({ content: "* { transition: none !important }" });
-  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<form id="blade">${html}<button class="btn">Save</button></form>`), blade);
-  return page.locator("#blade .multiselect");
-};
 
-test("multiselect: the Blade and Vue components render the same markup", async ({ page }) => {
-  await withBlade(page);
-  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<div id="blade-disabled">${html}</div>`), bladeDisabled);
-  for (const [blade, vue] of [["#blade .multiselect", "#vue-demo .multiselect >> nth=0"], ["#blade-disabled .multiselect", "#vue-demo .multiselect >> nth=1"]]) {
-  const [b, v] = await Promise.all([blade, vue].map((selector) => page.locator(selector).evaluate((el) => {
-    // attributes minus the generated id pair, plus live input state (Vue sets checked as a property)
-    const shape = (n) => n.nodeType === 3 ? n.data.trim() || null : n.nodeType !== 1 ? null : [
-      n.localName,
-      [...n.attributes].filter((a) => !["id", "popovertarget", "value", "checked"].includes(a.name)).map((a) => `${a.name}=${a.value}`).sort(),
-      n.localName === "input" ? [n.value, n.checked] : [],
-      [...n.childNodes].map(shape).filter((x) => x !== null),
-    ];
-    return { linked: el.querySelector("button").popoverTargetElement === el.querySelector("[popover]"), shape: shape(el) };
-  })));
-  expect([b.linked, v.linked]).toEqual([true, true]);
-  expect(b.shape).toEqual(v.shape);
-  }
-});
-
-test("multiselect: required, max, form and disabled work as on a select", async ({ page }) => {
-  const ms = await withBlade(page);
-  const [button, panel, save] = [ms.locator("button"), ms.locator("[popover]"), page.locator("#blade > .btn")];
-  const userInvalid = () => ms.evaluate((el) => el.matches(":state(touched):invalid"));
-  await button.scrollIntoViewIfNeeded();
-  expect(await userInvalid()).toBe(false);
-
-  // max="2": at two ticks the third box is disabled, at one it is back
-  await button.click();
-  await panel.getByLabel("Small").check();
-  await expect(panel.getByLabel("Large")).toBeDisabled();
-  await panel.getByLabel("Small").uncheck();
-  await expect(panel.getByLabel("Large")).toBeEnabled();
-  // removing max frees the boxes it disabled, and only those
-  await panel.getByLabel("Small").check();
-  await ms.evaluate((el) => { el.querySelector("[value=m]").disabled = true; el.removeAttribute("max"); });
-  await expect(panel.getByLabel("Large")).toBeEnabled();
-  await expect(panel.getByLabel("Medium")).toBeDisabled();
-  await ms.evaluate((el) => { el.querySelector("[value=m]").disabled = false; el.setAttribute("max", "2"); });
-  await panel.getByLabel("Small").uncheck();
-
-  // required: nothing ticked stops the submit with the browser's message, on the button
-  await panel.getByLabel("Medium").uncheck();
-  await page.keyboard.press("Escape");
-  await save.click();
-  await expect(button).toBeFocused();
-  expect(await userInvalid()).toBe(true);
-  expect(await ms.evaluate((el) => el.matches(":invalid") && document.querySelector("#blade").checkValidity())).toBe(false);
-  // the panel still takes clicks after the bubble (Firefox stopped when it pointed into the panel)
-  await button.click();
-  await panel.getByLabel("Large").check();
-  await page.keyboard.press("Escape");
-  expect(await userInvalid()).toBe(false);
-  await Promise.all([page.waitForURL(/size%5B%5D=l$/), save.click()]);
-
-  // form="…": an empty required multiselect outside its form still stops that form
-  await page.goto("/multiselect.html");
-  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `${html}<form id="other"><button class="btn">Send</button></form>`),
-    render(`<x-ui::multiselect name="colour" label="Colour" form="other" required :options="['b' => 'Black', 'w' => 'White']" />`));
-  const outside = page.locator("main > .multiselect");
-  await page.locator("#other .btn").click();
-  await expect(outside.locator("button")).toBeFocused();
-  await outside.locator("button").click();
-  await outside.getByLabel("White").check();
-  await page.keyboard.press("Escape");
-  await Promise.all([page.waitForURL(/colour%5B%5D=w$/), page.locator("#other .btn").click()]);
-
-  // disabled: the button cannot open the panel and the boxes are not submitted
-  await page.goto("/multiselect.html");
-  const disabled = page.locator("#vue-demo .multiselect").nth(1);
-  await expect(disabled.locator("button")).toBeDisabled();
-  await expect(disabled.locator("input").first()).toBeDisabled();
-});
-
-test("multiselect: the button shows the ticked items, and the count once they overflow", async ({ page }) => {
-  const ms = await withBlade(page);
-  const [button, panel, save] = [ms.locator("button"), ms.locator("[popover]"), page.locator("#blade > .btn")];
-  const overflows = () => ms.evaluate((el) => el.matches(":state(overflow)"));
-  const count = () => button.evaluate((b) => getComputedStyle(b, "::before").display);
-  await expect(button).toHaveAccessibleName("Size Medium");
-  expect([await overflows(), await count()]).toEqual([false, "none"]);
-  // ticked from code while closed: the change event is what updates the button
-  await panel.evaluate((p) => { const box = p.querySelector("[value=s]"); box.checked = true; box.dispatchEvent(new Event("change", { bubbles: true })); });
-  await expect(button).toHaveAccessibleName("Size Small, Medium");
-  await expect(button).toHaveAttribute("data-count", "2");
-  // narrower than the items: an ellipsis, then the count
-  await ms.evaluate((el) => (el.style.width = "7rem"));
-  await expect.poll(overflows).toBe(true);
-  expect(await count()).not.toBe("none");
-  await ms.evaluate((el) => (el.style.width = ""));
-  await expect.poll(overflows).toBe(false);
-
-  await button.click();
-  await expect(panel).toBeVisible();
-  await panel.getByLabel("Small").uncheck();
-  await panel.getByLabel("Medium").uncheck();
-  await expect(button).toHaveAttribute("data-count", "0");
-  await expect(button).toHaveAccessibleName("Size"); // nothing ticked: empty, as a select with no value
-  await panel.getByLabel("Large").check();
-  await page.keyboard.press("Escape");
-  await expect(panel).toBeHidden();
-  await expect(button).toHaveAccessibleName("Size Large");
-  await Promise.all([page.waitForURL(/size%5B%5D=l$/), save.click()]);
-});
-
-test("multiselect: keyboard moves between the button and the panel", async ({ page }) => {
-  await page.goto("/multiselect.html");
-  const button = page.locator("[popovertarget=f-size]");
-  await button.focus();
-  await page.keyboard.press("Enter");
-  await page.keyboard.press("Tab");
-  expect(await page.evaluate(() => document.activeElement.value)).toBe("s");
-  await page.keyboard.press("Space");
-  await page.keyboard.press("Shift+Tab");
-  await expect(button).toBeFocused();
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Escape");
-  await expect(page.locator("#f-size")).toBeHidden();
-  await expect(button).toBeFocused();
-  await expect(page.locator("#f-size [value=s]")).toBeChecked();
-});
-
-test("multiselect: Vue v-model follows the boxes and the count follows v-model", async ({ page }) => {
-  const warnings = [];
-  page.on("console", (m) => ["warning", "error"].includes(m.type()) && warnings.push(m.text()));
-  await page.goto("/multiselect.html");
-  const ms = page.locator("#vue-demo .multiselect").first(), count = ms.locator("button"), output = page.locator("#vue-demo output");
-  await expect(count).toHaveAttribute("data-count", "1"); // v-model ticks its boxes after the element connects
-  await ms.locator("button").click();
-  await ms.getByLabel("Small").check();
-  await expect(output).toHaveText('v-model: ["m","s"]');
-  await expect(count).toHaveAttribute("data-count", "2");
-  await expect(count).toHaveAccessibleName("Size Small, Medium");
-  await page.keyboard.press("Escape");
-  await page.locator("#vue-demo").getByRole("button", { name: "Clear" }).click();
-  await expect(output).toHaveText("v-model: []");
-  await expect(ms.locator("input:checked")).toHaveCount(0);
-  await expect(count).toHaveAttribute("data-count", "0");
-  await expect(count).toHaveAccessibleName("Size");
-  // a required one emptied from code is invalid, as if the user had unticked it
-  expect(await ms.evaluate((el) => el.matches(":invalid"))).toBe(true);
-  expect(warnings).toEqual([]);
-});
-
-// The Blade field rendered with the same props as each Vue field on field.html, in the same order.
+// The Blade field rendered with the same props as each Vue field on field.html, in the same order. The Vue demo ends with a combobox, which has no Blade twin.
 const fieldErrors = `['tags.1' => ['The selected tag is invalid.'], 'bio' => ['At least 20 characters.', 'Mention where you work.']]`;
 const cats = `[['id' => 1, 'name' => 'News'], ['id' => 2, 'name' => 'Sport'], ['id' => 3, 'name' => 'Culture']]`;
-const tagList = `[['id' => 1, 'name' => 'Laravel', 'slug' => 'laravel'], ['id' => 2, 'name' => 'Vue', 'slug' => 'vue'], ['id' => 3, 'name' => 'Tailwind', 'slug' => 'tailwind']]`;
 const bladeFields = render([
   `<x-ui::field name="email" type="email" required autocomplete="email" hint="We never share it." />`,
   `<x-ui::field name="category_id" type="select" :options="${cats}" :value="['id' => 2, 'name' => 'Sport']" placeholder="Choose one" />`,
-  `<x-ui::field name="tags" type="multiselect" :options="${tagList}" :value="collect(${tagList})->only([0, 2])" max="2" hint="Up to two." />`,
   `<x-ui::field name="price" type="number" prepend="£" step="0.01" value="12.50" />`,
   `<x-ui::field name="size" type="radio" :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']" value="m" />`,
   `<x-ui::field name="extras[]" type="checkbox" :options="['gift' => 'Gift wrap', 'card' => 'Card']" :value="['gift']" />`,
@@ -289,8 +135,9 @@ const bladeFields = render([
 test.describe(() => { test.use({ timezoneId: "UTC" });
 test("field: the Blade and Vue components render the same markup", async ({ page }) => {
   await page.goto("/field.html");
-  await page.locator("#vue-demo .multiselect").waitFor();
-  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<div id="blade">${html}</div>`), bladeFields);
+  await page.locator("#vue-demo .combobox").waitFor();
+  // a form of its own, so its radios are not one group with the Vue ones of the same name
+  await page.locator("main").evaluate((main, html) => main.insertAdjacentHTML("beforeend", `<form id="blade">${html}</form>`), bladeFields);
   const shapes = (selector) => page.locator(selector).evaluateAll((fields) => fields.map((field) => {
     // generated ids become #0, #1… in order of appearance, so a label still has to point at its control
     const ids = [...field.querySelectorAll("[id]")].map((el) => el.id);
@@ -306,13 +153,13 @@ test("field: the Blade and Vue components render the same markup", async ({ page
     ];
     return shape(field);
   }));
-  const [blade, vue] = await Promise.all([shapes("#blade > .field"), shapes("#vue-demo > .field")]);
-  expect(blade.length).toBe(9);
-  for (const [i, shape] of vue.entries()) expect(blade[i], `field ${i + 1}`).toEqual(shape);
+  const [blade, vue] = await Promise.all([shapes("#blade > .field"), shapes("#vue-demo > div > .field")]);
+  expect([blade.length, vue.length]).toEqual([8, 9]);
+  for (const [i, shape] of blade.entries()) expect(shape, `field ${i + 1}`).toEqual(vue[i]);
   // parity would pass if both left it out, so check each one: every control an error describes is invalid
-  for (const root of ["#blade", "#vue-demo"]) {
+  for (const [root, count] of [["#blade", 1], ["#vue-demo", 2]]) {
     const described = page.locator(`${root} [aria-describedby*="-error"]:not(fieldset)`);
-    await expect(described).toHaveCount(2);
+    await expect(described).toHaveCount(count);
     for (const control of await described.all()) await expect(control).toHaveAttribute("aria-invalid", "true");
   }
 });
@@ -324,13 +171,15 @@ test("field: labels, hints and errors reach the control, and models go out as id
   await expect(demo.getByLabel("Email")).toHaveAccessibleDescription("We never share it.");
   await expect(demo.getByRole("textbox", { name: "Bio" })).toHaveAccessibleDescription("At least 20 characters. Mention where you work.");
   await expect(demo.getByRole("textbox", { name: "Bio" })).toHaveAttribute("aria-invalid", "true");
-  await expect(demo.getByRole("button", { name: /^Tags Laravel ?, Tailwind$/ })).toHaveAccessibleDescription("Up to two. The selected tag is invalid.");
+  const tags = demo.getByRole("combobox", { name: "Tags", exact: true });
+  await expect(tags).toHaveText("Laravel, Tailwind");
+  await expect(tags).toHaveAccessibleDescription("Up to two. The selected tag is invalid.");
   await expect(demo.getByRole("group", { name: "Size" })).toBeVisible();
   await expect(demo.getByRole("switch", { name: "Send me the newsletter" })).toBeChecked();
 
   await demo.getByLabel("Category").selectOption("Culture");
   await expect(output).toContainText('"category_id":3');
-  await demo.getByRole("button", { name: /^Tags/ }).click();
+  await tags.click();
   await demo.getByLabel("Laravel").uncheck();
   await page.keyboard.press("Escape");
   await expect(output).toContainText('"tags":[3]');
@@ -346,9 +195,9 @@ test("field: labels, hints and errors reach the control, and models go out as id
 
 test("field: inside Inertia's <Form>, reset() sticks when the fields render again", async ({ page }) => {
   await page.goto("/field.html");
-  const form = page.locator("#inertia-demo form"), topics = form.getByRole("button", { name: /^Topics/ });
+  const form = page.locator("#inertia-demo form"), topics = form.getByRole("combobox", { name: "Topics", exact: true });
   await expect(form.getByLabel("Headline")).toHaveValue("Hello");
-  await expect(topics).toHaveAttribute("data-count", "1");
+  await expect(topics).toHaveText("Laravel");
   await form.getByLabel("Headline").fill("Changed");
   await topics.click();
   await form.getByLabel("Vue").check();
@@ -358,19 +207,19 @@ test("field: inside Inertia's <Form>, reset() sticks when the fields render agai
   expect(await data()).toEqual(["headline=Changed", "topics[]=1", "topics[]=2", "featured=1"]);
 
   await form.getByRole("button", { name: "Reset", exact: true }).click();
-  await expect(topics).toHaveAttribute("data-count", "1");
+  await expect(topics).toHaveText("Laravel");
   // the error renders every field again: v-model must not put "Changed" back
   await form.getByRole("button", { name: "Show an error" }).click();
   await expect(form.locator(".error")).toHaveText("An error from setError.");
   await expect(form.getByLabel("Headline")).toHaveValue("Hello");
-  await expect(topics).toHaveAttribute("data-count", "1");
+  await expect(topics).toHaveText("Laravel");
   expect(await data()).toEqual(["headline=Hello", "topics[]=1"]);
 });
 
-// reset("topics[]") writes the boxes and fires no event, so nothing renders until something else does
-test("field: inside Inertia's <Form>, resetting one field updates its button and max at once", async ({ page }) => {
+// reset("topics[]") writes the select and fires no event, so nothing renders until something else does
+test("field: inside Inertia's <Form>, resetting one field updates its trigger and max at once", async ({ page }) => {
   await page.goto("/field.html");
-  const form = page.locator("#inertia-demo form"), topics = form.getByRole("button", { name: /^Topics/ });
+  const form = page.locator("#inertia-demo form"), topics = form.getByRole("combobox", { name: "Topics", exact: true });
   await form.getByLabel("Headline").fill("Changed");
   await topics.click();
   await form.getByLabel("Vue").check();
@@ -379,40 +228,42 @@ test("field: inside Inertia's <Form>, resetting one field updates its button and
   await page.keyboard.press("Escape");
 
   await form.getByRole("button", { name: "Reset topics" }).click();
-  await expect(topics).toHaveAttribute("data-count", "1");
-  await expect(topics).toHaveAccessibleName("Topics Laravel");
+  await expect(topics).toHaveText("Laravel");
+  await topics.click();
   await expect(form.getByLabel("Tailwind")).toBeEnabled();
+  await page.keyboard.press("Escape");
   // the other fields keep what was typed
   await expect(form.getByLabel("Headline")).toHaveValue("Changed");
   const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
   expect(await data()).toEqual(["headline=Changed", "topics[]=1"]);
   // and a later render must not bring Vue back
   await form.getByRole("button", { name: "Show an error" }).click();
-  await expect(topics).toHaveAttribute("data-count", "1");
+  await expect(topics).toHaveText("Laravel");
   expect(await data()).toEqual(["headline=Changed", "topics[]=1"]);
 });
 
-test("field: inside Inertia's <Form>, options that change keep the ticks that still exist", async ({ page }) => {
+test("field: inside Inertia's <Form>, options that change keep the selection, and a value that left the options can still be unticked", async ({ page }) => {
   await page.goto("/field.html");
-  const form = page.locator("#inertia-demo form"), topics = form.getByRole("button", { name: /^Topics/ });
+  const form = page.locator("#inertia-demo form"), topics = form.getByRole("combobox", { name: "Topics", exact: true });
   await topics.click();
   await form.getByLabel("Vue").check();
   await page.keyboard.press("Escape");
-  // Laravel goes with its tick; Vue stays ticked, Svelte arrives unticked, and max no longer caps anything
+  // Laravel leaves the options but stays picked, listed first; Svelte arrives, capped by max until Laravel goes
   await form.getByRole("button", { name: "Other topics" }).click();
-  await expect(topics).toHaveAttribute("data-count", "1");
-  await expect(topics).toHaveAccessibleName("Topics Vue");
+  await expect(topics).toHaveText("Laravel, Vue");
   await topics.click();
-  await expect(form.getByLabel("Svelte")).toBeEnabled();
+  await expect(form.locator(".combobox label")).toHaveText(["Laravel", "Vue", "Tailwind", "Svelte"]);
+  await expect(form.getByLabel("Svelte")).toBeDisabled();
+  await form.getByLabel("Laravel").uncheck();
   await form.getByLabel("Svelte").check();
   await page.keyboard.press("Escape");
-  await expect(topics).toHaveAccessibleName(/^Topics Vue ?, Svelte$/);
+  await expect(topics).toHaveText("Vue, Svelte");
   const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
   expect(await data()).toEqual(["headline=Hello", "topics[]=2", "topics[]=4"]);
-  // a full reset goes back to the starting value, which is no longer an option
+  // a full reset goes back to the starting value, whether or not it is still an option
   await form.getByRole("button", { name: "Reset", exact: true }).click();
-  await expect(topics).toHaveAttribute("data-count", "0");
-  expect(await data()).toEqual(["headline=Hello"]);
+  await expect(topics).toHaveText("Laravel");
+  expect(await data()).toEqual(["headline=Hello", "topics[]=1"]);
 });
 
 // DataTable: what the URL, filters and selection do, none of which axe can see.
@@ -470,12 +321,12 @@ test("datatable: declared filters narrow the rows, sit in the URL and say how ma
   await expect(bodyRows(dt)).toHaveCount(4);
   await expect(dt.getByRole("status")).toHaveText("Showing 1–4 of 4, filtered from 12");
 
-  await dt.locator(".controls").getByRole("button", { name: /^Size/ }).click();
+  await dt.locator(".controls").getByRole("combobox", { name: "Size", exact: true }).click();
   await dt.getByRole("checkbox", { name: "L" }).check();
   await expect(page).toHaveURL(/products_size%5B%5D=L/);
   await expect(bodyRows(dt)).toHaveCount(2);
   await page.keyboard.press("Escape");
-  await expect(dt.locator(".controls").getByRole("button", { name: /^Size/ })).toContainText("L");
+  await expect(dt.locator(".controls").getByRole("combobox", { name: "Size", exact: true })).toContainText("L");
 });
 
 test("datatable: a date range works from either end, turns round when reversed and clears", async ({ page }) => {
@@ -759,9 +610,14 @@ test("combobox: multiple without search is a panel of checkboxes, with max", asy
 
 test("combobox: a native form reset and Inertia's reset() put the starting values back", async ({ page }) => {
   await page.goto("/combobox.html");
-  const form = page.locator("#native form"), status = form.getByRole("combobox", { name: "Status", exact: true }), sizes = form.getByRole("combobox", { name: "Sizes", exact: true });
+  const form = page.locator("#native form"), owner = page.getByRole("combobox", { name: "Owner", exact: true }), status = form.getByRole("combobox", { name: "Status", exact: true }), sizes = form.getByRole("combobox", { name: "Sizes", exact: true });
   const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
-  expect(await data()).toEqual(["status=1", "sizes[]=1", "sizes[]=2", "tags[]=3"]);
+  // Owner sits outside the form and joins it with form="…"
+  expect(await data()).toEqual(["status=1", "sizes[]=1", "sizes[]=2", "tags[]=3", "owner_id=2"]);
+  await owner.click();
+  await expect(page.getByRole("combobox", { name: "Search Owner" })).toBeFocused();
+  await page.keyboard.type("mia");
+  await page.keyboard.press("Enter");
   await status.focus();
   await page.keyboard.press("ArrowDown");
   await page.keyboard.press("End");
@@ -772,11 +628,12 @@ test("combobox: a native form reset and Inertia's reset() put the starting value
   await page.keyboard.press("Escape");
   await expect(status).toHaveText("Archived");
   await expect(sizes).toHaveText("Medium, Large");
-  expect(await data()).toEqual(["status=4", "sizes[]=2", "sizes[]=3", "tags[]=3"]);
+  expect(await data()).toEqual(["status=4", "sizes[]=2", "sizes[]=3", "tags[]=3", "owner_id=13"]);
   await form.getByRole("button", { name: "Reset" }).click();
   await expect(status).toHaveText("Draft");
   await expect(sizes).toHaveText("Small, Medium");
-  expect(await data()).toEqual(["status=1", "sizes[]=1", "sizes[]=2", "tags[]=3"]);
+  await expect(owner).toHaveText("Ben Carter");
+  expect(await data()).toEqual(["status=1", "sizes[]=1", "sizes[]=2", "tags[]=3", "owner_id=2"]);
   // and it still changes afterwards
   await status.focus();
   await page.keyboard.press("ArrowDown");
@@ -798,7 +655,11 @@ test("combobox: a native form reset and Inertia's reset() put the starting value
   await expect(assignee).toHaveText("Grace Lee");
   await expect(tags).toHaveText("Laravel, Vue");
   await expect(inertia.locator("output")).toHaveText("Changed");
-  await inertia.getByRole("button", { name: "Reset" }).click();
+  // reset("tags[]") fires no event: the trigger still follows at once, and the other field keeps its change
+  await inertia.getByRole("button", { name: "Reset tags" }).click();
+  await expect(tags).toHaveText("Laravel");
+  await expect(assignee).toHaveText("Grace Lee");
+  await inertia.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(assignee).toHaveText("Chloe Evans");
   await expect(tags).toHaveText("Laravel");
   await expect(inertia.locator("output")).toHaveText("Unchanged");

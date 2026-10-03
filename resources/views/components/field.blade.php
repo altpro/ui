@@ -1,7 +1,7 @@
 {{--
     <x-ui::field name="email" type="email" required />
     <x-ui::field name="category_id" type="select" :options="$categories" :value="$post->category" placeholder="Choose one" />
-    <x-ui::field name="tags" type="multiselect" :options="$tags" :value="$post->tags" hint="Up to three." max="3" />
+    <x-ui::field name="extras[]" type="checkbox" :options="$extras" :value="$order->extras" />
     Same markup as resources/js/Field.vue; tests/browsers.spec.js checks they match.
     A label, a control and its hint and errors, tied together by generated ids.
     The label defaults to the name: category_id and post[categoryId] both read "Category".
@@ -29,7 +29,7 @@
         ? [$toId($o) => data_get($o, 'name') ?? data_get($o, 'label')]
         : [array_is_list($items) ? $o : $k => $o])->all();
     $group = $options && in_array($type, ['radio', 'checkbox']);
-    $multi = $type === 'multiselect' || ($group && $type === 'checkbox');
+    $multi = $group && $type === 'checkbox';
     $boolean = ! $group && in_array($type, ['checkbox', 'switch']);
 
     // an unticked box submits nothing, so after a failed submit a missing key means unticked, not "use the default"
@@ -59,10 +59,6 @@
     @elseif ($boolean)
         {{-- value 1, not the browser's "on", so Laravel's boolean rule takes it --}}
         <label class="{{ $type === 'switch' ? 'switch' : 'checkbox' }}"><input {{ $control->merge(['type' => 'checkbox', 'value' => '1', 'role' => $type === 'switch' ? 'switch' : null, 'id' => $id, 'name' => $name, 'aria-describedby' => $describedby, 'aria-invalid' => $invalid]) }} @checked($value)> {{ $label }}</label>
-    @elseif ($type === 'multiselect')
-        {{-- no `for`: it would become the button's whole name and hide the ticked items --}}
-        <label>{{ $label }}</label>
-        <x-ui::multiselect :name="$base" :label="$label" :options="$options" :selected="$value" :attributes="$control->merge(['aria-describedby' => $describedby, 'aria-invalid' => $invalid])" />
     @else
         <label for="{{ $id }}">{{ $label }}</label>
         @php($control = $control->merge(['id' => $id, 'name' => $name, 'aria-describedby' => $describedby, 'aria-invalid' => $invalid]))

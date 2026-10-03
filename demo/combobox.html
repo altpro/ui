@@ -72,7 +72,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">VoiceOver check</h2>
-    <p class="text-sm muted">Prototype semantics, to confirm on Safari with VoiceOver (Cmd+F5) before multiselect goes. Use Tab and the keys named, not the VoiceOver cursor. For each, note exactly what is spoken.</p>
+    <p class="text-sm muted">Checked on Safari with VoiceOver (Cmd+F5) in October 2026; run it again after changing the roles or keyboard. Use Tab and the keys named, not the VoiceOver cursor. For each, note exactly what is spoken.</p>
     <ol class="list-decimal space-y-2 ps-5 text-sm">
       <li><strong>Trigger, closed.</strong> Tab to "Status" in the first section. Expect the label, the value and the role: "Status, In review, pop-up button" or similar. Tab to "Assignee" (empty), "Sizes" (Medium) and "Customer" (Acme Ltd): each should say its label and its value, and nothing when empty. Disabled "Locked status" should say dimmed.</li>
       <li><strong>One from a short list.</strong> On "Status", press Down. Expect it to open and say the highlighted option ("In review, selected" or similar). Down, Up, Home and End should each speak the new option. Type "a": "Archived". Enter: it closes and the trigger says the new value. Escape on an open list closes it without a change.</li>

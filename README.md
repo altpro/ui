@@ -1,6 +1,6 @@
 # altpro/ui
 
-An HTML and CSS component layer for Tailwind v4. Tailwind does layout; altpro/ui does the components, so `<button class="btn primary lg">` replaces a line of utilities. Native `<dialog>`, popovers, `<details>` and friends do the interactive parts. The few components that need repeated markup or state, such as the multiselect, also come as Blade and Vue components.
+An HTML and CSS component layer for Tailwind v4. Tailwind does layout; altpro/ui does the components, so `<button class="btn primary lg">` replaces a line of utilities. Native `<dialog>`, popovers, `<details>` and friends do the interactive parts. Components that need JavaScript, such as the combobox and DataTable, are Vue components; a few Blade components, such as the field, save markup.
 
 ## Install in Laravel
 
@@ -14,7 +14,7 @@ Add the repository to the app's `composer.json`, then require it:
 composer require altpro/ui
 ```
 
-The service provider is discovered automatically, so `<x-ui::multiselect>` works straight away. In `resources/css/app.css`:
+The service provider is discovered automatically, so `<x-ui::field>` works straight away. In `resources/css/app.css`:
 
 ```css
 @import "tailwindcss";
@@ -28,16 +28,10 @@ The service provider is discovered automatically, so `<x-ui::multiselect>` works
 :root { --radius: 9999px; }
 ```
 
-For the Blade components, load their JavaScript once in `resources/js/app.js`:
+Vue components are imported from the package and bring their own JavaScript:
 
 ```js
-import "../../vendor/altpro/ui/resources/js/multiselect.js";
-```
-
-Vue components are imported from the same folder and bring their own JavaScript:
-
-```js
-import Multiselect from "../../vendor/altpro/ui/resources/js/Multiselect.vue";
+import Combobox from "../../vendor/altpro/ui/resources/js/Combobox.vue";
 ```
 
 `composer update` updates the CSS, Blade and Vue components together. To change one Blade component for one app, copy it to `resources/views/vendor/ui/components/`, or `php artisan vendor:publish --tag=ui-views` for all of them. A copied component no longer receives updates.
@@ -55,7 +49,7 @@ npm install github:<owner>/ui
 @import "@altpro/ui";
 ```
 
-Vue components are at `@altpro/ui/js/Multiselect.vue`. Copy `resources/boost/skills/altpro-ui/SKILL.md` into the project's `.claude/skills/altpro-ui/` for Claude.
+Vue components are at `@altpro/ui/js/Combobox.vue` and alongside. Copy `resources/boost/skills/altpro-ui/SKILL.md` into the project's `.claude/skills/altpro-ui/` for Claude.
 
 ## Develop
 

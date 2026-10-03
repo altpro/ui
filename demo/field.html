@@ -173,18 +173,17 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Blade and Vue component</h2>
-    <p class="text-sm muted"><code>&lt;x-ui::field&gt;</code> and <code>Field.vue</code> write all of the above from a name and a type: the label (guessed from the name), the ids that tie it to the control, the hint, and the errors for that name out of Laravel's error bag. <code>type</code> is any input type, or <code>textarea</code>, <code>select</code>, <code>multiselect</code>, <code>switch</code>, or <code>radio</code> and <code>checkbox</code> with options for a group. Options and values take Eloquent models; what comes back is ids. This one is the Vue component, fed models and an errors object as a controller would.</p>
+    <p class="text-sm muted"><code>&lt;x-ui::field&gt;</code> and <code>Field.vue</code> write all of the above from a name and a type: the label (guessed from the name), the ids that tie it to the control, the hint, and the errors for that name out of Laravel's error bag. <code>type</code> is any input type, or <code>textarea</code>, <code>select</code>, <code>switch</code>, or <code>radio</code> and <code>checkbox</code> with options for a group. The Vue component also takes <code>combobox</code>, which renders <a class="underline" href="combobox.html">Combobox</a>. Options and values take Eloquent models; what comes back is ids. This one is the Vue component, fed models and an errors object as a controller would.</p>
     <div id="vue-demo"></div>
 <pre>&lt;x-ui::field name="category_id" type="select" :options="$categories" :value="$post-&gt;category" placeholder="Choose one" /&gt;
-&lt;x-ui::field name="tags" type="multiselect" :options="$tags" :value="$post-&gt;tags" max="2" hint="Up to two." /&gt;
 &lt;x-ui::field name="price" type="number" prepend="£" step="0.01" /&gt;
 
-&lt;Field v-model="form.tags" name="tags" type="multiselect" :options="tags" :errors="form.errors" :max="2" /&gt;</pre>
+&lt;Field v-model="form.tags" name="tags" type="combobox" multiple :options="tags" :errors="form.errors" :max="2" /&gt;</pre>
     <p class="text-sm muted">Inside Inertia's <code>&lt;Form&gt;</code> there is no v-model: <code>value</code> sets the start, the inputs hold the data, and <code>reset()</code> puts them back.</p>
     <div id="inertia-demo"></div>
 <pre>&lt;Form action="/posts" method="post" #default="{ errors }"&gt;
   &lt;Field name="headline" :value="post.headline" :errors="errors" /&gt;
-  &lt;Field name="topics" type="multiselect" :options="topics" :value="post.topics" :errors="errors" /&gt;
+  &lt;Field name="topics" type="combobox" multiple :options="topics" :value="post.topics" :errors="errors" /&gt;
 &lt;/Form&gt;</pre>
   </section>
 

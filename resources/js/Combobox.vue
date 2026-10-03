@@ -7,17 +7,17 @@
     aria-activedescendant through the listbox, Enter or Space picks, typing jumps to a label.
   - with search (searchable, over 12 options, src or create): the trigger is a combobox whose popup is a
     dialog; in it the search box is the combobox for the listbox, with aria-activedescendant.
-  - multiple without search: a dialog of checkboxes, as multiselect was.
+  - multiple without search: a dialog of checkboxes.
   The value is submitted by a hidden <select>, so a native form reset and Inertia's reset() put it back as
-  they would a select: its options' defaultSelected hold the starting value.
+  they would a select: its options' defaultSelected hold the starting value. Writes to that select from
+  outside, a reset("field") included, come back into the model.
   `src` is a URL (GET src?q=…, answering [{ value, label }]) or (q) => Promise<[{ value, label }]>.
   `create` is a URL (POST { label }, answering { value, label }; a 422 shows its error) or (label) => Promise<{ value, label }>.
   `options` seeds the labels of selected values, so with `src` pass the selected records there.
   aria-* attributes go on the trigger, everything else on the wrapper.
 -->
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref, useAttrs, useId, watch } from "vue";
-import { useDomModel } from "./domModel.js";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useAttrs, useId, watch } from "vue";
 
 const model = defineModel();
 const props = defineProps({
@@ -39,7 +39,7 @@ const attrs = useAttrs();
 const split = (aria) => Object.fromEntries(Object.entries(attrs).filter(([k]) => k.startsWith("aria-") === aria));
 
 const id = useId();
-const root = ref(), trigger = ref(), pop = ref(), input = ref(), hidden = ref();
+const trigger = ref(), pop = ref(), input = ref(), hidden = ref();
 const search = computed(() => !!(props.src || props.create) || (props.searchable ?? props.options.length > 12));
 const selectOnly = computed(() => !props.multiple && !search.value);
 const checkboxes = computed(() => props.multiple && !search.value);
@@ -52,14 +52,15 @@ const selected = computed(() => keys.value.map((k) => labels.get(k) ?? { value: 
 const has = (o) => keys.value.includes(String(o.value));
 const capped = (o) => props.multiple && keys.value.length >= props.max && !has(o);
 
-const open = ref(false), q = ref(""), active = ref(-1);
+const open = ref(false), q = ref(""), active = ref(-1), pinned = ref([]);
 const remote = ref([]), loading = ref(false), creating = ref(false), error = ref("");
 const list = computed(() => {
   const found = props.src ? remote.value : props.options.filter((o) => o.label.toLowerCase().includes(q.value.trim().toLowerCase()));
   if (!props.multiple || q.value) return found;
-  // nothing typed: what is selected but not in the results comes first, so it can be unticked
+  // nothing typed: what was selected on opening but is not in the results or options comes first, so it can
+  // be unticked; it stays while the panel is open, so a row does not vanish from under the pointer
   const shown = new Set(found.map((o) => String(o.value)));
-  return [...selected.value.filter((o) => !shown.has(String(o.value))), ...found];
+  return [...pinned.value.filter((o) => !shown.has(String(o.value))), ...found];
 });
 const canCreate = computed(() => {
   const label = q.value.trim().toLowerCase();
@@ -75,20 +76,35 @@ const activeId = computed(() => (open.value && active.value >= 0 && active.value
 const initial = keys.value;
 const submitted = computed(() => [...new Set([...initial, ...keys.value])]);
 const domKeys = () => [...hidden.value.selectedOptions].map((o) => o.value).filter(Boolean).join("\n");
-let written;
-onMounted(() => (written = domKeys()));
+let written, parentForm;
 watch(() => keys.value.join("\n"), () => {
   for (const o of hidden.value.options) o.selected = o.value ? keys.value.includes(o.value) : !keys.value.length;
   written = domKeys();
   // a real change event, so Inertia's <Form> sees the field change (isDirty) and @change on the wrapper fires
   hidden.value.dispatchEvent(new Event("change", { bubbles: true }));
 }, { flush: "post" });
-// read the select only when something else wrote to it: a reset
-useDomModel(model, root, () => {
-  if (domKeys() === written) return model.value;
-  const values = domKeys().split("\n").filter(Boolean).map((k) => labels.get(k)?.value ?? k);
-  return props.multiple ? values : values[0] ?? null;
+// Something else wrote to the select: a native reset, Inertia's reset(), or its reset("field"), which fires
+// no event. Read it into the model, with or without v-model, so the trigger follows at once.
+const external = () => {
+  if (!hidden.value || domKeys() === written) return;
+  written = domKeys();
+  const values = written.split("\n").filter(Boolean).map((k) => labels.get(k)?.value ?? k);
+  model.value = props.multiple ? values : values[0] ?? null;
+};
+// so each write to the select or an option calls the native setter and then checks, as React does to track input values
+const hook = (el, proto, name) => {
+  const native = Object.getOwnPropertyDescriptor(proto, name);
+  if (el && !Object.hasOwn(el, name)) Object.defineProperty(el, name, { configurable: true, get: native.get, set(v) { native.set.call(this, v); queueMicrotask(external); } });
+};
+const hookOption = (el) => hook(el, HTMLOptionElement.prototype, "selected");
+// the browser resets before its reset event, Inertia after, so wait either way
+const later = () => setTimeout(external);
+onMounted(() => {
+  written = domKeys();
+  hook(hidden.value, HTMLSelectElement.prototype, "value");
+  (parentForm = hidden.value.form)?.addEventListener("reset", later);
 });
+onBeforeUnmount(() => parentForm?.removeEventListener("reset", later));
 
 const close = (refocus) => {
   if (pop.value?.matches(":popover-open")) pop.value.hidePopover();
@@ -165,6 +181,7 @@ const pick = (i) => (i === list.value.length ? add() : list.value[i] && choose(l
 // toggle runs after, when the search box can take focus
 function beforetoggle(e) {
   open.value = e.newState === "open";
+  pinned.value = open.value ? selected.value : [];
   clearTimeout(timer);
   seq++;
   [q.value, loading.value, error.value] = ["", false, ""];
@@ -215,16 +232,16 @@ watch(activeId, (v) => v && nextTick(() => document.getElementById(v)?.scrollInt
 </script>
 
 <template>
-  <div ref="root" class="combobox" v-bind="split(false)" @keydown.esc="escape" @focusout="focusout">
+  <div class="combobox" v-bind="split(false)" @keydown.esc="escape" @focusout="focusout">
     <select ref="hidden" hidden :name="name && (multiple ? `${name}[]` : name)" :form="form" :multiple="multiple" :disabled="disabled">
-      <option v-if="!multiple" value="" :selected="!initial.length" />
-      <option v-for="k in submitted" :key="k" :value="k" :selected="initial.includes(k)" />
+      <option v-if="!multiple" :ref="hookOption" value="" :selected="!initial.length" />
+      <option v-for="k in submitted" :key="k" :ref="hookOption" :value="k" :selected="initial.includes(k)" />
     </select>
     <button ref="trigger" type="button" class="input" role="combobox" :aria-label="label" :aria-haspopup="selectOnly ? 'listbox' : 'dialog'" :aria-controls="selectOnly ? `${id}-list` : id" :aria-expanded="open" :aria-activedescendant="selectOnly ? activeId : null" :aria-required="required || null" :popovertarget="id" :data-count="multiple && keys.length > 1 ? keys.length : null" :disabled="disabled" :autofocus="autofocus" v-bind="split(true)" @keydown="keydown"><span>{{ selected.map((o) => o.label).join(", ") }}</span></button>
     <div :id="id" ref="pop" popover class="dropdown" :role="selectOnly ? null : 'dialog'" :aria-label="selectOnly ? null : label" @beforetoggle="beforetoggle" @toggle="toggle">
       <input v-if="search" ref="input" v-model="q" class="input" type="text" role="combobox" autocomplete="off" aria-autocomplete="list" aria-expanded="true" :aria-label="`Search ${label}`" :aria-controls="`${id}-list`" :aria-activedescendant="activeId" @keydown="keydown">
       <div v-if="checkboxes">
-        <label v-for="o in options" :key="o.value" class="checkbox"><input type="checkbox" :checked="has(o)" :disabled="capped(o)" @change="choose(o)"> {{ o.label }}</label>
+        <label v-for="o in list" :key="o.value" class="checkbox"><input type="checkbox" :checked="has(o)" :disabled="capped(o)" @change="choose(o)"> {{ o.label }}</label>
       </div>
       <!-- tabindex: Firefox would put the scrolling list in the tab order -->
       <ul v-else :id="`${id}-list`" role="listbox" tabindex="-1" :aria-label="label" :aria-multiselectable="multiple || null">

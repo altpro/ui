@@ -5,8 +5,8 @@
 // value back. So read the inputs into the model before every render, and on
 // the form's reset event. With v-model the model is the truth: nothing to do.
 // A reset('field') of one field fires no event: the inputs are right at once,
-// and so is a multiselect's button (multiselect.js sees the boxes change), but
-// the model here catches up on the next render. Nothing reads it before then.
+// but the model here catches up on the next render. Nothing reads it before
+// then. Combobox.vue hooks its select's writes instead, so its trigger follows.
 import { getCurrentInstance, onBeforeUnmount, onBeforeUpdate, onMounted } from "vue";
 
 export function useDomModel(model, root, read) {

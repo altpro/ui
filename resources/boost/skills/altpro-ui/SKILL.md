@@ -1,6 +1,6 @@
 ---
 name: altpro-ui
-description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, multiselect, combobox, tooltip, card, dialog, accordion, table, DataTable, repeater, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, table, DataTable, repeater, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # altpro/ui
@@ -29,7 +29,7 @@ Elsewhere it is the npm package `@altpro/ui`:
 @import "@altpro/ui";
 ```
 
-Components with a Blade or Vue version say so in their section. Their JavaScript is one small file per component in `resources/js/`. Vue components import it themselves. With Blade, import it once in `resources/js/app.js`, e.g. `import "../../vendor/altpro/ui/resources/js/multiselect.js";`.
+Components with a Blade or Vue version say so in their section. Vue components bring their own JavaScript; Blade components need none.
 
 Every scrollbar gets a muted thumb on no track, set once with the inherited `scrollbar-color`, and it follows `.light` `.dark` `.inverse`. Add `scrollbar-thin` (Tailwind) to a scroll area for the slim width that `.nav`, dropdown panels and dialogs already have.
 
@@ -172,7 +172,6 @@ Writes the whole `.field` from a name and a type: the label, generated ids tying
 ```blade
 <x-ui::field name="email" type="email" required autocomplete="email" hint="We never share it." />
 <x-ui::field name="category_id" type="select" :options="$categories" :value="$post->category" placeholder="Choose one" />
-<x-ui::field name="tags" type="multiselect" :options="$tags" :value="$post->tags" max="3" hint="Up to three." />
 <x-ui::field name="price" type="number" prepend="£" step="0.01" :value="$product->price" />
 <x-ui::field name="published" type="switch" :value="$post->published" />
 ```
@@ -183,13 +182,13 @@ import Field from "../../vendor/altpro/ui/resources/js/Field.vue"; // or "@altpr
 const form = useForm({ category_id: props.post.category_id, tags: props.post.tags });
 </script>
 
-<Field v-model="form.tags" name="tags" type="multiselect" :options="tags" :errors="form.errors" :max="3" />
+<Field v-model="form.tags" name="tags" type="combobox" multiple :options="tags" :errors="form.errors" :max="3" />
 ```
 
 | Prop | Blade | Vue |
 |------|-------|-----|
 | `name` | Field name. Brackets work: `post[title]`, `tags[]`. | Same; optional, but the label guess and error lookup need it. |
-| `type` | Any input type (`text` by default), or `textarea`, `select`, `multiselect`, `switch`. `radio`, or `checkbox` with options, renders a `<fieldset>` group. `checkbox` without options is one box. | Same. |
+| `type` | Any input type (`text` by default), or `textarea`, `select`, `switch`. `radio`, or `checkbox` with options, renders a `<fieldset>` group. `checkbox` without options is one box. | Same, plus `combobox`, which renders `Combobox.vue`; add `multiple` for several. |
 | `label` | Defaults to the name: `category_id`, `post[categoryId]` both read "Category". | Same. |
 | `hint` | Text under the control, read with it. A `<x-slot:hint>` takes markup. | Same; `#hint` slot. |
 | `prepend` / `append` | Text inside the input's border (`£`, `kg`). A slot goes in as written, for a select or an icon. Inputs only. | Same; `#prepend` / `#append` slots. |
@@ -199,17 +198,17 @@ const form = useForm({ category_id: props.post.category_id, tags: props.post.tag
 | `id` | Generated when left off. | Same. |
 | `now` | On a `date`, `time`, `datetime-local` or `month`, an empty value becomes the current one, in the app's timezone. | Same, in the browser's timezone; the value goes into v-model too. |
 
-- `class` lands on the `.field`; every other attribute (`required`, `placeholder`, `min`, `rows`, `autocomplete`, `max`, `disabled`…) on the control. On a `multiselect` they go to `<x-ui::multiselect>` / `Multiselect.vue`.
+- `class` lands on the `.field`; every other attribute (`required`, `placeholder`, `min`, `rows`, `autocomplete`, `max`, `disabled`…) on the control. On a `combobox` they go to `Combobox.vue`, so `multiple`, `max`, `src` and `create` work there.
 - `placeholder` on a select adds an empty first option, so `required` works on it.
-- After a failed submit, an unticked box or empty multiselect stays empty rather than falling back to `value`, since the browser sends nothing for it.
+- After a failed submit, an unticked box or checkbox group stays empty rather than falling back to `value`, since the browser sends nothing for it.
 - Errors set `aria-invalid` and turn the control red; one shows as a `<p class="error">`, several as a `<ul>`.
 - A single checkbox or switch submits `1`, which Laravel's `boolean` rule accepts. Unticked, it submits nothing: read it with `$request->boolean('name')`.
 
 Inertia, Vue:
 
 - `useForm`: `<Field v-model="form.title" name="title" :errors="form.errors" />`. Model ids and `now` are written into the form after `useForm` took its defaults, so `isDirty` starts true. Call `onMounted(() => form.defaults())` if you show it.
-- `<Form>`: no v-model. Give the start as `value` and pass the slot's `errors`: `<Form #default="{ errors }"><Field name="title" :value="post.title" :errors="errors" /></Form>`. Values come from the inputs, so every field needs a `name`. `reset()` works, including the multiselect.
-- Precognition: listeners land on the control, so `@change="form.validate('title')"` works. On a multiselect they land on the wrapper: use `@change` or `@focusout`, since `blur` does not bubble.
+- `<Form>`: no v-model. Give the start as `value` and pass the slot's `errors`: `<Form #default="{ errors }"><Field name="title" :value="post.title" :errors="errors" /></Form>`. Values come from the inputs, so every field needs a `name`. `reset()` and `reset("field")` work, including the combobox.
+- Precognition: listeners land on the control, so `@change="form.validate('title')"` works. On a combobox they land on the wrapper: use `@change` or `@focusout`, since `blur` does not bubble.
 
 ## File input and drop zone: `FileInput.vue` `.dropzone`
 
@@ -409,65 +408,9 @@ A panel anchored to the button that opens it. Native `popover` plus CSS anchor p
 
 Custom properties: `--dropdown-x --dropdown-y --dropdown-gap --dropdown-radius --dropdown-shadow`.
 
-## Multiselect: `.multiselect`
-
-A button that opens a `.dropdown` of checkboxes, in place of `<select multiple>`. One click ticks a box and the panel stays open while you tick more. The button shows what is ticked, as a select shows its value: empty when nothing is, the items separated by commas, then an ellipsis and a count once they no longer fit its fixed width (`12rem`; a `w-*` utility on the wrapper changes it). The visible label goes outside, in a `.field`, as it would for a select. The form submits the same `name[]` values a multiple select would. Prefer the Blade or Vue component; they render exactly this markup.
-
-```blade
-<div class="field">
-  <label>Size</label>
-  <x-ui::multiselect name="size" label="Size"
-      :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']"
-      :selected="old('size', $product->sizes)"
-      required max="2" />
-  <p class="hint">Up to two.</p>
-</div>
-```
-
-```vue
-<script setup>
-import Multiselect from "../../vendor/altpro/ui/resources/js/Multiselect.vue"; // or "@altpro/ui/js/Multiselect.vue" from npm
-const sizes = ref(["m"]);
-</script>
-
-<Multiselect v-model="sizes" name="size" label="Size" :options="[{ value: 's', label: 'Small' }, { value: 'm', label: 'Medium' }]" />
-```
-
-```html
-<ui-multiselect class="multiselect">
-  <button type="button" class="input" popovertarget="size" data-count="1">
-    <span class="sr-only">Size</span><span><span hidden>Small</span><span>Medium</span></span>
-  </button>
-  <fieldset id="size" popover class="dropdown" aria-label="Size">
-    <label class="checkbox"><input type="checkbox" name="size[]" value="s"> Small</label>
-    <label class="checkbox"><input type="checkbox" name="size[]" value="m" checked> Medium</label>
-  </fieldset>
-</ui-multiselect>
-```
-
-| Prop | Blade | Vue |
-|------|-------|-----|
-| `label` | `sr-only` text in the button and the panel's accessible name. Required. It does not show: put the visible label outside. | Same. |
-| `options` | `value => label` array or collection. | `[{ value, label }]`. |
-| `name` | Field name; `[]` is added so PHP receives every value. | Same; leave it off when no real form submits it. |
-| `selected` / `v-model` | Ticked values. Pass `old('name', $current)` to refill after a failed validation. | An array of ticked values. |
-| `required` | Stops the submit while nothing is ticked, as a required select does. | Same. |
-| `max` | Disables the unticked boxes once this many are ticked. Say so in a `.hint`. | Same; a number, `:max="2"`. |
-| `form` | Id of a form elsewhere on the page that submits it. | Same. |
-| `disabled` | Cannot open; nothing is submitted, as a disabled select. | Same. |
-| `autofocus` | Focuses the button on page load. | Same. |
-
-- Other attributes (`class="w-48"`) land on the wrapper, except `aria-*` (`aria-describedby` for a hint), which goes on the button.
-- Hand-written markup: one `<span>` per box inside the button's last span, same order, no whitespace between them (it would show), `hidden` on the unticked ones, and `data-count` on the button.
-- The visible label is plain text such as `<label>Size</label>` with no `for`. A `<label for>` pointing at the button becomes its whole accessible name, so screen readers would no longer hear the ticked items.
-- `<ui-multiselect>` (`resources/js/multiselect.js`) keeps the items and `data-count` in step with the boxes and sets `:state(overflow)` when they do not fit, which shows the count. Without that script everything else still works but the button keeps the server's ticks and never shows the count. It also follows boxes ticked from code, such as Inertia's `reset("tags[]")`, which fire no event.
-- Hand-written markup takes the same attributes, where a select would have them: `required`, `max` and `form` on `<ui-multiselect>`, `form` and `name` on each box as well, `disabled` on the button and the `<fieldset>`, `autofocus` on the button.
-- `required` uses the browser's own validation: the message sits on the button, and `:state(touched):invalid` turns the button red once the user has changed it or tried to submit. `required` and `max` need the script. Validate on the server as well, and show its message in a `.field` with a `<p class="error">`; the button turns red like any `.input`.
-- Override one component in an app by copying it to `resources/views/vendor/ui/components/multiselect.blade.php` (`php artisan vendor:publish --tag=ui-views` copies all of them). A copy stops receiving package updates.
-
 ## Combobox: `Combobox.vue`
 
-Prototype; it will replace Multiselect once checked with VoiceOver. Use it for anything a native `<select>` can't do: a long list to search, records searched on the server (customer, product, author, assignee), several values (tags), or adding a new value. A native `<select class="input">` is still the right control for one choice from a short fixed list. Vue only; Blade pages use a native select or checkboxes. A trigger styled like `.input` shows the value and opens a `.dropdown`. A hidden `<select>` submits the value under `name`, or `name[]` with `multiple`. The visible label goes outside it, in a `.field`, with no `for`.
+Use it for anything a native `<select>` can't do: a long list to search, records searched on the server (customer, product, author, assignee), several values (tags), or adding a new value. A native `<select class="input">` is still the right control for one choice from a short fixed list. Vue only; Blade pages use a native select or checkboxes. A trigger styled like `.input` shows the value and opens a `.dropdown`. A hidden `<select>` submits the value under `name`, or `name[]` with `multiple`. The visible label goes outside it, in a `.field`, with no `for`.
 
 ```vue
 <script setup>
@@ -499,7 +442,9 @@ import Combobox from "../../vendor/altpro/ui/resources/js/Combobox.vue"; // or "
 | `autofocus` | Focuses the trigger on load. |
 
 - `aria-*` attributes (`aria-describedby`, `aria-invalid`) go on the trigger; everything else, `class="w-64"` and listeners such as `@change`, on the wrapper. The width is `12rem` unless a utility changes it.
-- A native form reset and Inertia's `reset()` put the starting value back. Inertia's `<Form>` sees changes (`isDirty`).
+- A native form reset, Inertia's `reset()` and `reset("field")` put the starting value back, and the trigger follows at once. Inertia's `<Form>` sees changes (`isDirty`).
+- A picked value that is no longer in `options` stays picked, and with `multiple` it is listed first in the panel so it can be unticked.
+- `Field.vue` renders it with `type="combobox"`, and DataTable's `multiple` filters use it.
 - Keyboard: on the trigger, Down, Up, Enter or Space opens it. Without search, arrows, Home and End move, Enter or Space picks and typing jumps to a label. With search, typing filters, arrows move, Enter picks; Home and End move the caret. Escape closes, Tab leaves.
 - Semantics: the trigger is a `combobox` whose value is its text. Without search it controls a `listbox` (select-only combobox); with search it opens a dialog in which the search box is the `combobox` for the `listbox`, with `aria-activedescendant`. `multiple` without search is a dialog of checkboxes.
 - Laravel endpoint for `src`: `Customer::where('name', 'like', "%{$request->q}%")->orderBy('name')->limit(20)->get()->map(fn ($c) => ['value' => $c->id, 'label' => $c->name])`.

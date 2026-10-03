@@ -27,7 +27,7 @@
         min-width: 0;
       }
 
-      /* the Columns panel: one row per box, as in the multiselect panel */
+      /* the Columns panel: one row per box, as in the combobox panel */
       > .dropdown {
         padding: 0.25rem;
         /* not on the closed panel: the UA hides that with display */

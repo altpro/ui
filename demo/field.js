@@ -1,5 +1,5 @@
 // The Vue section of field.html. Its props match the Blade templates in
-// tests/browsers.spec.js, which compares the two renders field by field.
+// tests/browsers.spec.js, which compares the two renders field by field, up to the Vue-only combobox.
 import { createApp, h, reactive, ref } from "vue";
 import { Form } from "@inertiajs/vue3";
 import Field from "../resources/js/Field.vue";
@@ -15,13 +15,14 @@ createApp({
     return () => h("div", { class: "grid max-w-3xl gap-6 md:grid-cols-2" }, [
       field("email", { name: "email", type: "email", required: true, autocomplete: "email", hint: "We never share it." }),
       field("category_id", { name: "category_id", type: "select", options: categories, placeholder: "Choose one" }),
-      field("tags", { name: "tags", type: "multiselect", options: tags, max: 2, hint: "Up to two." }),
       field("price", { name: "price", type: "number", prepend: "£", step: "0.01" }),
       field("size", { name: "size", type: "radio", options: { s: "Small", m: "Medium", l: "Large" } }),
       field("extras", { name: "extras[]", type: "checkbox", options: { gift: "Gift wrap", card: "Card" } }),
       field("newsletter", { name: "newsletter", type: "switch", label: "Send me the newsletter" }),
       field("bio", { name: "bio", type: "textarea", rows: 3 }),
       field("published_on", { name: "published_on", type: "date", now: true }),
+      // Vue only, so it comes after the fields the Blade parity test compares
+      field("tags", { name: "tags", type: "combobox", multiple: true, options: tags, max: 2, hint: "Up to two." }),
       h("output", { class: "text-sm md:col-span-2" }, `v-model: ${JSON.stringify(form)}`),
     ]);
   },
@@ -38,7 +39,7 @@ const inertia = createApp({
     return () => h(Form, { action: "#", method: "post", class: "grid max-w-3xl gap-6 md:grid-cols-2" }, {
       default: ({ errors, reset, setError }) => [
         h(Field, { name: "headline", value: "Hello", errors }),
-        h(Field, { name: "topics", type: "multiselect", options: topics.value, value: [tags[0]], max: 2, errors }),
+        h(Field, { name: "topics", type: "combobox", multiple: true, options: topics.value, value: [tags[0]], max: 2, errors }),
         h(Field, { name: "featured", type: "switch", errors }),
         h("div", { class: "flex gap-2 md:col-span-2" }, [
           h("button", { type: "button", class: "btn", onClick: () => setError({ headline: "An error from setError." }) }, "Show an error"),
