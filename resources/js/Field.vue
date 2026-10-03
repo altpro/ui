@@ -104,7 +104,7 @@ const file = (e) => (model.value = e.target.multiple ? [...e.target.files] : e.t
     <template v-else-if="type === 'multiselect'">
       <!-- no `for`: it would become the button's whole name and hide the ticked items -->
       <label>{{ label }}</label>
-      <Multiselect v-model="picked" :name="base" :label="label" :options="options" :aria-describedby="describedby" v-bind="control()" />
+      <Multiselect v-model="picked" :name="base" :label="label" :options="options" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()" />
     </template>
     <template v-else>
       <label :for="id">{{ label }}</label>

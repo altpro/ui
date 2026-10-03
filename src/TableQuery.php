@@ -7,31 +7,36 @@ use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * Search, sort and pagination for a server-driven DataTable.vue.
+ * Search, sort, filters and pagination for a server-driven DataTable.vue.
  *
- * The component keeps its state in the query string; this reads the same
- * parameters back. A sort column arrives from the browser and ends up as an
- * identifier in `order by`, so it is checked against the list the server
+ * The component keeps its view in the query string; this reads it back the
+ * way readView() in resources/js/dataTable.ts does, and tests/table-urls.json
+ * holds both sides to that. A sort column arrives from the browser and ends up
+ * as an identifier in `order by`, so it is checked against the list the server
  * holds, here, where no controller can forget to.
  *
- * Filters stay in the controller: they are `when()` clauses over domain
- * meaning, and a generic filter language would say less than the clause.
+ * Filter values are read here; what they mean stays in the controller, as
+ * `when()` clauses, since a generic filter language would say less than the clause.
  */
 final class TableQuery
 {
     /**
-     * Page sizes the picker offers. Anything else in the URL is ignored, so a
+     * Page sizes the picker offers, from resources/js/dataTable.json, which
+     * DataTable.vue reads too. Anything else in the URL is ignored, so a
      * hand-typed `per_page=100000` cannot ask the database for everything.
-     * Keep in step with PAGE_SIZES in resources/js/dataTable.ts.
      *
-     * @var array<int, int>
+     * @return array<int, int>
      */
-    public const array PAGE_SIZES = [10, 25, 50, 100];
+    public static function pageSizes(): array
+    {
+        return self::sizes()['pageSizes'];
+    }
 
     /**
      * `$sortable` takes `['name']` when the column and the parameter share a
      * name, or `['sent_at' => 'created_at']` when they do not. `$name` prefixes
-     * every parameter and matches the component's `name` prop.
+     * every parameter and matches the component's `name` prop. `$perPage`
+     * defaults to the shared default page size.
      *
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
@@ -48,19 +53,101 @@ final class TableQuery
         ?string $name = null,
         ?string $defaultSort = null,
         string $defaultDirection = 'asc',
-        int $perPage = 25,
+        ?int $perPage = null,
     ): LengthAwarePaginator {
-        $parameter = static fn (string $key): string => $name === null ? $key : $name.'_'.$key;
+        $columns = [];
 
-        self::search($query, $searchable, (string) $request->query($parameter('search'), ''));
-        self::sort($query, $sortable, $request, $parameter, $defaultSort, $defaultDirection);
+        foreach ($sortable as $key => $column) {
+            $columns[is_int($key) ? $column : $key] = $column;
+        }
 
-        $requested = (int) $request->query($parameter('per_page'), 0);
+        $view = self::view($request, array_keys($columns), $name, $defaultSort, $defaultDirection);
 
-        return $query->paginate(
-            perPage: in_array($requested, self::PAGE_SIZES, true) ? $requested : $perPage,
-            pageName: $parameter('page'),
-        )->withQueryString();
+        self::search($query, $searchable, $view['search']);
+
+        if (isset($columns[$view['sort']])) {
+            $query->orderBy($columns[$view['sort']], $view['direction']);
+        }
+
+        $perPage = $view['perPage'] ?? $perPage ?? self::sizes()['defaultPageSize'];
+        $pageName = self::parameter($name, 'page');
+        $paginator = (clone $query)->paginate($perPage, pageName: $pageName, page: $view['page']);
+
+        // past the end, where an old link or a shrunk list leaves it: show the last page, as client mode does
+        if ($paginator->currentPage() > $paginator->lastPage()) {
+            $paginator = $query->paginate($perPage, pageName: $pageName, page: $paginator->lastPage());
+        }
+
+        return $paginator->withQueryString();
+    }
+
+    /**
+     * The view the query string asks for, without the filters (see filters()),
+     * plus the page size it asks for: null when that is not one on offer.
+     *
+     * @param  array<int, string>  $sortable  keys a URL may sort by; any other falls back to `$defaultSort`
+     * @return array{search: string, sort: string, direction: 'asc'|'desc', page: int, perPage: int|null}
+     */
+    public static function view(
+        Request $request,
+        array $sortable = [],
+        ?string $name = null,
+        ?string $defaultSort = null,
+        string $defaultDirection = 'asc',
+    ): array {
+        // an array (`sort[]=`) is another parameter to the browser, so it reads as absent
+        $at = static function (string $key) use ($request, $name): string {
+            $value = $request->query(self::parameter($name, $key));
+
+            return is_string($value) ? $value : '';
+        };
+
+        $sort = $at('sort');
+        $direction = $at('dir');
+        $page = $at('page');
+        $perPage = $at('per_page');
+
+        return [
+            'search' => trim($at('search')),
+            'sort' => in_array($sort, $sortable, true) ? $sort : ($defaultSort ?? ''),
+            'direction' => match ($direction) {
+                'asc', 'desc' => $direction,
+                default => $defaultDirection === 'desc' ? 'desc' : 'asc',
+            },
+            'page' => preg_match('/^[1-9][0-9]*$/', $page) === 1 ? (int) $page : 1,
+            'perPage' => in_array($perPage, array_map(strval(...), self::pageSizes()), true) ? (int) $perPage : null,
+        ];
+    }
+
+    /**
+     * Each declared filter's values, keyed by filter key. `$filters` is the
+     * array the page hands DataTable's `filters` prop: `key`, `type` and
+     * `default` are read here. A `multiple` filter is `{name}_{key}[]`, any
+     * other `{name}_{key}`. An absent filter gets its default; one present but
+     * empty gets nothing. Values are not checked against `options`, as in client mode.
+     *
+     * @param  array<int, array<string, mixed>>  $filters
+     * @return array<string, array<int, string>>
+     */
+    public static function filters(Request $request, array $filters, ?string $name = null): array
+    {
+        $values = [];
+
+        foreach ($filters as $filter) {
+            $key = self::parameter($name, $filter['key']);
+            $value = $request->query($key);
+            $multiple = $filter['type'] === 'multiple';
+
+            // the wrong shape for the type (`brand=` for a multiple, `brand[]=` for a select) is another
+            // parameter to the browser, so absent. A null is `brand=` after ConvertEmptyStringsToNull.
+            $values[$filter['key']] = match (true) {
+                ! $request->query->has($key) || $multiple !== is_array($value) => $filter['default'] ?? [],
+                $multiple => array_values(array_filter($value, static fn ($v): bool => is_string($v) && $v !== '')),
+                default => is_string($value) && $value !== '' ? [$value] : [],
+            };
+        }
+
+        return $values;
     }
 
     /**
@@ -91,40 +178,16 @@ final class TableQuery
         });
     }
 
-    /**
-     * @template TModel of \Illuminate\Database\Eloquent\Model
-     *
-     * @param  Builder<TModel>  $query
-     * @param  array<int|string, string>  $sortable
-     * @param  callable(string): string  $parameter
-     */
-    private static function sort(
-        Builder $query,
-        array $sortable,
-        Request $request,
-        callable $parameter,
-        ?string $defaultSort,
-        string $defaultDirection,
-    ): void {
-        $columns = [];
+    private static function parameter(?string $name, string $key): string
+    {
+        return ($name ?? '') === '' ? $key : $name.'_'.$key;
+    }
 
-        foreach ($sortable as $key => $column) {
-            $columns[is_int($key) ? $column : $key] = $column;
-        }
+    /** @return array{pageSizes: array<int, int>, defaultPageSize: int} */
+    private static function sizes(): array
+    {
+        static $sizes;
 
-        $requested = (string) $request->query($parameter('sort'), '');
-        $sort = array_key_exists($requested, $columns) ? $requested : $defaultSort;
-
-        if ($sort === null || ! array_key_exists($sort, $columns)) {
-            return;
-        }
-
-        $direction = match ($request->query($parameter('dir'))) {
-            'asc' => 'asc',
-            'desc' => 'desc',
-            default => $defaultDirection === 'desc' ? 'desc' : 'asc',
-        };
-
-        $query->orderBy($columns[$sort], $direction);
+        return $sizes ??= json_decode((string) file_get_contents(__DIR__.'/../resources/js/dataTable.json'), true, flags: JSON_THROW_ON_ERROR);
     }
 }

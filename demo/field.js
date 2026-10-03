@@ -1,6 +1,6 @@
 // The Vue section of field.html. Its props match the Blade templates in
 // tests/browsers.spec.js, which compares the two renders field by field.
-import { createApp, h, reactive } from "vue";
+import { createApp, h, reactive, ref } from "vue";
 import { Form } from "@inertiajs/vue3";
 import Field from "../resources/js/Field.vue";
 
@@ -32,14 +32,19 @@ createApp({
 const inertia = createApp({
   setup() {
     const tags = [{ id: 1, name: "Laravel" }, { id: 2, name: "Vue" }, { id: 3, name: "Tailwind" }];
+    // options that change under a live selection: Laravel goes, Svelte arrives
+    const topics = ref(tags);
+    const others = [tags[1], tags[2], { id: 4, name: "Svelte" }];
     return () => h(Form, { action: "#", method: "post", class: "grid max-w-3xl gap-6 md:grid-cols-2" }, {
       default: ({ errors, reset, setError }) => [
         h(Field, { name: "headline", value: "Hello", errors }),
-        h(Field, { name: "topics", type: "multiselect", options: tags, value: [tags[0]], errors }),
+        h(Field, { name: "topics", type: "multiselect", options: topics.value, value: [tags[0]], max: 2, errors }),
         h(Field, { name: "featured", type: "switch", errors }),
         h("div", { class: "flex gap-2 md:col-span-2" }, [
           h("button", { type: "button", class: "btn", onClick: () => setError({ headline: "An error from setError." }) }, "Show an error"),
           h("button", { type: "button", class: "btn ghost", onClick: () => reset() }, "Reset"),
+          h("button", { type: "button", class: "btn ghost", onClick: () => reset("topics[]") }, "Reset topics"),
+          h("button", { type: "button", class: "btn ghost", onClick: () => (topics.value = others) }, "Other topics"),
         ]),
       ],
     });

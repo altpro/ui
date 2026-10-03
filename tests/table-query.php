@@ -60,5 +60,32 @@ $check($names('/?sort=name&dir=desc', 'brands'), ['Anadin', 'Boots', 'Calpol'], 
 $perPage = fn (string $url): int => TableQuery::paginate(Brand::query(), Request::create($url), perPage: 2)->perPage();
 $check($perPage('/?per_page=100000'), 2, 'ignores a page size it does not offer');
 $check($perPage('/?per_page=10'), 10, 'takes a page size it offers');
+$check(TableQuery::paginate(Brand::query(), Request::create('/'))->perPage(), 25, 'defaults to the shared default page size');
+
+$page = fn (string $url): array => [
+    ($paginator = TableQuery::paginate(Brand::query(), Request::create($url), sortable: ['name'], defaultSort: 'name', perPage: 2))->currentPage(),
+    $paginator->pluck('name')->all(),
+];
+$check($page('/?page=2'), [2, ['Calpol']], 'reads the page from the request it was given');
+$check($page('/?page=9'), [2, ['Calpol']], 'shows the last page for a page past the end');
+
+// the URL format, case by case, from the fixture tests/table-view.ts reads too
+$fixture = json_decode((string) file_get_contents(__DIR__.'/table-urls.json'), true, flags: JSON_THROW_ON_ERROR);
+$table = $fixture['table'];
+$sorted = function (array $view): array {
+    ksort($view);
+    ksort($view['filters']);
+
+    return $view;
+};
+
+foreach ($fixture['cases'] as $case) {
+    $request = Request::create($case['url']);
+    $name = $case['name'] ?? null;
+    $actual = TableQuery::view($request, $table['sortable'], $name, $table['defaultSort'], $table['defaultDirection'])
+        + ['filters' => TableQuery::filters($request, $table['filters'], $name)];
+    $expected = [...$fixture['view'], ...$case['view'], 'filters' => [...$fixture['view']['filters'], ...$case['view']['filters'] ?? []]];
+    $check($sorted($actual), $sorted($expected), 'URL: '.$case['what']);
+}
 
 echo "TableQuery: all checks passed\n";

@@ -11,9 +11,10 @@ import {
   PAGE_SIZES,
   formatCellValue,
   isPaginated,
+  keyOf,
   pageWindow,
-  paginationMeta,
   readPreference,
+  tableView,
   useTableState,
   writePreference,
   type DataTableColumn,
@@ -40,6 +41,8 @@ const props = defineProps<{
   emptyMessage?: string;
   noMatchesMessage?: string;
   selectable?: boolean;
+  /** The field that identifies a row, and what a selection hands over. Default `id`; selectable rows must have it. */
+  rowKey?: keyof TRow & string;
   /** Server mode: the row count before any search or filter, so an empty table can say which kind of empty it is. */
   unfilteredTotal?: number;
   /** Server mode: the props a change reloads. */
@@ -57,17 +60,18 @@ defineSlots<{
 }>();
 
 const id = useId();
-const meta = computed(() => (isPaginated(props.rows) ? paginationMeta(props.rows) : null));
-const server = computed(() => meta.value !== null);
-const sourceRows = computed<TRow[]>(() => (isPaginated(props.rows) ? props.rows.data : [...props.rows]));
+const server = computed(() => isPaginated(props.rows));
 const storeKey = `datatable:${props.name || props.columns.map((c) => c.key).join("|")}`;
 
 const defaultSort = props.sort ?? props.columns.find((c) => c.sortable)?.key ?? "";
 const state = useTableState({
-  name: props.name,
-  defaultSort,
-  defaultDirection: props.direction ?? "asc",
-  filters: () => (props.filters ?? []).map((f) => ({ key: f.key, multiple: f.type === "multiple", defaults: [...(f.default ?? [])] })),
+  url: () => ({
+    name: props.name,
+    defaultSort,
+    defaultDirection: props.direction ?? "asc",
+    sortable: props.columns.filter((c) => c.sortable).map((c) => c.key),
+    filters: props.filters ?? [],
+  }),
   server: () => server.value,
   only: () => props.only ?? [],
 });
@@ -77,7 +81,6 @@ const storedSize = readPreference(`${storeKey}:per-page`);
 const preferredSize = ref(typeof storedSize === "number" && PAGE_SIZES.includes(storedSize) ? storedSize : (props.paginate ?? DEFAULT_PAGE_SIZE));
 const storedHidden = readPreference(`${storeKey}:hidden-columns`);
 const hiddenColumns = ref<string[]>(Array.isArray(storedHidden) ? storedHidden.filter((k) => typeof k === "string") : []);
-const pageSize = computed(() => meta.value?.per_page ?? preferredSize.value);
 
 const setPageSize = (size: number) => {
   preferredSize.value = size;
@@ -88,7 +91,7 @@ const setPageSize = (size: number) => {
 // ponytail: the first server visit does not carry a stored page size, so a changed one costs one extra request.
 // Store the preference on the user server-side if that ever matters.
 onMounted(() => {
-  if (meta.value && meta.value.per_page !== preferredSize.value && !state.hasParameter("per_page")) state.apply({ perPage: preferredSize.value });
+  if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value });
 });
 
 const hideableColumns = computed(() => props.columns.filter((c) => c.hideable ?? c.virtual !== true));
@@ -101,64 +104,15 @@ const toggleColumn = (key: string) => {
 const rowValue = (row: TRow, key: string): unknown => (row as Record<string, unknown>)[key];
 const cellText = (row: TRow, column: DataTableColumn<TRow>) => formatCellValue(rowValue(row, column.key), column.format, column.currency);
 
-// a virtual column has no field, so searching it would compare undefined
-const searchKeys = computed<string[]>(() => (props.searchable ? [...props.searchable] : props.columns.filter((c) => !c.virtual).map((c) => c.key)));
-const matchesSearch = (row: TRow) => {
-  const term = state.searchInput.value.trim().toLowerCase();
-  return term === "" || searchKeys.value.some((key) => String(rowValue(row, key) ?? "").toLowerCase().includes(term));
-};
-const matchesFilters = (row: TRow) =>
-  (props.filters ?? []).every((filter) => {
-    const values = state.filters.value[filter.key] ?? [];
-    if (values.length === 0) return true;
-    if (filter.match) return filter.match(row, values);
-    const value = rowValue(row, filter.field ?? filter.key);
-    return filter.type === "boolean" ? Boolean(value) === (values[0] === "1") : values.includes(String(value));
-  });
-
-const compare = (a: unknown, b: unknown): number => {
-  if (a === b) return 0;
-  if (a == null) return -1;
-  if (b == null) return 1;
-  if (typeof a === "number" && typeof b === "number") return a - b;
-  return String(a).localeCompare(String(b), undefined, { sensitivity: "base", numeric: true });
-};
-const sortColumn = computed(() => props.columns.find((c) => c.key === state.sort.value));
-const sortValue = (row: TRow, column: DataTableColumn<TRow>) => (column.virtual ? (column.sortValue?.(row) ?? null) : rowValue(row, column.key));
-
-const matchingRows = computed(() => {
-  if (server.value) return sourceRows.value;
-  const rows = sourceRows.value.filter((row) => matchesSearch(row) && matchesFilters(row));
-  const column = sortColumn.value;
-  if (!column) return rows;
-  const sign = state.direction.value === "asc" ? 1 : -1;
-  return rows.sort((a, b) => sign * compare(sortValue(a, column), sortValue(b, column)));
-});
-
-const total = computed(() => meta.value?.total ?? matchingRows.value.length);
-const unfilteredTotal = computed(() => (server.value ? props.unfilteredTotal : sourceRows.value.length));
-const lastPage = computed(() => meta.value?.last_page ?? Math.max(1, Math.ceil(total.value / pageSize.value)));
-const currentPage = computed(() => meta.value?.current_page ?? Math.min(state.page.value, lastPage.value));
-const displayedRows = computed(() => {
-  if (server.value) return matchingRows.value;
-  const start = (currentPage.value - 1) * pageSize.value;
-  return matchingRows.value.slice(start, start + pageSize.value);
-});
-const rangeFrom = computed(() => meta.value?.from ?? (total.value === 0 ? 0 : (currentPage.value - 1) * pageSize.value + 1));
-const rangeTo = computed(() => meta.value?.to ?? Math.min(currentPage.value * pageSize.value, total.value));
-const goTo = (page: number) => state.apply({ page: Math.min(Math.max(page, 1), lastPage.value) });
-
-// The status is always the count and the empty cell always the message, so neither repeats the other.
-// It is in the DOM in every state: a live region inserted with its text announces nothing.
-const summary = computed(() => {
-  const all = unfilteredTotal.value;
-  const filtered = all !== undefined && all !== total.value ? `, filtered from ${all}` : "";
-  return total.value === 0 ? `Showing 0 of 0${filtered}` : `Showing ${rangeFrom.value}–${rangeTo.value} of ${total.value}${filtered}`;
-});
-
-// "nothing yet" offers a way to create, "nothing matches" a way to clear. Server mode tells them apart by unfiltered-total.
-const hasQuery = computed(() => state.searchInput.value.trim() !== "" || state.activeFilterCount.value > 0);
-const emptyOfEverything = computed(() => (unfilteredTotal.value === undefined ? !hasQuery.value : unfilteredTotal.value === 0));
+// the summary sits in the DOM in every state: a live region inserted with its text announces nothing
+const view = computed(() =>
+  tableView(
+    props,
+    { search: state.searchInput.value, filters: state.filters.value, sort: state.sort.value, direction: state.direction.value, page: state.page.value },
+    preferredSize.value,
+  ),
+);
+const goTo = (page: number) => state.apply({ page: Math.min(Math.max(page, 1), view.value.lastPage) });
 
 // aria-sort on the th is the one place sort state lives; .table draws the arrow from it
 const ariaSort = (key: string) => (state.sort.value !== key ? undefined : state.direction.value === "asc" ? "ascending" : "descending");
@@ -167,17 +121,17 @@ const toggleSort = (key: string) => state.apply({ sort: key, direction: state.so
 const filterValue = (key: string) => state.filters.value[key]?.[0] ?? "";
 const setFilter = (key: string, values: string[]) => state.apply({ filters: { ...state.filters.value, [key]: values } });
 
-const rowId = (row: TRow, index: number): string | number => (row as { id?: string | number }).id ?? index;
+const rowId = (row: TRow, index: number) => keyOf(row, props.rowKey ?? "id", index, props.selectable);
 const selectedIds = ref<Array<string | number>>([]);
 const allMatching = ref(false);
-const visibleIds = computed(() => displayedRows.value.map(rowId));
+const visibleIds = computed(() => view.value.rows.map(rowId));
 const allVisibleSelected = computed(() => visibleIds.value.length > 0 && visibleIds.value.every((i) => selectedIds.value.includes(i)));
-const selectionCount = computed(() => (allMatching.value ? total.value : selectedIds.value.length));
+const selectionCount = computed(() => (allMatching.value ? view.value.total : selectedIds.value.length));
 // ticking the page is not ticking every match: the rest is an explicit offer, and taking it hands over the query, not ids
-const canSelectAllMatching = computed(() => allVisibleSelected.value && !allMatching.value && total.value > visibleIds.value.length);
+const canSelectAllMatching = computed(() => allVisibleSelected.value && !allMatching.value && view.value.total > visibleIds.value.length);
 const selection = computed<DataTableSelection | null>(() =>
   allMatching.value
-    ? { mode: "matching", search: state.searchInput.value.trim(), filters: state.filters.value, count: total.value }
+    ? { mode: "matching", search: state.searchInput.value.trim(), filters: state.filters.value, count: view.value.total }
     : selectedIds.value.length
       ? { mode: "ids", ids: [...selectedIds.value] }
       : null,
@@ -192,13 +146,13 @@ const toggleAllVisible = () => {
 };
 watch(selection, (value) => emit("update:selection", value));
 // a selection describes a list; change the list and it means nothing
-watch([state.searchInput, state.filters, state.sort, state.direction, currentPage], clearSelection);
+watch([state.searchInput, state.filters, state.sort, state.direction, () => view.value.page], clearSelection);
 
 const columnCount = computed(() => visibleColumns.value.length + (props.selectable ? 1 : 0));
 // a checkbox reading "Select row 4" names a position that moves with the sort; the first readable cell names the record
 const rowLabel = (row: TRow, index: number) => {
   const column = visibleColumns.value.find((c) => !c.virtual);
-  return (column && cellText(row, column)) || `row ${rangeFrom.value + index}`;
+  return (column && cellText(row, column)) || `row ${view.value.from + index}`;
 };
 </script>
 
@@ -247,7 +201,7 @@ const rowLabel = (row: TRow, index: number) => {
 
     <div v-if="selectable && selection" class="bulk">
       <p>{{ selectionCount }} selected</p>
-      <button v-if="canSelectAllMatching" type="button" class="btn sm" @click="allMatching = true">Select all {{ total }} matching</button>
+      <button v-if="canSelectAllMatching" type="button" class="btn sm" @click="allMatching = true">Select all {{ view.total }} matching</button>
       <slot name="bulk-actions" :selection="selection" :count="selectionCount" :clear="clearSelection" />
       <button type="button" class="btn sm ghost" @click="clearSelection">Clear</button>
     </div>
@@ -267,7 +221,7 @@ const rowLabel = (row: TRow, index: number) => {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(row, index) in displayedRows" :key="rowId(row, index)">
+          <tr v-for="(row, index) in view.rows" :key="rowId(row, index)">
             <td v-if="selectable" class="select">
               <label class="checkbox"><input v-model="selectedIds" type="checkbox" :value="rowId(row, index)" :aria-label="`Select ${rowLabel(row, index)}`" /></label>
             </td>
@@ -276,9 +230,9 @@ const rowLabel = (row: TRow, index: number) => {
             </td>
           </tr>
           <!-- the empty message is the table's content, under the caption that names it -->
-          <tr v-if="displayedRows.length === 0">
+          <tr v-if="view.empty">
             <td :colspan="columnCount">
-              <template v-if="emptyOfEverything">
+              <template v-if="view.empty === 'nothing-yet'">
                 {{ emptyMessage ?? "No records found." }}
                 <slot name="empty" />
               </template>
@@ -293,22 +247,22 @@ const rowLabel = (row: TRow, index: number) => {
     </div>
 
     <div class="foot">
-      <p role="status">{{ summary }}</p>
-      <label v-if="total > PAGE_SIZES[0]!">
+      <p role="status">{{ view.summary }}</p>
+      <label v-if="view.total > PAGE_SIZES[0]!">
         Per page
-        <select class="input sm" :value="pageSize" @change="setPageSize(Number(($event.target as HTMLSelectElement).value))">
+        <select class="input sm" :value="view.perPage" @change="setPageSize(Number(($event.target as HTMLSelectElement).value))">
           <option v-for="size in PAGE_SIZES" :key="size" :value="size">{{ size }}</option>
         </select>
       </label>
-      <nav v-if="lastPage > 1" class="join" :aria-label="`${caption} pagination`">
-        <button type="button" class="btn outlined sm" aria-label="Previous page" :disabled="currentPage === 1" @click="goTo(currentPage - 1)">
+      <nav v-if="view.lastPage > 1" class="join" :aria-label="`${caption} pagination`">
+        <button type="button" class="btn outlined sm" aria-label="Previous page" :disabled="view.page === 1" @click="goTo(view.page - 1)">
           <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
-        <template v-for="(page, i) in pageWindow(currentPage, lastPage)" :key="page ?? `gap-${i}`">
+        <template v-for="(page, i) in pageWindow(view.page, view.lastPage)" :key="page ?? `gap-${i}`">
           <span v-if="page === null" class="btn outlined sm pointer-events-none">…</span>
-          <button v-else type="button" class="btn sm" :class="page === currentPage ? 'primary' : 'outlined'" :aria-current="page === currentPage ? 'page' : undefined" @click="goTo(page)">{{ page }}</button>
+          <button v-else type="button" class="btn sm" :class="page === view.page ? 'primary' : 'outlined'" :aria-current="page === view.page ? 'page' : undefined" @click="goTo(page)">{{ page }}</button>
         </template>
-        <button type="button" class="btn outlined sm" aria-label="Next page" :disabled="currentPage === lastPage" @click="goTo(currentPage + 1)">
+        <button type="button" class="btn outlined sm" aria-label="Next page" :disabled="view.page === view.lastPage" @click="goTo(view.page + 1)">
           <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m9 18 6-6-6-6" /></svg>
         </button>
       </nav>

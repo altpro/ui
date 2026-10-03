@@ -309,6 +309,12 @@ test("field: the Blade and Vue components render the same markup", async ({ page
   const [blade, vue] = await Promise.all([shapes("#blade > .field"), shapes("#vue-demo > .field")]);
   expect(blade.length).toBe(9);
   for (const [i, shape] of vue.entries()) expect(blade[i], `field ${i + 1}`).toEqual(shape);
+  // parity would pass if both left it out, so check each one: every control an error describes is invalid
+  for (const root of ["#blade", "#vue-demo"]) {
+    const described = page.locator(`${root} [aria-describedby*="-error"]:not(fieldset)`);
+    await expect(described).toHaveCount(2);
+    for (const control of await described.all()) await expect(control).toHaveAttribute("aria-invalid", "true");
+  }
 });
 });
 
@@ -351,7 +357,7 @@ test("field: inside Inertia's <Form>, reset() sticks when the fields render agai
   const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
   expect(await data()).toEqual(["headline=Changed", "topics[]=1", "topics[]=2", "featured=1"]);
 
-  await form.getByRole("button", { name: "Reset" }).click();
+  await form.getByRole("button", { name: "Reset", exact: true }).click();
   await expect(topics).toHaveAttribute("data-count", "1");
   // the error renders every field again: v-model must not put "Changed" back
   await form.getByRole("button", { name: "Show an error" }).click();
@@ -359,6 +365,54 @@ test("field: inside Inertia's <Form>, reset() sticks when the fields render agai
   await expect(form.getByLabel("Headline")).toHaveValue("Hello");
   await expect(topics).toHaveAttribute("data-count", "1");
   expect(await data()).toEqual(["headline=Hello", "topics[]=1"]);
+});
+
+// reset("topics[]") writes the boxes and fires no event, so nothing renders until something else does
+test("field: inside Inertia's <Form>, resetting one field updates its button and max at once", async ({ page }) => {
+  await page.goto("/field.html");
+  const form = page.locator("#inertia-demo form"), topics = form.getByRole("button", { name: /^Topics/ });
+  await form.getByLabel("Headline").fill("Changed");
+  await topics.click();
+  await form.getByLabel("Vue").check();
+  // max is 2: the third box is capped
+  await expect(form.getByLabel("Tailwind")).toBeDisabled();
+  await page.keyboard.press("Escape");
+
+  await form.getByRole("button", { name: "Reset topics" }).click();
+  await expect(topics).toHaveAttribute("data-count", "1");
+  await expect(topics).toHaveAccessibleName("Topics Laravel");
+  await expect(form.getByLabel("Tailwind")).toBeEnabled();
+  // the other fields keep what was typed
+  await expect(form.getByLabel("Headline")).toHaveValue("Changed");
+  const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
+  expect(await data()).toEqual(["headline=Changed", "topics[]=1"]);
+  // and a later render must not bring Vue back
+  await form.getByRole("button", { name: "Show an error" }).click();
+  await expect(topics).toHaveAttribute("data-count", "1");
+  expect(await data()).toEqual(["headline=Changed", "topics[]=1"]);
+});
+
+test("field: inside Inertia's <Form>, options that change keep the ticks that still exist", async ({ page }) => {
+  await page.goto("/field.html");
+  const form = page.locator("#inertia-demo form"), topics = form.getByRole("button", { name: /^Topics/ });
+  await topics.click();
+  await form.getByLabel("Vue").check();
+  await page.keyboard.press("Escape");
+  // Laravel goes with its tick; Vue stays ticked, Svelte arrives unticked, and max no longer caps anything
+  await form.getByRole("button", { name: "Other topics" }).click();
+  await expect(topics).toHaveAttribute("data-count", "1");
+  await expect(topics).toHaveAccessibleName("Topics Vue");
+  await topics.click();
+  await expect(form.getByLabel("Svelte")).toBeEnabled();
+  await form.getByLabel("Svelte").check();
+  await page.keyboard.press("Escape");
+  await expect(topics).toHaveAccessibleName(/^Topics Vue ?, Svelte$/);
+  const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
+  expect(await data()).toEqual(["headline=Hello", "topics[]=2", "topics[]=4"]);
+  // a full reset goes back to the starting value, which is no longer an option
+  await form.getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(topics).toHaveAttribute("data-count", "0");
+  expect(await data()).toEqual(["headline=Hello"]);
 });
 
 // DataTable: what the URL, filters and selection do, none of which axe can see.

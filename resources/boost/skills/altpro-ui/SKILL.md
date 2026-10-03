@@ -424,7 +424,7 @@ const sizes = ref(["m"]);
 - Other attributes (`class="w-48"`) land on the wrapper, except `aria-*` (`aria-describedby` for a hint), which goes on the button.
 - Hand-written markup: one `<span>` per box inside the button's last span, same order, no whitespace between them (it would show), `hidden` on the unticked ones, and `data-count` on the button.
 - The visible label is plain text such as `<label>Size</label>` with no `for`. A `<label for>` pointing at the button becomes its whole accessible name, so screen readers would no longer hear the ticked items.
-- `<ui-multiselect>` (`resources/js/multiselect.js`) keeps the items and `data-count` in step with the boxes and sets `:state(overflow)` when they do not fit, which shows the count. Without that script everything else still works but the button keeps the server's ticks and never shows the count. A box ticked from code fires no change event: dispatch one.
+- `<ui-multiselect>` (`resources/js/multiselect.js`) keeps the items and `data-count` in step with the boxes and sets `:state(overflow)` when they do not fit, which shows the count. Without that script everything else still works but the button keeps the server's ticks and never shows the count. It also follows boxes ticked from code, such as Inertia's `reset("tags[]")`, which fire no event.
 - Hand-written markup takes the same attributes, where a select would have them: `required`, `max` and `form` on `<ui-multiselect>`, `form` and `name` on each box as well, `disabled` on the button and the `<fieldset>`, `autofocus` on the button.
 - `required` uses the browser's own validation: the message sits on the button, and `:state(touched):invalid` turns the button red once the user has changed it or tried to submit. `required` and `max` need the script. Validate on the server as well, and show its message in a `.field` with a `<p class="error">`; the button turns red like any `.input`.
 - Override one component in an app by copying it to `resources/views/vendor/ui/components/multiselect.blade.php` (`php artisan vendor:publish --tag=ui-views` copies all of them). A copy stops receiving package updates.
@@ -650,6 +650,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `sort`, `direction` | Default sort. Without `sort`, the first sortable column, ascending. |
 | `paginate` | Rows per page until the user picks another (10, 25, 50, 100). Default 25. |
 | `selectable` | Adds the checkbox column and the bulk bar. `@update:selection` gives `null`, `{ mode: "ids", ids }` or `{ mode: "matching", search, filters, count }`. |
+| `row-key` | The field that identifies a row, and what `ids` holds. Default `id`. A selectable table throws on a row without it rather than hand over positions. |
 | `empty-message`, `no-matches-message` | "Nothing yet" and "nothing matches", which show differently: the second offers to clear the search. |
 | `unfiltered-total` | Server mode: the count before search and filters, so the table can say "filtered from" and pick the right empty message. |
 | `only` | Server mode: the props a change reloads, e.g. `['brands']`. |
@@ -671,17 +672,24 @@ Server mode, in the controller:
 ```php
 use Altpro\Ui\TableQuery;
 
-$query = Brand::query()->when($request->boolean('brands_featured'), fn ($q) => $q->where('featured', true));
+$filters = [
+    ['key' => 'featured', 'label' => 'Featured only', 'type' => 'boolean'],
+];
+$values = TableQuery::filters($request, $filters, name: 'brands');
+$query = Brand::query()->when($values['featured'], fn ($q) => $q->where('featured', true));
 
 return Inertia::render('Brands/Index', [
     'brands' => TableQuery::paginate($query, $request, name: 'brands', searchable: ['name', 'slug'], sortable: ['name', 'added' => 'created_at'], defaultSort: 'name'),
+    'filters' => $filters,
     'unfilteredTotal' => Brand::count(),
 ]);
 ```
 
-- `sortable` is the allow-list: a sort column from the URL that is not on it is ignored, so user input never reaches `order by`. `['added' => 'created_at']` maps the column key to a database column.
-- Filters stay in the controller as `when()` clauses, reading `{name}_{key}` (and `{name}_{key}[]` for `multiple`).
-- `per_page` is honoured only for 10, 25, 50 or 100.
+- `sortable` is the allow-list: a sort column from the URL that is not on it falls back to `defaultSort`, so user input never reaches `order by`. `['added' => 'created_at']` maps the column key to a database column.
+- `defaultSort` and `defaultDirection` must match the component's `sort` and `direction`: a bare URL sorts by the controller's, and the header arrow shows the component's.
+- Declare the filters once and pass the same array to the page as the `filters` prop. `TableQuery::filters()` reads it the way the component writes it and returns each filter's values by key: `[]` for none, the `default` when the URL says nothing. A boolean is `['1']` when ticked. What a value means stays in the controller, as `when()` clauses.
+- `per_page` is honoured only for `TableQuery::pageSizes()` (10, 25, 50, 100); `perPage:` defaults to 25. A page past the end shows the last page.
+- Search is `LIKE %term%` on each `searchable` column, so case follows the collation (MySQL and SQLite ignore it, Postgres does not) and a typed `%` or `_` is a wildcard. Client mode matches a case-insensitive substring.
 
 ## Alert: `.alert`
 

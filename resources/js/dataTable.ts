@@ -3,6 +3,7 @@
 // Without the annotation `key` widens to string and stops being checked against the row.
 import { computed, onUnmounted, ref, watch } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
+import pageSizes from "./dataTable.json" with { type: "json" };
 
 export type DataTableDirection = "asc" | "desc";
 
@@ -76,14 +77,14 @@ export type DataTableSelection =
   | { mode: "ids"; ids: Array<string | number> }
   | { mode: "matching"; search: string; filters: Record<string, string[]>; count: number };
 
-/** Keep in step with TableQuery::PAGE_SIZES, which is the list the server enforces. */
-export const PAGE_SIZES: ReadonlyArray<number> = [10, 25, 50, 100];
+/** TableQuery reads the same file, so the picker offers what the server enforces. */
+export const PAGE_SIZES: ReadonlyArray<number> = pageSizes.pageSizes;
 
-export const DEFAULT_PAGE_SIZE = 25;
+export const DEFAULT_PAGE_SIZE: number = pageSizes.defaultPageSize;
 
 export const isPaginated = <TRow>(rows: DataTableRows<TRow>): rows is DataTablePaginated<TRow> => !Array.isArray(rows);
 
-export const paginationMeta = <TRow>(rows: DataTablePaginated<TRow>): DataTablePaginationMeta => {
+const paginationMeta = <TRow>(rows: DataTablePaginated<TRow>): DataTablePaginationMeta => {
   const meta = rows.meta;
   return {
     current_page: meta?.current_page ?? rows.current_page ?? 1,
@@ -143,6 +144,148 @@ export const pageWindow = (current: number, last: number): Array<number | null> 
   return [1, start > 2 ? null : [], middle, start + 4 < last - 1 ? null : [], last].flat();
 };
 
+/** A row's `key` field. Selection hands these to a bulk action, so there a missing one throws rather than fall back to the position. */
+export const keyOf = (row: object, key: string, index: number, required = false): string | number => {
+  const value = (row as Record<string, unknown>)[key];
+  if (typeof value === "string" || typeof value === "number") return value;
+  if (required) throw new Error(`DataTable: a selectable table needs "${key}" on every row. Set row-key to the field that identifies the record.`);
+  return index;
+};
+
+/** The view as the table reads it: search is the box as typed, ahead of the URL. */
+export interface DataTableView {
+  search: string;
+  filters: Record<string, string[]>;
+  sort: string;
+  direction: DataTableDirection;
+  page: number;
+}
+
+const compare = (a: unknown, b: unknown): number => {
+  if (a === b) return 0;
+  if (a == null) return -1;
+  if (b == null) return 1;
+  if (typeof a === "number" && typeof b === "number") return a - b;
+  return String(a).localeCompare(String(b), undefined, { sensitivity: "base", numeric: true });
+};
+
+/**
+ * What the table shows for a view. Client mode searches, filters, sorts and pages the rows here;
+ * server mode shows the paginator's page as it came. `pageSize` is the preference, which a paginator overrides.
+ */
+export const tableView = <TRow>(
+  table: {
+    rows: DataTableRows<TRow>;
+    columns: ReadonlyArray<DataTableColumn<TRow>>;
+    filters?: ReadonlyArray<DataTableFilter<TRow>>;
+    /** Keys to search. Defaults to every data column. */
+    searchable?: ReadonlyArray<string>;
+    /** Server mode only: client mode counts its own rows. */
+    unfilteredTotal?: number;
+  },
+  view: DataTableView,
+  pageSize: number,
+) => {
+  const value = (row: TRow, key: string): unknown => (row as Record<string, unknown>)[key];
+  const filters = table.filters ?? [];
+  const term = view.search.trim().toLowerCase();
+  let rows: TRow[], meta: DataTablePaginationMeta | null = null, unfiltered: number | undefined;
+
+  if (isPaginated(table.rows)) {
+    meta = paginationMeta(table.rows);
+    rows = table.rows.data;
+    unfiltered = table.unfilteredTotal;
+  } else {
+    // a virtual column has no field, so searching it would compare undefined
+    const keys = table.searchable ?? table.columns.filter((c) => !c.virtual).map((c) => c.key);
+    rows = table.rows.filter(
+      (row) =>
+        (term === "" || keys.some((key) => String(value(row, key) ?? "").toLowerCase().includes(term))) &&
+        filters.every((filter) => {
+          const values = view.filters[filter.key] ?? [];
+          if (values.length === 0) return true;
+          if (filter.match) return filter.match(row, values);
+          const v = value(row, filter.field ?? filter.key);
+          return filter.type === "boolean" ? Boolean(v) === (values[0] === "1") : values.includes(String(v));
+        }),
+    );
+    const column = table.columns.find((c) => c.key === view.sort);
+    if (column) {
+      const sortValue = (row: TRow) => (column.virtual ? (column.sortValue?.(row) ?? null) : value(row, column.key));
+      const sign = view.direction === "asc" ? 1 : -1;
+      rows.sort((a, b) => sign * compare(sortValue(a), sortValue(b)));
+    }
+    unfiltered = table.rows.length;
+  }
+
+  const perPage = meta?.per_page ?? pageSize;
+  const total = meta?.total ?? rows.length;
+  const lastPage = meta?.last_page ?? Math.max(1, Math.ceil(total / perPage));
+  const page = meta?.current_page ?? Math.min(view.page, lastPage);
+  if (!meta) rows = rows.slice((page - 1) * perPage, page * perPage);
+  const from = meta?.from ?? (total === 0 ? 0 : (page - 1) * perPage + 1);
+  const to = meta?.to ?? Math.min(page * perPage, total);
+
+  // The status is always the count and the empty cell always the message, so neither repeats the other.
+  const filtered = unfiltered !== undefined && unfiltered !== total ? `, filtered from ${unfiltered}` : "";
+  const summary = total === 0 ? `Showing 0 of 0${filtered}` : `Showing ${from}–${to} of ${total}${filtered}`;
+
+  // "nothing yet" offers a way to create, "nothing matches" a way to clear. Without an unfiltered total,
+  // the reader having searched or moved a filter off its default is the only clue.
+  const narrowed =
+    term !== "" ||
+    filters.some((f) => {
+      const values = view.filters[f.key] ?? [];
+      return values.length > 0 && values.join("\0") !== (f.default ?? []).join("\0");
+    });
+  const empty = rows.length > 0 ? null : (unfiltered === undefined ? !narrowed : unfiltered === 0) ? "nothing-yet" : "no-matches";
+
+  return { rows, total, page, lastPage, perPage, from, to, summary, empty };
+};
+
+/** What reading and writing a table's URL needs. A server-mode controller hands TableQuery the same. */
+export interface DataTableUrlOptions {
+  /** Prefixes every parameter, so two tables on one page do not share a page number. */
+  name?: string;
+  defaultSort: string;
+  defaultDirection: DataTableDirection;
+  /** Column keys a URL may sort by; any other falls back to the default sort. */
+  sortable: ReadonlyArray<string>;
+  filters: ReadonlyArray<{ key: string; type: DataTableFilter<unknown>["type"]; default?: ReadonlyArray<string> }>;
+}
+
+const parameter = (name: string | undefined, key: string) => (name ? `${name}_${key}` : key);
+
+// a page number as TableQuery accepts it: digits, no sign, no leading zero
+const pageNumber = /^[1-9]\d*$/;
+
+/**
+ * The view a query string asks for, plus the page size it asks the server for (null if none on offer).
+ * TableQuery::view() and ::filters() read it the same way; tests/table-urls.json holds both sides to that.
+ */
+export const readView = (query: URLSearchParams, options: DataTableUrlOptions): DataTableView & { perPage: number | null } => {
+  // a repeated parameter means its last value, as PHP reads it
+  const read = (key: string) => query.getAll(key).at(-1) ?? "";
+  const at = (key: string) => read(parameter(options.name, key));
+  const filters: Record<string, string[]> = {};
+  for (const filter of options.filters) {
+    const key = parameter(options.name, filter.key) + (filter.type === "multiple" ? "[]" : "");
+    // present but empty means none; only an absent parameter brings the default back
+    filters[filter.key] = !query.has(key)
+      ? [...(filter.default ?? [])]
+      : (filter.type === "multiple" ? query.getAll(key) : [read(key)]).filter((v) => v !== "");
+  }
+  const sort = at("sort"), direction = at("dir"), page = at("page"), perPage = at("per_page");
+  return {
+    search: at("search").trim(),
+    filters,
+    sort: options.sortable.includes(sort) ? sort : options.defaultSort,
+    direction: direction === "asc" || direction === "desc" ? direction : options.defaultDirection,
+    page: pageNumber.test(page) ? Number(page) : 1,
+    perPage: PAGE_SIZES.map(String).includes(perPage) ? Number(perPage) : null,
+  };
+};
+
 export interface TableStatePatch {
   search?: string;
   sort?: string;
@@ -152,6 +295,42 @@ export interface TableStatePatch {
   filters?: Record<string, string[]>;
 }
 
+/** The URL after a change to the view. `server` says whether the page size goes in too: only the server needs telling. */
+export const viewUrl = (url: string, patch: TableStatePatch, options: DataTableUrlOptions & { server: boolean }): string => {
+  const [path = "", search = ""] = url.split("?");
+  const next = new URLSearchParams(search);
+  const current = readView(next, options);
+  const set = (key: string, value: string) =>
+    value === "" ? next.delete(parameter(options.name, key)) : next.set(parameter(options.name, key), value);
+
+  if (patch.search !== undefined) set("search", patch.search.trim());
+  if (patch.sort !== undefined || patch.direction !== undefined) {
+    const s = patch.sort ?? current.sort, d = patch.direction ?? current.direction;
+    // the default sort is what an empty URL means, so it is left out
+    const isDefault = s === options.defaultSort && d === options.defaultDirection;
+    set("sort", isDefault ? "" : s);
+    set("dir", isDefault ? "" : d);
+  }
+  // page size is a device preference; only the server needs telling
+  if (patch.perPage !== undefined && options.server) set("per_page", String(patch.perPage));
+  if (patch.filters !== undefined) {
+    for (const filter of options.filters) {
+      const key = parameter(options.name, filter.key), multiple = filter.type === "multiple";
+      next.delete(key);
+      next.delete(`${key}[]`);
+      for (const value of (patch.filters[filter.key] ?? []).filter((v) => v !== "").slice(0, multiple ? undefined : 1)) {
+        next.append(multiple ? `${key}[]` : key, value);
+      }
+    }
+  }
+  // anything but a page change goes back to page one: the old page described another list
+  const nextPage = patch.page ?? 1;
+  set("page", nextPage > 1 ? String(nextPage) : "");
+
+  const qs = next.toString();
+  return qs === "" ? path : `${path}?${qs}`;
+};
+
 /**
  * Table state, held in the query string: search, sort, page and filters are the view,
  * the thing you would send somebody a link to. Client mode rewrites the URL with
@@ -159,90 +338,28 @@ export interface TableStatePatch {
  * with the same parameters, which TableQuery reads.
  */
 export const useTableState = (options: {
-  /** Prefixes every parameter, so two tables on one page do not share a page number. */
-  name?: string;
-  defaultSort: string;
-  defaultDirection: DataTableDirection;
-  filters: () => ReadonlyArray<{ key: string; multiple: boolean; defaults: string[] }>;
+  url: () => DataTableUrlOptions;
   server: () => boolean;
   /** Props a server visit reloads; empty reloads them all. */
   only: () => string[];
 }) => {
   const page = usePage();
-  const parameter = (key: string) => (options.name ? `${options.name}_${key}` : key);
-  const query = computed(() => new URLSearchParams(page.url.split("?")[1] ?? ""));
-
-  const urlSearch = computed(() => query.value.get(parameter("search")) ?? "");
-  const sort = computed(() => query.value.get(parameter("sort")) ?? options.defaultSort);
-  const direction = computed<DataTableDirection>(() => {
-    const value = query.value.get(parameter("dir"));
-    return value === "asc" || value === "desc" ? value : options.defaultDirection;
-  });
-  const pageNumber = computed(() => {
-    const raw = Number(query.value.get(parameter("page")) ?? 1);
-    return Number.isInteger(raw) && raw > 0 ? raw : 1;
-  });
-
-  const filters = computed(() => {
-    const result: Record<string, string[]> = {};
-    for (const filter of options.filters()) {
-      const key = parameter(filter.key) + (filter.multiple ? "[]" : "");
-      result[filter.key] = query.value.has(key) ? query.value.getAll(key).filter((v) => v !== "") : [...filter.defaults];
-    }
-    return result;
-  });
-
-  // a filter resting on its default is not the reader narrowing anything
-  const activeFilterCount = computed(
-    () =>
-      options.filters().filter((f) => {
-        const values = filters.value[f.key] ?? [];
-        return values.length > 0 && values.join("\0") !== f.defaults.join("\0");
-      }).length,
-  );
+  const read = computed(() => readView(new URLSearchParams(page.url.split("?")[1] ?? ""), options.url()));
 
   // the box answers each keystroke; the URL (a request, in server mode) catches up after a pause
-  const searchInput = ref(urlSearch.value);
+  const searchInput = ref(read.value.search);
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
-  // back button, or a clear from elsewhere: the URL wins unless the reader is mid-typing
-  watch(urlSearch, (value) => {
-    if (searchTimer === undefined) searchInput.value = value;
-  });
-
-  const buildUrl = (patch: TableStatePatch): string => {
-    const next = new URLSearchParams(query.value);
-    const set = (key: string, value: string) => (value === "" ? next.delete(parameter(key)) : next.set(parameter(key), value));
-
-    if (patch.search !== undefined) set("search", patch.search.trim());
-    if (patch.sort !== undefined || patch.direction !== undefined) {
-      const s = patch.sort ?? sort.value, d = patch.direction ?? direction.value;
-      // the default sort is what an empty URL means, so it is left out
-      const isDefault = s === options.defaultSort && d === options.defaultDirection;
-      set("sort", isDefault ? "" : s);
-      set("dir", isDefault ? "" : d);
-    }
-    // page size is a device preference; only the server needs telling
-    if (patch.perPage !== undefined && options.server()) set("per_page", String(patch.perPage));
-    if (patch.filters !== undefined) {
-      for (const filter of options.filters()) {
-        const key = parameter(filter.key);
-        next.delete(key);
-        next.delete(`${key}[]`);
-        for (const value of (patch.filters[filter.key] ?? []).filter((v) => v !== "").slice(0, filter.multiple ? undefined : 1)) {
-          next.append(filter.multiple ? `${key}[]` : key, value);
-        }
-      }
-    }
-    // anything but a page change goes back to page one: the old page described another list
-    const nextPage = patch.page ?? 1;
-    set("page", nextPage > 1 ? String(nextPage) : "");
-
-    const path = page.url.split("?")[0] ?? "", qs = next.toString();
-    return qs === "" ? path : `${path}?${qs}`;
-  };
+  // back button, or a clear from elsewhere: the URL wins unless the reader is mid-typing,
+  // or the box differs only by the spaces the URL trims, which would eat the one between two words
+  watch(
+    () => read.value.search,
+    (value) => {
+      if (searchTimer === undefined && value !== searchInput.value.trim()) searchInput.value = value;
+    },
+  );
 
   const apply = (patch: TableStatePatch) => {
-    const url = buildUrl(patch);
+    const url = viewUrl(page.url, patch, { ...options.url(), server: options.server() });
     if (url === page.url) return;
     if (!options.server()) return router.replace({ url, preserveScroll: true, preserveState: true });
     const only = options.only();
@@ -277,15 +394,15 @@ export const useTableState = (options: {
 
   return {
     searchInput,
-    sort,
-    direction,
-    page: pageNumber,
-    filters,
-    activeFilterCount,
+    sort: computed(() => read.value.sort),
+    direction: computed(() => read.value.direction),
+    page: computed(() => read.value.page),
+    filters: computed(() => read.value.filters),
+    /** The page size the URL asks the server for, if any. */
+    perPage: computed(() => read.value.perPage),
     busy,
     apply,
     setSearch,
     clearAll,
-    hasParameter: (key: string) => query.value.has(parameter(key)),
   };
 };

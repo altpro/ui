@@ -3,7 +3,9 @@
 // Each box has a span in the button, in the same order: it unhides the ticked
 // ones, sets data-count, and sets :state(overflow) when the ticked items do
 // not fit, which shows the count. A CSS counter would need no JS, but WebKit
-// miscounts it. A box ticked from code fires no change event: dispatch one.
+// miscounts it. A box ticked from code (Inertia's reset("tags[]"), say) fires
+// no event, so each box gets its own checked accessor that calls the native
+// one and then updates, as React does to track input values.
 //
 // Form-associated, so `required` and `form` on it work as on a select: an
 // empty required multiselect stops the submit with the browser's own "select
@@ -14,11 +16,14 @@
 // never match on a custom element and Firefox matches before any input.
 // `max` disables the unticked boxes once that many are ticked, and only
 // re-enables boxes it disabled, so hand-written disabled boxes stay disabled.
+const checked = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "checked");
+
 class Multiselect extends HTMLElement {
   static formAssociated = true;
   static observedAttributes = ["required", "max"];
   #internals = this.attachInternals();
   #capped = new WeakSet();
+  #tracked = new WeakSet();
 
   connectedCallback() {
     this.addEventListener("change", this.touch);
@@ -26,11 +31,11 @@ class Multiselect extends HTMLElement {
     // toggle does not bubble, so catch it on the way down
     this.addEventListener("toggle", this.dismiss, true);
     // Vue sets hidden itself when v-model changes from code, so watch the spans, not the boxes;
-    // update too, as validity follows the boxes
+    // update too, as validity follows the boxes. childList catches options Vue adds, so their boxes get tracked
     const items = this.querySelector("[popovertarget] > span:last-child");
     this.observers = [new ResizeObserver(this.fit), new MutationObserver(() => { this.update(); this.fit(); })];
     this.observers[0].observe(items);
-    this.observers[1].observe(items, { subtree: true, attributeFilter: ["hidden"] });
+    this.observers[1].observe(items, { subtree: true, childList: true, attributeFilter: ["hidden"] });
     // a microtask, so Vue has ticked its boxes first (v-model does that after connecting)
     queueMicrotask(this.update);
   }
@@ -68,6 +73,11 @@ class Multiselect extends HTMLElement {
     const count = boxes.filter((box) => box.checked).length;
     const max = this.hasAttribute("max") ? +this.getAttribute("max") : Infinity;
     boxes.forEach((box, i) => {
+      if (!this.#tracked.has(box)) {
+        const update = this.update;
+        Object.defineProperty(box, "checked", { configurable: true, get: checked.get, set(value) { checked.set.call(this, value); queueMicrotask(update); } });
+        this.#tracked.add(box);
+      }
       // only write a change: every write is a mutation, which would run this again
       if (items[i] && items[i].hidden === box.checked) items[i].hidden = !box.checked;
       const capped = !box.checked && count >= max;

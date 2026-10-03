@@ -17,7 +17,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "test": "php tests/table-query.php && playwright test"
+    "test": "php tests/table-query.php && node --test tests/table-view.ts && playwright test"
   },
   "peerDependencies": {
     "vue": "^3.5",

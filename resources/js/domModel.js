@@ -4,7 +4,9 @@
 // straight to the inputs, and on the next render v-model would put the old
 // value back. So read the inputs into the model before every render, and on
 // the form's reset event. With v-model the model is the truth: nothing to do.
-// ponytail: a reset('field') of one field fires no event, so a multiselect's button catches up on the next render.
+// A reset('field') of one field fires no event: the inputs are right at once,
+// and so is a multiselect's button (multiselect.js sees the boxes change), but
+// the model here catches up on the next render. Nothing reads it before then.
 import { getCurrentInstance, onBeforeUnmount, onBeforeUpdate, onMounted } from "vue";
 
 export function useDomModel(model, root, read) {

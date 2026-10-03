@@ -62,7 +62,7 @@
     @elseif ($type === 'multiselect')
         {{-- no `for`: it would become the button's whole name and hide the ticked items --}}
         <label>{{ $label }}</label>
-        <x-ui::multiselect :name="$base" :label="$label" :options="$options" :selected="$value" :attributes="$control->merge(['aria-describedby' => $describedby])" />
+        <x-ui::multiselect :name="$base" :label="$label" :options="$options" :selected="$value" :attributes="$control->merge(['aria-describedby' => $describedby, 'aria-invalid' => $invalid])" />
     @else
         <label for="{{ $id }}">{{ $label }}</label>
         @php($control = $control->merge(['id' => $id, 'name' => $name, 'aria-describedby' => $describedby, 'aria-invalid' => $invalid]))

@@ -1,0 +1,62 @@
+{
+  "about": "A DataTable URL and the view it asks for. tests/table-query.php reads each case with TableQuery::view() and ::filters(), tests/table-view.ts with readView(). Each case's view is laid over the empty URL's view below; its filters over those filters.",
+  "table": {
+    "defaultSort": "name",
+    "defaultDirection": "asc",
+    "sortable": ["name", "price"],
+    "filters": [
+      { "key": "brand", "label": "Brand", "type": "multiple" },
+      { "key": "status", "label": "Status", "type": "select", "default": ["live"] },
+      { "key": "featured", "label": "Featured", "type": "boolean" }
+    ]
+  },
+  "view": {
+    "search": "",
+    "filters": { "brand": [], "status": ["live"], "featured": [] },
+    "sort": "name",
+    "direction": "asc",
+    "page": 1,
+    "perPage": null
+  },
+  "cases": [
+    { "what": "an empty URL is the defaults", "url": "/", "view": {} },
+    { "what": "search is trimmed", "url": "/?search=%20anad%20", "view": { "search": "anad" } },
+    { "what": "a plus in search is a space", "url": "/?search=red+shoe", "view": { "search": "red shoe" } },
+    { "what": "a percent sign in search is kept", "url": "/?search=50%25", "view": { "search": "50%" } },
+    { "what": "sorts by a sortable column", "url": "/?sort=price&dir=desc", "view": { "sort": "price", "direction": "desc" } },
+    { "what": "a sort without a direction takes the default direction", "url": "/?sort=price", "view": { "sort": "price" } },
+    { "what": "a column that is not sortable falls back to the default sort", "url": "/?sort=id&dir=desc", "view": { "direction": "desc" } },
+    { "what": "an unknown direction falls back to the default", "url": "/?dir=sideways", "view": {} },
+    { "what": "sort as an array is not sort", "url": "/?sort%5B%5D=price", "view": {} },
+    { "what": "reads the page", "url": "/?page=3", "view": { "page": 3 } },
+    { "what": "page zero is page one", "url": "/?page=0", "view": {} },
+    { "what": "a negative page is page one", "url": "/?page=-2", "view": {} },
+    { "what": "a page with a decimal point is page one", "url": "/?page=2.0", "view": {} },
+    { "what": "a page with a leading zero is page one", "url": "/?page=02", "view": {} },
+    { "what": "a page that is not a number is page one", "url": "/?page=two", "view": {} },
+    { "what": "reads a page size on offer", "url": "/?per_page=50", "view": { "perPage": 50 } },
+    { "what": "ignores a page size not on offer", "url": "/?per_page=100000", "view": {} },
+    { "what": "ignores a page size spelt another way", "url": "/?per_page=50.0", "view": {} },
+    { "what": "a multiple filter reads every value", "url": "/?brand%5B%5D=acme&brand%5B%5D=bolt", "view": { "filters": { "brand": ["acme", "bolt"] } } },
+    { "what": "brackets may come unencoded", "url": "/?brand[]=acme", "view": { "filters": { "brand": ["acme"] } } },
+    { "what": "a multiple filter drops empty values", "url": "/?brand%5B%5D=&brand%5B%5D=acme", "view": { "filters": { "brand": ["acme"] } } },
+    { "what": "a multiple filter without brackets is absent", "url": "/?brand=acme", "view": {} },
+    { "what": "a select reads its value", "url": "/?status=draft", "view": { "filters": { "status": ["draft"] } } },
+    { "what": "a select present but empty overrides its default", "url": "/?status=", "view": { "filters": { "status": [] } } },
+    { "what": "a repeated select takes the last value", "url": "/?status=draft&status=archived", "view": { "filters": { "status": ["archived"] } } },
+    { "what": "a select with brackets is absent, so takes its default", "url": "/?status%5B%5D=draft", "view": {} },
+    { "what": "a boolean reads 1", "url": "/?featured=1", "view": { "filters": { "featured": ["1"] } } },
+    {
+      "what": "a named table reads its own parameters",
+      "name": "brands",
+      "url": "/?brands_search=x&brands_sort=price&brands_dir=desc&brands_page=2&brands_per_page=10&brands_brand%5B%5D=acme&brands_status=draft",
+      "view": { "search": "x", "sort": "price", "direction": "desc", "page": 2, "perPage": 10, "filters": { "brand": ["acme"], "status": ["draft"] } }
+    },
+    {
+      "what": "a named table ignores another table's parameters",
+      "name": "brands",
+      "url": "/?search=x&sort=price&page=2&per_page=10&brand%5B%5D=acme&status=draft&products_sort=price",
+      "view": {}
+    }
+  ]
+}
