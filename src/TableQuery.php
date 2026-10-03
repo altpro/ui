@@ -70,6 +70,10 @@ final class TableQuery
             $query->orderBy($columns[$view['sort']], $view['direction']);
         }
 
+        // rows tied on a repeated name, status or date come back in no set order, so one could
+        // turn up on two pages and another on neither; the key settles the tie
+        $query->orderBy($query->getModel()->getQualifiedKeyName(), $view['direction']);
+
         $perPage = $view['perPage'] ?? $perPage ?? self::sizes()['defaultPageSize'];
         $pageName = self::parameter($name, 'page');
         $paginator = (clone $query)->paginate($perPage, pageName: $pageName, page: $view['page']);

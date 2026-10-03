@@ -57,6 +57,14 @@ $check($names('/?search=y'), [], 'does not search columns it was not given');
 $check($names('/?brands_sort=name&brands_dir=desc', 'brands'), ['Calpol', 'Boots', 'Anadin'], 'reads parameters under the table name');
 $check($names('/?sort=name&dir=desc', 'brands'), ['Anadin', 'Boots', 'Calpol'], 'ignores another table\'s parameters');
 
+$orders = function (string $url): array {
+    TableQuery::paginate($query = Brand::query(), Request::create($url), sortable: ['name']);
+
+    return array_map(fn (array $o): string => $o['column'].' '.$o['direction'], $query->getQuery()->orders);
+};
+$check($orders('/?sort=name&dir=desc'), ['name desc', 'brands.id desc'], 'breaks ties by the key, so a page boundary is stable');
+$check($orders('/'), ['brands.id asc'], 'orders by the key when there is no sort');
+
 $perPage = fn (string $url): int => TableQuery::paginate(Brand::query(), Request::create($url), perPage: 2)->perPage();
 $check($perPage('/?per_page=100000'), 2, 'ignores a page size it does not offer');
 $check($perPage('/?per_page=10'), 10, 'takes a page size it offers');

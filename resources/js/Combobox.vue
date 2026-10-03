@@ -3,11 +3,11 @@
   <Combobox v-model="tags" name="tags" label="Tags" :options="tags" multiple :max="3" />
   <Combobox v-model="customerId" name="customer_id" label="Customer" src="/customers/search" :options="[{ value: 42, label: 'Acme Ltd' }]" />
   One trigger styled like .input, showing the value, that opens a popover. The semantics follow the mode:
-  - single, no search: the trigger is a select-only combobox (WAI-ARIA APG) and keeps focus; arrows move
-    aria-activedescendant through the listbox, Enter or Space picks, typing jumps to a label.
+  - no search: the trigger is a select-only combobox (WAI-ARIA APG) and keeps focus; arrows move
+    aria-activedescendant through the listbox, Enter or Space picks (toggles with multiple, the panel staying
+    open), typing jumps to a label.
   - with search (searchable, over 12 options, src or create): the trigger is a combobox whose popup is a
     dialog; in it the search box is the combobox for the listbox, with aria-activedescendant.
-  - multiple without search: a dialog of checkboxes.
   The value is submitted by a hidden <select>, so a native form reset and Inertia's reset() put it back as
   they would a select: its options' defaultSelected hold the starting value. Writes to that select from
   outside, a reset("field") included, come back into the model.
@@ -41,8 +41,7 @@ const split = (aria) => Object.fromEntries(Object.entries(attrs).filter(([k]) =>
 const id = useId();
 const trigger = ref(), pop = ref(), input = ref(), hidden = ref();
 const search = computed(() => !!(props.src || props.create) || (props.searchable ?? props.options.length > 12));
-const selectOnly = computed(() => !props.multiple && !search.value);
-const checkboxes = computed(() => props.multiple && !search.value);
+const selectOnly = computed(() => !search.value);
 
 // what is selected, as strings, and the labels of everything ever selected or offered
 const keys = computed(() => [model.value ?? []].flat().filter((v) => v != null && v !== "").map(String));
@@ -240,11 +239,8 @@ watch(activeId, (v) => v && nextTick(() => document.getElementById(v)?.scrollInt
     <button ref="trigger" type="button" class="input" role="combobox" :aria-label="label" :aria-haspopup="selectOnly ? 'listbox' : 'dialog'" :aria-controls="selectOnly ? `${id}-list` : id" :aria-expanded="open" :aria-activedescendant="selectOnly ? activeId : null" :aria-required="required || null" :popovertarget="id" :data-count="multiple && keys.length > 1 ? keys.length : null" :disabled="disabled" :autofocus="autofocus" v-bind="split(true)" @keydown="keydown"><span>{{ selected.map((o) => o.label).join(", ") }}</span></button>
     <div :id="id" ref="pop" popover class="dropdown" :role="selectOnly ? null : 'dialog'" :aria-label="selectOnly ? null : label" @beforetoggle="beforetoggle" @toggle="toggle">
       <input v-if="search" ref="input" v-model="q" class="input" type="text" role="combobox" autocomplete="off" aria-autocomplete="list" aria-expanded="true" :aria-label="`Search ${label}`" :aria-controls="`${id}-list`" :aria-activedescendant="activeId" @keydown="keydown">
-      <div v-if="checkboxes">
-        <label v-for="o in list" :key="o.value" class="checkbox"><input type="checkbox" :checked="has(o)" :disabled="capped(o)" @change="choose(o)"> {{ o.label }}</label>
-      </div>
       <!-- tabindex: Firefox would put the scrolling list in the tab order -->
-      <ul v-else :id="`${id}-list`" role="listbox" tabindex="-1" :aria-label="label" :aria-multiselectable="multiple || null">
+      <ul :id="`${id}-list`" role="listbox" tabindex="-1" :aria-label="label" :aria-multiselectable="multiple || null">
         <li v-for="(o, i) in list" :id="optionId(i)" :key="o.value" role="option" :aria-selected="has(o)" :aria-disabled="capped(o) || null" :data-active="i === active || null" @mousedown.prevent @pointermove="active = i" @click="pick(i)">{{ o.label }}</li>
         <li v-if="canCreate" :id="optionId(list.length)" role="option" aria-selected="false" :data-active="active === list.length || null" @mousedown.prevent @pointermove="active = list.length" @click="pick(list.length)">Add “{{ q.trim() }}”</li>
       </ul>

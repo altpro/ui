@@ -45,7 +45,7 @@ tests/table-urls.json        URL-to-view cases both of the above read, so the PH
 
 1. `resources/css/components/<name>.css`, following the button file's shape.
 2. Import it from `resources/css/ui.css`.
-3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name, or to `scripted` if it has a Vue component.
+3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name, plus `js` as a fourth item if it has a Vue component.
 4. Add a section to `resources/boost/skills/altpro-ui/SKILL.md` with the class table and one copy-paste example.
 5. Add the page to `pages` in `tests/a11y.spec.js` and give it a hover-contrast loop if it has hover states.
 6. If it needs JavaScript: `resources/js/<Name>.vue` and a Vue instance on the demo page. A markup-only Blade component goes in `resources/views/components/<name>.blade.php`.

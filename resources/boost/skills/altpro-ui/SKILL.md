@@ -446,7 +446,7 @@ import Combobox from "../../vendor/altpro/ui/resources/js/Combobox.vue"; // or "
 - A picked value that is no longer in `options` stays picked, and with `multiple` it is listed first in the panel so it can be unticked.
 - `Field.vue` renders it with `type="combobox"`, and DataTable's `multiple` filters use it.
 - Keyboard: on the trigger, Down, Up, Enter or Space opens it. Without search, arrows, Home and End move, Enter or Space picks and typing jumps to a label. With search, typing filters, arrows move, Enter picks; Home and End move the caret. Escape closes, Tab leaves.
-- Semantics: the trigger is a `combobox` whose value is its text. Without search it controls a `listbox` (select-only combobox); with search it opens a dialog in which the search box is the `combobox` for the `listbox`, with `aria-activedescendant`. `multiple` without search is a dialog of checkboxes.
+- Semantics: the trigger is a `combobox` whose value is its text. Without search it controls a `listbox` (select-only combobox, `aria-multiselectable` with `multiple`); with search it opens a dialog in which the search box is the `combobox` for the `listbox`, with `aria-activedescendant`.
 - Laravel endpoint for `src`: `Customer::where('name', 'like', "%{$request->q}%")->orderBy('name')->limit(20)->get()->map(fn ($c) => ['value' => $c->id, 'label' => $c->name])`.
 
 ## Tooltip: `data-tooltip`
@@ -651,7 +651,7 @@ Custom properties: `--table-fg --table-head-fg --table-border --table-stripe --t
 
 ## DataTable: `DataTable.vue` and `TableQuery`
 
-A Vue component for Inertia apps: search, sortable columns, declared filters, page size, hideable columns, row selection with bulk actions, and empty states. Hand it an array and it does the work in the browser. Hand it a Laravel paginator and the server did it, through `Altpro\Ui\TableQuery`. Search, sort, page and filters live in the query string, so the view is a link you can send and the back button works; page size and hidden columns are kept in `localStorage`. It needs `@inertiajs/vue3`. There is no Blade version.
+A Vue component for Inertia apps: search, sortable columns, declared filters, page size, hideable columns, row selection with bulk actions, and empty states. Hand it an array and it does the work in the browser. Hand it a Laravel paginator and the server did it, through `Altpro\Ui\TableQuery`. Search, sort, page and filters live in the query string, so the view is a link you can send and the back button works; page size and hidden columns are kept in `localStorage`. It needs `@inertiajs/vue3`. There is no Blade version. It is rendered in the browser only: stored preferences and date formatting would differ from a server render, so an SSR app keeps it out of the server render with a `v-if` on a flag set in `onMounted`.
 
 ```vue
 <script setup lang="ts">
@@ -688,14 +688,14 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `caption` | Required. Names the table (sr-only caption), the search box and the pagination. |
 | `name` | Prefixes the query parameters (`brands_sort`) and the stored preferences. Required when two tables share a page. |
 | `searchable` | Keys to search. Defaults to every data column. Client mode only; the server searches what `TableQuery` is given. |
-| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match? }`. `default` applies when the URL says nothing; a select with a default needs its own "All" option. `match(row, values)` covers what a field comparison cannot. |
+| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match? }`. `default` applies when the URL says nothing. A select always offers "All". `match(row, values)` covers what a field comparison cannot. |
 | `sort`, `direction` | Default sort. Without `sort`, the first sortable column, ascending. |
 | `paginate` | Rows per page until the user picks another (10, 25, 50, 100). Default 25. |
 | `selectable` | Adds the checkbox column and the bulk bar. `@update:selection` gives `null`, `{ mode: "ids", ids }` or `{ mode: "matching", search, filters, count }`. |
 | `row-key` | The field that identifies a row, and what `ids` holds. Default `id`. A selectable table throws on a row without it rather than hand over positions. |
 | `empty-message`, `no-matches-message` | "Nothing yet" and "nothing matches", which show differently: the second offers to clear the search. |
 | `unfiltered-total` | Server mode: the count before search and filters, so the table can say "filtered from" and pick the right empty message. |
-| `only` | Server mode: the props a change reloads, e.g. `['brands']`. |
+| `only` | Server mode: the props a change reloads, e.g. `['brands']`. Give it, with the controller's other props as closures (below), so a table change skips their queries. |
 | `search-placeholder` | Defaults to "Search…". |
 
 | Slot | Gets |
@@ -705,8 +705,11 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `filters` | Extra controls in the toolbar. Filtering in the parent works, but then the table cannot count what was hidden. |
 | `empty` | Under `empty-message`, e.g. a "Create one" link. |
 
-- The header checkbox ticks the visible page only. Once the page is ticked and more rows match, the bar offers "Select all N matching", which hands over the query instead of ids: run it again on the server with `TableQuery::search()`.
-- Any change except a page change goes back to page one and clears the selection.
+- The header checkbox ticks the visible page only, and shows a dash when part of it is ticked. Once the page is ticked and more rows match, the bar offers "Select all N matching", which hands over the query instead of ids: run it again on the server with `TableQuery::search()`. In server mode that query is the one the rows on screen answer, not a search still on its way. Unticking a row afterwards goes back to `ids`: the page's, less that row.
+- Any change to this table's view except a page change goes back to page one and clears the selection. Another table's changes on the same page leave it alone.
+- Sort, page and filter changes add a history entry, so Back steps through views. A search rewrites the current entry as it is typed, and a page size change rewrites it too.
+- Clearing a filter that has a `default` (unticking a boolean defaulting to `["1"]`, emptying a multiple, picking "All") writes it present but empty (`featured=`, `tags[]=`), so it stays clear. Setting it back to its default takes it out of the URL. "Clear filters" in the no-matches message puts every filter back to its default.
+- The Columns panel will not hide the last data column.
 - A `daterange` filter is two native date inputs and a Clear button, for orders placed, tasks due or content scheduled. Its value is `[from, to]` as `Y-m-d`, either of which may be `""`, or `[]` for no range; the URL holds `{key}_from` and `{key}_to`, and either works alone. An impossible or oddly written date is dropped, and a reversed range is turned round. Clear removes both, so a `default` (`["2026-01-01", ""]`) comes back: give one only when the table should never show all time. Client mode compares the first ten characters of the field, both ends inclusive, so a timestamp must arrive in the app's timezone; `match` covers anything else.
 - Markup: `.datatable` wraps `.controls`, `.bulk`, a scrolling `.scroll` region holding a `.table.hover`, and `.foot` (count, page size, pagination). Utilities on `thClass`/`tdClass` handle alignment and wrapping (`text-right tabular-nums`, `whitespace-nowrap`).
 
@@ -721,11 +724,16 @@ $filters = [
 $values = TableQuery::filters($request, $filters, name: 'brands');
 $query = Brand::query()->when($values['featured'], fn ($q) => $q->where('featured', true));
 
+// closures, so a reload with `only` runs the table's query and none of the others
 return Inertia::render('Brands/Index', [
-    'brands' => TableQuery::paginate($query, $request, name: 'brands', searchable: ['name', 'slug'], sortable: ['name', 'added' => 'created_at'], defaultSort: 'name'),
+    'brands' => fn () => TableQuery::paginate($query, $request, name: 'brands', searchable: ['name', 'slug'], sortable: ['name', 'added' => 'created_at'], defaultSort: 'name'),
     'filters' => $filters,
-    'unfilteredTotal' => Brand::count(),
+    'unfilteredTotal' => fn () => Brand::count(),
 ]);
+```
+
+```vue
+<DataTable caption="Brands" name="brands" :columns="columns" :rows="brands" :filters="filters" :unfiltered-total="unfilteredTotal" :only="['brands']" sort="name" />
 ```
 
 - `sortable` is the allow-list: a sort column from the URL that is not on it falls back to `defaultSort`, so user input never reaches `order by`. `['added' => 'created_at']` maps the column key to a database column.
@@ -740,6 +748,7 @@ return Inertia::render('Brands/Index', [
       ->when($to !== '', fn ($q) => $q->where('placed_at', '<', Date::parse($to)->addDay()->startOfDay()));
   ```
 
+- After the sort, rows are ordered by the model's key in the same direction, so rows tied on a repeated name, status or date fall on the same side of a page break every time.
 - `per_page` is honoured only for `TableQuery::pageSizes()` (10, 25, 50, 100); `perPage:` defaults to 25. A page past the end shows the last page.
 - Search is `LIKE %term%` on each `searchable` column, so case follows the collation (MySQL and SQLite ignore it, Postgres does not) and a typed `%` or `_` is a wildcard. Client mode matches a case-insensitive substring.
 

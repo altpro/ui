@@ -7,7 +7,6 @@
      <div id="s" popover class="dropdown">
        <input class="input" role="combobox">            with search
        <ul role="listbox"><li role="option" aria-selected="true">Draft</li>…</ul>
-       <div><label class="checkbox">…</label>…</div>     multiple without search
        <p role="status">No results</p>
      </div>
      <button class="btn ghost" aria-label="Clear status">×</button>
@@ -36,7 +35,7 @@
         flex: none;
         width: 100%;
       }
-      > :is(ul, div) {
+      > ul {
         display: grid;
         min-height: 0;
         margin: 0;
@@ -45,7 +44,7 @@
         list-style: none;
         scrollbar-width: thin;
       }
-      :is(li, label) {
+      li {
         display: flex;
         align-items: center;
         gap: 0.5rem;

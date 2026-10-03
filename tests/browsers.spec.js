@@ -180,7 +180,7 @@ test("field: labels, hints and errors reach the control, and models go out as id
   await demo.getByLabel("Category").selectOption("Culture");
   await expect(output).toContainText('"category_id":3');
   await tags.click();
-  await demo.getByLabel("Laravel").uncheck();
+  await demo.getByRole("option", { name: "Laravel" }).click();
   await page.keyboard.press("Escape");
   await expect(output).toContainText('"tags":[3]');
   await demo.getByLabel("Card").check();
@@ -200,7 +200,7 @@ test("field: inside Inertia's <Form>, reset() sticks when the fields render agai
   await expect(topics).toHaveText("Laravel");
   await form.getByLabel("Headline").fill("Changed");
   await topics.click();
-  await form.getByLabel("Vue").check();
+  await form.getByRole("option", { name: "Vue" }).click();
   await page.keyboard.press("Escape");
   await form.getByRole("switch").check();
   const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
@@ -222,15 +222,15 @@ test("field: inside Inertia's <Form>, resetting one field updates its trigger an
   const form = page.locator("#inertia-demo form"), topics = form.getByRole("combobox", { name: "Topics", exact: true });
   await form.getByLabel("Headline").fill("Changed");
   await topics.click();
-  await form.getByLabel("Vue").check();
-  // max is 2: the third box is capped
-  await expect(form.getByLabel("Tailwind")).toBeDisabled();
+  await form.getByRole("option", { name: "Vue" }).click();
+  // max is 2: the third option is capped
+  await expect(form.getByRole("option", { name: "Tailwind" })).toHaveAttribute("aria-disabled", "true");
   await page.keyboard.press("Escape");
 
   await form.getByRole("button", { name: "Reset topics" }).click();
   await expect(topics).toHaveText("Laravel");
   await topics.click();
-  await expect(form.getByLabel("Tailwind")).toBeEnabled();
+  await expect(form.getByRole("option", { name: "Tailwind" })).not.toHaveAttribute("aria-disabled");
   await page.keyboard.press("Escape");
   // the other fields keep what was typed
   await expect(form.getByLabel("Headline")).toHaveValue("Changed");
@@ -246,16 +246,16 @@ test("field: inside Inertia's <Form>, options that change keep the selection, an
   await page.goto("/field.html");
   const form = page.locator("#inertia-demo form"), topics = form.getByRole("combobox", { name: "Topics", exact: true });
   await topics.click();
-  await form.getByLabel("Vue").check();
+  await form.getByRole("option", { name: "Vue" }).click();
   await page.keyboard.press("Escape");
   // Laravel leaves the options but stays picked, listed first; Svelte arrives, capped by max until Laravel goes
   await form.getByRole("button", { name: "Other topics" }).click();
   await expect(topics).toHaveText("Laravel, Vue");
   await topics.click();
-  await expect(form.locator(".combobox label")).toHaveText(["Laravel", "Vue", "Tailwind", "Svelte"]);
-  await expect(form.getByLabel("Svelte")).toBeDisabled();
-  await form.getByLabel("Laravel").uncheck();
-  await form.getByLabel("Svelte").check();
+  await expect(form.locator(".combobox [role=option]")).toHaveText(["Laravel", "Vue", "Tailwind", "Svelte"]);
+  await expect(form.getByRole("option", { name: "Svelte" })).toHaveAttribute("aria-disabled", "true");
+  await form.getByRole("option", { name: "Laravel" }).click();
+  await form.getByRole("option", { name: "Svelte" }).click();
   await page.keyboard.press("Escape");
   await expect(topics).toHaveText("Vue, Svelte");
   const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
@@ -302,6 +302,10 @@ test("datatable: pages move through the URL, and the page size is kept on the de
   await expect(nav.getByRole("button", { name: "2" })).toHaveAttribute("aria-current", "page");
   await expect(dt.getByRole("status")).toHaveText("Showing 6–7 of 7");
   await expect(bodyRows(dt)).toHaveCount(2);
+  // a page is a step Back undoes
+  await page.goBack();
+  await expect(page).not.toHaveURL(/basic_page/);
+  await expect(dt.getByRole("status")).toHaveText("Showing 1–5 of 7");
 
   const products = datatable(page, "Products");
   await products.getByRole("combobox", { name: "Per page" }).selectOption("25");
@@ -322,7 +326,7 @@ test("datatable: declared filters narrow the rows, sit in the URL and say how ma
   await expect(dt.getByRole("status")).toHaveText("Showing 1–4 of 4, filtered from 12");
 
   await dt.locator(".controls").getByRole("combobox", { name: "Size", exact: true }).click();
-  await dt.getByRole("checkbox", { name: "L" }).check();
+  await dt.getByRole("option", { name: "L", exact: true }).click();
   await expect(page).toHaveURL(/products_size%5B%5D=L/);
   await expect(bodyRows(dt)).toHaveCount(2);
   await page.keyboard.press("Escape");
@@ -383,6 +387,16 @@ test("datatable: the header box selects the page, and the rest of the matches is
   await dt.getByRole("button", { name: "Select all 12 matching" }).click();
   await expect(dt.locator(".bulk p")).toHaveText("12 selected");
   await expect(output).toContainText('"mode":"matching"');
+  // another table's sort changes the URL but not this list, so the selection stays
+  await datatable(page, "Team members").getByRole("button", { name: "Email" }).click();
+  await expect(page).toHaveURL(/basic_sort=email/);
+  await expect(dt.locator(".bulk p")).toHaveText("12 selected");
+  // a query cannot leave one row out, so unticking one goes back to the page's ids, less that one
+  const header = dt.getByRole("checkbox", { name: "Select every Products under review row on this page" });
+  await dt.locator("tbody input").first().uncheck();
+  await expect(dt.locator(".bulk p")).toHaveText("9 selected");
+  await expect(output).toContainText('"mode":"ids"');
+  expect(await header.evaluate((e) => e.indeterminate)).toBe(true);
   // a selection describes a list: change the list and it goes
   await dt.getByRole("searchbox").fill("tee");
   await expect(dt.locator(".bulk")).toHaveCount(0);
@@ -402,6 +416,11 @@ test("datatable: hiding a column removes it from every row and survives a reload
   for (const row of await bodyRows(dt).all()) await expect(row.locator("td")).toHaveCount(2);
   await page.reload();
   await expect(datatable(page, "Team members").locator("thead th")).toHaveText(["Name", "Role"]);
+  // the last data column cannot go: rows with nothing in them cannot be told apart
+  const group = datatable(page, "Team members").getByRole("group", { name: "Team members columns" });
+  await datatable(page, "Team members").getByRole("button", { name: "Columns" }).click();
+  await group.getByRole("checkbox", { name: "Role" }).uncheck();
+  await expect(group.getByRole("checkbox", { name: "Name" })).toBeDisabled();
 });
 
 test("file input: choose, list, remove, drop, and accept filters dropped files", async ({ page }) => {
@@ -584,24 +603,29 @@ test("combobox: multiple with search toggles options and stays open", async ({ p
   expect(await submitted(box)).toEqual([]);
 });
 
-test("combobox: multiple without search is a panel of checkboxes, with max", async ({ page }) => {
+test("combobox: multiple without search is a select-only listbox that stays open, with max", async ({ page }) => {
   await page.goto("/combobox.html");
   const box = combobox(page, "multiple", 1), trigger = box.getByRole("combobox", { name: "Delivery days", exact: true });
+  const list = box.getByRole("listbox"), option = (name) => list.getByRole("option", { name });
   await expect(trigger).toHaveAttribute("aria-required", "true");
   await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(list).toHaveAttribute("aria-multiselectable", "true");
+  await page.keyboard.press("Space");
+  await page.keyboard.press("ArrowDown");
   await page.keyboard.press("Enter");
-  await page.keyboard.press("Tab");
-  await expect(box.getByLabel("Monday")).toBeFocused();
-  await page.keyboard.press("Space");
-  await page.keyboard.press("Tab");
-  await page.keyboard.press("Space");
-  await expect(box.getByRole("dialog")).toBeVisible();
-  await expect(box.getByLabel("Friday")).toBeDisabled();
-  await page.keyboard.press("Space");
-  await expect(box.getByLabel("Friday")).toBeEnabled();
-  await page.keyboard.press("Space");
+  await expect(list).toBeVisible();
+  await expect(trigger).toBeFocused();
+  await expect(option("Friday")).toHaveAttribute("aria-disabled", "true");
+  // a click toggles and leaves the panel open
+  await option("Wednesday").click();
+  await expect(option("Wednesday")).toHaveAttribute("aria-selected", "false");
+  await expect(option("Friday")).not.toHaveAttribute("aria-disabled");
+  await option("Wednesday").click();
+  await expect(list).toBeVisible();
+  await expect(trigger).toBeFocused();
   await page.keyboard.press("Escape");
-  await expect(box.getByRole("dialog")).toBeHidden();
+  await expect(list).toBeHidden();
   await expect(trigger).toBeFocused();
   await expect(trigger).toHaveText("Monday, Wednesday");
   expect(await submitted(box)).toEqual(["1", "2"]);
@@ -623,8 +647,8 @@ test("combobox: a native form reset and Inertia's reset() put the starting value
   await page.keyboard.press("End");
   await page.keyboard.press("Enter");
   await sizes.click();
-  await form.getByLabel("Small").uncheck();
-  await form.getByLabel("Large", { exact: true }).check();
+  await form.getByRole("option", { name: "Small" }).click();
+  await form.getByRole("option", { name: "Large", exact: true }).click();
   await page.keyboard.press("Escape");
   await expect(status).toHaveText("Archived");
   await expect(sizes).toHaveText("Medium, Large");

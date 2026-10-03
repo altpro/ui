@@ -115,7 +115,8 @@ test("viewUrl leaves the defaults out and goes back to page one on any change bu
   assert.equal(url("/t", { perPage: 50 }, true), "/t?per_page=50");
   assert.equal(
     url("/t?brand%5B%5D=old&status=draft", { filters: { brand: ["acme", "", "bolt"], status: ["live", "draft"], featured: [] } }),
-    "/t?brand%5B%5D=acme&brand%5B%5D=bolt&status=live",
+    "/t?brand%5B%5D=acme&brand%5B%5D=bolt",
+    "a select keeps one value, and its default stays out of the URL",
   );
   assert.equal(viewUrl("/t?other=1", { search: "x", page: 2 }, { ...table, name: "brands", server: false }), "/t?other=1&brands_search=x&brands_page=2");
   assert.equal(url("/t?placed_from=2026-03-01", { filters: { placed: ["", "2026-03-31"] } }), "/t?placed_to=2026-03-31");
@@ -123,6 +124,17 @@ test("viewUrl leaves the defaults out and goes back to page one on any change bu
   const cleared = url("/t?placed_from=2026-03-01&placed_to=2026-03-31", { filters: { placed: [] } });
   assert.equal(cleared, "/t");
   assert.deepEqual(readView(new URLSearchParams(), table).filters.placed, ["2026-01-01", ""]);
+});
+
+test("viewUrl: clearing a filter with a default keeps it clear, and leaving one out brings its default back", () => {
+  const withDefaults = { ...table, filters: [...table.filters, { key: "tags", type: "multiple" as const, default: ["new"] }, { key: "live", type: "boolean" as const, default: ["1"] }] };
+  const url = (from: string, filters: Record<string, string[]>) => viewUrl(from, { filters }, { ...withDefaults, server: false });
+  const read = (u: string) => readView(new URLSearchParams(u.split("?")[1] ?? ""), withDefaults).filters;
+  const cleared = url("/t", { status: [""], tags: [], live: [] });
+  assert.equal(cleared, "/t?status=&tags%5B%5D=&live=");
+  assert.deepEqual([read(cleared).status, read(cleared).tags, read(cleared).live], [[], [], []]);
+  assert.equal(url(cleared, { status: ["live"], tags: ["new"], live: ["1"] }), "/t", "a value equal to the default is left out");
+  assert.equal(url("/t?status=draft&live=", {}), "/t", "a patch without a filter restores its default");
 });
 
 test("a daterange keeps rows whose day falls inside it, both ends included", () => {
@@ -143,9 +155,9 @@ test("a daterange keeps rows whose day falls inside it, both ends included", () 
 
 test("readView reads back what viewUrl wrote", () => {
   const options = { ...table, name: "brands" };
-  const url = viewUrl("/t", { search: "red shoe", sort: "price", direction: "desc", filters: { brand: ["a&b"], status: [""], placed: ["", "2026-03-31"] } }, { ...options, server: true });
+  const url = viewUrl("/t", { search: "red shoe", sort: "price", direction: "desc", filters: { brand: ["a&b"], status: ["draft"], placed: ["", "2026-03-31"] } }, { ...options, server: true });
   const view = readView(new URLSearchParams(url.split("?")[1]), options);
-  assert.deepEqual(view, { search: "red shoe", sort: "price", direction: "desc", page: 1, perPage: null, filters: { brand: ["a&b"], status: ["live"], featured: [], placed: ["", "2026-03-31"] } });
+  assert.deepEqual(view, { search: "red shoe", sort: "price", direction: "desc", page: 1, perPage: null, filters: { brand: ["a&b"], status: ["draft"], featured: [], placed: ["", "2026-03-31"] } });
 });
 
 test("keyOf: a selectable row needs its key, a plain one falls back to its position", () => {

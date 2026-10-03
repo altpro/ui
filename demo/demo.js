@@ -34,7 +34,6 @@ const icons = {
   sun: '<circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/>',
   list: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
   moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
-  braces: '<path d="M8 3H7a2 2 0 0 0-2 2v5a2 2 0 0 1-2 2 2 2 0 0 1 2 2v5c0 1.1.9 2 2 2h1"/><path d="M16 21h1a2 2 0 0 0 2-2v-5c0-1.1.9-2 2-2a2 2 0 0 1-2-2V5a2 2 0 0 0-2-2h-1"/>',
   search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
   upload: '<path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
@@ -43,6 +42,8 @@ const icons = {
 export const icon = (name) =>
   `<svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${icons[name]}</svg>`;
 
+// pages with a Vue component in resources/js/ get a JS badge
+const js = '<span class="badge outlined sm ms-auto">JS</span>';
 const components = [
   ["accordion.html", "Accordion", "collapse"],
   ["alert.html", "Alert", "alert"],
@@ -52,10 +53,13 @@ const components = [
   ["button.html", "Button", "rectangle"],
   ["card.html", "Card", "card"],
   ["check.html", "Check", "check"],
+  ["combobox.html", "Combobox", "search", js],
+  ["datatable.html", "DataTable", "sheet", js],
   ["dl.html", "Description list", "list"],
   ["dialog.html", "Dialog", "window"],
   ["dropdown.html", "Dropdown", "dropdown"],
-  ["field.html", "Field", "field"],
+  ["field.html", "Field", "field", js],
+  ["file.html", "File input", "upload", js],
   ["join.html", "Join", "columns"],
   ["loading.html", "Loading", "loader"],
   ["nav.html", "Nav", "panel"],
@@ -71,19 +75,12 @@ const components = [
   ["toast.html", "Toast", "bell"],
   ["tooltip.html", "Tooltip", "bubble"],
 ];
-// components with a Vue component in resources/js/
-const scripted = [
-  ["combobox.html", "Combobox", "search"],
-  ["datatable.html", "DataTable", "sheet"],
-  ["file.html", "File input", "upload"],
-];
 /* Every href is relative to demo/; `root` fixes them up from app/.
    Menu items: a string is a heading, [href, label, icon?, extra?] a link,
    [label, icon, items] a collapsible group. */
 const menu = [
   ["index.html", "Getting started", "house"],
-  ["CSS only", "blocks", components],
-  ["JavaScript", "braces", scripted],
+  ["Components", "blocks", components],
   ["theme.html", "Theme", "palette"],
   ["Application", "monitor", [["app/product.html", "Product"], ["app/order.html", "Order"]]],
 ];

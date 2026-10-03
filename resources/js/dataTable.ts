@@ -48,7 +48,7 @@ export interface DataTableFilter<TRow> {
   /** A daterange is `{key}_from` and `{key}_to` in the URL, and `[from, to]` here, either of which may be "". */
   type: "select" | "multiple" | "boolean" | "daterange";
   options?: ReadonlyArray<DataTableFilterOption>;
-  /** Applied when the URL says nothing. A select with a default needs its own catch-all option, since unset brings the default back. */
+  /** Applied when the URL says nothing. Clearing a filter that has one writes it present but empty, so it stays clear; a daterange's Clear brings it back. */
   default?: ReadonlyArray<string>;
   /** The field to compare client-side. Defaults to `key`. */
   field?: keyof TRow & string;
@@ -334,22 +334,25 @@ export const viewUrl = (url: string, patch: TableStatePatch, options: DataTableU
   }
   // page size is a device preference; only the server needs telling
   if (patch.perPage !== undefined && options.server) set("per_page", String(patch.perPage));
+  // a filter left out of the patch, or set to its default, leaves the URL, and the default applies
   if (patch.filters !== undefined) {
     for (const filter of options.filters) {
       const key = parameter(options.name, filter.key), multiple = filter.type === "multiple";
-      next.delete(key);
-      next.delete(`${key}[]`);
+      for (const k of [key, `${key}[]`, `${key}_from`, `${key}_to`]) next.delete(k);
+      const given = patch.filters[filter.key];
+      if (given === undefined) continue;
       if (filter.type === "daterange") {
-        const [from = "", to = ""] = patch.filters[filter.key] ?? [];
-        next.delete(`${key}_from`);
-        next.delete(`${key}_to`);
+        // a cleared range writes neither end, so its default comes back: a default range is one the table should never be without
+        const [from = "", to = ""] = given;
         if (from) next.set(`${key}_from`, from);
         if (to) next.set(`${key}_to`, to);
         continue;
       }
-      for (const value of (patch.filters[filter.key] ?? []).filter((v) => v !== "").slice(0, multiple ? undefined : 1)) {
-        next.append(multiple ? `${key}[]` : key, value);
-      }
+      const values = given.filter((v) => v !== "").slice(0, multiple ? undefined : 1);
+      if (values.join("\0") === (filter.default ?? []).join("\0")) continue;
+      // none, over a default, has to be said: an absent parameter would bring the default straight back
+      if (values.length === 0) next.set(multiple ? `${key}[]` : key, "");
+      for (const value of values) next.append(multiple ? `${key}[]` : key, value);
     }
   }
   // anything but a page change goes back to page one: the old page described another list
@@ -362,8 +365,8 @@ export const viewUrl = (url: string, patch: TableStatePatch, options: DataTableU
 
 /**
  * Table state, held in the query string: search, sort, page and filters are the view,
- * the thing you would send somebody a link to. Client mode rewrites the URL with
- * `router.replace` and asks the server for nothing; server mode makes a real visit
+ * the thing you would send somebody a link to. Client mode rewrites the URL with a
+ * client-side visit and asks the server for nothing; server mode makes a real visit
  * with the same parameters, which TableQuery reads.
  */
 export const useTableState = (options: {
@@ -387,12 +390,13 @@ export const useTableState = (options: {
     },
   );
 
-  const apply = (patch: TableStatePatch) => {
+  // a sort, page or filter is a step Back undoes; a search rewrites its entry as it is typed, and page size is a preference
+  const apply = (patch: TableStatePatch, replace = false) => {
     const url = viewUrl(page.url, patch, { ...options.url(), server: options.server() });
     if (url === page.url) return;
-    if (!options.server()) return router.replace({ url, preserveScroll: true, preserveState: true });
+    if (!options.server()) return router[replace ? "replace" : "push"]({ url, preserveScroll: true, preserveState: true });
     const only = options.only();
-    router.get(url, {}, { preserveScroll: true, preserveState: true, replace: true, only: only.length ? only : undefined });
+    router.get(url, {}, { preserveScroll: true, preserveState: true, replace, only: only.length ? only : undefined });
   };
 
   const setSearch = (value: string) => {
@@ -400,7 +404,7 @@ export const useTableState = (options: {
     clearTimeout(searchTimer);
     searchTimer = setTimeout(() => {
       searchTimer = undefined;
-      apply({ search: value });
+      apply({ search: value }, true);
     }, 300);
   };
 
@@ -426,7 +430,12 @@ export const useTableState = (options: {
     sort: computed(() => read.value.sort),
     direction: computed(() => read.value.direction),
     page: computed(() => read.value.page),
-    filters: computed(() => read.value.filters),
+    // the same object until a value changes: every URL change reads afresh, and another table's sort is not a change to these
+    filters: computed<Record<string, string[]>>((old) =>
+      old && JSON.stringify(old) === JSON.stringify(read.value.filters) ? old : read.value.filters,
+    ),
+    /** The search the URL holds, which in server mode is the one the rows on screen answer; the box may be ahead of it. */
+    search: computed(() => read.value.search),
     /** The page size the URL asks the server for, if any. */
     perPage: computed(() => read.value.perPage),
     busy,

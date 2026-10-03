@@ -33,7 +33,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Several</h2>
-    <p class="text-sm muted"><code>multiple</code>: a panel of checkboxes that stays open while ticking. The trigger lists the picks and, from two, a count. The clear button sits beside it. <code>max</code> disables the rest once that many are picked; say so in a hint.</p>
+    <p class="text-sm muted"><code>multiple</code>: the same list, with a checkmark on each pick. The trigger keeps focus; Enter, Space or a click toggles one and the panel stays open. The trigger lists the picks and, from two, a count. The clear button sits beside it. <code>max</code> disables the rest once that many are picked; say so in a hint.</p>
     <div id="multiple"></div>
 <pre>&lt;Combobox v-model="days" name="days" label="Delivery days" :options="days" multiple :max="2" /&gt;</pre>
   </section>
@@ -77,7 +77,7 @@
       <li><strong>Trigger, closed.</strong> Tab to "Status" in the first section. Expect the label, the value and the role: "Status, In review, pop-up button" or similar. Tab to "Assignee" (empty), "Sizes" (Medium) and "Customer" (Acme Ltd): each should say its label and its value, and nothing when empty. Disabled "Locked status" should say dimmed.</li>
       <li><strong>One from a short list.</strong> On "Status", press Down. Expect it to open and say the highlighted option ("In review, selected" or similar). Down, Up, Home and End should each speak the new option. Type "a": "Archived". Enter: it closes and the trigger says the new value. Escape on an open list closes it without a change.</li>
       <li><strong>A long list.</strong> On "Assignee", press Enter. Expect the search box to be announced ("Search Assignee, combo box" or similar). Type "ja": VoiceOver should say the highlighted option ("Jack Wilson"). Down and Up should speak each option. Enter picks it, closes and returns to the trigger, which says "Assignee, Jack Wilson".</li>
-      <li><strong>Several, checkboxes.</strong> On "Sizes", press Enter, then Tab: "Small, checkbox, unchecked". Space ticks it and the panel stays open. Escape closes and the trigger says "Sizes, Small, Medium".</li>
+      <li><strong>Several.</strong> On "Sizes", press Down: "Small, selected" (or "1 of 4"). Space toggles it and the panel stays open. Escape closes and the trigger says "Sizes, Small, Medium".</li>
       <li><strong>Several, with search.</strong> On "Tags" (with search), press Enter, type "c", Down to "CSS" and press Enter. Expect "CSS, selected" (or a change in its selected state) and the panel to stay open. Enter again unticks it. On the trigger, the count is visual only; check it is not read.</li>
       <li><strong>On the server.</strong> On "Customer", type "mar". Expect "Searching…" and then the first result to be spoken. Type "fail": "Could not load results." should be read. Type "zzz": "No results".</li>
       <li><strong>Adding one.</strong> On "Tags" in Adding one, type "ab": "Add “ab”" is highlighted. Enter: "The label must be at least 3 characters." should be read. Type "abc" and Enter: it is added and selected.</li>

@@ -85,17 +85,22 @@ const hiddenColumns = ref<string[]>(Array.isArray(storedHidden) ? storedHidden.f
 const setPageSize = (size: number) => {
   preferredSize.value = size;
   writePreference(`${storeKey}:per-page`, size);
-  state.apply({ perPage: size, page: 1 });
+  state.apply({ perPage: size, page: 1 }, true);
 };
 
 // ponytail: the first server visit does not carry a stored page size, so a changed one costs one extra request.
 // Store the preference on the user server-side if that ever matters.
 onMounted(() => {
-  if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value });
+  if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value }, true);
 });
 
 const hideableColumns = computed(() => props.columns.filter((c) => c.hideable ?? c.virtual !== true));
 const visibleColumns = computed(() => props.columns.filter((c) => !hiddenColumns.value.includes(c.key)));
+// with every data column hidden, nothing tells one row from another
+const lastDataColumn = computed(() => {
+  const shown = visibleColumns.value.filter((c) => !c.virtual);
+  return shown.length === 1 ? shown[0]!.key : null;
+});
 const toggleColumn = (key: string) => {
   hiddenColumns.value = hiddenColumns.value.includes(key) ? hiddenColumns.value.filter((k) => k !== key) : [...hiddenColumns.value, key];
   writePreference(`${storeKey}:hidden-columns`, hiddenColumns.value);
@@ -126,12 +131,15 @@ const selectedIds = ref<Array<string | number>>([]);
 const allMatching = ref(false);
 const visibleIds = computed(() => view.value.rows.map(rowId));
 const allVisibleSelected = computed(() => visibleIds.value.length > 0 && visibleIds.value.every((i) => selectedIds.value.includes(i)));
+const someVisibleSelected = computed(() => !allVisibleSelected.value && visibleIds.value.some((i) => selectedIds.value.includes(i)));
 const selectionCount = computed(() => (allMatching.value ? view.value.total : selectedIds.value.length));
-// ticking the page is not ticking every match: the rest is an explicit offer, and taking it hands over the query, not ids
+// ticking the page is not ticking every match: the rest is an explicit offer, and taking it hands over the query, not ids.
+// Unticking a row after that drops back to the page's ids, less that row: a query cannot say "except this one".
 const canSelectAllMatching = computed(() => allVisibleSelected.value && !allMatching.value && view.value.total > visibleIds.value.length);
 const selection = computed<DataTableSelection | null>(() =>
   allMatching.value
-    ? { mode: "matching", search: state.searchInput.value.trim(), filters: state.filters.value, count: view.value.total }
+    ? // the query the rows on screen answer: in server mode the box can be ahead of a response still on its way
+      { mode: "matching", search: server.value ? state.search.value : state.searchInput.value.trim(), filters: state.filters.value, count: view.value.total }
     : selectedIds.value.length
       ? { mode: "ids", ids: [...selectedIds.value] }
       : null,
@@ -172,7 +180,7 @@ const rowLabel = (row: TRow, index: number) => {
         <div v-if="filter.type === 'select'" class="field">
           <label :for="`${id}-${filter.key}`">{{ filter.label }}</label>
           <select :id="`${id}-${filter.key}`" class="input" :value="filterValue(filter.key)" @change="setFilter(filter.key, [($event.target as HTMLSelectElement).value])">
-            <option v-if="!filter.default" value="">All</option>
+            <option value="">All</option>
             <option v-for="o in filter.options ?? []" :key="o.value" :value="o.value">{{ o.label }}</option>
           </select>
         </div>
@@ -200,7 +208,7 @@ const rowLabel = (row: TRow, index: number) => {
         <button type="button" class="btn" :popovertarget="`${id}-columns`">Columns</button>
         <fieldset :id="`${id}-columns`" popover class="dropdown right" :aria-label="`${caption} columns`">
           <label v-for="column in hideableColumns" :key="column.key" class="checkbox">
-            <input type="checkbox" :checked="!hiddenColumns.includes(column.key)" @change="toggleColumn(column.key)" />
+            <input type="checkbox" :checked="!hiddenColumns.includes(column.key)" :disabled="column.key === lastDataColumn" @change="toggleColumn(column.key)" />
             {{ column.label }}
           </label>
         </fieldset>
@@ -220,7 +228,7 @@ const rowLabel = (row: TRow, index: number) => {
         <thead>
           <tr>
             <th v-if="selectable" scope="col" class="select">
-              <label class="checkbox"><input type="checkbox" :checked="allVisibleSelected" :aria-label="`Select every ${caption} row on this page`" @change="toggleAllVisible" /></label>
+              <label class="checkbox"><input type="checkbox" :checked="allVisibleSelected" :indeterminate="someVisibleSelected" :aria-label="`Select every ${caption} row on this page`" @change="toggleAllVisible" /></label>
             </th>
             <th v-for="column in visibleColumns" :key="column.key" scope="col" :aria-sort="ariaSort(column.key)" :class="column.thClass">
               <button v-if="column.sortable" type="button" @click="toggleSort(column.key)">{{ column.label }}</button>
@@ -231,7 +239,7 @@ const rowLabel = (row: TRow, index: number) => {
         <tbody>
           <tr v-for="(row, index) in view.rows" :key="rowId(row, index)">
             <td v-if="selectable" class="select">
-              <label class="checkbox"><input v-model="selectedIds" type="checkbox" :value="rowId(row, index)" :aria-label="`Select ${rowLabel(row, index)}`" /></label>
+              <label class="checkbox"><input v-model="selectedIds" type="checkbox" :value="rowId(row, index)" :aria-label="`Select ${rowLabel(row, index)}`" @change="allMatching = false" /></label>
             </td>
             <td v-for="column in visibleColumns" :key="column.key" :class="column.tdClass">
               <slot :name="`cell-${column.key}`" :row="row" :value="rowValue(row, column.key)">{{ cellText(row, column) }}</slot>
