@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Description list</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Description list</h1>
+    <p class="muted"><code>.dl</code> on a <code>&lt;dl&gt;</code>. Label and value pairs for record pages: customer details, order summaries, addresses, publication metadata. Each pair sits in its own <code>&lt;div&gt;</code>. No JavaScript.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Stacked</h2>
+    <p class="text-sm muted">The muted label above its value. Grid utilities on the <code>&lt;dl&gt;</code> put the pairs in columns.</p>
+    <dl class="dl sm:grid-cols-3">
+      <div><dt>Customer</dt><dd>Ann Okafor</dd></div>
+      <div><dt>Email</dt><dd>ann@example.com</dd></div>
+      <div><dt>Phone</dt><dd>0113 496 0000</dd></div>
+      <div><dt>Delivery address</dt><dd>14 Park Row<br>Leeds<br>LS1 5HD</dd></div>
+      <div><dt>Account</dt><dd><span class="badge success sm">Active</span></dd></div>
+      <div><dt>Customer since</dt><dd><time datetime="2021-03-04">4 March 2021</time></dd></div>
+    </dl>
+<pre>&lt;dl class="dl sm:grid-cols-3"&gt;
+  &lt;div&gt;&lt;dt&gt;Customer&lt;/dt&gt;&lt;dd&gt;Ann Okafor&lt;/dd&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;dt&gt;Email&lt;/dt&gt;&lt;dd&gt;ann@example.com&lt;/dd&gt;&lt;/div&gt;
+&lt;/dl&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Horizontal</h2>
+    <p class="text-sm muted"><code>.horizontal</code> puts the labels in a column beside the values. A row too narrow for both falls back to stacked on its own, so a card in a sidebar and a phone need no extra classes.</p>
+    <section class="card divided max-w-xl">
+      <header><h3>Order #10482</h3><span class="badge info sm">Awaiting dispatch</span></header>
+      <dl class="dl horizontal">
+        <div><dt>Placed</dt><dd><time datetime="2026-09-15T09:30">15 September 2026, 09:30</time></dd></div>
+        <div><dt>Customer</dt><dd><a class="underline" href="#">Ann Okafor</a></dd></div>
+        <div><dt>Delivery</dt><dd>Royal Mail Tracked 48</dd></div>
+        <div><dt>Delivery address</dt><dd>14 Park Row, Leeds, LS1 5HD</dd></div>
+        <div><dt>Total</dt><dd class="font-medium tabular-nums">£42.50</dd></div>
+      </dl>
+    </section>
+    <div class="card max-w-72">
+      <dl class="dl horizontal">
+        <div><dt>Published</dt><dd>12 Sep 2026</dd></div>
+        <div><dt>Author</dt><dd>Steve Rayner</dd></div>
+        <div><dt>Path</dt><dd class="break-all font-mono">/news/autumn-range</dd></div>
+      </dl>
+    </div>
+<pre>&lt;dl class="dl horizontal"&gt;
+  &lt;div&gt;&lt;dt&gt;Placed&lt;/dt&gt;&lt;dd&gt;15 September 2026&lt;/dd&gt;&lt;/div&gt;
+  &lt;div&gt;&lt;dt&gt;Total&lt;/dt&gt;&lt;dd&gt;£42.50&lt;/dd&gt;&lt;/div&gt;
+&lt;/dl&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Custom properties</h2>
+<pre>.dl {
+  --dl-gap     /* between pairs, 1rem */
+  --dl-label   /* label column width in .horizontal, 10rem */
+}</pre>
+    <dl class="dl horizontal max-w-md [--dl-label:6rem] [--dl-gap:0.5rem]">
+      <div><dt>SKU</dt><dd class="font-mono">PAR-500-16</dd></div>
+      <div><dt>Barcode</dt><dd class="font-mono">5000158062580</dd></div>
+    </dl>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

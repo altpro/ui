@@ -52,6 +52,7 @@ const productFilters = [
   },
   { key: "size", label: "Size", type: "multiple", options: options("S", "M", "L") },
   { key: "brand", label: "Brand", type: "multiple", options: options("Northline", "Orbit", "Acme") },
+  { key: "added", label: "Added", type: "daterange" },
 ];
 
 const selection = ref(null);

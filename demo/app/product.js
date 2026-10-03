@@ -48,7 +48,7 @@ function render() {
   $('variant-rows').innerHTML = matches.map((v) => `<tr><th scope="row"><div class="flex items-center gap-3"><span class="flex size-11 shrink-0 items-center justify-center rounded-md border border-border bg-muted font-mono text-base tabular-nums" aria-hidden="true">${v.size}</span><div><p class="font-semibold">${packName(v)}</p><p class="mt-1 text-xs font-normal muted">${escape(v.code)}${v.composite ? ' · Composite' : ''}</p></div></div></th><td>${badge(v.classification, 'outlined')}</td><td class="tabular-nums"><p>${money(v.web)}</p><p class="text-xs muted">${money(v.web / v.size)} / item</p></td><td>${badge(v.sellable ? 'Sellable' : 'Not sellable', v.sellable ? 'success' : '')}</td><td><button class="btn ghost sm" data-edit="${v.id}" aria-label="Edit ${packName(v)}">Open →</button></td></tr>`).join('');
   $('search-empty').hidden = matches.length > 0;
   $('contribution-rows').innerHTML = variants.map((v) => `<tr><th scope="row">${packName(v)}</th><td class="text-right font-mono">${contribution(v)} tablets</td><td class="muted">${v.composite ? `Derived · ${v.composite.quantity} × ${escape(variants.find((p) => p.id === v.composite.id).code)}` : 'Entered per pack'}</td></tr>`).join('');
-  $('quantity-caps').innerHTML = variants.map((v) => `<div><dt class="muted">${packName(v)}</dt><dd class="mt-1 font-medium">${v.max ? `${v.max} pack${v.max === 1 ? '' : 's'}` : 'No cap'}</dd></div>`).join('');
+  $('quantity-caps').innerHTML = variants.map((v) => `<div><dt>${packName(v)}</dt><dd class="font-medium">${v.max ? `${v.max} pack${v.max === 1 ? '' : 's'}` : 'No cap'}</dd></div>`).join('');
   $('restriction-card').hidden = !range.restricted;
   $('no-restriction').hidden = range.restricted;
   $('question-set-cards').innerHTML = range.sets.map((id) => {
@@ -90,7 +90,7 @@ $('range-form').onsubmit = (e) => {
 $('range-name').oninput = () => $('range-name').setCustomValidity('');
 $('view-page').onclick = () => {
   $('preview-title').textContent = 'Linked page · version 4';
-  $('preview-content').innerHTML = '<p class="text-sm muted">Page 218 · published version · illustrative content</p><h3 class="text-2xl font-semibold">Paracetamol tablets</h3><dl class="space-y-4 text-sm"><div><dt class="muted">Heading</dt><dd>Paracetamol tablets</dd></div><div><dt class="muted">Path</dt><dd class="break-all font-mono">/products/paracetamol-tablets</dd></div><div><dt class="muted">Search indexing</dt><dd>Allowed</dd></div></dl><p class="text-sm muted">Description, clinical copy, search metadata and redirects are managed by the page editor. No clinical copy has been supplied for this prototype.</p>';
+  $('preview-content').innerHTML = '<p class="text-sm muted">Page 218 · published version · illustrative content</p><h3 class="text-2xl font-semibold">Paracetamol tablets</h3><dl class="dl"><div><dt>Heading</dt><dd>Paracetamol tablets</dd></div><div><dt>Path</dt><dd class="break-all font-mono">/products/paracetamol-tablets</dd></div><div><dt>Search indexing</dt><dd>Allowed</dd></div></dl><p class="text-sm muted">Description, clinical copy, search metadata and redirects are managed by the page editor. No clinical copy has been supplied for this prototype.</p>';
   open('preview-dialog');
 };
 $('manage-restrictions').onclick = () => { $('paracetamol-attached').checked = range.restricted; $('membership-context').value = ''; open('membership-dialog'); };

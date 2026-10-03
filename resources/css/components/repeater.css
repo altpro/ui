@@ -1,0 +1,44 @@
+/* Repeater: the markup Repeater.vue renders. Each row is a .card whose
+   header holds its title and the move and remove buttons.
+   <div class="repeater">
+     <ol>
+       <li class="card"><header><h3>Line 1</h3><div>…buttons</div></header>…fields</li>
+     </ol>
+     <p class="error">Add at least one line.</p>
+     <button class="btn outlined sm">Add line</button>
+   </div>
+   Layered so Tailwind utilities win. */
+@layer components {
+  .repeater {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.75rem;
+
+    > ol {
+      display: grid;
+      gap: 0.75rem;
+      align-self: stretch;
+
+      > li > header {
+        align-items: center;
+        h3 {
+          font-size: var(--text-sm, 0.875rem);
+        }
+        > div {
+          display: flex;
+          gap: 0.25rem;
+        }
+        /* icon buttons are square */
+        .btn {
+          --btn-px: 0;
+          width: var(--btn-h);
+        }
+      }
+    }
+    > .error {
+      font-size: var(--text-sm, 0.875rem);
+      color: var(--color-danger);
+    }
+  }
+}

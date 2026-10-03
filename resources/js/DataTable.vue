@@ -180,6 +180,14 @@ const rowLabel = (row: TRow, index: number) => {
           <input type="checkbox" :checked="filterValue(filter.key) === '1'" @change="setFilter(filter.key, ($event.target as HTMLInputElement).checked ? ['1'] : [])" />
           {{ filter.label }}
         </label>
+        <fieldset v-else-if="filter.type === 'daterange'" class="field">
+          <legend>{{ filter.label }}</legend>
+          <div class="join">
+            <input type="date" class="input" :aria-label="`${filter.label} from`" :value="filterValue(filter.key)" @change="setFilter(filter.key, [($event.target as HTMLInputElement).value, state.filters.value[filter.key]?.[1] ?? ''])" />
+            <input type="date" class="input" :aria-label="`${filter.label} to`" :value="state.filters.value[filter.key]?.[1] ?? ''" @change="setFilter(filter.key, [filterValue(filter.key), ($event.target as HTMLInputElement).value])" />
+            <button type="button" class="btn outlined" :aria-label="`Clear ${filter.label}`" @click="setFilter(filter.key, [])">Clear</button>
+          </div>
+        </fieldset>
         <div v-else class="field">
           <label>{{ filter.label }}</label>
           <Multiselect :label="filter.label" :options="[...(filter.options ?? [])]" :model-value="state.filters.value[filter.key] ?? []" @update:model-value="setFilter(filter.key, $event)" />

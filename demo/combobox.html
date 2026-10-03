@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Combobox</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Combobox</h1>
+    <p class="muted"><code>Combobox.vue</code>: the one component for anything a native <code>&lt;select&gt;</code> cannot do: a long list to search, a list on the server, several values, or adding a new one. A native select stays the answer for one pick from a short fixed list. A trigger styled like <code>.input</code> shows the value and opens a <code>.dropdown</code>. Vue only. A hidden <code>&lt;select&gt;</code> submits the value under <code>name</code> (<code>name[]</code> with <code>multiple</code>).</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">One from a short list</h2>
+    <p class="text-sm muted">The trigger is the combobox and keeps focus: arrows, Home and End move through the options, Enter or Space picks, Escape closes, typing jumps to a label. <code>required</code> sets <code>aria-required</code> only; the server validates. <code>disabled</code> cannot open and submits nothing.</p>
+    <div id="single"></div>
+<pre>&lt;Combobox v-model="status" name="status" label="Status" :options="statuses" required /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">A long list</h2>
+    <p class="text-sm muted">Over 12 options, a search box appears and filters locally. <code>searchable</code> or <code>:searchable="false"</code> overrides that either way. The search box is the combobox now; the first match is highlighted, so Enter takes it.</p>
+    <div id="long"></div>
+<pre>&lt;Combobox v-model="assigneeId" name="assignee_id" label="Assignee" :options="people" /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Several</h2>
+    <p class="text-sm muted"><code>multiple</code>: a panel of checkboxes that stays open while ticking. The trigger lists the picks and, from two, a count. The clear button sits beside it. <code>max</code> disables the rest once that many are picked; say so in a hint.</p>
+    <div id="multiple"></div>
+<pre>&lt;Combobox v-model="days" name="days" label="Delivery days" :options="days" multiple :max="2" /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Several, with search</h2>
+    <p class="text-sm muted">With search, <code>multiple</code> is a listbox of options with <code>aria-selected</code> and a checkmark. Enter or a click toggles one and the panel stays open.</p>
+    <div id="multiple-search"></div>
+<pre>&lt;Combobox v-model="tagIds" name="tags" label="Tags" :options="tags" multiple :max="5" /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">On the server</h2>
+    <p class="text-sm muted"><code>src</code>: the search runs on the server and the search box always shows. A URL gets <code>GET src?q=acme</code> by plain <code>fetch</code>, with Laravel's <code>XSRF-TOKEN</code> cookie sent as <code>X-XSRF-TOKEN</code>, and answers <code>[{ value, label }]</code>. A function <code>(q) =&gt; Promise</code> covers any other request; this one is a pretend server. Typing waits 250ms, and an answer to an older query is dropped. Opening the panel asks for the empty query, so the server decides what to offer first (recent, favourites, the first few). Return a limited list: the panel shows all it gets. <code>options</code> holds the labels of what is selected, so "Acme Ltd", not 42, shows before any search.</p>
+    <div id="server"></div>
+<pre>&lt;Combobox v-model="order.customer_id" name="customer_id" label="Customer"
+    src="/customers/search" :options="[{ value: order.customer.id, label: order.customer.name }]" /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Adding one</h2>
+    <p class="text-sm muted"><code>create</code> turns search on and offers "Add “xyz”" when nothing matches exactly, ignoring case. A URL gets <code>POST create</code> with <code>{ label }</code> and answers <code>{ value, label }</code>, which is selected; a 422 shows its error in the panel. The server decides whether to create or return an existing record, and owns permissions. A function <code>(label) =&gt; Promise</code> works too; its rejection's message shows. Try a label under three letters.</p>
+    <div id="create"></div>
+<pre>&lt;Combobox v-model="post.tags" name="tags" label="Tags" multiple
+    src="/tags/search" create="/tags" :options="post.tags_options" /&gt;</pre>
+    <p class="text-sm muted">The same with URLs. This page has no server, so it shows the error state.</p>
+    <div id="urls"></div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Forms</h2>
+    <p class="text-sm muted">Without <code>v-model</code>, inside a form that owns its data, the value given is the starting value. A native reset and Inertia's <code>reset()</code> put it back, as they would a select. <code>form="id"</code> ties it to a form elsewhere on the page.</p>
+    <div id="native"></div>
+    <div id="inertia"></div>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">VoiceOver check</h2>
+    <p class="text-sm muted">Prototype semantics, to confirm on Safari with VoiceOver (Cmd+F5) before multiselect goes. Use Tab and the keys named, not the VoiceOver cursor. For each, note exactly what is spoken.</p>
+    <ol class="list-decimal space-y-2 ps-5 text-sm">
+      <li><strong>Trigger, closed.</strong> Tab to "Status" in the first section. Expect the label, the value and the role: "Status, In review, pop-up button" or similar. Tab to "Assignee" (empty), "Sizes" (Medium) and "Customer" (Acme Ltd): each should say its label and its value, and nothing when empty. Disabled "Locked status" should say dimmed.</li>
+      <li><strong>One from a short list.</strong> On "Status", press Down. Expect it to open and say the highlighted option ("In review, selected" or similar). Down, Up, Home and End should each speak the new option. Type "a": "Archived". Enter: it closes and the trigger says the new value. Escape on an open list closes it without a change.</li>
+      <li><strong>A long list.</strong> On "Assignee", press Enter. Expect the search box to be announced ("Search Assignee, combo box" or similar). Type "ja": VoiceOver should say the highlighted option ("Jack Wilson"). Down and Up should speak each option. Enter picks it, closes and returns to the trigger, which says "Assignee, Jack Wilson".</li>
+      <li><strong>Several, checkboxes.</strong> On "Sizes", press Enter, then Tab: "Small, checkbox, unchecked". Space ticks it and the panel stays open. Escape closes and the trigger says "Sizes, Small, Medium".</li>
+      <li><strong>Several, with search.</strong> On "Tags" (with search), press Enter, type "c", Down to "CSS" and press Enter. Expect "CSS, selected" (or a change in its selected state) and the panel to stay open. Enter again unticks it. On the trigger, the count is visual only; check it is not read.</li>
+      <li><strong>On the server.</strong> On "Customer", type "mar". Expect "Searching…" and then the first result to be spoken. Type "fail": "Could not load results." should be read. Type "zzz": "No results".</li>
+      <li><strong>Adding one.</strong> On "Tags" in Adding one, type "ab": "Add “ab”" is highlighted. Enter: "The label must be at least 3 characters." should be read. Type "abc" and Enter: it is added and selected.</li>
+      <li><strong>Report back</strong> anything not spoken, spoken twice, or spoken late, especially the options in steps 2, 3 and 5: <code>aria-activedescendant</code> is where VoiceOver has been patchy.</li>
+    </ol>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="combobox.js"></script>
+</body>
+</html>

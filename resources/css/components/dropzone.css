@@ -1,0 +1,129 @@
+/* Drop zone: the markup FileInput.vue renders.
+   <div class="dropzone">
+     <label><input type="file" multiple> <strong>Choose files</strong> or drop them here</label>
+     <ul><li><img alt=""><div><span>photo.jpg</span><span>120 kB</span><progress class="progress sm"></progress><p class="error">…</p></div><button class="btn ghost sm">…</button></li></ul>
+     <p class="error">…</p>
+   </div>
+   The native input covers the label, invisible, so a click or a key press
+   anywhere on it opens the picker and its focus ring is the label's.
+   FileInput.vue adds `dragging` while files are dragged over. Layered so
+   Tailwind wins. */
+@layer components {
+  .dropzone {
+    --dropzone-border: var(--color-border);
+    --dropzone-ring: var(--color-ring);
+    /* capped: a pill-radius theme should not turn the box into an ellipse */
+    --dropzone-radius: min(var(--radius), 1rem);
+
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    font-size: var(--text-sm, 0.875rem);
+    line-height: 1.25;
+
+    > label {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      min-height: 7rem;
+      padding: 1.5rem;
+      text-align: center;
+      border: 1px dashed var(--dropzone-border);
+      border-radius: var(--dropzone-radius);
+      color: var(--color-muted-foreground);
+      cursor: pointer;
+      transition: border-color 0.15s, background-color 0.15s;
+
+      > input {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        cursor: inherit;
+      }
+      > strong {
+        font-weight: 500;
+        color: var(--color-foreground);
+      }
+      > svg {
+        width: 1.5rem;
+        height: 1.5rem;
+      }
+      &:hover {
+        border-color: var(--color-muted-foreground);
+        background: color-mix(in oklab, var(--color-muted) 50%, transparent);
+      }
+      &:has([aria-invalid="true"], :user-invalid) {
+        --dropzone-border: var(--color-danger);
+        --dropzone-ring: var(--color-danger);
+      }
+      &:has(:focus-visible) {
+        border-color: var(--dropzone-ring);
+        outline: 3px solid color-mix(in oklab, var(--dropzone-ring) 50%, transparent);
+        outline-offset: 0;
+      }
+      &:has(:disabled) {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background: none;
+      }
+    }
+    &.dragging > label {
+      border-style: solid;
+      border-color: var(--dropzone-ring);
+      background: color-mix(in oklab, var(--color-muted) 50%, transparent);
+    }
+
+    > ul:not(.error) {
+      display: grid;
+      gap: 0.5rem;
+
+      > li {
+        display: flex;
+        align-items: center;
+        gap: 0.75rem;
+        padding: 0.5rem;
+        border: 1px solid var(--color-border);
+        border-radius: var(--dropzone-radius);
+
+        /* the preview, or a file icon in its place */
+        > :is(img, svg) {
+          flex: none;
+          width: 2.5rem;
+          height: 2.5rem;
+          border-radius: min(var(--radius), 0.375rem);
+          object-fit: cover;
+        }
+        > svg {
+          padding: 0.5rem;
+          background: var(--color-muted);
+          color: var(--color-muted-foreground);
+        }
+        > div {
+          display: grid;
+          flex: 1;
+          gap: 0.25rem;
+          min-width: 0;
+
+          > span:first-child {
+            overflow: hidden;
+            font-weight: 500;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          > span:nth-child(2) {
+            color: var(--color-muted-foreground);
+          }
+        }
+      }
+    }
+
+    .error {
+      color: var(--color-danger);
+    }
+  }
+}

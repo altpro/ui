@@ -5,7 +5,7 @@ import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { execFileSync } from "node:child_process";
 
-const pages = ["button.html", "field.html", "dropdown.html", "multiselect.html", "datatable.html", "dialog.html", "tabs.html", "app/product.html"];
+const pages = ["button.html", "field.html", "dropdown.html", "multiselect.html", "combobox.html", "datatable.html", "dialog.html", "tabs.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 
 for (const colorScheme of ["light", "dark"]) {
@@ -478,6 +478,22 @@ test("datatable: declared filters narrow the rows, sit in the URL and say how ma
   await expect(dt.locator(".controls").getByRole("button", { name: /^Size/ })).toContainText("L");
 });
 
+test("datatable: a date range works from either end, turns round when reversed and clears", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Products");
+  await dt.getByLabel("Added from").fill("2026-02-01");
+  await expect(page).toHaveURL(/products_added_from=2026-02-01/);
+  await expect(bodyRows(dt)).toHaveCount(9);
+  await dt.getByLabel("Added to").fill("2026-01-01");
+  await expect(dt.getByLabel("Added from")).toHaveValue("2026-01-01");
+  await expect(dt.getByLabel("Added to")).toHaveValue("2026-02-01");
+  await expect(bodyRows(dt)).toHaveCount(3);
+  await dt.getByRole("button", { name: "Clear Added" }).click();
+  await expect(page).not.toHaveURL(/products_added/);
+  await expect(dt.getByLabel("Added from")).toHaveValue("");
+  await expect(bodyRows(dt)).toHaveCount(10);
+});
+
 test("datatable: a search that matches nothing says so in the table and offers to clear itself", async ({ page }) => {
   await page.goto("/datatable.html");
   const dt = datatable(page, "Team members");
@@ -535,4 +551,304 @@ test("datatable: hiding a column removes it from every row and survives a reload
   for (const row of await bodyRows(dt).all()) await expect(row.locator("td")).toHaveCount(2);
   await page.reload();
   await expect(datatable(page, "Team members").locator("thead th")).toHaveText(["Name", "Role"]);
+});
+
+test("file input: choose, list, remove, drop, and accept filters dropped files", async ({ page }) => {
+  const warnings = [];
+  page.on("console", (m) => ["warning", "error"].includes(m.type()) && warnings.push(m.text()));
+  // count revoked preview URLs, so a removed image is known to free its blob
+  await page.addInitScript(() => {
+    const revoke = URL.revokeObjectURL;
+    window.revoked = [];
+    URL.revokeObjectURL = (url) => (window.revoked.push(url), revoke(url));
+  });
+  await page.goto("/file.html");
+  const zone = page.locator("#vue-demo .dropzone").first(), input = page.locator("#photos"), output = page.locator("#vue-demo output").first();
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+  const file = (name) => ({ name, mimeType: "image/png", buffer: png });
+
+  // multiple: a second pick adds to the list, and the native input holds every file
+  await input.setInputFiles([file("a.png"), file("b.png")]);
+  await input.setInputFiles([file("c.png")]);
+  await expect(output).toHaveText("v-model: [a.png, b.png, c.png]");
+  await expect(zone.locator("li")).toHaveCount(3);
+  expect(await input.evaluate((el) => [...el.files].map((f) => f.name))).toEqual(["a.png", "b.png", "c.png"]);
+  const src = await zone.locator("li img").nth(1).getAttribute("src");
+  expect(src).toMatch(/^blob:/);
+
+  // remove: the file goes, its preview is revoked, and focus moves to the next remove button
+  await zone.getByRole("button", { name: "Remove b.png" }).click();
+  await expect(output).toHaveText("v-model: [a.png, c.png]");
+  expect(await page.evaluate(() => window.revoked)).toEqual([src]);
+  await expect(zone.getByRole("button", { name: "Remove c.png" })).toBeFocused();
+  expect(await input.evaluate((el) => el.files.length)).toBe(2);
+
+  // drop: an image is added, a PDF is refused by accept="image/*" and named in an alert
+  const dataTransfer = await page.evaluateHandle(() => {
+    const dt = new DataTransfer();
+    dt.items.add(new File(["x"], "d.png", { type: "image/png" }));
+    dt.items.add(new File(["x"], "e.pdf", { type: "application/pdf" }));
+    return dt;
+  });
+  await zone.dispatchEvent("dragover", { dataTransfer });
+  await expect(zone).toHaveClass(/dragging/);
+  await zone.locator("label").dispatchEvent("drop", { dataTransfer });
+  await expect(zone).not.toHaveClass(/dragging/);
+  await expect(output).toHaveText("v-model: [a.png, c.png, d.png]");
+  await expect(zone.getByRole("alert")).toHaveText("Not an accepted file type: e.pdf.");
+
+  // single: a new file replaces the old one
+  const contract = page.locator("#contract");
+  await contract.setInputFiles([{ name: "one.pdf", mimeType: "application/pdf", buffer: Buffer.from("x") }]);
+  await contract.setInputFiles([{ name: "two.pdf", mimeType: "application/pdf", buffer: Buffer.from("x") }]);
+  await expect(page.locator("#vue-demo output").nth(1)).toHaveText("v-model: two.pdf");
+
+  // disabled: a drop does nothing
+  const archived = page.locator("#vue-demo .dropzone").nth(2);
+  await archived.locator("label").dispatchEvent("drop", { dataTransfer });
+  await expect(archived.locator("li")).toHaveCount(0);
+  expect(warnings).toEqual([]);
+});
+
+// Combobox: keyboard, selection, resets and the server, on the examples of combobox.html.
+const combobox = (page, section, n = 0) => page.locator(`#${section} .combobox`).nth(n);
+const submitted = (box) => box.locator("select").evaluate((s) => (s.disabled ? [] : [...s.selectedOptions].map((o) => o.value).filter(Boolean)));
+const activeOption = (control) => control.evaluate((el) => document.getElementById(el.getAttribute("aria-activedescendant"))?.textContent ?? null);
+
+test("combobox: one from a short list works from the keyboard on the trigger", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const box = combobox(page, "single"), trigger = box.getByRole("combobox", { name: "Status", exact: true }), list = box.getByRole("listbox");
+  await expect(trigger).toHaveText("In review");
+  await expect(trigger).toHaveAttribute("aria-required", "true");
+  await trigger.focus();
+  await page.keyboard.press("ArrowDown");
+  await expect(list).toBeVisible();
+  await expect(trigger).toHaveAttribute("aria-expanded", "true");
+  await expect(trigger).toBeFocused();
+  await expect.poll(() => activeOption(trigger)).toBe("In review");
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => activeOption(trigger)).toBe("Published");
+  await page.keyboard.press("End");
+  await expect.poll(() => activeOption(trigger)).toBe("Archived");
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => activeOption(trigger)).toBe("Archived");
+  await page.keyboard.press("Home");
+  await expect.poll(() => activeOption(trigger)).toBe("Draft");
+  await page.keyboard.press("p");
+  await expect.poll(() => activeOption(trigger)).toBe("Published");
+  await page.keyboard.press("Enter");
+  await expect(list).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveText("Published");
+  await expect(trigger).toHaveAttribute("aria-expanded", "false");
+  expect(await submitted(box)).toEqual(["3"]);
+  await expect(page.locator("#single output").first()).toHaveText("v-model: 3");
+
+  // Escape closes without a change; Space opens and picks
+  await page.keyboard.press("ArrowUp");
+  await expect(list).toBeVisible();
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("Escape");
+  await expect(list).toBeHidden();
+  await expect(trigger).toHaveText("Published");
+  await page.keyboard.press("Space");
+  await expect(list).toBeVisible();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Space");
+  await expect(list).toBeHidden();
+  await expect(trigger).toHaveText("Archived");
+  // a click picks too
+  await trigger.click();
+  await list.getByRole("option", { name: "Draft" }).click();
+  await expect(list).toBeHidden();
+  await expect(trigger).toHaveText("Draft");
+
+  // disabled: cannot open, submits nothing
+  await expect(combobox(page, "single", 1).getByRole("combobox")).toBeDisabled();
+  expect(await submitted(combobox(page, "single", 1))).toEqual([]);
+});
+
+test("combobox: a long list searches, and the search box drives the listbox", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const box = combobox(page, "long"), trigger = box.getByRole("combobox", { name: "Assignee", exact: true });
+  await trigger.click();
+  const search = box.getByRole("combobox", { name: "Search Assignee" });
+  await expect(search).toBeFocused();
+  await expect(box.getByRole("option")).toHaveCount(15);
+  await page.keyboard.type("ja");
+  await expect(box.getByRole("option")).toHaveText(["Jack Wilson"]);
+  await expect.poll(() => activeOption(search)).toBe("Jack Wilson");
+  await page.keyboard.press("Enter");
+  await expect(search).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveText("Jack Wilson");
+  expect(await submitted(box)).toEqual(["10"]);
+
+  // the query starts empty again and the highlight on the value; arrows move, Escape leaves the value
+  await page.keyboard.press("Enter");
+  await expect(search).toBeFocused();
+  await expect(search).toHaveValue("");
+  await page.keyboard.press("ArrowDown");
+  await expect.poll(() => activeOption(search)).toBe("Kate Murphy");
+  await page.keyboard.type("zz");
+  await expect(box.getByRole("status")).toHaveText("No results");
+  await page.keyboard.press("Escape");
+  await expect(search).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveText("Jack Wilson");
+  // Tab out closes it
+  await page.keyboard.press("Enter");
+  await expect(search).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(search).toBeHidden();
+});
+
+test("combobox: multiple with search toggles options and stays open", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const box = combobox(page, "multiple-search"), trigger = box.getByRole("combobox", { name: "Tags", exact: true });
+  await expect(trigger).toHaveText("Laravel, Tailwind");
+  await expect(trigger).toHaveAttribute("data-count", "2");
+  await trigger.click();
+  const search = box.getByRole("combobox", { name: "Search Tags" }), list = box.getByRole("listbox");
+  await expect(list).toHaveAttribute("aria-multiselectable", "true");
+  await expect(search).toBeFocused();
+  await page.keyboard.type("css");
+  await page.keyboard.press("Enter");
+  await expect(list.getByRole("option", { name: "CSS" })).toHaveAttribute("aria-selected", "true");
+  await expect(search).toBeFocused();
+  await expect(trigger).toHaveText("Laravel, Tailwind, CSS");
+  await page.keyboard.press("Enter");
+  await expect(list.getByRole("option", { name: "CSS" })).toHaveAttribute("aria-selected", "false");
+  await search.fill("");
+  await list.getByRole("option", { name: "Vue" }).click();
+  await expect(list).toBeVisible();
+  await expect(search).toBeFocused();
+  expect(await submitted(box)).toEqual(["1", "3", "2"]);
+  await page.keyboard.press("Escape");
+  await expect(trigger).toBeFocused();
+  // the clear button sits beside the trigger and empties it
+  await box.getByRole("button", { name: "Clear Tags" }).click();
+  await expect(trigger).toHaveText("");
+  await expect(trigger).toBeFocused();
+  expect(await submitted(box)).toEqual([]);
+});
+
+test("combobox: multiple without search is a panel of checkboxes, with max", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const box = combobox(page, "multiple", 1), trigger = box.getByRole("combobox", { name: "Delivery days", exact: true });
+  await expect(trigger).toHaveAttribute("aria-required", "true");
+  await trigger.focus();
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Tab");
+  await expect(box.getByLabel("Monday")).toBeFocused();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Tab");
+  await page.keyboard.press("Space");
+  await expect(box.getByRole("dialog")).toBeVisible();
+  await expect(box.getByLabel("Friday")).toBeDisabled();
+  await page.keyboard.press("Space");
+  await expect(box.getByLabel("Friday")).toBeEnabled();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Escape");
+  await expect(box.getByRole("dialog")).toBeHidden();
+  await expect(trigger).toBeFocused();
+  await expect(trigger).toHaveText("Monday, Wednesday");
+  expect(await submitted(box)).toEqual(["1", "2"]);
+  expect(await box.locator("select").getAttribute("name")).toBe("days[]");
+});
+
+test("combobox: a native form reset and Inertia's reset() put the starting values back", async ({ page }) => {
+  await page.goto("/combobox.html");
+  const form = page.locator("#native form"), status = form.getByRole("combobox", { name: "Status", exact: true }), sizes = form.getByRole("combobox", { name: "Sizes", exact: true });
+  const data = () => form.evaluate((f) => [...new FormData(f)].map(([k, v]) => `${k}=${v}`));
+  expect(await data()).toEqual(["status=1", "sizes[]=1", "sizes[]=2", "tags[]=3"]);
+  await status.focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("End");
+  await page.keyboard.press("Enter");
+  await sizes.click();
+  await form.getByLabel("Small").uncheck();
+  await form.getByLabel("Large", { exact: true }).check();
+  await page.keyboard.press("Escape");
+  await expect(status).toHaveText("Archived");
+  await expect(sizes).toHaveText("Medium, Large");
+  expect(await data()).toEqual(["status=4", "sizes[]=2", "sizes[]=3", "tags[]=3"]);
+  await form.getByRole("button", { name: "Reset" }).click();
+  await expect(status).toHaveText("Draft");
+  await expect(sizes).toHaveText("Small, Medium");
+  expect(await data()).toEqual(["status=1", "sizes[]=1", "sizes[]=2", "tags[]=3"]);
+  // and it still changes afterwards
+  await status.focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(status).toHaveText("In review");
+
+  const inertia = page.locator("#inertia form"), assignee = inertia.getByRole("combobox", { name: "Assignee", exact: true }), tags = inertia.getByRole("combobox", { name: "Tags", exact: true });
+  await expect(inertia.locator("output")).toHaveText("Unchanged");
+  await assignee.click();
+  await expect(inertia.getByRole("combobox", { name: "Search Assignee" })).toBeFocused();
+  await page.keyboard.type("grace");
+  await page.keyboard.press("Enter");
+  await tags.click();
+  await expect(inertia.getByRole("combobox", { name: "Search Tags" })).toBeFocused();
+  await page.keyboard.type("vue");
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Escape");
+  await expect(assignee).toHaveText("Grace Lee");
+  await expect(tags).toHaveText("Laravel, Vue");
+  await expect(inertia.locator("output")).toHaveText("Changed");
+  await inertia.getByRole("button", { name: "Reset" }).click();
+  await expect(assignee).toHaveText("Chloe Evans");
+  await expect(tags).toHaveText("Laravel");
+  await expect(inertia.locator("output")).toHaveText("Unchanged");
+});
+
+test("combobox: src and create talk to the server with the XSRF token, drop stale answers and show errors", async ({ page, context, baseURL }) => {
+  await context.addCookies([{ name: "XSRF-TOKEN", value: "tok%3D", url: baseURL }]);
+  const tokens = new Set();
+  await page.route("**/api/suppliers**", async (route) => {
+    const req = route.request(), q = new URL(req.url()).searchParams.get("q");
+    tokens.add(req.headers()["x-xsrf-token"]);
+    if (req.method() === "POST") {
+      const { label } = req.postDataJSON();
+      return label === "ab"
+        ? route.fulfill({ status: 422, json: { message: "The label has already been taken.", errors: { label: ["The label has already been taken."] } } })
+        : route.fulfill({ status: 201, json: { value: 77, label } });
+    }
+    if (q === "err") return route.fulfill({ status: 500, body: "" });
+    if (q === "a") await new Promise((r) => setTimeout(r, 800));
+    const rows = { "": [{ value: 1, label: "Alpha" }, { value: 2, label: "Beta" }], a: [{ value: 9, label: "Stale" }], ab: [{ value: 3, label: "Abbey Supplies" }] };
+    route.fulfill({ json: rows[q] ?? [] });
+  });
+  await page.goto("/combobox.html");
+  const box = combobox(page, "urls"), trigger = box.getByRole("combobox", { name: "Supplier", exact: true }), options = box.getByRole("option");
+  await trigger.click();
+  // the empty query asks the server what to offer first
+  await expect(options).toHaveText(["Alpha", "Beta"]);
+  const search = box.getByRole("combobox", { name: "Search Supplier" });
+  await page.keyboard.type("a");
+  await expect(box.getByRole("status")).toHaveText("Searching…");
+  await page.waitForTimeout(400);
+  await page.keyboard.type("b");
+  await expect(options).toHaveText(["Abbey Supplies", "Add “ab”"]);
+  await page.waitForTimeout(800);
+  await expect(options).toHaveText(["Abbey Supplies", "Add “ab”"]);
+
+  // a 422 shows its message in the panel
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(box.getByRole("status")).toHaveText("The label has already been taken.");
+  await expect(search).toBeVisible();
+  // any other failure says so
+  await search.fill("err");
+  await expect(box.getByRole("status")).toHaveText("Could not load results.");
+  // a created record is selected
+  await search.fill("New Co");
+  await expect(options).toHaveText(["Add “New Co”"]);
+  await page.keyboard.press("Enter");
+  await expect(search).toBeHidden();
+  await expect(trigger).toHaveText("New Co");
+  expect(await submitted(box)).toEqual(["77"]);
+  expect([...tokens]).toEqual(["tok="]);
 });

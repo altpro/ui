@@ -7,12 +7,13 @@
     "filters": [
       { "key": "brand", "label": "Brand", "type": "multiple" },
       { "key": "status", "label": "Status", "type": "select", "default": ["live"] },
-      { "key": "featured", "label": "Featured", "type": "boolean" }
+      { "key": "featured", "label": "Featured", "type": "boolean" },
+      { "key": "placed", "label": "Placed", "type": "daterange", "default": ["2026-01-01", ""] }
     ]
   },
   "view": {
     "search": "",
-    "filters": { "brand": [], "status": ["live"], "featured": [] },
+    "filters": { "brand": [], "status": ["live"], "featured": [], "placed": ["2026-01-01", ""] },
     "sort": "name",
     "direction": "asc",
     "page": 1,
@@ -46,16 +47,25 @@
     { "what": "a repeated select takes the last value", "url": "/?status=draft&status=archived", "view": { "filters": { "status": ["archived"] } } },
     { "what": "a select with brackets is absent, so takes its default", "url": "/?status%5B%5D=draft", "view": {} },
     { "what": "a boolean reads 1", "url": "/?featured=1", "view": { "filters": { "featured": ["1"] } } },
+    { "what": "a daterange reads both ends", "url": "/?placed_from=2026-03-01&placed_to=2026-03-31", "view": { "filters": { "placed": ["2026-03-01", "2026-03-31"] } } },
+    { "what": "a daterange start works alone", "url": "/?placed_from=2026-03-01", "view": { "filters": { "placed": ["2026-03-01", ""] } } },
+    { "what": "a daterange end works alone, and replaces the whole default", "url": "/?placed_to=2026-03-31", "view": { "filters": { "placed": ["", "2026-03-31"] } } },
+    { "what": "a reversed daterange is turned round", "url": "/?placed_from=2026-03-31&placed_to=2026-03-01", "view": { "filters": { "placed": ["2026-03-01", "2026-03-31"] } } },
+    { "what": "a daterange drops a day that does not exist", "url": "/?placed_from=2026-02-30&placed_to=2026-03-31", "view": { "filters": { "placed": ["", "2026-03-31"] } } },
+    { "what": "a daterange drops a date not written as a date input writes it", "url": "/?placed_from=1%2F3%2F2026&placed_to=2026-3-31", "view": { "filters": { "placed": [] } } },
+    { "what": "a daterange with both ends present but empty overrides its default", "url": "/?placed_from=&placed_to=", "view": { "filters": { "placed": [] } } },
+    { "what": "a cleared daterange, with neither end in the URL, takes its default", "url": "/?placed=2026-03-01&placed%5B%5D=2026-03-01", "view": {} },
+    { "what": "a daterange end with brackets is absent, so takes its default", "url": "/?placed_from%5B%5D=2026-03-01", "view": {} },
     {
       "what": "a named table reads its own parameters",
       "name": "brands",
-      "url": "/?brands_search=x&brands_sort=price&brands_dir=desc&brands_page=2&brands_per_page=10&brands_brand%5B%5D=acme&brands_status=draft",
-      "view": { "search": "x", "sort": "price", "direction": "desc", "page": 2, "perPage": 10, "filters": { "brand": ["acme"], "status": ["draft"] } }
+      "url": "/?brands_search=x&brands_sort=price&brands_dir=desc&brands_page=2&brands_per_page=10&brands_brand%5B%5D=acme&brands_status=draft&brands_placed_to=2026-03-31",
+      "view": { "search": "x", "sort": "price", "direction": "desc", "page": 2, "perPage": 10, "filters": { "brand": ["acme"], "status": ["draft"], "placed": ["", "2026-03-31"] } }
     },
     {
       "what": "a named table ignores another table's parameters",
       "name": "brands",
-      "url": "/?search=x&sort=price&page=2&per_page=10&brand%5B%5D=acme&status=draft&products_sort=price",
+      "url": "/?search=x&sort=price&page=2&per_page=10&brand%5B%5D=acme&status=draft&placed_from=2026-03-01&products_sort=price",
       "view": {}
     }
   ]

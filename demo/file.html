@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · File input</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">File input</h1>
+    <p class="muted">A native <code>&lt;input type="file" class="input"&gt;</code> for Blade and plain forms, and <code>FileInput.vue</code>: a drop zone round the same input, with the chosen files listed, previewed and removable. Neither uploads anything; the app sends the files and hands back progress and errors.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Drop zone</h2>
+    <p class="text-sm muted">Click, press Enter or Space, or drop files on it. The native input covers the zone, so keyboards and screen readers get the browser's own file button. With <code>multiple</code>, more files add to the list; without it, a new file replaces the old one. <code>accept</code> filters dropped files as the picker does. Images get a preview. Upload fakes progress and the server's errors for this demo.</p>
+    <div id="vue-demo"></div>
+<pre>&lt;script setup&gt;
+import FileInput from "@altpro/ui/js/FileInput.vue";
+const form = useForm({ photos: [] });
+&lt;/script&gt;
+
+&lt;div class="field"&gt;
+  &lt;label for="photos"&gt;Photos&lt;/label&gt;
+  &lt;FileInput v-model="form.photos" id="photos" name="photos" accept="image/*" multiple
+    :errors="form.errors" :progress="progress"&gt;
+    &lt;span&gt;PNG or JPEG, up to 5 MB each.&lt;/span&gt;
+  &lt;/FileInput&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Native input</h2>
+    <p class="text-sm muted"><code>.input</code> on <code>&lt;input type="file"&gt;</code> draws the browser's file button as a muted button inside the border. Sizes, invalid and disabled work as on any input. In Laravel, <code>&lt;x-ui::field type="file"&gt;</code> writes it.</p>
+    <div class="grid max-w-3xl gap-6 md:grid-cols-2">
+      <div class="field">
+        <label for="invoice">Invoice</label>
+        <input class="input" id="invoice" type="file" accept=".pdf" aria-describedby="invoice-hint">
+        <p class="hint" id="invoice-hint">PDF only.</p>
+      </div>
+      <div class="field">
+        <label for="evidence">Delivery evidence</label>
+        <input class="input" id="evidence" type="file" accept="image/*" multiple aria-invalid="true" aria-describedby="evidence-error">
+        <p class="error" id="evidence-error">Add at least one photo.</p>
+      </div>
+      <div class="field">
+        <label for="statement">Statement</label>
+        <input class="input" id="statement" type="file" disabled>
+      </div>
+    </div>
+    <div class="flex flex-wrap items-center gap-4">
+      <input class="input sm" type="file" aria-label="File, small">
+      <input class="input" type="file" aria-label="File">
+      <input class="input lg" type="file" aria-label="File, large">
+    </div>
+<pre>&lt;div class="field"&gt;
+  &lt;label for="invoice"&gt;Invoice&lt;/label&gt;
+  &lt;input class="input" id="invoice" type="file" accept=".pdf" aria-describedby="invoice-hint"&gt;
+  &lt;p class="hint" id="invoice-hint"&gt;PDF only.&lt;/p&gt;
+&lt;/div&gt;</pre>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="file.js"></script>
+</body>
+</html>

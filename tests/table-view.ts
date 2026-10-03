@@ -118,13 +118,34 @@ test("viewUrl leaves the defaults out and goes back to page one on any change bu
     "/t?brand%5B%5D=acme&brand%5B%5D=bolt&status=live",
   );
   assert.equal(viewUrl("/t?other=1", { search: "x", page: 2 }, { ...table, name: "brands", server: false }), "/t?other=1&brands_search=x&brands_page=2");
+  assert.equal(url("/t?placed_from=2026-03-01", { filters: { placed: ["", "2026-03-31"] } }), "/t?placed_to=2026-03-31");
+  // the clear button: neither end left in the URL, so the range is back to its default
+  const cleared = url("/t?placed_from=2026-03-01&placed_to=2026-03-31", { filters: { placed: [] } });
+  assert.equal(cleared, "/t");
+  assert.deepEqual(readView(new URLSearchParams(), table).filters.placed, ["2026-01-01", ""]);
+});
+
+test("a daterange keeps rows whose day falls inside it, both ends included", () => {
+  type Dated = { id: number; at: string | null };
+  const dated: Dated[] = [
+    { id: 1, at: "2026-03-01" },
+    { id: 2, at: "2026-03-31 23:59:59" },
+    { id: 3, at: null },
+    { id: 4, at: "2026-04-01T00:00:00" },
+  ];
+  const filters: DataTableFilter<Dated>[] = [{ key: "at", label: "At", type: "daterange" }];
+  const run = (range: string[]) => ids(tableView({ rows: dated, columns: [{ key: "at", label: "At" }], filters }, at({ filters: { at: range } }), 25));
+  assert.deepEqual(run(["2026-03-01", "2026-03-31"]), [1, 2]);
+  assert.deepEqual(run(["2026-03-02", ""]), [2, 4]);
+  assert.deepEqual(run(["", "2026-03-01"]), [1]);
+  assert.deepEqual(run([]), [1, 2, 3, 4]);
 });
 
 test("readView reads back what viewUrl wrote", () => {
   const options = { ...table, name: "brands" };
-  const url = viewUrl("/t", { search: "red shoe", sort: "price", direction: "desc", filters: { brand: ["a&b"], status: [""] } }, { ...options, server: true });
+  const url = viewUrl("/t", { search: "red shoe", sort: "price", direction: "desc", filters: { brand: ["a&b"], status: [""], placed: ["", "2026-03-31"] } }, { ...options, server: true });
   const view = readView(new URLSearchParams(url.split("?")[1]), options);
-  assert.deepEqual(view, { search: "red shoe", sort: "price", direction: "desc", page: 1, perPage: null, filters: { brand: ["a&b"], status: ["live"], featured: [] } });
+  assert.deepEqual(view, { search: "red shoe", sort: "price", direction: "desc", page: 1, perPage: null, filters: { brand: ["a&b"], status: ["live"], featured: [], placed: ["", "2026-03-31"] } });
 });
 
 test("keyOf: a selectable row needs its key, a plain one falls back to its position", () => {

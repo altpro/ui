@@ -138,6 +138,33 @@
       line-height: 1.5;
     }
 
+    /* file: the picker button is a muted .btn inset in the border; the file name follows it */
+    &[type="file"] {
+      padding-block: 0.25rem;
+      padding-inline-start: 0.25rem;
+      cursor: pointer;
+
+      &::file-selector-button {
+        height: calc(var(--input-h) - 0.5rem - 2px);
+        margin-inline-end: 0.75rem;
+        padding-inline: 0.75rem;
+        border: 0;
+        border-radius: max(0px, var(--input-radius) - 0.25rem);
+        background: var(--color-muted);
+        color: var(--color-foreground);
+        font: inherit;
+        font-weight: 500;
+        cursor: inherit;
+        transition: background-color 0.15s;
+      }
+      &:hover::file-selector-button {
+        background: color-mix(in oklab, var(--color-muted), light-dark(black, white) 10%);
+      }
+      &:disabled {
+        cursor: not-allowed;
+      }
+    }
+
     /* wrapper: the control inside loses its own chrome, everything else is muted.
        The control keeps its natural one-line height rather than stretching, so
        it and the addon are the same box centred the same way, whatever the

@@ -2,6 +2,7 @@
 
 namespace Altpro\Ui;
 
+use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -122,8 +123,9 @@ final class TableQuery
     /**
      * Each declared filter's values, keyed by filter key. `$filters` is the
      * array the page hands DataTable's `filters` prop: `key`, `type` and
-     * `default` are read here. A `multiple` filter is `{name}_{key}[]`, any
-     * other `{name}_{key}`. An absent filter gets its default; one present but
+     * `default` are read here. A `multiple` filter is `{name}_{key}[]`, a
+     * `daterange` `{name}_{key}_from` and `_to` (see dateRange()), any other
+     * `{name}_{key}`. An absent filter gets its default; one present but
      * empty gets nothing. Values are not checked against `options`, as in client mode.
      *
      * @param  array<int, array<string, mixed>>  $filters
@@ -135,6 +137,13 @@ final class TableQuery
 
         foreach ($filters as $filter) {
             $key = self::parameter($name, $filter['key']);
+
+            if ($filter['type'] === 'daterange') {
+                $values[$filter['key']] = self::dateRange($request, $key, $filter['default'] ?? []);
+
+                continue;
+            }
+
             $value = $request->query($key);
             $multiple = $filter['type'] === 'multiple';
 
@@ -176,6 +185,38 @@ final class TableQuery
                 $query->orWhere($column, 'like', $pattern);
             }
         });
+    }
+
+    /**
+     * `[from, to]` as Y-m-d, either of which may be '', or [] for no range.
+     * Either end present speaks for the range; with neither, the default applies.
+     * An invalid date is dropped and a reversed range turned round.
+     *
+     * @param  array<int, string>  $default
+     * @return array<int, string>
+     */
+    private static function dateRange(Request $request, string $key, array $default): array
+    {
+        $present = false;
+        $ends = [];
+
+        foreach (["{$key}_from", "{$key}_to"] as $end) {
+            $value = $request->query($end);
+            // as for a select, an array (`placed_from[]=`) is another parameter to the browser, so absent
+            $present = $present || ($request->query->has($end) && ! is_array($value));
+            // a day as a date input writes it; 2026-02-30 rolls over into March, so it is not one
+            $date = is_string($value) ? DateTimeImmutable::createFromFormat('!Y-m-d', $value) : false;
+            $ends[] = $date !== false && $date->format('Y-m-d') === $value ? $value : '';
+        }
+
+        [$from, $to] = $ends;
+
+        return match (true) {
+            ! $present => $default,
+            $from === '' && $to === '' => [],
+            $from !== '' && $to !== '' && $from > $to => [$to, $from],
+            default => $ends,
+        };
     }
 
     private static function parameter(?string $name, string $key): string

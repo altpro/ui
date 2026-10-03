@@ -1,6 +1,6 @@
 ---
 name: altpro-ui
-description: Use altpro/ui component classes (btn, join, input, field, checkbox, radio, switch, segmented control, badge, avatar, nav, breadcrumb, dropdown, multiselect, tooltip, card, dialog, accordion, table, DataTable, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, multiselect, combobox, tooltip, card, dialog, accordion, table, DataTable, repeater, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # altpro/ui
@@ -125,6 +125,8 @@ One class for every text-like control: `<input>` of any text type, `<select>`, `
 
 A textarea grows with `rows`; the size is a minimum height. Width is the browser default; use `w-full` or `w-64`.
 
+`<input type="file" class="input">` draws the browser's file button as a muted button inside the border; sizes, invalid and disabled work as above. For a drop zone with a file list, see `FileInput.vue`.
+
 A `<select>` opts into `appearance: base-select` where the browser has it (Chrome 135+). The chevron is a Lucide stroke in muted text, the picker matches `.dropdown`, and `<option>`, `<optgroup>` and its `<legend>` are styled. Other browsers keep their native select.
 
 Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (a `<span>` symbol or unit, a `size-4` svg, a `<kbd>` drawn as a key cap) sits in the same border in muted text, and the focus ring goes round the whole box. Clicking an addon focuses the control. A `<select>` can be a second control inside the wrapper. A button next to an input is a `.join`, not an addon.
@@ -208,6 +210,40 @@ Inertia, Vue:
 - `useForm`: `<Field v-model="form.title" name="title" :errors="form.errors" />`. Model ids and `now` are written into the form after `useForm` took its defaults, so `isDirty` starts true. Call `onMounted(() => form.defaults())` if you show it.
 - `<Form>`: no v-model. Give the start as `value` and pass the slot's `errors`: `<Form #default="{ errors }"><Field name="title" :value="post.title" :errors="errors" /></Form>`. Values come from the inputs, so every field needs a `name`. `reset()` works, including the multiselect.
 - Precognition: listeners land on the control, so `@change="form.validate('title')"` works. On a multiselect they land on the wrapper: use `@change` or `@focusout`, since `blur` does not bubble.
+
+## File input and drop zone: `FileInput.vue` `.dropzone`
+
+A drop zone round a native file input, then a list of the chosen files: name, size, an image preview, a remove button, and the app's progress and errors per file. Vue only; in Blade use `<input type="file" class="input">` (or `<x-ui::field type="file">`). It never uploads: the app sends the files from v-model and passes back progress and errors.
+
+```vue
+<script setup>
+import FileInput from "../../vendor/altpro/ui/resources/js/FileInput.vue"; // or "@altpro/ui/js/FileInput.vue" from npm
+const form = useForm({ photos: [] });
+</script>
+
+<div class="field">
+  <label for="photos">Photos</label>
+  <FileInput v-model="form.photos" id="photos" name="photos" accept="image/*" multiple :errors="form.errors" :progress="progress">
+    <span>PNG or JPEG, up to 5 MB each.</span>
+  </FileInput>
+</div>
+```
+
+| Prop | |
+|------|-|
+| `v-model` | The chosen `File`, or an array of them with `multiple`. With `multiple`, choosing or dropping more adds to the list; without, a new file replaces the old one. |
+| `accept` `multiple` `disabled` | As on the native input. `accept` also filters dropped files; refused ones are named in an alert and left out. |
+| `errors` | A string or array for the whole field, or Laravel's errors object: `photos` shows under the zone, `photos.1` on the second file. A file's errors stay with it when another file is removed. |
+| `progress` | Array of 0 to 100 by position in v-model; `null` (or a short array) shows no bar for that file. Draws a `.progress sm`. |
+| `name` `id` | On the input. `name` also picks the errors. |
+| default slot | An extra line inside the zone: limits, formats. |
+
+- The native input covers the zone, invisible: click, Enter or Space opens the picker, and screen readers get the browser's file button. Dropping is the extra. The zone is a `<label>`, so the input is named by it and by any `<label for>` outside.
+- The native input always holds the same files as v-model, so `required`, a plain form post and Inertia's `<Form>` work.
+- Image previews are object URLs, revoked when their file is removed or the component unmounts.
+- Removing a file moves focus to the next remove button, or back to the zone.
+- `class` lands on the `.dropzone`; every other attribute (`required`, `aria-describedby`, `form`) on the input.
+- Uploading as files are added (a CMS media library): watch v-model, send each new file, and build `progress` from your own per-file state, e.g. `photos.map((f) => percent.get(f))`.
 
 ## Checkbox, radio, switch: `.checkbox` `.radio` `.switch`
 
@@ -429,6 +465,45 @@ const sizes = ref(["m"]);
 - `required` uses the browser's own validation: the message sits on the button, and `:state(touched):invalid` turns the button red once the user has changed it or tried to submit. `required` and `max` need the script. Validate on the server as well, and show its message in a `.field` with a `<p class="error">`; the button turns red like any `.input`.
 - Override one component in an app by copying it to `resources/views/vendor/ui/components/multiselect.blade.php` (`php artisan vendor:publish --tag=ui-views` copies all of them). A copy stops receiving package updates.
 
+## Combobox: `Combobox.vue`
+
+Prototype; it will replace Multiselect once checked with VoiceOver. Use it for anything a native `<select>` can't do: a long list to search, records searched on the server (customer, product, author, assignee), several values (tags), or adding a new value. A native `<select class="input">` is still the right control for one choice from a short fixed list. Vue only; Blade pages use a native select or checkboxes. A trigger styled like `.input` shows the value and opens a `.dropdown`. A hidden `<select>` submits the value under `name`, or `name[]` with `multiple`. The visible label goes outside it, in a `.field`, with no `for`.
+
+```vue
+<script setup>
+import Combobox from "../../vendor/altpro/ui/resources/js/Combobox.vue"; // or "@altpro/ui/js/Combobox.vue" from npm
+</script>
+
+<div class="field">
+  <label>Customer</label>
+  <Combobox v-model="form.customer_id" name="customer_id" label="Customer"
+      src="/customers/search" :options="[{ value: order.customer.id, label: order.customer.name }]"
+      :aria-invalid="form.errors.customer_id ? 'true' : null" aria-describedby="customer-error" required />
+  <p class="error" id="customer-error">{{ form.errors.customer_id }}</p>
+</div>
+```
+
+| Prop | |
+|------|-|
+| `label` | Required. The trigger's and the list's accessible name. Not shown: put the visible label outside. |
+| `options` | `[{ value, label }]`. With `src`, only the labels of the selected values, so "Acme Ltd" (not 42) shows before any search. |
+| `v-model` | The value, or `null`. With `multiple`, an array. Without v-model (Inertia's `<Form>`), pass `model-value` as the starting value. |
+| `name` / `form` | Field name, and the id of a form elsewhere on the page. |
+| `multiple` | Pick several. The panel stays open while picking; the trigger lists them, with a count from two. A clear button sits beside the trigger. |
+| `searchable` | Show the search box. It shows anyway over 12 options, or with `src` or `create`; `:searchable="false"` hides it. |
+| `src` | Search on the server. A URL gets `GET src?q=…` by `fetch`, with the `XSRF-TOKEN` cookie as `X-XSRF-TOKEN`, and must answer `[{ value, label }]`. Or a function `(q) => Promise<[{ value, label }]>`. Debounced 250ms; older answers are dropped. Opening asks for `q=` empty, so answer with something useful (recent or first few). Limit the rows on the server (`->limit(20)`): the panel shows all it gets. |
+| `create` | Offers "Add “xyz”" when no result matches exactly, ignoring case. A URL gets `POST create` with `{ label }` and must answer `{ value, label }`, which is selected. A 422 shows `errors.label[0]` (or `message`) in the panel. Or a function `(label) => Promise<{ value, label }>`; a rejection's message shows. The server decides whether to create or return an existing record, and checks permission. |
+| `max` | With `multiple`, disables the rest once this many are picked. Say so in a `.hint`. |
+| `required` | Sets `aria-required` only. Validate on the server and show its `.error`. |
+| `disabled` | Cannot open; nothing is submitted. |
+| `autofocus` | Focuses the trigger on load. |
+
+- `aria-*` attributes (`aria-describedby`, `aria-invalid`) go on the trigger; everything else, `class="w-64"` and listeners such as `@change`, on the wrapper. The width is `12rem` unless a utility changes it.
+- A native form reset and Inertia's `reset()` put the starting value back. Inertia's `<Form>` sees changes (`isDirty`).
+- Keyboard: on the trigger, Down, Up, Enter or Space opens it. Without search, arrows, Home and End move, Enter or Space picks and typing jumps to a label. With search, typing filters, arrows move, Enter picks; Home and End move the caret. Escape closes, Tab leaves.
+- Semantics: the trigger is a `combobox` whose value is its text. Without search it controls a `listbox` (select-only combobox); with search it opens a dialog in which the search box is the `combobox` for the `listbox`, with `aria-activedescendant`. `multiple` without search is a dialog of checkboxes.
+- Laravel endpoint for `src`: `Customer::where('name', 'like', "%{$request->q}%")->orderBy('name')->limit(20)->get()->map(fn ($c) => ['value' => $c->id, 'label' => $c->name])`.
+
 ## Tooltip: `data-tooltip`
 
 One line of supplementary text in a bubble above an element, on hover and keyboard focus. An attribute, not a class, and no JavaScript. Works on any element; for something that is not focusable, add `tabindex="0"` so keyboard users can reach it.
@@ -481,6 +556,28 @@ A bordered box on `--color-card`. Children are styled by element, so no item cla
 Custom properties: `--card-bg --card-fg --card-border --card-radius --card-p`.
 
 In a `divided` card, a first-child header and last-child footer extend to the outer border and inherit its inner corners. Their contents keep the `--card-p` inset, so `bg-muted` on either section fills the edge without a padding strip. This also applies to divided dialogs.
+
+## Description list: `.dl`
+
+Label and value pairs for record pages: customer details, order summaries, addresses, publication metadata. Each pair sits in its own `<div>`.
+
+```html
+<dl class="dl horizontal">
+  <div><dt>Placed</dt><dd><time datetime="2026-09-15T09:30">15 September 2026, 09:30</time></dd></div>
+  <div><dt>Delivery address</dt><dd>14 Park Row<br>Leeds<br>LS1 5HD</dd></div>
+  <div><dt>Total</dt><dd class="tabular-nums">£42.50</dd></div>
+</dl>
+```
+
+| Kind | Classes |
+|------|---------|
+| Layout | Stacked by default: the muted label above its value. `horizontal` puts the labels in a column beside the values. |
+
+- `horizontal` falls back to stacked on any row narrower than the label column plus 9rem, so it needs no breakpoint classes in a sidebar card or on a phone. Narrow the label column in a tight space: `[--dl-label:6.5rem]`.
+- The `<dl>` is a grid. Stacked pairs go into columns with grid utilities: `class="dl sm:grid-cols-3"`.
+- Text is `text-sm`. A value can hold anything: a badge, a link, a `<time>`, several lines.
+
+Custom properties: `--dl-gap --dl-label`.
 
 ## Dialog: `.dialog`
 
@@ -646,7 +743,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `caption` | Required. Names the table (sr-only caption), the search box and the pagination. |
 | `name` | Prefixes the query parameters (`brands_sort`) and the stored preferences. Required when two tables share a page. |
 | `searchable` | Keys to search. Defaults to every data column. Client mode only; the server searches what `TableQuery` is given. |
-| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean", options?: [{ value, label }], default?, field?, match? }`. `default` applies when the URL says nothing; a select with a default needs its own "All" option. `match(row, values)` covers what a field comparison cannot. |
+| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match? }`. `default` applies when the URL says nothing; a select with a default needs its own "All" option. `match(row, values)` covers what a field comparison cannot. |
 | `sort`, `direction` | Default sort. Without `sort`, the first sortable column, ascending. |
 | `paginate` | Rows per page until the user picks another (10, 25, 50, 100). Default 25. |
 | `selectable` | Adds the checkbox column and the bulk bar. `@update:selection` gives `null`, `{ mode: "ids", ids }` or `{ mode: "matching", search, filters, count }`. |
@@ -665,6 +762,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 
 - The header checkbox ticks the visible page only. Once the page is ticked and more rows match, the bar offers "Select all N matching", which hands over the query instead of ids: run it again on the server with `TableQuery::search()`.
 - Any change except a page change goes back to page one and clears the selection.
+- A `daterange` filter is two native date inputs and a Clear button, for orders placed, tasks due or content scheduled. Its value is `[from, to]` as `Y-m-d`, either of which may be `""`, or `[]` for no range; the URL holds `{key}_from` and `{key}_to`, and either works alone. An impossible or oddly written date is dropped, and a reversed range is turned round. Clear removes both, so a `default` (`["2026-01-01", ""]`) comes back: give one only when the table should never show all time. Client mode compares the first ten characters of the field, both ends inclusive, so a timestamp must arrive in the app's timezone; `match` covers anything else.
 - Markup: `.datatable` wraps `.controls`, `.bulk`, a scrolling `.scroll` region holding a `.table.hover`, and `.foot` (count, page size, pagination). Utilities on `thClass`/`tdClass` handle alignment and wrapping (`text-right tabular-nums`, `whitespace-nowrap`).
 
 Server mode, in the controller:
@@ -688,8 +786,53 @@ return Inertia::render('Brands/Index', [
 - `sortable` is the allow-list: a sort column from the URL that is not on it falls back to `defaultSort`, so user input never reaches `order by`. `['added' => 'created_at']` maps the column key to a database column.
 - `defaultSort` and `defaultDirection` must match the component's `sort` and `direction`: a bare URL sorts by the controller's, and the header arrow shows the component's.
 - Declare the filters once and pass the same array to the page as the `filters` prop. `TableQuery::filters()` reads it the way the component writes it and returns each filter's values by key: `[]` for none, the `default` when the URL says nothing. A boolean is `['1']` when ticked. What a value means stays in the controller, as `when()` clauses.
+- A `daterange` on a timestamp column: start inclusive, end exclusive at the start of the next day, both in the app's timezone, so the whole of the last day is in.
+
+  ```php
+  [$from, $to] = $values['placed'] + ['', ''];
+  $query
+      ->when($from !== '', fn ($q) => $q->where('placed_at', '>=', Date::parse($from)->startOfDay()))
+      ->when($to !== '', fn ($q) => $q->where('placed_at', '<', Date::parse($to)->addDay()->startOfDay()));
+  ```
+
 - `per_page` is honoured only for `TableQuery::pageSizes()` (10, 25, 50, 100); `perPage:` defaults to 25. A page past the end shows the last page.
 - Search is `LIKE %term%` on each `searchable` column, so case follows the collation (MySQL and SQLite ignore it, Postgres does not) and a typed `%` or `_` is a wildcard. Client mode matches a case-insensitive substring.
+
+## Repeater: `Repeater.vue`
+
+A list of rows the user can add to, remove from and reorder: order lines, contact methods, product attributes, links. Each row is a `.card` with its title ("Line 2") and move up, move down and remove buttons; the row's fields come from the slot. Vue only, and it does not need Inertia, though it takes `useForm`'s shape. There is no Blade version.
+
+```vue
+<script setup>
+import Field from "../../vendor/altpro/ui/resources/js/Field.vue";
+import Repeater from "../../vendor/altpro/ui/resources/js/Repeater.vue"; // or "@altpro/ui/js/Repeater.vue" from npm
+const form = useForm({ lines: props.order.lines });
+</script>
+
+<Repeater v-model="form.lines" name="lines" item="line" :make="() => ({ product_id: '', qty: 1 })" :errors="form.errors" :disabled="form.processing" v-slot="{ row, index, errors }">
+  <Field v-model="row.product_id" :name="`lines.${index}.product_id`" label="Product" type="select" :options="products" :errors="errors" />
+  <Field v-model="row.qty" :name="`lines.${index}.qty`" label="Quantity" type="number" :errors="errors" />
+</Repeater>
+```
+
+| Prop | Meaning |
+|------|---------|
+| `v-model` | The array of rows. Rows are objects, edited in place through the slot's `row`; add, remove and move hand back a new array of the same objects. |
+| `make` | Required. Returns a new row for "Add". |
+| `name` | The array's key in the errors, `lines` for `lines.0.qty`. |
+| `item` | What a row is called, default `row`. Titles read "Line 2", buttons "Add line", "Move line 2 up", "Remove line 2". |
+| `errors` | `form.errors`, or a 422 body's `errors`. `lines` itself shows under the list. |
+| `disabled` | `form.processing`: add, remove and move are off while saving. |
+
+| Slot prop | Gets |
+|-----------|------|
+| `row` | The row object; bind its fields with `v-model="row.qty"`. |
+| `index` | Its position now, for `name`: `lines.${index}.qty` is only where it sits in what is submitted. |
+| `errors` | Its errors, keyed by its current position, so `<Field :errors="errors">` finds them. |
+
+- Each row gets a key held in the component, not in the data, so nothing extra is submitted. Server errors are read by position when a new errors object arrives (Inertia replaces `form.errors` on every response), then belong to the row: they move with it, and go when it is removed.
+- Focus: after a move it stays on the moved row's button, or its other move button at the top or bottom; after a remove it goes to the remove button of the row now in that place, else the previous row's, else "Add"; after an add, to the new row's first field. A polite live region says what happened.
+- Moving the first row up and the last row down are disabled. Drag reordering is not there yet; when it comes it sits beside the buttons.
 
 ## Alert: `.alert`
 
@@ -961,6 +1104,38 @@ No class. A `.card` with a muted label, a big number and an optional change line
 - The change line says the direction in words (`Up 12%`) and what it compares to, not colour alone. `text-success` up, `text-danger` down, `muted` for no change or a plain note.
 - An icon on the right: a `<header>` holding the label `p` and the svg, so the card pushes the svg to the far side. A limit: a `.meter` under the number.
 - Loading: a `.skeleton h-9 w-32` for the number and `h-5 w-40` for the change line, with `aria-busy="true"` on the card.
+
+## Empty state (pattern)
+
+No class. What a list, attachment panel, relationship or activity feed shows when it has nothing in it. There are two kinds, and they say different things, as DataTable's `empty-message` and `no-matches-message` do:
+
+- **Nothing yet**: say what will appear here and how it gets there, and offer the action that adds the first one. If the user can't add one, say who can instead of showing a disabled button.
+- **Nothing matches**: say that the search or filter found nothing and offer to clear it. Don't offer to create a record from here.
+
+On a page or tab of its own, a centred block with a heading:
+
+```html
+<div class="card items-center py-3gap text-center">
+  <h3 class="font-semibold">No attachments yet</h3>
+  <p class="max-w-sm text-sm muted">Invoices, delivery notes and photos added to this order appear here.</p>
+  <button class="btn primary sm">Add attachment</button>
+</div>
+```
+
+Inside a card or section that already has a heading, one muted sentence and the action, no second heading:
+
+```html
+<section class="card divided">
+  <header><h2>Contacts</h2><button class="btn sm">Add contact</button></header>
+  <p class="text-sm muted">No contacts yet. Add the people you deal with at this company.</p>
+</section>
+```
+
+- The heading level follows the page outline; it is not always `h3`.
+- An icon above the heading is decoration: `aria-hidden="true"`, `size-8 muted`. The words carry the meaning.
+- Not an `.alert`: an empty list is a normal state, not a problem.
+- When the empty state replaces results after a search, a live status line elsewhere announces the count (DataTable's summary does this). Don't put `role="status"` on the empty block itself.
+- While loading, show `.skeleton` rows, not the empty state, so "No orders yet" never flashes before the orders arrive.
 
 ## Theme tokens
 

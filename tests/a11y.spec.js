@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "check.html", "badge.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "multiselect.html", "datatable.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "multiselect.html", "combobox.html", "datatable.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/order.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -136,6 +136,36 @@ for (const colorScheme of ["light", "dark"]) {
           await row.evaluate((el) => el.setAttribute("data-hover", ""));
           const { violations } = await axe(page).include("[data-hover]").analyze();
           if (violations.length) failures.push(`${await row.textContent()} hovered: ${summary(violations)}`);
+          await row.evaluate((el) => el.removeAttribute("data-hover"));
+        }
+        await page.keyboard.press("Escape");
+      }
+      expect(failures).toEqual([]);
+    });
+
+    test("combobox.html: every open panel passes axe, stays inside the viewport and its rows keep contrast on hover", async ({ page }) => {
+      test.slow();
+      await page.setViewportSize({ width: 800, height: 500 });
+      await page.goto("/combobox.html");
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const failures = [];
+      for (const t of await page.locator("main .combobox > button[role=combobox]:enabled").all()) {
+        const name = await t.getAttribute("aria-label");
+        await t.scrollIntoViewIfNeeded();
+        await t.click();
+        const pop = t.locator("xpath=..").locator("[popover]");
+        await expect(pop).toBeVisible();
+        await expect(pop.getByText("Searching…")).toHaveCount(0);
+        const box = await pop.boundingBox();
+        if (box.x < 0 || box.y < 0 || box.x + box.width > 800 || box.y + box.height > 500) failures.push(`${name}: ${JSON.stringify(box)}`);
+        const { violations } = await axe(page).include(".combobox > :popover-open").analyze();
+        if (violations.length) failures.push(`${name}: ${summary(violations)}`);
+        // every row has the same styles, so the first three are enough
+        for (const row of (await pop.locator(":is(li, label)").all()).slice(0, 3)) {
+          await row.hover();
+          await row.evaluate((el) => el.setAttribute("data-hover", ""));
+          const { violations } = await axe(page).include("[data-hover]").analyze();
+          if (violations.length) failures.push(`${name} ${await row.textContent()} hovered: ${summary(violations)}`);
           await row.evaluate((el) => el.removeAttribute("data-hover"));
         }
         await page.keyboard.press("Escape");
@@ -361,6 +391,19 @@ for (const colorScheme of ["light", "dark"]) {
       expect(same(await fill("#score"), await fill("main .progress.info"))).toBe(true);
     });
 
+    // the list is empty at load, so axe never sees it: choose files, then show progress, a file error and a field error
+    test("file.html: the file list with progress and errors passes axe", async ({ page }) => {
+      await page.goto("/file.html");
+      const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
+      await page.locator("#photos").setInputFiles([{ name: "a.png", mimeType: "image/png", buffer: png }, { name: "b.png", mimeType: "image/png", buffer: png }]);
+      await page.getByRole("button", { name: "Upload" }).click();
+      await expect(page.locator("main .dropzone progress").first()).toBeVisible();
+      expect(summary((await axe(page).include("main .dropzone").analyze()).violations)).toEqual([]);
+      await expect(page.locator("main .dropzone li .error")).toHaveCount(1);
+      await page.getByRole("button", { name: "Show a field error" }).click();
+      expect(summary((await axe(page).include("main .dropzone").analyze()).violations)).toEqual([]);
+    });
+
     // the ring is on the thumb pseudo, not the input, so the shared focus test below cannot see it
     test("range.html: the input is a 24px target and keyboard focus rings the thumb", async ({ page }) => {
       await page.goto("/range.html");
@@ -381,7 +424,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["multiselect.html", ".multiselect > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["multiselect.html", ".multiselect > button", null], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });

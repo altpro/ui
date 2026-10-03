@@ -1,0 +1,42 @@
+/* Description list.
+   <dl class="dl">   <dl class="dl horizontal">
+   Label/value pairs for record pages. Each pair sits in its own <div>.
+   Stacked by default: the muted label above its value. `.horizontal` puts the
+   label in a column of --dl-label beside the value, and wraps back to
+   stacked when the row is narrower than the label plus 9rem, with no
+   media query.
+   Grid utilities on the <dl> (sm:grid-cols-3) lay the pairs out in columns.
+   Layered so Tailwind utilities win. */
+@layer components {
+  .dl {
+    --dl-gap: 1rem;
+    --dl-label: 10rem;
+
+    display: grid;
+    gap: var(--dl-gap);
+    font-size: var(--text-sm, 0.875rem);
+
+    & dt {
+      color: var(--color-muted-foreground);
+    }
+    & dd {
+      margin: 0;
+      margin-top: 0.25rem;
+    }
+
+    &.horizontal > div {
+      display: flex;
+      flex-wrap: wrap;
+      column-gap: 1rem;
+      row-gap: 0.25rem;
+      & dt {
+        flex: 1 1 var(--dl-label);
+        max-width: var(--dl-label);
+      }
+      & dd {
+        flex: 999 1 8rem;
+        margin-top: 0;
+      }
+    }
+  }
+}

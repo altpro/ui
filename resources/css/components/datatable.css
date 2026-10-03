@@ -22,6 +22,11 @@
         max-width: 24rem;
       }
 
+      /* a date range: a fieldset will not shrink below its content, which is wider than a phone */
+      > fieldset {
+        min-width: 0;
+      }
+
       /* the Columns panel: one row per box, as in the multiselect panel */
       > .dropdown {
         padding: 0.25rem;

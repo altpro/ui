@@ -45,7 +45,8 @@ export interface DataTableFilter<TRow> {
   /** Also the query parameter, after the table's name prefix. */
   key: string;
   label: string;
-  type: "select" | "multiple" | "boolean";
+  /** A daterange is `{key}_from` and `{key}_to` in the URL, and `[from, to]` here, either of which may be "". */
+  type: "select" | "multiple" | "boolean" | "daterange";
   options?: ReadonlyArray<DataTableFilterOption>;
   /** Applied when the URL says nothing. A select with a default needs its own catch-all option, since unset brings the default back. */
   default?: ReadonlyArray<string>;
@@ -206,6 +207,12 @@ export const tableView = <TRow>(
           if (values.length === 0) return true;
           if (filter.match) return filter.match(row, values);
           const v = value(row, filter.field ?? filter.key);
+          if (filter.type === "daterange") {
+            // ponytail: compares the date part as the row gives it, so a timestamp must arrive in the app's timezone; `match` covers others
+            const day = v == null ? "" : String(v).slice(0, 10);
+            const [from = "", to = ""] = values;
+            return day !== "" && (from === "" || day >= from) && (to === "" || day <= to);
+          }
           return filter.type === "boolean" ? Boolean(v) === (values[0] === "1") : values.includes(String(v));
         }),
     );
@@ -259,6 +266,12 @@ const parameter = (name: string | undefined, key: string) => (name ? `${name}_${
 // a page number as TableQuery accepts it: digits, no sign, no leading zero
 const pageNumber = /^[1-9]\d*$/;
 
+// a day as a date input writes it; 2026-02-30 rolls over into March, so it is not one
+const isDate = (value: string) => {
+  const date = new Date(`${value}T00:00:00Z`);
+  return /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(date.getTime()) && date.toISOString().startsWith(value);
+};
+
 /**
  * The view a query string asks for, plus the page size it asks the server for (null if none on offer).
  * TableQuery::view() and ::filters() read it the same way; tests/table-urls.json holds both sides to that.
@@ -269,6 +282,14 @@ export const readView = (query: URLSearchParams, options: DataTableUrlOptions): 
   const at = (key: string) => read(parameter(options.name, key));
   const filters: Record<string, string[]> = {};
   for (const filter of options.filters) {
+    if (filter.type === "daterange") {
+      const ends = ["_from", "_to"].map((end) => parameter(options.name, filter.key) + end);
+      // either end present speaks for the range; an invalid date is dropped and a reversed range turned round
+      let [from = "", to = ""] = ends.map((end) => (isDate(read(end)) ? read(end) : ""));
+      if (from !== "" && to !== "" && from > to) [from, to] = [to, from];
+      filters[filter.key] = !ends.some((end) => query.has(end)) ? [...(filter.default ?? [])] : from || to ? [from, to] : [];
+      continue;
+    }
     const key = parameter(options.name, filter.key) + (filter.type === "multiple" ? "[]" : "");
     // present but empty means none; only an absent parameter brings the default back
     filters[filter.key] = !query.has(key)
@@ -318,6 +339,14 @@ export const viewUrl = (url: string, patch: TableStatePatch, options: DataTableU
       const key = parameter(options.name, filter.key), multiple = filter.type === "multiple";
       next.delete(key);
       next.delete(`${key}[]`);
+      if (filter.type === "daterange") {
+        const [from = "", to = ""] = patch.filters[filter.key] ?? [];
+        next.delete(`${key}_from`);
+        next.delete(`${key}_to`);
+        if (from) next.set(`${key}_from`, from);
+        if (to) next.set(`${key}_to`, to);
+        continue;
+      }
       for (const value of (patch.filters[filter.key] ?? []).filter((v) => v !== "").slice(0, multiple ? undefined : 1)) {
         next.append(multiple ? `${key}[]` : key, value);
       }

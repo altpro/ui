@@ -1,6 +1,6 @@
 # altpro/ui
 
-CSS component layer for Tailwind v4, with Blade and Vue versions of the components that need markup or state. Private library: Laravel apps install it with Composer (`altpro/ui`), anything else with npm (`@altpro/ui`), both from this GitHub repo. Read `resources/boost/skills/altpro-ui/SKILL.md` first; it documents what exists.
+CSS component layer for Tailwind v4, with Vue components for anything that needs JavaScript and a few Blade components that save markup. Private library: Laravel apps install it with Composer (`altpro/ui`), anything else with npm (`@altpro/ui`), both from this GitHub repo. Read `resources/boost/skills/altpro-ui/SKILL.md` first; it documents what exists.
 
 ## Layout
 
@@ -8,9 +8,9 @@ CSS component layer for Tailwind v4, with Blade and Vue versions of the componen
 resources/css/ui.css         entry, imports everything below; @source points Tailwind at the Blade and Vue templates
 resources/css/theme.css      @theme default tokens, all light-dark(); --radius knob and responsive --spacing-gap on :root
 resources/css/scheme.css     color-scheme regions: .light .dark .inverse
-resources/css/components/    one file per component (button, join, input, field, check, badge, avatar, nav, breadcrumb, dropdown, multiselect, tooltip, card, dialog, accordion, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast)
+resources/css/components/    one file per component (button, join, input, field, dropzone, check, badge, dl, avatar, nav, breadcrumb, dropdown, multiselect, combobox, tooltip, card, dialog, accordion, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast, repeater)
 resources/views/components/  Blade components, rendered as <x-ui::name>
-resources/js/                Vue components (Name.vue) and the custom elements they share with Blade (name.js); DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
+resources/js/                Vue components (Name.vue); multiselect.js is the one custom element, shared with Blade, and goes when the combobox replaces it; DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs it
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 src/TableQuery.php           server half of DataTable.vue: reads the view and filters from the query string as dataTable.ts does, then searches, sorts and pages
@@ -28,8 +28,8 @@ tests/table-urls.json        URL-to-view cases both of the above read, so the PH
 - Naming: base class plus bare modifier words. `.btn.primary.lg`, never `.btn-primary` or `.btn-lg`.
 - Before adding a modifier word, check it is not a Tailwind utility. `invert`, `contrast`, `flex`, `block`, `hidden` and similar are taken. That is why the region class is `inverse`.
 - No JavaScript in `resources/css/`. Use native HTML first: `<dialog>`, `popover`, anchor positioning, `<details>`, `:has()`, style container queries.
-- When CSS cannot do it, the behaviour goes in a custom element in `resources/js/<name>.js` (`<ui-name>`, light DOM). Blade and Vue both use it, so it lives once. It must never change DOM that Vue renders; setting an attribute Vue binds to the same value is fine.
-- A Blade component and its Vue component render the same markup. `tests/browsers.spec.js` compares them; extend that test for each new pair. Only add them where they save real markup or hold state. A button does not need `<x-ui::button>`.
+- When CSS cannot do it, the behaviour goes in a Vue component, `resources/js/<Name>.vue`. JavaScript components are Vue only: no new custom elements and no Blade version of them. Blade pages get the CSS and native HTML.
+- A Blade component only where it saves real markup and needs no JavaScript. A button does not need `<x-ui::button>`. Where a Blade component has a Vue twin (field), both render the same markup and `tests/browsers.spec.js` compares them.
 - Browser target: current Chrome, Firefox, Safari. No Safari-only features. Chrome-only features need sign-off from Steve first.
 - Colours come from tokens only. Never a literal colour inside a component.
 - Everything in a component file sits in `@layer components` so Tailwind utilities override it.
@@ -45,10 +45,10 @@ tests/table-urls.json        URL-to-view cases both of the above read, so the PH
 
 1. `resources/css/components/<name>.css`, following the button file's shape.
 2. Import it from `resources/css/ui.css`.
-3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name, or to `scripted` if it has a custom element in `resources/js/`.
+3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name, or to `scripted` if it has a Vue component.
 4. Add a section to `resources/boost/skills/altpro-ui/SKILL.md` with the class table and one copy-paste example.
 5. Add the page to `pages` in `tests/a11y.spec.js` and give it a hover-contrast loop if it has hover states.
-6. If it gets Blade and Vue versions: `resources/views/components/<name>.blade.php`, `resources/js/<Name>.vue`, any shared `resources/js/<name>.js`, a Vue instance on the demo page, and a parity test in `tests/browsers.spec.js`. See multiselect.
+6. If it needs JavaScript: `resources/js/<Name>.vue` and a Vue instance on the demo page. A markup-only Blade component goes in `resources/views/components/<name>.blade.php`.
 7. `npm run build` and `npm test` must pass. Check the demo page in light, dark, pill and square.
 
 ## Commands
