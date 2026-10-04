@@ -42,7 +42,8 @@
       outline: 3px solid color-mix(in oklab, var(--input-ring) 50%, transparent);
       outline-offset: 0;
     }
-    &:is(:disabled, :has(:disabled)) {
+    /* not a disabled <option>: a select with a disabled placeholder is still live */
+    &:is(:disabled, :has(:disabled:not(option, optgroup))) {
       opacity: 0.5;
       cursor: not-allowed;
     }
