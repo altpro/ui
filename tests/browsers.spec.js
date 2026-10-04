@@ -34,6 +34,28 @@ test("native disclosure and popover interactions work", async ({ page }) => {
   await expect(target).toBeHidden();
 });
 
+// a branch that is a page: the link navigates without toggling, the summary over its gutter toggles from mouse and keyboard
+test("tree: a page branch's link navigates and its 24px chevron toggles", async ({ page }) => {
+  await page.goto("/tree.html");
+  const li = page.locator("main .tree > li").nth(1);
+  const [link, details, toggle] = [li.locator("> a"), li.locator("> details"), li.locator("> details > summary")];
+  await link.click();
+  await expect(page).toHaveURL(/#\/about$/);
+  await expect(details).toHaveAttribute("open", "");
+  const [a, s] = [await link.boundingBox(), await toggle.boundingBox()];
+  expect(s.width).toBeGreaterThanOrEqual(24);
+  expect(s.height).toBeGreaterThanOrEqual(24);
+  expect([s.x, s.y]).toEqual([a.x, a.y]);
+  await toggle.click();
+  await expect(details).not.toHaveAttribute("open");
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(details).toHaveAttribute("open", "");
+  await page.keyboard.press("Space");
+  await expect(details).not.toHaveAttribute("open");
+  await expect(toggle).toHaveAccessibleName("About us");
+});
+
 test("the sample app tabs expose valid complete panels", async ({ page }) => {
   await page.goto("/app/product.html");
   const tabs = page.locator("main .tabs > label");
@@ -347,6 +369,25 @@ test("datatable: a date range works from either end, turns round when reversed a
   await expect(page).not.toHaveURL(/products_added/);
   await expect(dt.getByLabel("Added from")).toHaveValue("");
   await expect(bodyRows(dt)).toHaveCount(10);
+});
+
+test("datatable: a date preset fills in both dates, and the select names it only while they match", async ({ page }) => {
+  await page.clock.setFixedTime(new Date(2026, 2, 25, 10));
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Products");
+  const preset = dt.getByRole("combobox", { name: "Added preset" });
+  await expect(preset.locator("option:checked")).toHaveText("Any time");
+  await preset.selectOption("Last 30 days");
+  await expect(page).toHaveURL(/products_added_from=2026-02-24&products_added_to=2026-03-25/);
+  await expect(dt.getByLabel("Added from")).toHaveValue("2026-02-24");
+  await expect(bodyRows(dt)).toHaveCount(3);
+  await dt.getByLabel("Added from").fill("2026-02-01");
+  await expect(preset).toHaveValue("");
+  await expect(preset.locator("option:checked")).toHaveText("Custom");
+  await page.goBack();
+  await expect(preset).toHaveValue("Last 30 days");
+  await dt.getByRole("button", { name: "Clear Added" }).click();
+  await expect(preset.locator("option:checked")).toHaveText("Any time");
 });
 
 test("datatable: a search that matches nothing says so in the table and offers to clear itself", async ({ page }) => {

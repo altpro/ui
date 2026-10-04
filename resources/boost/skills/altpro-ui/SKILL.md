@@ -466,6 +466,34 @@ One line of supplementary text in a bubble above an element, on hover and keyboa
 
 Custom properties: `--tooltip-bg --tooltip-fg --tooltip-radius --tooltip-h --tooltip-px --tooltip-text --tooltip-gap --tooltip-tail`.
 
+## Copy button: `CopyButton.vue`
+
+A `.btn` that copies a value to the clipboard: order numbers, tracking codes, emails. The tooltip shows `label`, then "Copied" (or "Copy failed") for two seconds. Vue only; in Blade, show the value in a `readonly` `.input` so it can be selected.
+
+```vue
+<script setup>
+import CopyButton from "../../vendor/altpro/ui/resources/js/CopyButton.vue"; // or "@altpro/ui/js/CopyButton.vue" from npm
+</script>
+
+Order {{ order.number }} <CopyButton :value="order.number" label="Copy order number" />
+
+<div class="join flex">
+  <input class="input flex-1" aria-label="Tracking code" readonly :value="order.tracking">
+  <CopyButton class="outlined" :value="order.tracking" label="Copy tracking code" />
+</div>
+```
+
+| Prop | |
+|------|-|
+| `value` | The string copied. Required. |
+| `label` | Accessible name and resting tooltip. Default `Copy`. Say what is copied: `Copy order number`. |
+| `class` | Replaces the default look (`ghost sm -my-1.5 align-middle`, which sits in a line of text without making it taller). Use `outlined` beside an `.input` in a `.join`; add a size class if the input has one. |
+| default slot | Replaces the copy icon, which turns to a tick once copied. Start `label` with the slot's visible words (`Copy` → `Copy reference`). |
+
+- Screen readers do not read the tooltip, so "Copied" or "Copy failed" also goes to a polite live region teleported to `<body>`.
+- Uses `navigator.clipboard.writeText`, which needs HTTPS (or localhost). Anywhere else, and when the browser refuses, the button says "Copy failed".
+- Every other attribute lands on the `<button>`, which is `type="button"`.
+
 ## Card: `.card`
 
 A bordered box on `--color-card`. Children are styled by element, so no item classes exist.
@@ -604,6 +632,51 @@ A stack of native `<details>`, each a bordered row that slides open. The `<summa
 
 Custom properties: `--accordion-fg --accordion-border --accordion-py --accordion-text --accordion-duration`.
 
+## Tree: `.tree`
+
+Nested lists of links and native `<details>`, for page hierarchies and category trees. No JavaScript; the chevron is drawn in CSS. Not the ARIA `tree` widget: every link and toggle is its own Tab stop, and there is no selection or reordering.
+
+| Markup | Role |
+|--------|------|
+| `<ul class="tree">` | The root. Nested `<ul>` indent one level each. |
+| `.tree.lines` | Adds a guide line down each nested level. |
+| `<li><a href>…</a></li>` | A leaf. Its label lines up with branch labels. `aria-current="page"` marks the current one. |
+| `<li><details><summary>Label</summary><ul>…</ul></details></li>` | A branch that is only a group. `open` starts it expanded. |
+| `<li><a href>Label</a><details><summary aria-label="Label"></summary><ul>…</ul></details></li>` | A branch that is also a page. The empty summary is a 24px chevron toggle over the link's gutter; the link navigates. |
+
+```html
+<nav aria-label="Pages">
+  <ul class="tree lines">
+    <li><a href="/">Home</a></li>
+    <li>
+      <a href="/about">About us</a>
+      <details open>
+        <summary aria-label="About us"></summary>
+        <ul>
+          <li><a href="/about/team" aria-current="page">Team</a></li>
+          <li><a href="/about/history">History</a></li>
+        </ul>
+      </details>
+    </li>
+    <li>
+      <details>
+        <summary>Archive</summary>
+        <ul>
+          <li><a href="/archive/2025">2025</a></li>
+        </ul>
+      </details>
+    </li>
+  </ul>
+</nav>
+```
+
+- Never put a link inside `<summary>`: a summary is a button, and a link inside it is nested interactive content. Use the page-branch markup above.
+- Open the branches above the current page (`open`) so the current link is visible.
+- An icon goes first in the link or summary, `size-4`, `aria-hidden`. A trailing count gets `ms-auto`.
+- Wrap it in `<nav aria-label>` when the links are site navigation.
+
+Custom properties: `--tree-fg --tree-chevron --tree-hover --tree-active-fg --tree-active-bg --tree-line --tree-radius --tree-h --tree-gutter --tree-indent --tree-text`.
+
 ## Table: `.table`
 
 A data table on a native `<table>`. Children are styled by element, so no cell classes exist.
@@ -631,7 +704,7 @@ A data table on a native `<table>`. Children are styled by element, so no cell c
 |-------|------|
 | `thead th` | Column header, muted, medium weight, line underneath. |
 | `tbody th` | Row header, give it `scope="row"`. |
-| `tfoot` | Totals row, medium weight, line above. |
+| `tfoot` | Totals, line above each row. One row is medium weight; with several, the last (the total) is semibold and the rest regular. |
 | `caption` | A muted note under the table. |
 | `th > button` | A sort control. `aria-sort="ascending"` or `"descending"` on the `th` draws the arrow; the app sorts. |
 | `tr[aria-selected="true"]` | A highlighted row. Also automatic when the row's first cell holds a checked checkbox. |
@@ -646,6 +719,33 @@ A data table on a native `<table>`. Children are styled by element, so no cell c
 - A table never wraps its width. Put it in an `overflow-x-auto` wrapper with `tabindex="0"` to scroll sideways; the tabindex lets keyboard users scroll it.
 - As a direct child of a `.card` (or a scroll wrapper that is), it runs edge to edge and its cell padding becomes the card inset. The last row takes the card's bottom corners.
 - Row backgrounds are on the cells, so `bg-*` goes on `td`, not `tr`.
+
+### Line items and totals (pattern)
+
+The read-only order or invoice; editing the lines is `Repeater.vue`. `tabular-nums` on the table lines up the digits, `text-right` on the `tfoot` aligns labels and amounts, and each label is a `th scope="row"` spanning the columns before the amount.
+
+```html
+<table class="table tabular-nums">
+  <thead>
+    <tr>
+      <th>Item</th><th class="text-right">Qty</th>
+      <th class="text-right">Unit price</th><th class="text-right">Amount</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Task chair</td><td class="text-right">2</td>
+      <td class="text-right">£135.00</td><td class="text-right">£270.00</td>
+    </tr>
+  </tbody>
+  <tfoot class="text-right">
+    <tr><th scope="row" colspan="3">Subtotal</th><td>£270.00</td></tr>
+    <tr><th scope="row" colspan="3">Delivery</th><td>£25.00</td></tr>
+    <tr><th scope="row" colspan="3">VAT at 20%</th><td>£59.00</td></tr>
+    <tr><th scope="row" colspan="3">Total</th><td>£354.00</td></tr>
+  </tfoot>
+</table>
+```
 
 Custom properties: `--table-fg --table-head-fg --table-border --table-stripe --table-hover --table-selected --table-px --table-py --table-text`.
 
@@ -688,7 +788,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `caption` | Required. Names the table (sr-only caption), the search box and the pagination. |
 | `name` | Prefixes the query parameters (`brands_sort`) and the stored preferences. Required when two tables share a page. |
 | `searchable` | Keys to search. Defaults to every data column. Client mode only; the server searches what `TableQuery` is given. |
-| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match? }`. `default` applies when the URL says nothing. A select always offers "All". `match(row, values)` covers what a field comparison cannot. |
+| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match?, presets? }`. `default` applies when the URL says nothing. A select always offers "All". `match(row, values)` covers what a field comparison cannot. |
 | `sort`, `direction` | Default sort. Without `sort`, the first sortable column, ascending. |
 | `paginate` | Rows per page until the user picks another (10, 25, 50, 100). Default 25. |
 | `selectable` | Adds the checkbox column and the bulk bar. `@update:selection` gives `null`, `{ mode: "ids", ids }` or `{ mode: "matching", search, filters, count }`. |
@@ -711,6 +811,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 - Clearing a filter that has a `default` (unticking a boolean defaulting to `["1"]`, emptying a multiple, picking "All") writes it present but empty (`featured=`, `tags[]=`), so it stays clear. Setting it back to its default takes it out of the URL. "Clear filters" in the no-matches message puts every filter back to its default.
 - The Columns panel will not hide the last data column.
 - A `daterange` filter is two native date inputs and a Clear button, for orders placed, tasks due or content scheduled. Its value is `[from, to]` as `Y-m-d`, either of which may be `""`, or `[]` for no range; the URL holds `{key}_from` and `{key}_to`, and either works alone. An impossible or oddly written date is dropped, and a reversed range is turned round. Clear removes both, so a `default` (`["2026-01-01", ""]`) comes back: give one only when the table should never show all time. Client mode compares the first ten characters of the field, both ends inclusive, so a timestamp must arrive in the app's timezone; `match` covers anything else.
+- `presets: true` on a `daterange` adds a select beside the dates: Today, Last 7 days, Last 30 days, This month (the whole calendar month), counted in the browser's local time. A preset only fills in both dates, so the URL and `TableQuery` see plain `from` and `to`. The select names a preset while both dates still match it, and says "Custom" once either is edited ("Any time" with no range). Give it to backward-looking ranges such as orders placed; a schedule looking forward is better without. `{ key: "placed", label: "Placed", type: "daterange", presets: true }`.
 - Markup: `.datatable` wraps `.controls`, `.bulk`, a scrolling `.scroll` region holding a `.table.hover`, and `.foot` (count, page size, pagination). Utilities on `thClass`/`tdClass` handle alignment and wrapping (`text-right tabular-nums`, `whitespace-nowrap`).
 
 Server mode, in the controller:
@@ -1009,6 +1110,14 @@ An `<ol>` of events, a dot each joined by a line. For an audit history or activi
 - A `<time>` is drawn muted on its own line. Anything else inside the item is ordinary content.
 - Width is the container's: `max-w-md` or a card.
 
+Activity feed on a record: a `<blockquote>` in an item is a note (indented behind a rule), `<del>`/`<ins>` show a field change (old muted and struck through, new bold), and an attachment is a link with its size in `.muted`.
+
+```html
+<li><p><b>Steve Rayner</b> changed Status <del>Pending</del> → <ins>Paid</ins></p><time>Today, 09:30</time></li>
+<li><p><b>Ann Okafor</b> left a note</p><blockquote>Courier left it with a neighbour.</blockquote><time>Yesterday</time></li>
+<li><p><b>Steve Rayner</b> attached <a class="underline" href="…">invoice-1042.pdf</a> <span class="muted">84 KB</span></p><time>12 Sep</time></li>
+```
+
 Custom properties: `--timeline-dot --timeline-line --timeline-marker`.
 
 ## Toast: `.toaster`
@@ -1090,6 +1199,58 @@ Inside a card or section that already has a heading, one muted sentence and the 
 - Not an `.alert`: an empty list is a normal state, not a problem.
 - When the empty state replaces results after a search, a live status line elsewhere announces the count (DataTable's summary does this). Don't put `role="status"` on the empty block itself.
 - While loading, show `.skeleton` rows, not the empty state, so "No orders yet" never flashes before the orders arrive.
+
+## Record header (pattern)
+
+No class. The top of a record page (an order, a customer, a CMS page): the record's name as the `h1`, a status `.badge`, one muted line of facts, and the page's actions on the right. On a phone the actions wrap under the title.
+
+```html
+<div class="flex flex-wrap items-start justify-between gap-4">
+  <div class="min-w-0">
+    <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+      <h1 class="text-2xl font-semibold tracking-tight break-words">Order ORD-10482</h1>
+      <span class="badge info">Processing</span>
+    </div>
+    <p class="mt-1 text-sm muted">Placed <time datetime="2026-10-03">3 Oct</time> by Ann Okafor · Next-day delivery</p>
+  </div>
+  <div class="flex flex-wrap gap-2">
+    <a href="/orders/10482/slip" class="btn outlined">Packing slip</a>
+    <button class="btn outlined danger">Cancel order</button>
+  </div>
+</div>
+```
+
+- The badge sits beside the `h1`, not inside it, so the heading's name is just the record's name.
+- A semantic badge colour for status (`success` active or paid, `warning` waiting on someone, `danger` overdue or failed, plain for draft or archived). A hue badge is a tag, not a status.
+- Two or three actions at most, `outlined`, with a destructive one `outlined danger`. The rest go behind a "More" button opening a `.dropdown`. `primary` is for the page's one main action; on an edit screen that is Save, in the save bar, so the header has none.
+- A `.breadcrumb` back to the list goes above, outside the flex row.
+- The facts line is a sentence, not a list of labels. Label/value details go in a `.dl` further down.
+
+## Save bar (pattern)
+
+No class. The Save and Discard buttons of a long edit screen, stuck to the bottom of the viewport while the form is on screen. The app tracks unsaved changes and saving; with Inertia's `useForm` that is `form.isDirty` and `form.processing`.
+
+```html
+<html class="scroll-pb-20">
+…
+<form @submit.prevent="form.put(url)">
+  <!-- fields -->
+  <div class="sticky bottom-0 z-10 -mx-gap flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background px-gap py-3">
+    <p class="me-auto text-sm" role="status">{{ form.isDirty ? "Unsaved changes" : form.recentlySuccessful ? "Saved." : "" }}</p>
+    <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="form.reset(); form.clearErrors()">Discard</button>
+    <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>
+  </div>
+</form>
+```
+
+- The bar is the last child of the `<form>`, so Tab reaches it after the last field and Enter in a field submits. `sticky`, not `fixed`: at the end of the form it sits in its own place under the last field instead of covering it, and it never shows outside the form.
+- `scroll-pb-20` on `<html>` (the bar's height plus a little) stops the browser tabbing a field behind the bar. Inside a scrolling panel instead of the page, put it on that panel.
+- `-mx-gap px-gap` takes the bar to the edges of a `p-gap` container; match whatever padding the page has. `bg-background` must be opaque, since fields scroll behind it; on a card use `bg-card`. In a grid form give it `col-span-full`.
+- Save stays enabled while the form is clean: a disabled Save gives no reason, and saving unchanged data does no harm. While saving it is `loading`, `disabled` and `aria-busy`, as in the Button section. Discard is a `type="button"` (never `type="reset"`, which bypasses `v-model`) and is disabled while there is nothing to discard or a save is running.
+- Inertia takes the saved data as the new defaults after a successful save, so `isDirty` goes false by itself. If a `Field` makes `isDirty` start true, call `form.defaults()` on mount (see the Field section).
+- The `role="status"` line says "Unsaved changes" once, when the form first changes, and "Saved." after a save. Keep the element in the page at load and change only its text.
+- Always shown, not `v-if="form.isDirty"`: a bar that appears shifts the page and hides Save until something changes.
+- Warning about unsaved changes on leaving is the app's job (`beforeunload`, and Inertia's `router.on("before")` for in-app visits).
 
 ## Theme tokens
 

@@ -54,6 +54,8 @@ export interface DataTableFilter<TRow> {
   field?: keyof TRow & string;
   /** Client-side matching for anything a field comparison cannot express. */
   match?: (row: TRow, values: string[]) => boolean;
+  /** A daterange only: offer Today, Last 7 days, Last 30 days and This month, which fill in both dates. */
+  presets?: boolean;
 }
 
 export interface DataTablePaginationMeta {
@@ -143,6 +145,22 @@ export const pageWindow = (current: number, last: number): Array<number | null> 
   const start = Math.min(Math.max(current - 2, 2), last - 5);
   const middle = Array.from({ length: 5 }, (_, i) => start + i);
   return [1, start > 2 ? null : [], middle, start + 4 < last - 1 ? null : [], last].flat();
+};
+
+// a day as a date input writes it, from the local date parts: toISOString is UTC, which is another day near midnight
+const localDay = (date: Date) =>
+  [date.getFullYear(), date.getMonth() + 1, date.getDate()].map((n, i) => String(n).padStart(i ? 2 : 4, "0")).join("-");
+
+/** A daterange's presets as `[from, to]` around `today`, both ends included. Days are counted by the calendar, not in hours, so a clock change moves nothing. */
+export const datePresets = (today = new Date()): Array<{ label: string; range: [string, string] }> => {
+  const [y, m, d] = [today.getFullYear(), today.getMonth(), today.getDate()];
+  const day = (month: number, date: number) => localDay(new Date(y, month, date));
+  return [
+    { label: "Today", range: [day(m, d), day(m, d)] },
+    { label: "Last 7 days", range: [day(m, d - 6), day(m, d)] },
+    { label: "Last 30 days", range: [day(m, d - 29), day(m, d)] },
+    { label: "This month", range: [day(m, 1), day(m + 1, 0)] },
+  ];
 };
 
 /** A row's `key` field. Selection hands these to a bulk action, so there a missing one throws rather than fall back to the position. */

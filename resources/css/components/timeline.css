@@ -9,6 +9,7 @@
    </ol>
    A dot per event joined by a line. An .avatar as the first child of an
    item takes the dot's place. Colour words on the item recolour the dot.
+   A <blockquote> in an item is a note; <del>/<ins> show a field change.
    Unlike .steps there is no current or done state; every event has
    happened. Layered so Tailwind utilities win. */
 @layer components {
@@ -34,6 +35,15 @@
       &:last-child { padding-block-end: 0; }
       > * { grid-column: 2; margin: 0; }
       > time { display: block; color: var(--color-muted-foreground); }
+      /* a note someone left, set off by a rule in the line's colour */
+      > blockquote {
+        margin-block: 0.25rem;
+        padding-inline-start: 0.75rem;
+        border-inline-start: 2px solid var(--timeline-line);
+      }
+      /* a field change: <del>old</del> → <ins>new</ins> */
+      del { color: var(--color-muted-foreground); }
+      ins { text-decoration: none; font-weight: 600; }
 
       /* the dot, centred in the marker square */
       &::before {

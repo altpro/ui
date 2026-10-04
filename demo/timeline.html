@@ -67,6 +67,31 @@
   </section>
 
   <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Activity feed</h2>
+    <p class="text-sm muted">Notes, attachments and field changes on a record. A <code>&lt;blockquote&gt;</code> is a note. A field change is <code>&lt;del&gt;</code> old, <code>&lt;ins&gt;</code> new: the old value is muted and struck through, the new one bold. An attachment is a link to the file, its size in a <code>.muted</code> span.</p>
+    <ol class="timeline max-w-md">
+      <li class="success"><p><b>Steve Rayner</b> changed Status <del>Pending</del> → <ins>Paid</ins></p><time datetime="2026-09-15T09:30">Today, 09:30</time></li>
+      <li><span class="avatar teal">AO</span><p><b>Ann Okafor</b> left a note</p><blockquote>Customer rang to say the courier left it with a neighbour at number 14. Happy for us to close this.</blockquote><time datetime="2026-09-14T16:05">Yesterday, 16:05</time></li>
+      <li><span class="avatar blue">SR</span><p><b>Steve Rayner</b> attached <a class="underline" href="#">invoice-1042.pdf</a> <span class="muted">84 KB</span></p><time datetime="2026-09-12T11:20">12 Sep, 11:20</time></li>
+      <li><p><b>Ann Okafor</b> changed Delivery <del>Standard</del> → <ins>Next day</ins> and Total <del>£42.00</del> → <ins>£48.95</ins></p><time datetime="2026-09-12T10:02">12 Sep, 10:02</time></li>
+      <li><p>Order placed</p><time datetime="2026-09-11T19:47">11 Sep, 19:47</time></li>
+    </ol>
+<pre>&lt;li&gt;
+  &lt;p&gt;&lt;b&gt;Steve Rayner&lt;/b&gt; changed Status &lt;del&gt;Pending&lt;/del&gt; → &lt;ins&gt;Paid&lt;/ins&gt;&lt;/p&gt;
+  &lt;time datetime="2026-09-15T09:30"&gt;Today, 09:30&lt;/time&gt;
+&lt;/li&gt;
+&lt;li&gt;
+  &lt;p&gt;&lt;b&gt;Ann Okafor&lt;/b&gt; left a note&lt;/p&gt;
+  &lt;blockquote&gt;Customer rang to say the courier left it with a neighbour.&lt;/blockquote&gt;
+  &lt;time datetime="2026-09-14T16:05"&gt;Yesterday, 16:05&lt;/time&gt;
+&lt;/li&gt;
+&lt;li&gt;
+  &lt;p&gt;&lt;b&gt;Steve Rayner&lt;/b&gt; attached &lt;a class="underline" href="…"&gt;invoice-1042.pdf&lt;/a&gt; &lt;span class="muted"&gt;84 KB&lt;/span&gt;&lt;/p&gt;
+  &lt;time datetime="2026-09-12T11:20"&gt;12 Sep, 11:20&lt;/time&gt;
+&lt;/li&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
     <h2 class="text-xl font-semibold">In a card</h2>
     <div class="card max-w-md">
       <header><h3>History</h3></header>

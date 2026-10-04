@@ -31,13 +31,13 @@ In this order: `.dl` and the empty state are quick wins, then the combobox proto
 
 ## When an app asks
 
-- [ ] **Activity feed**: extend the timeline examples with notes, attachments and before/after values.
-- [ ] **Line item totals**: `.table` pattern with a `tfoot` for totals and tabular-nums for right-aligned money. Editing the lines is the repeater.
-- [ ] **Record header**: title, status badge, action buttons. A SKILL.md pattern.
-- [ ] **Save bar**: sticky save/discard bar for long edit screens. Layout pattern only; the app tracks unsaved changes and saving state (Inertia's `form.isDirty`, `form.processing`).
-- [ ] **Tree**: nested `<details>` with links for page hierarchies and category trees. CSS only. Not the ARIA `tree` pattern; selection and reordering wait for a real requirement.
-- [ ] **Copy button**: order numbers, tracking codes, emails. Small Vue component; the tooltip says "Copied".
-- [ ] **Date range presets**: "Today", "Last 30 days" on the daterange filter.
+- [x] **Activity feed**: extend the timeline examples with notes, attachments and before/after values.
+- [x] **Line item totals**: `.table` pattern with a `tfoot` for totals and tabular-nums for right-aligned money. Editing the lines is the repeater.
+- [x] **Record header**: title, status badge, action buttons. A SKILL.md pattern.
+- [x] **Save bar**: sticky save/discard bar for long edit screens. Layout pattern only; the app tracks unsaved changes and saving state (Inertia's `form.isDirty`, `form.processing`).
+- [x] **Tree**: nested `<details>` with links for page hierarchies and category trees. CSS only. Not the ARIA `tree` pattern; selection and reordering wait for a real requirement.
+- [x] **Copy button**: order numbers, tracking codes, emails. Small Vue component; the tooltip says "Copied".
+- [x] **Date range presets**: "Today", "Last 30 days" on the daterange filter. `presets: true`, a fixed set; the URL still holds plain dates.
 - [ ] **Kanban**: CRM pipeline. Expensive, because drag-and-drop has to work from the keyboard too. Only if a CRM needs it.
 
 ## Not building

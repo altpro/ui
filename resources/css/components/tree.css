@@ -1,0 +1,131 @@
+/* Tree: nested <details> with links, for page hierarchies and category trees.
+   <nav aria-label="Pages">
+     <ul class="tree lines">
+       <li><a href="/" aria-current="page">Home</a></li>
+       <li>
+         <details open>
+           <summary>Shop</summary>
+           <ul>
+             <li><a href="/shop/new">New in</a></li>
+           </ul>
+         </details>
+       </li>
+       <li>
+         <a href="/about">About</a>
+         <details>
+           <summary aria-label="About"></summary>
+           <ul>…</ul>
+         </details>
+       </li>
+     </ul>
+   </nav>
+   A branch is a <details>; its summary draws a chevron in the gutter before
+   the label, and leaves pad the same gutter so every label lines up. A
+   branch that is also a page puts its link before the <details> and leaves
+   the summary empty with an aria-label: the summary sits over the link's
+   gutter as a 24px toggle. Never a link inside <summary>: a summary is a
+   button, so the link would be nested interactive content. `lines` draws a
+   guide down each open level. Not the ARIA tree pattern: every row is a Tab
+   stop. Layered so Tailwind utilities win. */
+@layer components {
+  .tree {
+    --tree-fg: var(--color-foreground);
+    --tree-chevron: var(--color-muted-foreground);
+    --tree-hover: var(--color-muted);
+    --tree-active-fg: var(--color-primary);
+    --tree-active-bg: color-mix(in oklab, var(--color-primary) 10%, transparent);
+    --tree-line: var(--color-border);
+    --tree-radius: var(--radius);
+    --tree-h: 2rem;
+    --tree-gutter: 1.5rem;
+    --tree-indent: 1.5rem;
+    --tree-text: var(--text-sm, 0.875rem);
+
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: var(--tree-text);
+    color: var(--tree-fg);
+
+    ul {
+      margin: 0;
+      margin-inline-start: calc(var(--tree-gutter) / 2);
+      padding: 0;
+      padding-inline-start: calc(var(--tree-indent) - var(--tree-gutter) / 2);
+      list-style: none;
+    }
+    &.lines ul {
+      border-inline-start: 1px solid var(--tree-line);
+    }
+    li {
+      position: relative;
+    }
+
+    a, summary {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      min-height: var(--tree-h);
+      padding-inline: var(--tree-gutter) 0.5rem;
+      border-radius: var(--tree-radius);
+      color: inherit;
+      text-decoration: none;
+      cursor: pointer;
+      transition: background-color 0.15s, color 0.15s;
+
+      > svg { flex: none; }
+
+      &:hover {
+        background: var(--tree-hover);
+      }
+      &:focus-visible {
+        outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+        outline-offset: 0;
+      }
+    }
+    a[aria-current] {
+      background: var(--tree-active-bg);
+      color: var(--tree-active-fg);
+      font-weight: 500;
+    }
+
+    /* chevron, drawn in CSS and centred in the gutter: points along the line closed, down open */
+    summary {
+      padding-inline-start: 0;
+      list-style: none;
+      user-select: none;
+      &::-webkit-details-marker { display: none; }
+      &::before {
+        content: "";
+        flex: none;
+        width: 0.4em;
+        height: 0.4em;
+        margin-inline: calc((var(--tree-gutter) - 0.4em) / 2) calc((var(--tree-gutter) - 0.4em) / 2 - 0.5rem);
+        border: solid var(--tree-chevron);
+        border-width: 0 1.5px 1.5px 0;
+        rotate: -45deg;
+        transition: rotate 0.15s;
+      }
+      &:dir(rtl)::before { rotate: 135deg; }
+    }
+    details[open] > summary::before {
+      rotate: 45deg;
+    }
+
+    /* a branch that is a page: the empty summary is a toggle over the link's gutter */
+    a + details > summary {
+      position: absolute;
+      inset-block-start: 0;
+      inset-inline-start: 0;
+      width: var(--tree-gutter);
+      height: var(--tree-h);
+      justify-content: center;
+      padding: 0;
+      &::before { margin: 0; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      summary::before { transition: none; }
+    }
+  }
+}

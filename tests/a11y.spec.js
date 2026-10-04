@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "datatable.html", "tooltip.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/order.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "copy.html", "datatable.html", "tooltip.html", "tree.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/order.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -398,7 +398,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2], ["tree.html", ".tree :is(a, summary)", 14]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });

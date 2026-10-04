@@ -4,6 +4,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fixture from "./table-urls.json" with { type: "json" };
 import {
+  datePresets,
   keyOf,
   readView,
   tableView,
@@ -151,6 +152,31 @@ test("a daterange keeps rows whose day falls inside it, both ends included", () 
   assert.deepEqual(run(["2026-03-02", ""]), [2, 4]);
   assert.deepEqual(run(["", "2026-03-01"]), [1]);
   assert.deepEqual(run([]), [1, 2, 3, 4]);
+});
+
+test("date presets count calendar days in local time, across month ends and clock changes", () => {
+  const tz = process.env.TZ;
+  process.env.TZ = "Europe/London";
+  try {
+    const ranges = (...at: number[]) => Object.fromEntries(datePresets(new Date(...(at as [number, number, number, number, number]))).map((p) => [p.label, p.range]));
+    assert.deepEqual(ranges(2026, 2, 31, 12, 0), {
+      Today: ["2026-03-31", "2026-03-31"],
+      "Last 7 days": ["2026-03-25", "2026-03-31"],
+      "Last 30 days": ["2026-03-02", "2026-03-31"],
+      "This month": ["2026-03-01", "2026-03-31"],
+    });
+    // the clocks went forward on 29 March: 00:30 BST is still the 29th in UTC, and six days of hours back is a day short
+    const spring = ranges(2026, 2, 30, 0, 30);
+    assert.deepEqual([spring.Today, spring["Last 7 days"]], [["2026-03-30", "2026-03-30"], ["2026-03-24", "2026-03-30"]]);
+    // and back on 25 October
+    assert.deepEqual(ranges(2026, 9, 26, 23, 30)["Last 7 days"], ["2026-10-20", "2026-10-26"]);
+    // a short month, a leap year, and a range that starts in the year before
+    assert.deepEqual(ranges(2028, 1, 10, 9, 0)["This month"], ["2028-02-01", "2028-02-29"]);
+    assert.deepEqual(ranges(2026, 0, 5, 9, 0)["Last 30 days"], ["2025-12-07", "2026-01-05"]);
+  } finally {
+    if (tz === undefined) delete process.env.TZ;
+    else process.env.TZ = tz;
+  }
 });
 
 test("readView reads back what viewUrl wrote", () => {

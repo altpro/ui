@@ -8,7 +8,7 @@ CSS component layer for Tailwind v4, with Vue components for anything that needs
 resources/css/ui.css         entry, imports everything below; @source points Tailwind at the Blade and Vue templates
 resources/css/theme.css      @theme default tokens, all light-dark(); --radius knob and responsive --spacing-gap on :root
 resources/css/scheme.css     color-scheme regions: .light .dark .inverse
-resources/css/components/    one file per component (button, join, input, field, dropzone, check, badge, dl, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast, repeater)
+resources/css/components/    one file per component (button, join, input, field, dropzone, check, badge, dl, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, tree, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast, repeater)
 resources/views/components/  Blade components, rendered as <x-ui::name>
 resources/js/                Vue components (Name.vue); domModel.js lets Field.vue work without v-model inside a form; DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs it

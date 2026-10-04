@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Tree</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Tree</h1>
+    <p class="muted"><code>.tree</code> on a <code>&lt;ul&gt;</code> of links and native <code>&lt;details&gt;</code>, for page hierarchies and category trees. A branch opens and closes with no script. Every row is a link or a toggle on the Tab order; it is not the ARIA <code>tree</code> widget.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Page hierarchy</h2>
+    <nav class="w-64" aria-label="Example: pages">
+      <ul class="tree lines">
+        <li><a href="#/home">Home</a></li>
+        <li>
+          <a href="#/about">About us</a>
+          <details open>
+            <summary aria-label="About us"></summary>
+            <ul>
+              <li><a href="#/about/team">Team</a></li>
+              <li>
+                <a href="#/about/careers">Careers</a>
+                <details open>
+                  <summary aria-label="Careers"></summary>
+                  <ul>
+                    <li><a href="#/about/careers/engineering" aria-current="page">Engineering</a></li>
+                    <li><a href="#/about/careers/design">Design</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li><a href="#/about/history">History</a></li>
+            </ul>
+          </details>
+        </li>
+        <li>
+          <a href="#/services">Services</a>
+          <details open>
+            <summary aria-label="Services"></summary>
+            <ul>
+              <li><a href="#/services/consulting">Consulting</a></li>
+              <li><a href="#/services/support">Support</a></li>
+            </ul>
+          </details>
+        </li>
+        <li><a href="#/contact">Contact</a></li>
+      </ul>
+    </nav>
+    <p class="text-sm muted">Each branch here is a page too, so its link comes first and the <code>&lt;details&gt;</code> after it holds an empty <code>&lt;summary&gt;</code> named with <code>aria-label</code>. The summary sits on the chevron: the link navigates, the chevron toggles, and each is its own Tab stop. <code>lines</code> draws the guides. <code>aria-current="page"</code> marks the current page.</p>
+<pre>&lt;nav aria-label="Pages"&gt;
+  &lt;ul class="tree lines"&gt;
+    &lt;li&gt;&lt;a href="/"&gt;Home&lt;/a&gt;&lt;/li&gt;
+    &lt;li&gt;
+      &lt;a href="/about"&gt;About us&lt;/a&gt;
+      &lt;details open&gt;
+        &lt;summary aria-label="About us"&gt;&lt;/summary&gt;
+        &lt;ul&gt;
+          &lt;li&gt;&lt;a href="/about/team" aria-current="page"&gt;Team&lt;/a&gt;&lt;/li&gt;
+          &lt;li&gt;&lt;a href="/about/history"&gt;History&lt;/a&gt;&lt;/li&gt;
+        &lt;/ul&gt;
+      &lt;/details&gt;
+    &lt;/li&gt;
+  &lt;/ul&gt;
+&lt;/nav&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Category tree</h2>
+    <nav class="w-72" aria-label="Example: categories">
+      <ul class="tree">
+        <li>
+          <details open>
+            <summary>Clothing</summary>
+            <ul>
+              <li>
+                <details open>
+                  <summary>Tops</summary>
+                  <ul>
+                    <li><a href="#/c/t-shirts">T-shirts <span class="badge sm ms-auto">48</span></a></li>
+                    <li><a href="#/c/shirts" aria-current="page">Shirts <span class="badge sm ms-auto">23</span></a></li>
+                    <li><a href="#/c/knitwear">Knitwear <span class="badge sm ms-auto">9</span></a></li>
+                  </ul>
+                </details>
+              </li>
+              <li>
+                <details>
+                  <summary>Bottoms</summary>
+                  <ul>
+                    <li><a href="#/c/jeans">Jeans</a></li>
+                    <li><a href="#/c/shorts">Shorts</a></li>
+                  </ul>
+                </details>
+              </li>
+              <li><a href="#/c/outerwear">Outerwear <span class="badge sm ms-auto">12</span></a></li>
+            </ul>
+          </details>
+        </li>
+        <li>
+          <details>
+            <summary>Footwear</summary>
+            <ul>
+              <li><a href="#/c/trainers">Trainers</a></li>
+              <li><a href="#/c/boots">Boots</a></li>
+            </ul>
+          </details>
+        </li>
+        <li><a href="#/c/accessories">Accessories</a></li>
+      </ul>
+    </nav>
+    <p class="text-sm muted">A branch that is only a group puts its label in the <code>&lt;summary&gt;</code>. Leaves line up with branch labels. No <code>lines</code>, so levels are shown by indent alone. A trailing count gets <code>ms-auto</code>.</p>
+<pre>&lt;ul class="tree"&gt;
+  &lt;li&gt;
+    &lt;details open&gt;
+      &lt;summary&gt;Clothing&lt;/summary&gt;
+      &lt;ul&gt;
+        &lt;li&gt;&lt;a href="/c/shirts" aria-current="page"&gt;Shirts &lt;span class="badge sm ms-auto"&gt;23&lt;/span&gt;&lt;/a&gt;&lt;/li&gt;
+        &lt;li&gt;&lt;a href="/c/outerwear"&gt;Outerwear&lt;/a&gt;&lt;/li&gt;
+      &lt;/ul&gt;
+    &lt;/details&gt;
+  &lt;/li&gt;
+  &lt;li&gt;&lt;a href="/c/accessories"&gt;Accessories&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Custom properties</h2>
+<pre>.tree {
+  --tree-fg --tree-chevron --tree-hover
+  --tree-active-fg --tree-active-bg   /* aria-current row */
+  --tree-line                         /* .lines guide colour */
+  --tree-radius                       /* defaults to --radius */
+  --tree-h --tree-gutter --tree-indent --tree-text
+}</pre>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

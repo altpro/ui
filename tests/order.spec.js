@@ -69,3 +69,15 @@ test("server errors follow their line, go when it is removed, and nothing moves 
   await expect(page.getByRole("status")).toHaveText("Order saved.");
   await expect(page.locator(".repeater .error")).toHaveCount(0);
 });
+
+test("the save bar offers Discard only while there are unsaved changes, and Discard puts the lines back", async ({ page }) => {
+  await expect(button(page, "Discard")).toBeDisabled();
+  await line(page, 1).getByLabel("Quantity").fill("3");
+  await expect(page.getByRole("status")).toHaveText("Unsaved changes");
+  await button(page, "Remove line 2").click();
+  await button(page, "Discard").click();
+  await expect(lines(page)).toHaveCount(3);
+  await expect(line(page, 1).getByLabel("Quantity")).toHaveValue("2");
+  await expect(button(page, "Discard")).toBeDisabled();
+  await expect(page.getByRole("status")).toHaveText("");
+});

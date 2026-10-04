@@ -25,6 +25,14 @@
       /* a date range: a fieldset will not shrink below its content, which is wider than a phone */
       > fieldset {
         min-width: 0;
+        /* presets: the select beside the dates while they fit, above them on a phone */
+        &:has(> select) {
+          flex-flow: row wrap;
+          column-gap: 0.5rem;
+          > .join {
+            min-width: 0;
+          }
+        }
       }
 
       /* the Columns panel: one row per box, as in the combobox panel */

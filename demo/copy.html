@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Copy button</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Copy button</h1>
+    <p class="muted"><code>CopyButton.vue</code>: a <code>.btn</code> that copies a value to the clipboard. Order numbers, tracking codes, emails. The tooltip names what it copies, then says "Copied" for two seconds, and a screen reader hears the same. Vue only; there is no CSS of its own.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">After text</h2>
+    <p class="text-sm muted">The default: a small ghost icon button. <code>label</code> is its accessible name and its tooltip.</p>
+    <div id="copy-inline"></div>
+<pre>&lt;script setup&gt;
+import CopyButton from "@altpro/ui/js/CopyButton.vue";
+&lt;/script&gt;
+
+Order ORD-1042 &lt;CopyButton value="ORD-1042" label="Copy order number" /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Joined to a read-only input</h2>
+    <p class="text-sm muted">Any <code>class</code> replaces the default look; <code>outlined</code> matches the input's border inside a <code>.join</code>.</p>
+    <div id="copy-join"></div>
+<pre>&lt;div class="join flex"&gt;
+  &lt;input class="input flex-1" id="tracking" readonly :value="order.tracking"&gt;
+  &lt;CopyButton class="outlined" :value="order.tracking" label="Copy tracking code" /&gt;
+&lt;/div&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a description list</h2>
+    <p class="text-sm muted">The default slot replaces the icon. Start <code>label</code> with the slot's words so speech control users can say what they see.</p>
+    <div id="copy-dl"></div>
+<pre>&lt;dd&gt;INV-2026-0091 &lt;CopyButton class="outlined xs" value="INV-2026-0091" label="Copy reference"&gt;Copy&lt;/CopyButton&gt;&lt;/dd&gt;</pre>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="copy.js"></script>
+</body>
+</html>

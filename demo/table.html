@@ -59,6 +59,47 @@
   </section>
 
   <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Line items and totals</h2>
+    <div class="card max-w-2xl">
+      <table class="table tabular-nums">
+        <thead><tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Unit price</th><th class="text-right">Amount</th></tr></thead>
+        <tbody>
+          <tr><td>Oak desk, 140 cm</td><td class="text-right">1</td><td class="text-right">£420.00</td><td class="text-right">£420.00</td></tr>
+          <tr><td>Task chair</td><td class="text-right">2</td><td class="text-right">£135.00</td><td class="text-right">£270.00</td></tr>
+          <tr><td>Cable tray</td><td class="text-right">3</td><td class="text-right">£12.50</td><td class="text-right">£37.50</td></tr>
+        </tbody>
+        <tfoot class="text-right">
+          <tr><th scope="row" colspan="3">Subtotal</th><td>£727.50</td></tr>
+          <tr><th scope="row" colspan="3">Delivery</th><td>£25.00</td></tr>
+          <tr><th scope="row" colspan="3">VAT at 20%</th><td>£150.50</td></tr>
+          <tr><th scope="row" colspan="3">Total</th><td>£903.00</td></tr>
+        </tfoot>
+      </table>
+    </div>
+    <p class="text-sm muted">The read-only order or invoice; editing the lines is the repeater. <code>tabular-nums</code> on the table lines up every digit, <code>text-right</code> on the <code>tfoot</code> right-aligns the labels and amounts, and each label spans the columns before the amount. With several footer rows the last, the total, is semibold and the rest regular.</p>
+<pre>&lt;table class="table tabular-nums"&gt;
+  &lt;thead&gt;
+    &lt;tr&gt;
+      &lt;th&gt;Item&lt;/th&gt;&lt;th class="text-right"&gt;Qty&lt;/th&gt;
+      &lt;th class="text-right"&gt;Unit price&lt;/th&gt;&lt;th class="text-right"&gt;Amount&lt;/th&gt;
+    &lt;/tr&gt;
+  &lt;/thead&gt;
+  &lt;tbody&gt;
+    &lt;tr&gt;
+      &lt;td&gt;Task chair&lt;/td&gt;&lt;td class="text-right"&gt;2&lt;/td&gt;
+      &lt;td class="text-right"&gt;£135.00&lt;/td&gt;&lt;td class="text-right"&gt;£270.00&lt;/td&gt;
+    &lt;/tr&gt;
+  &lt;/tbody&gt;
+  &lt;tfoot class="text-right"&gt;
+    &lt;tr&gt;&lt;th scope="row" colspan="3"&gt;Subtotal&lt;/th&gt;&lt;td&gt;£270.00&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;th scope="row" colspan="3"&gt;Delivery&lt;/th&gt;&lt;td&gt;£25.00&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;th scope="row" colspan="3"&gt;VAT at 20%&lt;/th&gt;&lt;td&gt;£59.00&lt;/td&gt;&lt;/tr&gt;
+    &lt;tr&gt;&lt;th scope="row" colspan="3"&gt;Total&lt;/th&gt;&lt;td&gt;£354.00&lt;/td&gt;&lt;/tr&gt;
+  &lt;/tfoot&gt;
+&lt;/table&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
     <h2 class="text-xl font-semibold">Hover, selection, row actions</h2>
     <table class="table hover">
       <thead>

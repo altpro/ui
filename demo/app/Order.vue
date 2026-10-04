@@ -1,5 +1,6 @@
 <!-- The order edit page. `form` has the shape of Inertia's useForm without Inertia: lines as v-model,
-     errors keyed by position (`lines.0.qty`), and processing while it saves. save() stands in for the server. -->
+     errors keyed by position (`lines.0.qty`), processing while it saves, isDirty against the last saved lines,
+     and reset(). save() stands in for the server. -->
 <script setup>
 import { computed, reactive, ref } from "vue";
 import Field from "../../resources/js/Field.vue";
@@ -17,6 +18,14 @@ const form = reactive({
   processing: false,
 });
 const saved = ref("");
+// Inertia keeps these defaults itself and takes new ones after a successful save
+const defaults = ref(JSON.stringify(form.lines));
+const isDirty = computed(() => JSON.stringify(form.lines) !== defaults.value);
+function reset() {
+  form.lines = JSON.parse(defaults.value);
+  form.errors = {};
+  saved.value = "";
+}
 
 const money = (n) => new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(n);
 const product = (line) => products.find((p) => p.id === Number(line.product_id));
@@ -38,7 +47,10 @@ function save() {
     });
     form.errors = errors;
     form.processing = false;
-    if (!Object.keys(errors).length) saved.value = "Order saved.";
+    if (!Object.keys(errors).length) {
+      defaults.value = JSON.stringify(form.lines);
+      saved.value = "Order saved.";
+    }
   }, 400);
 }
 </script>
@@ -63,11 +75,12 @@ function save() {
           <div><dt>Lines</dt><dd class="text-end tabular-nums">{{ form.lines.length }}</dd></div>
           <div class="font-semibold"><dt class="text-foreground">Total</dt><dd class="text-end tabular-nums">{{ money(total) }}</dd></div>
         </dl>
-        <footer>
-          <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save order</button>
-          <p class="text-sm" role="status">{{ saved }}</p>
-        </footer>
       </section>
+    </div>
+    <div class="sticky bottom-0 z-10 -mx-gap flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background px-gap py-3 col-span-full">
+      <p class="me-auto text-sm" role="status">{{ isDirty ? "Unsaved changes" : saved }}</p>
+      <button type="button" class="btn outlined" :disabled="!isDirty || form.processing" @click="reset">Discard</button>
+      <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save order</button>
     </div>
   </form>
 </template>
