@@ -464,7 +464,7 @@ test("datatable: hiding a column removes it from every row and survives a reload
   await expect(group.getByRole("checkbox", { name: "Name" })).toBeDisabled();
 });
 
-test("file input: choose, list, remove, drop, and accept filters dropped files", async ({ page }) => {
+test("file input: choose, list, remove, drop, reset, and accept filters dropped files", async ({ page }) => {
   const warnings = [];
   page.on("console", (m) => ["warning", "error"].includes(m.type()) && warnings.push(m.text()));
   // count revoked preview URLs, so a removed image is known to free its blob
@@ -513,6 +513,14 @@ test("file input: choose, list, remove, drop, and accept filters dropped files",
   await contract.setInputFiles([{ name: "one.pdf", mimeType: "application/pdf", buffer: Buffer.from("x") }]);
   await contract.setInputFiles([{ name: "two.pdf", mimeType: "application/pdf", buffer: Buffer.from("x") }]);
   await expect(page.locator("#vue-demo output").nth(1)).toHaveText("v-model: two.pdf");
+
+  // a native form reset empties the list and v-model along with the input
+  await page.locator("#vue-demo").getByRole("button", { name: "Reset", exact: true }).click();
+  await expect(output).toHaveText("v-model: []");
+  await expect(zone.locator("li")).toHaveCount(0);
+  await expect(zone.getByRole("alert")).toHaveCount(0);
+  await expect(page.locator("#vue-demo output").nth(1)).toHaveText("v-model: null");
+  expect(await input.evaluate((el) => el.files.length)).toBe(0);
 
   // disabled: a drop does nothing
   const archived = page.locator("#vue-demo .dropzone").nth(2);

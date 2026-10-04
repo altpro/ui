@@ -9,9 +9,11 @@
   Errors take a string, an array, or Laravel's errors object: `photos` shows under the zone and `photos.1` on the
   second file. Per-file errors stay with their file when another is removed.
   `class` lands on the .dropzone, every other attribute on the input. The default slot adds a line to the zone.
+  A form reset (native or Inertia's <Form>) empties the list and v-model.
 -->
 <script setup>
 import { computed, nextTick, onBeforeUnmount, ref, shallowRef, useAttrs, useId, watch } from "vue";
+import { onFormReset } from "./domModel.js";
 
 defineOptions({ inheritAttrs: false });
 const model = defineModel({ default: null });
@@ -60,6 +62,11 @@ const write = (list) => {
   input.value.files = dt.files;
 };
 watch(files, write, { flush: "post" });
+// a reset empties the input, so the list and v-model follow, with or without v-model
+onFormReset(root, () => {
+  rejected.value = [];
+  if (!input.value.files.length) set([]);
+});
 
 // object URLs for image previews, revoked once their file leaves the list
 const urls = new Map();

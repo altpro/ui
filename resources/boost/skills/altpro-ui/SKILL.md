@@ -239,6 +239,7 @@ const form = useForm({ photos: [] });
 
 - The native input covers the zone, invisible: click, Enter or Space opens the picker, and screen readers get the browser's file button. Dropping is the extra. The zone is a `<label>`, so the input is named by it and by any `<label for>` outside.
 - The native input always holds the same files as v-model, so `required`, a plain form post and Inertia's `<Form>` work.
+- A form reset, native or Inertia's `<Form>`, empties the list and v-model as it empties the input. Vue's `<Field type="file">` does the same.
 - Image previews are object URLs, revoked when their file is removed or the component unmounts.
 - Removing a file moves focus to the next remove button, or back to the zone.
 - `class` lands on the `.dropzone`; every other attribute (`required`, `aria-describedby`, `form`) on the input.
@@ -806,7 +807,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `empty` | Under `empty-message`, e.g. a "Create one" link. |
 
 - The header checkbox ticks the visible page only, and shows a dash when part of it is ticked. Once the page is ticked and more rows match, the bar offers "Select all N matching", which hands over the query instead of ids: run it again on the server with `TableQuery::search()`. In server mode that query is the one the rows on screen answer, not a search still on its way. Unticking a row afterwards goes back to `ids`: the page's, less that row.
-- Any change to this table's view except a page change goes back to page one and clears the selection. Another table's changes on the same page leave it alone.
+- A change to this table's search, filters, sort or page size goes back to page one. A change to its search, filters, sort or page clears the selection. Another table's changes on the same page leave both alone.
 - Sort, page and filter changes add a history entry, so Back steps through views. A search rewrites the current entry as it is typed, and a page size change rewrites it too.
 - Clearing a filter that has a `default` (unticking a boolean defaulting to `["1"]`, emptying a multiple, picking "All") writes it present but empty (`featured=`, `tags[]=`), so it stays clear. Setting it back to its default takes it out of the URL. "Clear filters" in the no-matches message puts every filter back to its default.
 - The Columns panel will not hide the last data column.
@@ -887,6 +888,7 @@ const form = useForm({ lines: props.order.lines });
 
 - Each row gets a key held in the component, not in the data, so nothing extra is submitted. Server errors are read by position when a new errors object arrives (Inertia replaces `form.errors` on every response), then belong to the row: they move with it, and go when it is removed.
 - Focus: after a move it stays on the moved row's button, or its other move button at the top or bottom; after a remove it goes to the remove button of the row now in that place, else the previous row's, else "Add"; after an add, to the new row's first field. A polite live region says what happened.
+- Errors are read by position only when a new errors object arrives. After a move, an in-place `form.setError('lines.1.qty', …)` or a partial `form.clearErrors('lines.1.qty')` names the position the row had when the errors last arrived, not where it is now. Errors from a response are always right; set or clear them in the client only before rows move, or replace the whole object.
 - Moving the first row up and the last row down are disabled. Drag reordering is not there yet; when it comes it sits beside the buttons.
 
 ## Alert: `.alert`
@@ -1274,8 +1276,8 @@ Override in the app's stylesheet, after the altpro/ui import:
 
 ```css
 @theme {
-  --color-primary: oklch(0.6 0.2 30);
-  --color-primary-foreground: white;
+  --color-primary: light-dark(oklch(0.55 0.2 30), oklch(0.72 0.15 30));
+  --color-primary-foreground: light-dark(white, oklch(0.145 0 0));
 }
 :root { --radius: 9999px; }   /* one knob for corner radius: 0 = square, 9999px = pill */
 ```

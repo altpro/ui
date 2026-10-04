@@ -13,7 +13,7 @@
 <script setup>
 import { computed, ref, useAttrs, useId, useSlots, watch } from "vue";
 import Combobox from "./Combobox.vue";
-import { useDomModel } from "./domModel.js";
+import { onFormReset, useDomModel } from "./domModel.js";
 
 defineOptions({ inheritAttrs: false });
 const model = defineModel();
@@ -94,7 +94,9 @@ const control = () => {
   const { class: _, placeholder, ...rest } = attrs;
   return props.type === "select" ? rest : { ...rest, placeholder };
 };
-const file = (e) => (model.value = e.target.multiple ? [...e.target.files] : e.target.files[0]);
+const file = (e) => (model.value = e.target.multiple ? [...e.target.files] : e.target.files[0] ?? null);
+// nothing can write a file input, so even with v-model a reset empties the model as it empties the input
+onFormReset(root, () => props.type === "file" && file({ target: root.value.querySelector("input") }));
 </script>
 
 <template>

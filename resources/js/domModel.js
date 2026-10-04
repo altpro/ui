@@ -14,10 +14,15 @@ export function useDomModel(model, root, read) {
   const sync = () => {
     if (root.value && !("onUpdate:modelValue" in (instance.vnode.props ?? {}))) model.value = read(root.value);
   };
-  // Inertia fires reset after writing the inputs, the browser before, so wait either way
-  const later = () => setTimeout(sync);
-  let form;
   onBeforeUpdate(sync);
+  onFormReset(root, sync);
+}
+
+// Runs fn once the form holding root's first control has reset.
+// Inertia fires reset after writing the inputs, the browser before, so wait either way.
+export function onFormReset(root, fn) {
+  const later = () => setTimeout(fn);
+  let form;
   onMounted(() => (form = root.value.querySelector("input, select, textarea")?.form)?.addEventListener("reset", later));
   onBeforeUnmount(() => form?.removeEventListener("reset", later));
 }

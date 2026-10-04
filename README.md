@@ -22,8 +22,8 @@ The service provider is discovered automatically, so `<x-ui::field>` works strai
 
 /* optional */
 @theme {
-  --color-primary: oklch(0.6 0.2 30);
-  --color-primary-foreground: white;
+  --color-primary: light-dark(oklch(0.55 0.2 30), oklch(0.72 0.15 30));
+  --color-primary-foreground: light-dark(white, oklch(0.145 0 0));
 }
 :root { --radius: 9999px; }
 ```

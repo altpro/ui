@@ -19,7 +19,7 @@ createApp({
         }
       }, 200);
     };
-    return () => h("div", { class: "grid max-w-3xl gap-6" }, [
+    return () => h("form", { class: "grid max-w-3xl gap-6" }, [
       h("div", { class: "field" }, [
         h("label", { for: "photos" }, "Photos"),
         h(FileInput, { modelValue: photos.value, "onUpdate:modelValue": (v) => (photos.value = v), id: "photos", name: "photos", accept: "image/*", multiple: true, errors: errors.value, progress: progress.value },
@@ -27,6 +27,7 @@ createApp({
         h("div", { class: "flex gap-2" }, [
           h("button", { type: "button", class: "btn primary", disabled: !photos.value.length, onClick: upload }, "Upload"),
           h("button", { type: "button", class: "btn ghost", onClick: () => (errors.value = { photos: ["Add no more than 10 photos."] }) }, "Show a field error"),
+          h("button", { type: "reset", class: "btn ghost" }, "Reset"),
         ]),
         h("output", { class: "text-sm" }, `v-model: [${photos.value.map((f) => f.name).join(", ")}]`),
       ]),

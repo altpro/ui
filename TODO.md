@@ -1,44 +1,45 @@
 # TODO
 
-Components the CMS, CRM and order-management apps are likely to need. Anything needing JavaScript is a Vue component only. Drawers (`.dialog.drawer`) and bulk actions (DataTable's `bulk-actions` slot) already exist.
+The components the first CMS, CRM and order-management apps need are built. This list is about making an app quicker to build with them, from two review passes (October 2026). Anything needing JavaScript stays a Vue component only.
 
-## Next
+## Fix first
 
-In this order: `.dl` and the empty state are quick wins, then the combobox prototype.
+- [x] **FileInput reset**: a native form reset empties the input's files but leaves the list and v-model populated. `FileInput.vue` never listens for the form's `reset` event (`domModel.js` does, for the other field types, but returns the model unchanged for `file`). Clear the model on reset, so `<Field type="file">` follows, and add a regression test to `tests/browsers.spec.js`.
+- [x] **Theme example fails contrast**: the `--color-primary: oklch(0.6 0.2 30)` override in `README.md`, `demo/index.html` and SKILL.md measures 4.34:1 against white. Darken it until it passes 4.5:1 and use the same value in all three; examples meet the same bar as the defaults.
+- [x] **DataTable selection wording**: SKILL.md says "any change to this table's view except a page change goes back to page one and clears the selection", but a page change clears the selection too (`DataTable.vue` watches the page). Two sentences: what resets the page, what clears the selection.
+- [x] **Repeater error caveat**: the comment in `Repeater.vue` (an in-place `setError` or a partial `clearErrors` after a move maps stale positions; fine while errors come from responses) belongs in the skill's Repeater section, not only in the source.
 
-- [x] **`.dl` description list**: label/value pairs for record pages (customer details, order summaries, addresses, publication metadata). Stacked and side-by-side layouts. CSS only. `demo/app/product.html` builds it by hand twice.
-- [x] **Empty state pattern**: title, explanation and action for an empty relationship, attachment list or activity feed. A SKILL.md section, following DataTable's split between "nothing yet" and "nothing matches".
-- [x] **Combobox**: the one component for anything a native `<select>` can't do. A native `<select>` stays the answer for one pick from a short fixed list. For choosing the customer on an order, a product for a line item, tags, an author, supplier or assignee. Vue only. Filament's searchable select is a reference for behaviour, not API.
-  - Prototype the accessibility first, with real VoiceOver on Safari: how the closed trigger announces its label and value, and keyboard behaviour in both single and multiple modes. VoiceOver's support for `aria-activedescendant` in comboboxes has been patchy.
-  - Same API and look in every mode; the semantics may differ. A trigger button styled like `.input` shows the value and opens a popover. With search, the search box is the ARIA combobox controlling a listbox. `multiple` without search may stay a checkbox panel, as multiselect is now; `multiple` with search is a listbox with `aria-selected` options and checkmarks. Never checkboxes inside options. The prototype decides.
-  - `options` alone: pick one. Over 12 options, the search box appears and filters locally; `searchable` overrides that either way.
-  - `multiple`: the panel stays open while ticking; the trigger shows "Small, Medium…" and a count. The clear button sits beside the trigger, not in it, as would any chips (a button can't hold buttons).
-  - `src`: search runs on the server and the search box always shows. A URL gets `GET src?q=acme` returning `[{value, label}]`, by plain `fetch` (not an Inertia visit) with Laravel's XSRF cookie value sent as the `X-XSRF-TOKEN` header. A function `(q) => Promise<[{value, label}]>` covers any other request or auth. Labels of selected records are kept apart from the current results, seeded from `options`, so "Acme Ltd" (not 42) shows before any search and stays after searching for something else.
-  - `create`: turns search on. An "Add 'xyz'" option when no result matches exactly (ignoring case). `POST create` with `{label}` returns `{value, label}` and selects it; a 422 shows its error in the panel. The server decides whether to create or return an existing record, and owns permissions.
-  - Async basics: debounce, drop stale responses, loading, no-results and error states, a server result limit. Decide what an empty query shows in the prototype.
-  - `required` sets `aria-required` only; the server validates and `.field` shows its error. Keep `max`, `form=`, `disabled` (nothing submitted), and both resets: native form reset and Inertia's `reset()`, which write to inputs without events (see `domModel.js`).
-  - Replaces multiselect. Move its behaviour tests to the combobox first, then delete `Multiselect.vue`, `multiselect.js`, the Blade component, its demo page and tests, keeping its summary and count CSS. DataTable's `multiple` filters switch to `Combobox multiple`. Field's Vue `type="multiselect"` becomes `type="combobox"`; Blade field loses `type="multiselect"`, leaving native selects and checkbox groups. Then update AGENTS.md's Layout, which still names `multiselect.js`.
-  - Ruled out: `<datalist>` can't keep an ID separate from the label and can't be styled; `appearance: base-select` is Chrome-only and doesn't search a server.
-- [x] **Date range DataTable filter**: orders placed, overdue tasks, scheduled content. A `daterange` filter type beside `select`, `multiple` and `boolean`: two native date inputs and a clear button, held in the URL view. Touches `dataTable.ts`, `TableQuery.php` and `tests/table-urls.json` together.
-  - Named parameters `{key}_from` and `{key}_to`, not a `[]` pair: both readers drop empty `[]` values, so a pair loses which end was set. Either end works alone.
-  - Add invalid dates, reversed ranges and clearing back to the default as `tests/table-urls.json` cases.
-  - Document for timestamp columns: inclusive start, exclusive end at the start of the next day, both in the app's timezone. The app writes the query, as with other filters.
-- [x] **Repeater**: order lines, contact methods, product attributes, CMS links. A Vue component around `v-for`, with a slot per row. Add and remove rows, move up/down buttons; drag reordering later, alongside the buttons, never instead of them. Focus moves sensibly after a row is removed or moved. Build it on an order edit page in `demo/app/`. Filament's repeater is a reference.
-  - Row identity is not submission position. Each row gets a UI key kept outside the submitted data; `lines.0.qty` is only its position in the submitted array.
-  - Server errors are mapped from position to row key when they arrive, then move with their row; removing a row drops its errors. Add, remove and move are disabled while the form is submitting.
-  - The app supplies a function that makes a new row.
-- [x] **File input and drop zone**: CMS images, CRM documents, invoices, delivery evidence. Style native `<input type="file">` first; a Vue component adds drag-and-drop and a list of chosen files with filenames, image previews, removal, progress (`.progress`) and per-file errors. The app owns uploading and storage.
+## Make an app quicker to build
+
+In this order: the shell and recipes save the most time on the first app; the split and setup notes save it on every one after.
+
+- [ ] **App shell (pattern)**: the first thing every app needs and the one thing the skill does not have. A copy-paste Blade layout and an Inertia layout: sidebar `.nav`, header with `.breadcrumb` and a scheme switcher, `main` with `p-gap`, and how the sidebar collapses on a phone. `demo/demo.js` builds one in JavaScript; the recipe is the HTML it produces.
+- [ ] **Page recipes**: two screens that chain the patterns already documented. List page: breadcrumb, record header, DataTable. Edit page: breadcrumb, record header, form of `Field`s, save bar. Each with every import and the controller beside it.
+- [ ] **Complete, runnable recipes**: the component sections are thorough but assembling a screen still takes inference, and some snippets assume `useForm` is imported or a variable exists. Three end-to-end examples with every import, prop, endpoint response and submission handler: a Laravel/Inertia edit form (defaults, validation errors, save, discard); a server-driven DataTable (controller, filter declaration, `only`, a bulk action endpoint re-running `TableQuery::search()`); a combobox with `src` and `create` endpoints plus a FileInput upload handler with progress. Build them as `demo/app/` pages with a simulated server, as `Order.vue` does, so the browser tests cover them.
+- [ ] **Icons**: every svg in the skill is `…`. One line naming the icon package per stack (Lucide for Vue and Blade) and the `size-4 aria-hidden="true"` convention, so an app does not hand-write paths.
+- [ ] **Flash to toast**: the Toast section is a vanilla script. Add the Inertia form: a watcher on the page's flash prop that appends an `.alert` to the toaster, and the controller side (`->with('success', …)`).
+- [ ] **Vite alias for vendor imports**: `README.md` imports `../../vendor/altpro/ui/resources/js/Field.vue`, which depends on where the importing file lives. Document a `@ui` alias in the app's `vite.config.js` and use it in every example after.
+- [ ] **Dependency matrix in README**: three rows, CSS only, Vue components, DataTable (Vue and Inertia), with the packages and Vite plugins each needs and the versions supported.
+- [ ] **Lifecycle notes per Vue component**: under each component's props table, a short list of what happens when v-model, `options`, `errors` or the form's defaults change after mount. These matter more in an app than another modifier example. Start with Repeater (above), then Field, Combobox, FileInput.
+- [ ] **Split the skill**: SKILL.md is 82KB, about 20k tokens, and loads whole. Keep the rules, class composition, a component decision table (one line each: what it is for, CSS or Vue or Blade), tokens and scheme regions in SKILL.md; move each component section to a reference file beside it. Check first that Laravel Boost installs the whole skill directory, not the one file. Update AGENTS.md step 4.
+
+## Make mistakes cheaper to catch
+
+- [ ] **Inventory test**: a `node --test` file asserting every `resources/css/components/*.css` is imported in `ui.css`, has a demo page, is in the `components` array in `demo/demo.js`, is in `pages` in `tests/a11y.spec.js`, and has a heading in SKILL.md; and that every `demo/**/*.html` is in the a11y scan. Turns the seven-step checklist in AGENTS.md into a failing test, and stops the hand-kept page lists drifting.
+- [ ] **Type check**: `vue-tsc --noEmit` over `resources/js` and `tests/table-view.ts`, run first in `npm test`. The TypeScript in `DataTable.vue` and `dataTable.ts` is never checked today.
+- [ ] **Focused test commands**: `test:unit` (PHP and Node), `test:a11y`, `test:browsers`, so a CSS change does not wait for the three-browser matrix. Note them in AGENTS.md.
+- [ ] **Tag `v0.1.0`**: with no tags a Composer VCS install can only track `dev-main`. Tag now, bump on breaking changes, and apps pin `^0.1` once adoption starts.
+
+## Housekeeping
+
+- [ ] `CONTEXT.md` is a glossary for DataTable only. Grow it as terms arrive or fold it into the `TableQuery` docblock, which already explains most of it.
+- [ ] AGENTS.md: record that the Chrome-only `appearance: base-select` in `input.css` was signed off, and point the test description at the hand-rolled PNG reader in `tests/a11y.spec.js` so the next reader knows why it is there.
+- [ ] Delete the stray `undefined/` directory at the repo root (two gitignored screenshots from a tool mishap).
 
 ## When an app asks
 
-- [x] **Activity feed**: extend the timeline examples with notes, attachments and before/after values.
-- [x] **Line item totals**: `.table` pattern with a `tfoot` for totals and tabular-nums for right-aligned money. Editing the lines is the repeater.
-- [x] **Record header**: title, status badge, action buttons. A SKILL.md pattern.
-- [x] **Save bar**: sticky save/discard bar for long edit screens. Layout pattern only; the app tracks unsaved changes and saving state (Inertia's `form.isDirty`, `form.processing`).
-- [x] **Tree**: nested `<details>` with links for page hierarchies and category trees. CSS only. Not the ARIA `tree` pattern; selection and reordering wait for a real requirement.
-- [x] **Copy button**: order numbers, tracking codes, emails. Small Vue component; the tooltip says "Copied".
-- [x] **Date range presets**: "Today", "Last 30 days" on the daterange filter. `presets: true`, a fixed set; the URL still holds plain dates.
 - [ ] **Kanban**: CRM pipeline. Expensive, because drag-and-drop has to work from the keyboard too. Only if a CRM needs it.
+- [ ] **Repeater drag reordering**: beside the move buttons, never instead of them.
 
 ## Not building
 
