@@ -3,7 +3,7 @@
     <Field v-model="row.qty" :name="`lines.${index}.qty`" type="number" :errors="errors" />
   </Repeater>
   Rows are objects, edited in place. Each gets a key held here, outside the data, so `lines.0` is only a position.
-  Errors are read from position when a new errors object arrives (Inertia replaces form.errors on every response),
+  Errors are read from position whenever they change (Inertia replaces form.errors on every response; setError writes into it),
   then belong to the row's key: they move with it and go when it is removed. The slot gets them keyed by the row's current position.
 -->
 <script setup>
@@ -24,6 +24,7 @@ const keyOf = (row) => keys.get(toRaw(row)) ?? keys.set(toRaw(row), ++last).get(
 
 // { rowKey: { ".qty": message } }; "" holds an error on the row itself (`lines.0`)
 const byKey = ref({});
+// deep, so setError (which writes into the same object) is seen too.
 // ponytail: an in-place setError or a partial clearErrors after a move maps stale positions; fine while errors come from responses
 watch(() => props.errors, (errors) => {
   const next = {}, prefix = `${props.name}.`;
@@ -33,7 +34,7 @@ watch(() => props.errors, (errors) => {
     if (row) (next[keyOf(row)] ??= {})[rest] = m;
   }
   byKey.value = next;
-}, { immediate: true });
+}, { immediate: true, deep: true });
 const rowErrors = (row, i) => Object.fromEntries(Object.entries(byKey.value[keyOf(row)] ?? {}).map(([rest, m]) => [`${props.name}.${i}${rest}`, m]));
 
 const title = (i) => `${props.item[0].toUpperCase()}${props.item.slice(1)} ${i + 1}`;
