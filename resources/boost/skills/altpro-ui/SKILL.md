@@ -12,6 +12,7 @@ Rule of thumb when writing markup:
 1. Reach for an altpro/ui class (or its Blade or Vue component) first if one exists for the component.
 2. Use Tailwind utilities for layout around it and for one-off tweaks on it.
 3. Never rebuild an altpro/ui component out of utilities.
+4. For a component altpro/ui does not have, write a CSS component in the app the way the library writes its own: [app-component.md](references/app-component.md).
 
 ## Setup (already done if the project uses altpro/ui)
 
