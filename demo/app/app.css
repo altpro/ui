@@ -175,6 +175,8 @@
     .demo-history { --card-p: 20px; }
     .demo-table-footer { gap: 14px; }
   }
+  /* the recipe pages are written for an app layout whose main is p-gap, which their save bar's -mx-gap matches */
+  .demo-main:has(> .demo-recipe) { padding: var(--spacing-gap); }
   @media (prefers-reduced-motion: reduce) {
     .demo-product-card { transition: none; }
   }

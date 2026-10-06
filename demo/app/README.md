@@ -8,6 +8,7 @@ Run `npm run dev` from the repository root and open `/app/dashboard.html`.
 - **Products:** search, category and stock filters, sorting, pagination, table/grid views, selection, CSV export and product creation.
 - **Product detail:** editable information and image upload in a drawer, a pricing dialog, an inventory drawer with add/remove/reorder via Repeater, status popovers, per-finish editors and a storefront preview.
 - **Activity:** product history, team notes and a workspace reset.
+- **Recipes:** `recipe-products.html`, `recipe-product.html` and `recipe-media.html` run the Inertia pages in `Pages/Products/` from the skill's `references/recipes.md`. `server.js` stands in for Laravel: it answers Inertia visits, `useHttp` and the combobox's `fetch`, and keeps its data in sessionStorage.
 
 The screens were designed in the theme drawer's **Sol** preset and work in every preset.
 
