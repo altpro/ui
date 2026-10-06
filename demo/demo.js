@@ -122,8 +122,7 @@ aside.innerHTML = `
     <span class="demo-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="5"/><path d="M16 1v6M16 25v6M1 16h6M25 16h6" stroke="currentColor" stroke-width="2"/></svg></span>
     <span>altpro/ui<span class="demo-brand-caption demo-sidebar-description">Tailwind v4 components</span></span>
   </a>
-  <nav class="nav demo-navigation" aria-label="Main">${nav}</nav>
-  <div class="demo-sidebar-footer"><span class="avatar sm blue">AM</span><div><strong>Alex Morgan</strong><span>Store owner</span></div><span class="badge outlined sm">Demo</span></div>`;
+  <nav class="nav demo-navigation" aria-label="Main">${nav}</nav>`;
 
 // a page can put its own controls inside <header>; they keep their place before the scheme switcher and theme button
 const header = document.querySelector("header");
