@@ -91,18 +91,18 @@ for (const colorScheme of ["light", "dark"]) {
     test("dropdown.html: a right-edge trigger opens right-aligned and a bottom-edge trigger opens upwards", async ({ page }) => {
       await page.setViewportSize({ width: 800, height: 500 });
       await page.goto("/dropdown.html");
-      const right = page.locator("[popovertarget=menu-right]");
+      const right = page.locator("[popovertarget=account-menu]");
       await right.evaluate((el) => el.scrollIntoView({ block: "start" }));
       await right.click();
-      const [t, p] = [await right.boundingBox(), await page.locator("#menu-right").boundingBox()];
+      const [t, p] = [await right.boundingBox(), await page.locator("#account-menu").boundingBox()];
       expect(Math.round(p.x + p.width)).toBe(Math.round(t.x + t.width));
       expect(p.y).toBeGreaterThan(t.y);
       await page.keyboard.press("Escape");
 
-      const bottom = page.locator("[popovertarget=menu-left]");
+      const bottom = page.locator("[popovertarget=options-menu]");
       await bottom.evaluate((el) => el.scrollIntoView({ block: "end" }));
       await bottom.click();
-      const [t2, p2] = [await bottom.boundingBox(), await page.locator("#menu-left").boundingBox()];
+      const [t2, p2] = [await bottom.boundingBox(), await page.locator("#options-menu").boundingBox()];
       expect(Math.round(p2.x)).toBe(Math.round(t2.x));
       expect(p2.y + p2.height).toBeLessThan(t2.y);
       await page.keyboard.press("Escape");
@@ -111,7 +111,7 @@ for (const colorScheme of ["light", "dark"]) {
       await page.setViewportSize({ width: 800, height: 150 });
       await bottom.evaluate((el) => el.scrollIntoView({ block: "start" }));
       await bottom.click();
-      const [t3, p3] = [await bottom.boundingBox(), await page.locator("#menu-left").boundingBox()];
+      const [t3, p3] = [await bottom.boundingBox(), await page.locator("#options-menu").boundingBox()];
       expect(p3.y).toBeGreaterThan(t3.y);
       expect(p3.y + p3.height).toBeLessThanOrEqual(150);
     });
