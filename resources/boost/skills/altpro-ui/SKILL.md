@@ -12,6 +12,7 @@ Rule of thumb when writing markup:
 1. Reach for an altpro/ui class (or its Blade or Vue component) first if one exists for the component.
 2. Use Tailwind utilities for layout around it and for one-off tweaks on it.
 3. Never rebuild an altpro/ui component out of utilities.
+4. For a component altpro/ui does not have, write a CSS component in the app the way the library writes its own: [app-component.md](references/app-component.md).
 
 ## Setup (already done if the project uses altpro/ui)
 
@@ -80,9 +81,51 @@ One base class, then bare modifier words in any order. No prefixes.
 
 Write `btn primary`, never `btn-primary` or `btn btn-primary`. Utilities always override component styles because components live in `@layer components`.
 
+### Not daisyUI
+
+`btn`, `badge`, `card`, `join`, `tabs`, `steps` and `alert` are daisyUI names too, but nothing else carries over. There are no hyphenated modifiers and no part classes: write the modifier word, or the plain element the component already styles.
+
+| daisyUI | altpro/ui |
+|---------|-----------|
+| `btn-primary btn-outline btn-sm`, `badge-success`, `alert-error` | `btn primary outlined sm`, `badge success`, `alert danger` |
+| `btn-error`, `text-error`, `bg-error` | `danger`, `text-danger`, `bg-danger` |
+| `bg-base-100`, `bg-base-200`, `text-base-content`, `text-primary-content` | `bg-background` (`bg-card` in a panel), `bg-muted`, `text-foreground`, `text-primary-foreground` |
+| `card-body`, `card-title`, `card-actions` | Children of `.card`: a `<header>` holding the heading, the body as plain children, a `<footer>` for actions |
+| `join-item` | Nothing: every direct child of `.join` is a member |
+| `modal`, `modal-box`, `modal-action` | `<dialog class="dialog">` with a `<header>` and `<footer>`, opened by `command="show-modal"` |
+| `tab`, `tab-active` | Bare `<a>` children of `.tabs`, `aria-current="page"` on the active one |
+| `step`, `step-primary` | `<li>` children of `<ol class="steps">`, `aria-current="step"` on the current one |
+| `stats`, `stat-title`, `stat-value` | The [stat](references/stat.md) pattern: a `.card` of `<p>`s |
+| `input-bordered`, `select`, `textarea`, `input-error` | `class="input"` on `<input>`, `<select>` and `<textarea>`; `aria-invalid="true"` |
+| `form-control`, `label-text`, `fieldset-legend` | `.field`, or `<x-ui::field>` / `Field.vue` |
+| `toggle`, `checkbox-primary` | `<label class="switch">` round an `<input type="checkbox" role="switch">`; `checkbox` |
+| `menu`, `dropdown-content` | `.nav`; `<div popover class="dropdown">` |
+| `collapse` | `.accordion` on `<details>` |
+| `loading loading-spinner` | `spinner`, or `loading` on a `.btn` |
+| `tooltip` with `data-tip` | `data-tooltip="…"` on the element |
+| `breadcrumbs`, `table-zebra` | `breadcrumb`, `table striped` |
+
+Check your markup with this grep; it should print nothing. An `id` or `for` that starts with one of these words is a false alarm.
+
+```sh
+grep -rnE '(^|[^[:alnum:]_/:-])(btn|badge|alert|card|join|tabs?|steps?|stats?|input|textarea|modal|menu|dropdown|collapse|toggle|loading|checkbox|radio|range|progress|avatar|tooltip|label|form)-[a-z$]|-(base-[0-9c]|[a-z]+-content[^-[:alnum:]])|class="([^"]*[[:space:]])?(modal|toggle|menu|navbar|tab|stats)[[:space:]"]' resources/js resources/views
+```
+
 ## Icons
 
 Lucide, never hand-written paths: `@lucide/vue` in Vue (`<Plus class="size-4" aria-hidden="true" />`), `mallardduck/blade-lucide-icons` in Blade (`<x-lucide-plus class="size-4" aria-hidden="true" />`). An `<svg>…</svg>` in a reference file stands for one of these. Icons are `size-4` and `aria-hidden="true"`; an icon-only button gets its name from `aria-label`.
+
+## Headings
+
+One scale for page content, the same on every page. Pick the level from the page's outline, never for its size.
+
+| Heading | Classes | For |
+|---------|---------|-----|
+| `h1` | `text-2xl font-semibold tracking-tight`, plus `break-words` when it shows a record's name | The page title, one per page, in the [record header](references/record-header.md) |
+| `h2` | `text-lg font-semibold` | A section of the page, or of a [long form](references/long-form.md) |
+| `h3` | `font-semibold` | A group inside a section |
+
+Inside a `.card` or `.dialog` header, an `.alert` or a `.nav`, write the heading with no classes: the component sizes it.
 
 ## Components
 
@@ -128,6 +171,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Empty state | What an empty list or panel says | pattern | [empty-state.md](references/empty-state.md) |
 | Record header | The top of a record page | pattern | [record-header.md](references/record-header.md) |
 | Save bar | Sticky Save and Discard on a long form | pattern | [save-bar.md](references/save-bar.md) |
+| Long form | A form split into `<fieldset>` sections with headings | pattern | [long-form.md](references/long-form.md) |
 
 ## Theme tokens
 
