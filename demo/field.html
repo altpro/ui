@@ -101,7 +101,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Addons</h2>
-    <p class="text-sm muted">Put <code>.input</code> on a <code>&lt;label&gt;</code> that wraps the control. A symbol, unit or icon beside it sits inside the same border and the focus ring goes round the lot. Clicking the addon focuses the control. A button next to an input is still a <a href="join.html" class="underline">join</a>.</p>
+    <p class="text-sm muted">Put <code>.input</code> on a <code>&lt;label&gt;</code> that wraps the control. A symbol, unit or icon beside it sits inside the same border and the focus ring goes round the lot. Clicking the addon focuses the control. A button next to an input is still a <a href="join.html" class="link">join</a>.</p>
     <div class="grid max-w-3xl gap-6 md:grid-cols-2">
       <div class="field">
         <label for="price">Price</label>
@@ -174,7 +174,7 @@
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Blade and Vue component</h2>
-    <p class="text-sm muted"><code>&lt;x-ui::field&gt;</code> and <code>Field.vue</code> write all of the above from a name and a type: the label (guessed from the name), the ids that tie it to the control, the hint, and the errors for that name out of Laravel's error bag. <code>type</code> is any input type, or <code>textarea</code>, <code>select</code>, <code>switch</code>, or <code>radio</code> and <code>checkbox</code> with options for a group. The Vue component also takes <code>combobox</code>, which renders <a class="underline" href="combobox.html">Combobox</a>. Options and values take Eloquent models; what comes back is ids. This one is the Vue component, fed models and an errors object as a controller would.</p>
+    <p class="text-sm muted"><code>&lt;x-ui::field&gt;</code> and <code>Field.vue</code> write all of the above from a name and a type: the label (guessed from the name), the ids that tie it to the control, the hint, and the errors for that name out of Laravel's error bag. <code>type</code> is any input type, or <code>textarea</code>, <code>select</code>, <code>switch</code>, or <code>radio</code> and <code>checkbox</code> with options for a group. The Vue component also takes <code>combobox</code>, which renders <a class="link" href="combobox.html">Combobox</a>. Options and values take Eloquent models; what comes back is ids. This one is the Vue component, fed models and an errors object as a controller would.</p>
     <div id="vue-demo"></div>
 <pre>&lt;x-ui::field name="category_id" type="select" :options="$categories" :value="$post-&gt;category" placeholder="Choose one" /&gt;
 &lt;x-ui::field name="price" type="number" prepend="£" step="0.01" /&gt;

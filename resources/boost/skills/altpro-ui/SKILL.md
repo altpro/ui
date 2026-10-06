@@ -58,6 +58,8 @@ One base class, then bare modifier words in any order. No prefixes.
 
 Write `btn primary`, never `btn-primary` or `btn btn-primary`. Utilities always override component styles because components live in `@layer components`.
 
+Every `<a>` that is not already a component (a `.btn`, a `.nav` or `.tabs` item and so on) takes `class="link"`: a link in a sentence, a `.dl` value, an `.alert`, a table cell. Tailwind's reset makes a bare `<a>` look like plain text.
+
 ## Icons
 
 Lucide, never hand-written paths: `@lucide/vue` in Vue (`<Plus class="size-4" aria-hidden="true" />`), `mallardduck/blade-lucide-icons` in Blade (`<x-lucide-plus class="size-4" aria-hidden="true" />`). An `<svg>…</svg>` in a reference file stands for one of these. Icons are `size-4` and `aria-hidden="true"`; an icon-only button gets its name from `aria-label`.
@@ -78,6 +80,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | File input `.dropzone` | Drop zone and file list with previews and progress | CSS, Vue | [file-input.md](references/file-input.md) |
 | Checkbox, radio, switch | Restyled native checkboxes and radios | CSS | [check.md](references/check.md) |
 | Badge `.badge` | Status, counts, tags | CSS | [badge.md](references/badge.md) |
+| Link `.link` | A link in a sentence, a `.dl` value, an `.alert` or a table cell | CSS | [link.md](references/link.md) |
 | Avatar `.avatar` | A person's photo or initials | CSS | [avatar.md](references/avatar.md) |
 | Nav `.nav` | Vertical sidebar or settings menu | CSS | [nav.md](references/nav.md) |
 | Breadcrumb `.breadcrumb` | The path to the current page | CSS | [breadcrumb.md](references/breadcrumb.md) |

@@ -90,7 +90,7 @@ header .btn[aria-pressed="true"] {
   }
   .demo-menu-scrim { display: none; }
   .demo-main { width: 100%; max-width: 1520px; margin-inline: auto; padding: 36px 32px 16px; }
-  .demo-docs { margin-inline: auto; ul > li > a.underline { display: inline-flex; align-items: center; min-height: 24px; } }
+  .demo-docs { margin-inline: auto; ul > li > a.link { display: inline-flex; align-items: center; min-height: 24px; } }
   @media (width < 80rem) {
     .demo-main { padding: 28px 24px 16px; }
   }
