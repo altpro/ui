@@ -1,7 +1,7 @@
 // The Vue section of file.html. Upload stands in for the app: it fills progress
 // as a real upload's onUploadProgress would, then sets errors as a 422 would.
 import { createApp, h, ref } from "vue";
-import FileInput from "../resources/js/FileInput.vue";
+import FileInput from "@ui/FileInput.vue";
 
 createApp({
   setup() {

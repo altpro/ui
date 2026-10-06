@@ -1,7 +1,7 @@
 <script setup>
 import { computed, reactive, ref, nextTick } from 'vue';
-import Field from '../../resources/js/Field.vue';
-import FileInput from '../../resources/js/FileInput.vue';
+import Field from '@ui/Field.vue';
+import FileInput from '@ui/FileInput.vue';
 import Icon from './Icon.vue';
 import { categories } from './store.js';
 const emit = defineEmits(['save']);

@@ -1,6 +1,6 @@
 <script setup>
 import { ref } from "vue";
-import DataTable from "../resources/js/DataTable.vue";
+import DataTable from "@ui/DataTable.vue";
 
 const members = [
   { id: 1, name: "Ada Lovelace", email: "ada@example.com", role: "Admin" },

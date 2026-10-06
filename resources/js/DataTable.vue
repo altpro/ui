@@ -1,7 +1,7 @@
 <!--
   <DataTable caption="Brands" name="brands" :columns="columns" :rows="brands" sort="name" />
   An array of rows is searched, sorted and paged here; a Laravel paginator means the server did it (TableQuery).
-  State lives in the query string, so this needs an Inertia app. See the DataTable section of SKILL.md.
+  State lives in the query string, so this needs an Inertia app. See references/datatable.md in the skill.
 -->
 <script setup lang="ts" generic="TRow extends object">
 import { computed, onMounted, ref, useId, watch } from "vue";

@@ -2,7 +2,7 @@
 // tests/browsers.spec.js, which compares the two renders field by field, up to the Vue-only combobox.
 import { createApp, h, reactive, ref } from "vue";
 import { Form } from "@inertiajs/vue3";
-import Field from "../resources/js/Field.vue";
+import Field from "@ui/Field.vue";
 
 createApp({
   setup() {

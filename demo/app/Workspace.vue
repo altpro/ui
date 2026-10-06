@@ -1,11 +1,11 @@
 <script setup>
 import { computed, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import Field from '../../resources/js/Field.vue';
-import Repeater from '../../resources/js/Repeater.vue';
+import Field from '@ui/Field.vue';
+import Repeater from '@ui/Repeater.vue';
 import ProductArt from './ProductArt.vue';
 import ProductEditor from './ProductEditor.vue';
 import Icon from './Icon.vue';
-import { datePresets } from '../../resources/js/dataTable';
+import { datePresets } from '@ui/dataTable';
 import { store, money, categories, statusClass, record, resetWorkspace, daySales, day, shift } from './store.js';
 const props = defineProps({ screen: String });
 const editor = ref();

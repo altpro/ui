@@ -1,7 +1,7 @@
 // The examples on combobox.html, one Vue app per section. Each app counts useId() from 0, so each gets its own prefix.
 import { createApp, h, ref } from "vue";
 import { Form } from "@inertiajs/vue3";
-import Combobox from "../resources/js/Combobox.vue";
+import Combobox from "@ui/Combobox.vue";
 
 const mount = (selector, render) => {
   const app = createApp({ setup: () => render });

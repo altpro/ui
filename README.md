@@ -28,15 +28,19 @@ The service provider is discovered automatically, so `<x-ui::field>` works strai
 :root { --radius: 9999px; }
 ```
 
-Vue components are imported from the package and bring their own JavaScript:
+Vue components are imported from the package and bring their own JavaScript. Add a `@ui` alias to `vite.config.js` so the import does not depend on where the importing file lives:
 
 ```js
-import Combobox from "../../vendor/altpro/ui/resources/js/Combobox.vue";
+resolve: { alias: { "@ui": `${import.meta.dirname}/vendor/altpro/ui/resources/js` } },
+```
+
+```js
+import Combobox from "@ui/Combobox.vue";
 ```
 
 `composer update` updates the CSS, Blade and Vue components together. To change one Blade component for one app, copy it to `resources/views/vendor/ui/components/`, or `php artisan vendor:publish --tag=ui-views` for all of them. A copied component no longer receives updates.
 
-Laravel Boost picks up `resources/boost/skills/altpro-ui/SKILL.md` so agents in the app know the classes and components.
+Laravel Boost picks up `resources/boost/skills/altpro-ui/` (SKILL.md and its `references/`) so agents in the app know the classes and components.
 
 ## Install anywhere else
 
@@ -49,7 +53,7 @@ npm install github:<owner>/ui
 @import "@altpro/ui";
 ```
 
-Vue components are at `@altpro/ui/js/Combobox.vue` and alongside. Copy `resources/boost/skills/altpro-ui/SKILL.md` into the project's `.claude/skills/altpro-ui/` for Claude.
+Vue components are at `@altpro/ui/js/Combobox.vue` and alongside; alias `"@ui": "@altpro/ui/js"` to use the skill's examples as written. Copy the `resources/boost/skills/altpro-ui/` directory into the project's `.claude/skills/altpro-ui/` for Claude.
 
 ## Develop
 
@@ -61,4 +65,4 @@ npm run dev
 npm test     # detailed Chromium checks plus Firefox/WebKit coverage; renders Blade through PHP
 ```
 
-`AGENTS.md` has the conventions. `resources/boost/skills/altpro-ui/SKILL.md` is the class reference.
+`AGENTS.md` has the conventions. `resources/boost/skills/altpro-ui/` is the class reference: SKILL.md, then a file per component in `references/`.

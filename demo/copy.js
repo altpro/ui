@@ -1,6 +1,6 @@
 // The Vue examples on copy.html, one small app per section.
 import { createApp, h } from "vue";
-import CopyButton from "../resources/js/CopyButton.vue";
+import CopyButton from "@ui/CopyButton.vue";
 
 const mount = (selector, render) => createApp({ setup: () => render }).mount(selector);
 

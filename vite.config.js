@@ -14,6 +14,8 @@ const pages = Object.fromEntries(
 export default defineConfig({
   root: demo,
   plugins: [tailwindcss(), vue()],
+  // the same alias the skill tells apps to set, so demo imports read like app imports
+  resolve: { alias: { "@ui": resolve(import.meta.dirname, "resources/js") } },
   build: {
     outDir: resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
