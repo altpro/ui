@@ -115,11 +115,13 @@ All colours are Tailwind theme variables, so `bg-primary`, `text-muted-foregroun
 background  foreground
 card        card-foreground
 muted       muted-foreground
-border      ring
+border      input       ring
 primary     secondary  info  success  warning  danger   (each with -foreground)
 red orange amber yellow lime green emerald teal cyan sky blue indigo violet purple fuchsia pink rose
             (hue fills: a tint in light, a deep shade in dark; pair with text derived from them, as .avatar does)
 ```
+
+`border` is for dividers and card edges and is too faint to be the only sign of a control. `input` is the edge of a control known by its border (an empty input, select, unticked checkbox, drop zone): 3:1 on `background`, `card` and `muted` in both schemes (WCAG 1.4.11). `.input`, the checks and `.dropzone` already use it; use `border-input` on anything of your own that works the same way, and keep 3:1 if you override it.
 
 Every token is `light-dark()`, so the same class is correct in both schemes. Do not write `dark:` variants for these colours.
 

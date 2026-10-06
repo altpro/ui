@@ -461,6 +461,32 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
+    // an empty control is known only by its edge, which needs 3:1 on whatever it sits on (WCAG 1.4.11); axe does not check it.
+    // Paint the backgrounds behind it, then the border, on a canvas: it composites translucent fills for us.
+    for (const p of ["field.html", "check.html", "file.html", "combobox.html", "join.html", "table.html", "datatable.html"]) test(`${p}: control borders reach 3:1`, async ({ page }) => {
+      await page.goto("/" + p);
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const low = await page.evaluate(() => {
+        const x = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+        const paint = (c) => { x.fillStyle = c; x.fillRect(0, 0, 1, 1); return [...x.getImageData(0, 0, 1, 1).data]; };
+        const lum = ([r, g, b]) => [r, g, b].map((v) => (v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+        const sel = "main :is(.input:not(label), label.input, input:is(.checkbox, .radio, .switch), :is(.checkbox, .radio, .switch) > input, .dropzone > label)";
+        return [...document.querySelectorAll(sel)].filter((el) => el.checkVisibility() && !el.matches(":checked, :disabled, :has(:disabled), :focus-within")).flatMap((el) => {
+          const fills = [];
+          for (let a = el.parentElement; a; a = a.parentElement) {
+            fills.unshift(getComputedStyle(a).backgroundColor);
+            if (paint(fills[0])[3] === 255) break;
+          }
+          x.clearRect(0, 0, 1, 1);
+          fills.forEach((f) => paint(f));
+          const bg = lum([...x.getImageData(0, 0, 1, 1).data]), edge = lum(paint(getComputedStyle(el).borderTopColor));
+          const ratio = (Math.max(bg, edge) + 0.05) / (Math.min(bg, edge) + 0.05);
+          return ratio < 3 ? [`${el.outerHTML.slice(0, 80)} ${ratio.toFixed(2)}`] : [];
+        });
+      });
+      expect(low).toEqual([]);
+    });
+
     for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2], ["tree.html", ".tree :is(a, summary)", 14]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);

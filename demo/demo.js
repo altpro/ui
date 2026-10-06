@@ -168,7 +168,7 @@ for (const [property, previous] of Object.entries(presetMigrations[activePreset]
 
 // theme drawer: every colour token as a light and a dark picker, plus the radius; overrides live in <html style> and localStorage.tokens
 export const tokens = {
-  Base: ["background", "foreground", "card", "card-foreground", "muted", "muted-foreground", "border", "ring"],
+  Base: ["background", "foreground", "card", "card-foreground", "muted", "muted-foreground", "border", "input", "ring"],
   Intent: ["primary", "primary-foreground", "secondary", "secondary-foreground", "info", "info-foreground",
     "success", "success-foreground", "warning", "warning-foreground", "danger", "danger-foreground"],
 };

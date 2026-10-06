@@ -9,7 +9,7 @@
    the smaller sizes. Focus, disabled and invalid follow .input. */
 @layer components {
   :is(.checkbox, .radio, .switch) {
-    --check-border: var(--color-border);
+    --check-border: var(--color-input);
     --check-accent: var(--color-primary);
     --check-fg: var(--color-primary-foreground);
     --check-ring: var(--color-ring);
