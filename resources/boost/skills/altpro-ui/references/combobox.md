@@ -4,16 +4,25 @@ Use it for anything a native `<select>` can't do: a long list to search, records
 
 ```vue
 <script setup>
+import { useForm } from "@inertiajs/vue3";
 import Combobox from "@ui/Combobox.vue";
+
+const props = defineProps({ order: { type: Object, required: true } }); // { id, customer: { id, name } }
+const form = useForm({ customer_id: props.order.customer.id });
 </script>
 
-<div class="field">
-  <label>Customer</label>
-  <Combobox v-model="form.customer_id" name="customer_id" label="Customer"
-      src="/customers/search" :options="[{ value: order.customer.id, label: order.customer.name }]"
-      :aria-invalid="form.errors.customer_id ? 'true' : null" aria-describedby="customer-error" required />
-  <p class="error" id="customer-error">{{ form.errors.customer_id }}</p>
-</div>
+<template>
+  <form class="flex flex-col gap-4" @submit.prevent="form.put(`/orders/${order.id}`)">
+    <div class="field">
+      <label>Customer</label>
+      <Combobox v-model="form.customer_id" name="customer_id" label="Customer"
+          src="/customers/search" :options="[{ value: order.customer.id, label: order.customer.name }]"
+          :aria-invalid="form.errors.customer_id ? 'true' : null" aria-describedby="customer-error" required />
+      <p class="error" id="customer-error">{{ form.errors.customer_id }}</p>
+    </div>
+    <div><button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button></div>
+  </form>
+</template>
 ```
 
 | Prop | |

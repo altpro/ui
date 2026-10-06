@@ -4,16 +4,28 @@ A drop zone round a native file input, then a list of the chosen files: name, si
 
 ```vue
 <script setup>
+import { computed } from "vue";
+import { useForm } from "@inertiajs/vue3";
 import FileInput from "@ui/FileInput.vue";
+
+const props = defineProps({ product: { type: Object, required: true } });
 const form = useForm({ photos: [] });
+// one request carries every file, so each shows the request's progress while it runs
+const progress = computed(() => form.photos.map(() => form.progress?.percentage ?? null));
+const upload = () => form.post(`/products/${props.product.id}/photos`, { onSuccess: () => form.reset() });
 </script>
 
-<div class="field">
-  <label for="photos">Photos</label>
-  <FileInput v-model="form.photos" id="photos" name="photos" accept="image/*" multiple :errors="form.errors" :progress="progress">
-    <span>PNG or JPEG, up to 5 MB each.</span>
-  </FileInput>
-</div>
+<template>
+  <form class="flex flex-col gap-4" @submit.prevent="upload">
+    <div class="field">
+      <label for="photos">Photos</label>
+      <FileInput v-model="form.photos" id="photos" name="photos" accept="image/*" multiple :errors="form.errors" :progress="progress">
+        <span>PNG or JPEG, up to 5 MB each.</span>
+      </FileInput>
+    </div>
+    <div><button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Upload</button></div>
+  </form>
+</template>
 ```
 
 | Prop | |

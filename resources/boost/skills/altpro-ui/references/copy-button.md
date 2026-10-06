@@ -5,14 +5,18 @@ A `.btn` that copies a value to the clipboard: order numbers, tracking codes, em
 ```vue
 <script setup>
 import CopyButton from "@ui/CopyButton.vue";
+
+defineProps({ order: { type: Object, required: true } }); // { number, tracking }
 </script>
 
-Order {{ order.number }} <CopyButton :value="order.number" label="Copy order number" />
+<template>
+  <p>Order {{ order.number }} <CopyButton :value="order.number" label="Copy order number" /></p>
 
-<div class="join flex">
-  <input class="input flex-1" aria-label="Tracking code" readonly :value="order.tracking">
-  <CopyButton class="outlined" :value="order.tracking" label="Copy tracking code" />
-</div>
+  <div class="join flex">
+    <input class="input flex-1" aria-label="Tracking code" readonly :value="order.tracking">
+    <CopyButton class="outlined" :value="order.tracking" label="Copy tracking code" />
+  </div>
+</template>
 ```
 
 | Prop | |

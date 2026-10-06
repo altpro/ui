@@ -4,8 +4,16 @@ A Vue component for Inertia apps: search, sortable columns, declared filters, pa
 
 ```vue
 <script setup lang="ts">
+import { Link } from "@inertiajs/vue3";
 import DataTable from "@ui/DataTable.vue";
 import type { DataTableColumn, DataTableFilter } from "@ui/dataTable";
+
+interface Brand {
+  id: number;
+  name: string;
+  featured: boolean;
+  created_at: string;
+}
 
 defineProps<{ brands: Brand[] }>();
 
