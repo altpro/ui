@@ -54,6 +54,10 @@ $check($names('/?sort=title&dir=asc'), ['Boots', 'Anadin', 'Calpol'], 'maps the 
 $check($names('/?sort=id&dir=asc'), ['Anadin', 'Boots', 'Calpol'], 'refuses a column not on the list and falls back to the default');
 $check($names('/?search=anad'), ['Anadin'], 'searches the named columns');
 $check($names('/?search=y'), [], 'does not search columns it was not given');
+// SQLite and MySQL ignore case anyway; Postgres needs ilike. Compiled only, so no server is needed
+$app['config']->set('database.connections.pgsql', ['driver' => 'pgsql', 'database' => 'x', 'prefix' => '']);
+TableQuery::search($pg = Brand::on('pgsql'), ['name'], 'ANAD');
+$check($pg->toSql(), 'select * from "brands" where ("name"::text ilike ?)', 'searches without case on Postgres');
 $check($names('/?brands_sort=name&brands_dir=desc', 'brands'), ['Calpol', 'Boots', 'Anadin'], 'reads parameters under the table name');
 $check($names('/?sort=name&dir=desc', 'brands'), ['Anadin', 'Boots', 'Calpol'], 'ignores another table\'s parameters');
 

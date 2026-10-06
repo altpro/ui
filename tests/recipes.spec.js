@@ -90,12 +90,14 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
 
 test("tags and photos: the combobox searches and creates on the server, and each photo uploads with progress and its own errors", async ({ page }) => {
   await page.goto("/app/recipe-media.html?id=3");
-  const box = page.locator(".combobox"), trigger = box.getByRole("combobox", { name: "Tags", exact: true });
+  const box = page.locator(".combobox"), trigger = box.getByRole("combobox", { name: "Tags", exact: true }), search = box.getByRole("combobox", { name: "Search Tags" });
   await expect(trigger).toHaveText("Wireless");
   await trigger.click();
+  // the search box takes focus on toggle, after the click: typing sooner can land on the trigger (WebKit)
+  await expect(search).toBeFocused();
   await page.keyboard.type("vin");
   await expect(box.getByRole("option")).toHaveText(["Add “vin”"]);
-  await box.getByRole("combobox", { name: "Search Tags" }).fill("Vinyl");
+  await search.fill("Vinyl");
   await expect(box.getByRole("option")).toHaveText(["Add “Vinyl”"]);
   await page.keyboard.press("Enter");
   await page.keyboard.press("Escape");
@@ -107,6 +109,7 @@ test("tags and photos: the combobox searches and creates on the server, and each
   await expect(trigger).toContainText("Vinyl");
   // the new tag is a tag now: a search finds it
   await trigger.click();
+  await expect(search).toBeFocused();
   await page.keyboard.type("vinyl");
   await expect(box.getByRole("option")).toHaveText(["Vinyl"]);
   await page.keyboard.press("Escape");

@@ -186,7 +186,7 @@ final class TableQuery
 
         $query->where(static function (Builder $query) use ($searchable, $pattern): void {
             foreach ($searchable as $column) {
-                $query->orWhere($column, 'like', $pattern);
+                $query->orWhereLike($column, $pattern);
             }
         });
     }

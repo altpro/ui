@@ -49,7 +49,8 @@ const labels = reactive(new Map());
 watch(() => props.options, (list) => list.forEach((o) => labels.set(String(o.value), o)), { immediate: true });
 const selected = computed(() => keys.value.map((k) => labels.get(k) ?? { value: k, label: k }));
 const has = (o) => keys.value.includes(String(o.value));
-const capped = (o) => props.multiple && keys.value.length >= props.max && !has(o);
+const full = computed(() => props.multiple && keys.value.length >= props.max);
+const capped = (o) => full.value && !has(o);
 
 const open = ref(false), q = ref(""), active = ref(-1), pinned = ref([]);
 const remote = ref([]), loading = ref(false), creating = ref(false), error = ref("");
@@ -161,6 +162,8 @@ watch([q, remote], () => open.value && (active.value = count.value ? 0 : -1));
 
 async function add() {
   const label = q.value.trim();
+  // a second Enter while the first request runs, or a full list, would create a record that is never selected
+  if (creating.value || full.value) return;
   creating.value = true;
   error.value = "";
   try {
@@ -242,7 +245,7 @@ watch(activeId, (v) => v && nextTick(() => document.getElementById(v)?.scrollInt
       <!-- tabindex: Firefox would put the scrolling list in the tab order -->
       <ul :id="`${id}-list`" role="listbox" tabindex="-1" :aria-label="label" :aria-multiselectable="multiple || null">
         <li v-for="(o, i) in list" :id="optionId(i)" :key="o.value" role="option" :aria-selected="has(o)" :aria-disabled="capped(o) || null" :data-active="i === active || null" @mousedown.prevent @pointermove="active = i" @click="pick(i)">{{ o.label }}</li>
-        <li v-if="canCreate" :id="optionId(list.length)" role="option" aria-selected="false" :data-active="active === list.length || null" @mousedown.prevent @pointermove="active = list.length" @click="pick(list.length)">Add “{{ q.trim() }}”</li>
+        <li v-if="canCreate" :id="optionId(list.length)" role="option" aria-selected="false" :aria-disabled="full || null" :data-active="active === list.length || null" @mousedown.prevent @pointermove="active = list.length" @click="pick(list.length)">Add “{{ q.trim() }}”</li>
       </ul>
       <p v-if="search" role="status">{{ status }}</p>
     </div>

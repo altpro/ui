@@ -48,6 +48,8 @@ const props = defineProps<{
   unfilteredTotal?: number;
   /** Server mode: the props a change reloads. */
   only?: string[];
+  /** Formats dates and money. Defaults to `<html lang>` in the browser; pass it when the page is rendered on the server too. */
+  locale?: string;
 }>();
 
 const emit = defineEmits<{ "update:selection": [selection: DataTableSelection | null] }>();
@@ -77,11 +79,10 @@ const state = useTableState({
   only: () => props.only ?? [],
 });
 
-// page size and hidden columns are preferences, not the view: a link you send shows the rows, not your column choices
-const storedSize = readPreference(`${storeKey}:per-page`);
-const preferredSize = ref(typeof storedSize === "number" && PAGE_SIZES.includes(storedSize) ? storedSize : (props.paginate ?? DEFAULT_PAGE_SIZE));
-const storedHidden = readPreference(`${storeKey}:hidden-columns`);
-const hiddenColumns = ref<string[]>(Array.isArray(storedHidden) ? storedHidden.filter((k) => typeof k === "string") : []);
+// page size and hidden columns are preferences, not the view: a link you send shows the rows, not your column choices.
+// They are read on mount, so a server render and the hydrating browser start from the same table.
+const preferredSize = ref(props.paginate ?? DEFAULT_PAGE_SIZE);
+const hiddenColumns = ref<string[]>([]);
 
 const setPageSize = (size: number) => {
   preferredSize.value = size;
@@ -92,6 +93,10 @@ const setPageSize = (size: number) => {
 // ponytail: the first server visit does not carry a stored page size, so a changed one costs one extra request.
 // Store the preference on the user server-side if that ever matters.
 onMounted(() => {
+  const storedSize = readPreference(`${storeKey}:per-page`);
+  if (typeof storedSize === "number" && PAGE_SIZES.includes(storedSize)) preferredSize.value = storedSize;
+  const storedHidden = readPreference(`${storeKey}:hidden-columns`);
+  if (Array.isArray(storedHidden)) hiddenColumns.value = storedHidden.filter((k) => typeof k === "string");
   if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value }, true);
 });
 
@@ -108,7 +113,7 @@ const toggleColumn = (key: string) => {
 };
 
 const rowValue = (row: TRow, key: string): unknown => (row as Record<string, unknown>)[key];
-const cellText = (row: TRow, column: DataTableColumn<TRow>) => formatCellValue(rowValue(row, column.key), column.format, column.currency);
+const cellText = (row: TRow, column: DataTableColumn<TRow>) => formatCellValue(rowValue(row, column.key), column.format, column.currency, props.locale);
 
 // the summary sits in the DOM in every state: a live region inserted with its text announces nothing
 const view = computed(() =>
