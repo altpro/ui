@@ -785,3 +785,40 @@ test("combobox: src and create talk to the server with the XSRF token, drop stal
   expect(await submitted(box)).toEqual(["77"]);
   expect([...tokens]).toEqual(["tok="]);
 });
+
+test("combobox: create sends one request for a double Enter, and none once multiple is at max", async ({ page }) => {
+  let posts = 0;
+  await page.route("**/api/suppliers**", async (route) => {
+    if (route.request().method() !== "POST") return route.fulfill({ json: [] });
+    posts++;
+    await new Promise((r) => setTimeout(r, 300));
+    route.fulfill({ status: 201, json: { value: 77, label: "New Co" } });
+  });
+  await page.goto("/combobox.html");
+  const box = combobox(page, "urls"), trigger = box.getByRole("combobox", { name: "Supplier", exact: true });
+  await trigger.click();
+  await page.keyboard.type("New Co");
+  await expect(box.getByRole("option")).toHaveText(["Add “New Co”"]);
+  await page.keyboard.press("Enter");
+  await page.keyboard.press("Enter");
+  await expect(trigger).toHaveText("New Co");
+  expect(posts).toBe(1);
+
+  // Tags in "Adding one" takes three; at three, Add is disabled and Enter creates nothing
+  const tags = combobox(page, "create"), search = tags.getByRole("combobox", { name: "Search Tags" });
+  await tags.getByRole("combobox", { name: "Tags", exact: true }).click();
+  for (const name of ["Vue", "CSS"]) {
+    await search.fill(name);
+    await tags.getByRole("option", { name, exact: true }).click();
+  }
+  await search.fill("Zebra");
+  const add = tags.getByRole("option", { name: "Add “Zebra”" });
+  await expect(add).toHaveAttribute("aria-disabled", "true");
+  await page.keyboard.press("Enter");
+  await expect(tags.getByRole("status")).not.toHaveText("Adding…");
+  await page.waitForTimeout(600);
+  // nothing was created: the search still offers to add it
+  await expect(tags.getByRole("option")).toHaveText(["Add “Zebra”"]);
+  await page.keyboard.press("Escape");
+  await expect(tags.getByRole("combobox", { name: "Tags", exact: true })).toHaveText("Laravel, Vue, CSS");
+});

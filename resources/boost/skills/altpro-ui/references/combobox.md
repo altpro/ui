@@ -26,7 +26,7 @@ import Combobox from "@ui/Combobox.vue";
 | `searchable` | Show the search box. It shows anyway over 12 options, or with `src` or `create`; `:searchable="false"` hides it. |
 | `src` | Search on the server. A URL gets `GET src?q=…` by `fetch`, with the `XSRF-TOKEN` cookie as `X-XSRF-TOKEN`, and must answer `[{ value, label }]`. Or a function `(q) => Promise<[{ value, label }]>`. Debounced 250ms; older answers are dropped. Opening asks for `q=` empty, so answer with something useful (recent or first few). Limit the rows on the server (`->limit(20)`): the panel shows all it gets. |
 | `create` | Offers "Add “xyz”" when no result matches exactly, ignoring case. A URL gets `POST create` with `{ label }` and must answer `{ value, label }`, which is selected. A 422 shows `errors.label[0]` (or `message`) in the panel. Or a function `(label) => Promise<{ value, label }>`; a rejection's message shows. The server decides whether to create or return an existing record, and checks permission. |
-| `max` | With `multiple`, disables the rest once this many are picked. Say so in a `.hint`. |
+| `max` | With `multiple`, disables the rest, and "Add", once this many are picked. Say so in a `.hint`. |
 | `required` | Sets `aria-required` only. Validate on the server and show its `.error`. |
 | `disabled` | Cannot open; nothing is submitted. |
 | `autofocus` | Focuses the trigger on load. |
