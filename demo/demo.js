@@ -38,6 +38,7 @@ const icons = {
   list: '<path d="M3 12h.01"/><path d="M3 18h.01"/><path d="M3 6h.01"/><path d="M8 12h13"/><path d="M8 18h13"/><path d="M8 6h13"/>',
   moon: '<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
   search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
+  archive: '<rect width="20" height="5" x="2" y="3" rx="1"/><path d="M4 8v11a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8"/><path d="M10 12h4"/>',
   upload: '<path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
   headphones: '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
@@ -88,7 +89,8 @@ const components = [
    Menu items: a string is a heading, [href, label, icon?, extra?] a link,
    [label, icon, items] a collapsible group. */
 const menu = [
-  ["Application", "monitor", [["app/dashboard.html", "Overview", "gauge"], ["app/products.html", "Products", "blocks"], ["app/product.html", "Product detail", "tag"], ["app/activity.html", "Activity", "timeline"], ["app/shell.html", "App shell", "panel"]]],
+  ["Application", "monitor", [["app/dashboard.html", "Overview", "gauge"], ["app/products.html", "Products", "blocks"], ["app/product.html", "Product detail", "tag"], ["app/activity.html", "Activity", "timeline"],
+    ["app/recipe-products.html", "Recipe: list page", "sheet"], ["app/recipe-product.html", "Recipe: edit page", "field"], ["app/recipe-media.html", "Recipe: tags and uploads", "upload", ["app/shell.html", "App shell", "panel"]]],
   ["index.html", "Getting started", "house"],
   ["Components", "blocks", components],
   ["theme.html", "Theme", "palette"],

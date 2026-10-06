@@ -8,8 +8,8 @@ export default defineConfig({
   use: { baseURL: `http://localhost:${port}` },
   projects: [
     { name: "chromium", use: { ...devices["Desktop Chrome"] } },
-    { name: "firefox", testMatch: ["browsers.spec.js", "workspace.spec.js", "repeater.spec.js"], use: { ...devices["Desktop Firefox"] } },
-    { name: "webkit", testMatch: ["browsers.spec.js", "workspace.spec.js", "repeater.spec.js"], use: { ...devices["Desktop Safari"] } },
+    { name: "firefox", testMatch: ["browsers.spec.js", "workspace.spec.js", "repeater.spec.js", "recipes.spec.js"], use: { ...devices["Desktop Firefox"] } },
+    { name: "webkit", testMatch: ["browsers.spec.js", "workspace.spec.js", "repeater.spec.js", "recipes.spec.js"], use: { ...devices["Desktop Safari"] } },
   ],
   webServer: {
     command: `npx vite --port ${port} --strictPort`,
