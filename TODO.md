@@ -28,7 +28,7 @@ In this order: the shell and recipes save the most time on the first app; the sp
 - [x] **Inventory test**: a `node --test` file asserting every `resources/css/components/*.css` is imported in `ui.css`, has a demo page, is in the `components` array in `demo/demo.js`, is in `pages` in `tests/a11y.spec.js`, and has a heading in SKILL.md; and that every `demo/**/*.html` is in the a11y scan. Turns the seven-step checklist in AGENTS.md into a failing test, and stops the hand-kept page lists drifting.
 - [x] **Type check**: `vue-tsc --noEmit` over `resources/js` and `tests/table-view.ts`, run first in `npm test`. The TypeScript in `DataTable.vue` and `dataTable.ts` is never checked today.
 - [x] **Focused test commands**: `test:unit` (PHP and Node), `test:a11y`, `test:browsers`, so a CSS change does not wait for the three-browser matrix. Note them in AGENTS.md.
-- [x] **Tag `v0.1.0`**: with no tags a Composer VCS install can only track `dev-main`. Tag now, bump on breaking changes, and apps pin `^0.1` once adoption starts.
+- [ ] **Tag `v0.1.0`**: with no tags a Composer VCS install can only track `dev-main`. Tag now, bump on breaking changes, and apps pin `^0.1` once adoption starts.
 
 ## Housekeeping
 
