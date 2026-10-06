@@ -797,6 +797,7 @@ test("combobox: create sends one request for a double Enter, and none once multi
   await page.goto("/combobox.html");
   const box = combobox(page, "urls"), trigger = box.getByRole("combobox", { name: "Supplier", exact: true });
   await trigger.click();
+  await expect(box.getByRole("combobox", { name: "Search Supplier" })).toBeFocused();
   await page.keyboard.type("New Co");
   await expect(box.getByRole("option")).toHaveText(["Add “New Co”"]);
   await page.keyboard.press("Enter");
