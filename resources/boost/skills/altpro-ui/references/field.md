@@ -61,6 +61,7 @@ const form = useForm({ category_id: props.post.category_id, tags: props.post.tag
 | `label` | Defaults to the name: `category_id`, `post[categoryId]` both read "Category". | Same. |
 | `hint` | Text under the control, read with it. A `<x-slot:hint>` takes markup. | Same; `#hint` slot. |
 | `prepend` / `append` | Text inside the input's border (`£`, `kg`). A slot goes in as written, for a select or an icon. Inputs only. | Same; `#prepend` / `#append` slots. |
+| `reveal` | None: showing a password needs JavaScript. | On a `password`: an eye button inside the border that shows and hides it (`aria-pressed`). `<Field name="password" type="password" reveal autocomplete="current-password" />` |
 | `options` | `value => label`, a list of strings (value is the string), or a collection of models or arrays: value from `id` (else `value`), label from `name` (else `label`). | `[{ value, label }]`, `{ value: label }`, strings, or models as above. |
 | `value` / `v-model` | Current value. `old()` wins automatically. A model or collection of models becomes its ids. | `v-model` with `useForm`; models are handed straight back as ids. `value` without v-model, in Inertia's `<Form>`. `type="number"` emits a number, `file` a `File` (an array when `multiple`). |
 | `errors` | Defaults to the page's `$errors`. Also takes a `MessageBag`, an array keyed by field (`tags.0` counts for `tags`), or a string or list for this field. `bag` picks a named error bag. | A string, an array, or Laravel's errors object keyed by field: Inertia's `form.errors`, or a 422 body's `errors`. |

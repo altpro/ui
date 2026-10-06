@@ -138,7 +138,7 @@ test('coloured divided card sections reach the edges and keep their content inse
 // Blade rendered by PHP through Testbench.
 const render = (tag) => execFileSync("php", ["tests/blade.php", tag], { encoding: "utf8" });
 
-// The Blade field rendered with the same props as each Vue field on field.html, in the same order. The Vue demo ends with a combobox, which has no Blade twin.
+// The Blade field rendered with the same props as each Vue field on field.html, in the same order. The Vue demo ends with a combobox and a password reveal, which have no Blade twin.
 const fieldErrors = `['tags.1' => ['The selected tag is invalid.'], 'bio' => ['At least 20 characters.', 'Mention where you work.']]`;
 const cats = `[['id' => 1, 'name' => 'News'], ['id' => 2, 'name' => 'Sport'], ['id' => 3, 'name' => 'Culture']]`;
 const bladeFields = render([
@@ -175,7 +175,7 @@ test("field: the Blade and Vue components render the same markup", async ({ page
     return shape(field);
   }));
   const [blade, vue] = await Promise.all([shapes("#blade > .field"), shapes("#vue-demo > div > .field")]);
-  expect([blade.length, vue.length]).toEqual([8, 9]);
+  expect([blade.length, vue.length]).toEqual([8, 10]);
   for (const [i, shape] of blade.entries()) expect(shape, `field ${i + 1}`).toEqual(vue[i]);
   // parity would pass if both left it out, so check each one: every control an error describes is invalid
   for (const [root, count] of [["#blade", 1], ["#vue-demo", 2]]) {
@@ -184,6 +184,31 @@ test("field: the Blade and Vue components render the same markup", async ({ page
     for (const control of await described.all()) await expect(control).toHaveAttribute("aria-invalid", "true");
   }
 });
+});
+
+test("field: reveal shows and hides a password, and only the input rings its wrapper", async ({ page }) => {
+  await page.goto("/field.html");
+  const input = page.locator("#vue-demo").getByLabel("Password", { exact: true });
+  const reveal = page.locator("#vue-demo").getByRole("button", { name: "Show password" });
+  await input.fill("hunter2");
+  await expect(input).toHaveAttribute("type", "password");
+  await expect(reveal).toHaveAttribute("aria-pressed", "false");
+  await reveal.click();
+  await expect(input).toHaveAttribute("type", "text");
+  await expect(input).toHaveValue("hunter2");
+  await expect(reveal).toHaveAttribute("aria-pressed", "true");
+  await reveal.click();
+  await expect(input).toHaveAttribute("type", "password");
+  // the button rings itself; the wrapper's ring is the input's
+  const wrapperRing = () => input.evaluate((el) => getComputedStyle(el.parentElement).outlineStyle);
+  await reveal.focus();
+  await page.keyboard.press("Shift+Tab");
+  await page.keyboard.press("Tab");
+  await expect(reveal).toBeFocused();
+  expect(await wrapperRing()).toBe("none");
+  await page.keyboard.press("Shift+Tab");
+  await expect(input).toBeFocused();
+  expect(await wrapperRing()).not.toBe("none");
 });
 
 // on its own a combobox is a select's fixed 12rem; in a field it must line up with the inputs around it

@@ -6,6 +6,7 @@
   Options take [{ value, label }], { value: label }, a list of strings, or models with id and name.
   A model or a list of models in v-model is handed straight back as ids, so an untouched field never submits models.
   Without v-model (Inertia's <Form>), `value` is the starting value and the inputs are the truth.
+  `reveal` on a password adds a button that shows and hides it. Vue only: the Blade field has no twin for it.
   `now` fills an empty date, time, datetime-local or month with the current one, in the browser's timezone, and emits it.
   Errors take a string, an array, or Laravel's errors object (Inertia's, or a 422 body's `errors`).
   `class` lands on the .field, every other attribute on the control.
@@ -29,6 +30,7 @@ const props = defineProps({
   errors: [String, Array, Object],
   id: String,
   now: Boolean,
+  reveal: Boolean,
 });
 const attrs = useAttrs();
 const slots = useSlots();
@@ -70,6 +72,7 @@ const picked = computed({
 watch(model, () => options.value.length && [model.value].flat().some(isObject) && (model.value = picked.value), { immediate: true });
 
 const root = ref();
+const shown = ref(false);
 useDomModel(model, root, (el) => {
   // the combobox reads its own resets into the model
   if (props.type === "combobox") return model.value;
@@ -118,12 +121,17 @@ onFormReset(root, () => props.type === "file" && file({ target: root.value.query
         <option v-if="$attrs.placeholder != null" value="">{{ $attrs.placeholder }}</option>
         <option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
       </select>
-      <!-- a string sits in a span; a slot (a currency select, say) goes in as written -->
-      <label v-else-if="prepend || append || $slots.prepend || $slots.append" class="input">
+      <!-- a string sits in a span; a slot (a currency select, say) goes in as written. With the reveal button the
+           wrapper is a div: a wrapping label would add the button's name to the input's -->
+      <component :is="reveal ? 'div' : 'label'" v-else-if="prepend || append || $slots.prepend || $slots.append || reveal" class="input">
         <slot name="prepend"><span v-if="prepend">{{ prepend }}</span></slot>
-        <input v-model="model" :type="type" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()">
+        <input v-model="model" :type="reveal && shown ? 'text' : type" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()">
         <slot name="append"><span v-if="append">{{ append }}</span></slot>
-      </label>
+        <button v-if="reveal" type="button" class="btn ghost sm -me-2 px-2" aria-label="Show password" :aria-pressed="String(shown)" @click="shown = !shown">
+          <svg v-if="shown" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>
+          <svg v-else class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M2.062 12.348a1 1 0 0 1 0-.696 10.75 10.75 0 0 1 19.876 0 1 1 0 0 1 0 .696 10.75 10.75 0 0 1-19.876 0"/><circle cx="12" cy="12" r="3"/></svg>
+        </button>
+      </component>
       <!-- a file input cannot take a value: it hands back the File, or an array of them when multiple -->
       <input v-else-if="type === 'file'" class="input" type="file" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()" @change="file">
       <input v-else v-model="model" :class="type === 'range' ? 'range' : 'input'" :type="type" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()">

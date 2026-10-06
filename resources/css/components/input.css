@@ -38,7 +38,8 @@
       color: var(--color-muted-foreground);
     }
     /* the ring hugs the border and the border takes the ring colour, as shadcn does */
-    &:is(:focus-visible, :has(:focus-visible)) {
+    /* a wrapper rings for its control, not for a button beside it (Field's password reveal), which rings itself */
+    &:is(:focus-visible, :has(> :is(input, select, textarea):focus-visible)) {
       border-color: var(--input-ring);
       outline: 3px solid color-mix(in oklab, var(--input-ring) 50%, transparent);
       outline-offset: 0;
