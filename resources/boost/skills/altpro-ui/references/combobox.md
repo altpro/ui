@@ -39,7 +39,7 @@ After mount:
 - **`src`** and **`create`** are read on each search and add, so swapping them (a different customer's contacts) applies to the next keystroke.
 - It takes no `errors`: Field passes `aria-invalid` and the message for it.
 
-- `aria-*` attributes (`aria-describedby`, `aria-invalid`) go on the trigger; everything else, `class="w-64"` and listeners such as `@change`, on the wrapper. The width is `12rem` unless a utility changes it.
+- `aria-*` attributes (`aria-describedby`, `aria-invalid`) go on the trigger; everything else, `class="w-64"` and listeners such as `@change`, on the wrapper. The width is `12rem` unless a utility changes it; inside a `.field` it fills the column like an input.
 - A native form reset, Inertia's `reset()` and `reset("field")` put the starting value back, and the trigger follows at once. Inertia's `<Form>` sees changes (`isDirty`).
 - A picked value that is no longer in `options` stays picked, and with `multiple` it is listed first in the panel so it can be unticked.
 - `Field.vue` renders it with `type="combobox"`, and DataTable's `multiple` filters use it.

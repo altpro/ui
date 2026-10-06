@@ -65,6 +65,12 @@
     a[aria-current] {
       background: var(--nav-active-bg);
       color: var(--nav-active-fg);
+      /* forced colours drop the fill, the only mark of the current page */
+      @media (forced-colors: active) {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+      }
     }
 
     /* collapsible section */

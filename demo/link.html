@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Link</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Link</h1>
+    <p class="muted"><code>.link</code> on an <code>&lt;a&gt;</code> in content. Tailwind's reset leaves a bare link looking like the text around it; this gives it the primary colour and an underline, so it is told apart by more than colour. No JavaScript.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Where it goes</h2>
+    <p class="text-sm">In a sentence: the order ships once the <a class="link" href="#payment">payment clears</a>. Hover thickens the underline.</p>
+    <dl class="dl horizontal max-w-md">
+      <div><dt>Customer</dt><dd><a class="link" href="#customer">Ann Okafor</a></dd></div>
+      <div><dt>Email</dt><dd><a class="link" href="mailto:ann@example.com">ann@example.com</a></dd></div>
+    </dl>
+    <div class="alert"><p>Read the <a class="link" href="#terms">returns policy</a> before you refund.</p></div>
+    <div class="alert info"><p>A new version is out. <a class="link" href="#changes">See what changed</a>.</p></div>
+    <div class="alert success"><p>Saved. <a class="link" href="#view">View the product</a>.</p></div>
+    <div class="alert warning"><p>Stock is low. <a class="link" href="#reorder">Reorder now</a>.</p></div>
+    <div class="alert danger"><p>The payment failed. <a class="link" href="#retry">Try another card</a>.</p></div>
+    <table class="table max-w-md">
+      <thead><tr><th>Order</th><th>Total</th></tr></thead>
+      <tbody><tr><td><a class="link" href="#ord-10482">ORD-10482</a></td><td>£42.50</td></tr></tbody>
+    </table>
+<pre>&lt;p&gt;The order ships once the &lt;a class="link" href="/payments/1"&gt;payment clears&lt;/a&gt;.&lt;/p&gt;
+&lt;dd&gt;&lt;a class="link" href="mailto:ann@example.com"&gt;ann@example.com&lt;/a&gt;&lt;/dd&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Scheme regions</h2>
+    <div class="grid gap-4 sm:grid-cols-3">
+      <div class="light panel"><p class="text-sm">A <a class="link" href="#light">link</a> in light.</p></div>
+      <div class="dark panel"><p class="text-sm">A <a class="link" href="#dark">link</a> in dark.</p></div>
+      <div class="inverse panel"><p class="text-sm">A <a class="link" href="#inverse">link</a> inverted.</p></div>
+    </div>
+    <p class="text-sm muted">Custom property: <code>--link-fg</code>, the primary colour by default.</p>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

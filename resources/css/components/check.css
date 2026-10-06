@@ -9,7 +9,7 @@
    the smaller sizes. Focus, disabled and invalid follow .input. */
 @layer components {
   :is(.checkbox, .radio, .switch) {
-    --check-border: var(--color-border);
+    --check-border: var(--color-input);
     --check-accent: var(--color-primary);
     --check-fg: var(--color-primary-foreground);
     --check-ring: var(--color-ring);
@@ -75,6 +75,30 @@
         outline: 3px solid color-mix(in oklab, var(--check-ring) 50%, transparent);
         outline-offset: 0;
       }
+      /* forced colours repaint every background as Canvas, mark included, so
+         checked would look unchecked: draw both states in system colours */
+      @media (forced-colors: active) {
+        forced-color-adjust: none;
+        border-color: CanvasText;
+        background: Canvas;
+        color: CanvasText;
+        &:is(:checked, :indeterminate) {
+          border-color: Highlight;
+          background: Highlight;
+          color: HighlightText;
+        }
+        &:disabled {
+          border-color: GrayText;
+          color: GrayText;
+          &:is(:checked, :indeterminate) {
+            background: GrayText;
+            color: Canvas;
+          }
+        }
+        &:focus-visible {
+          outline-color: Highlight;
+        }
+      }
     }
   }
 
@@ -114,6 +138,10 @@
     }
     &:checked::before {
       translate: calc(var(--check-size) * 0.75);
+    }
+    /* the muted track is not a system colour; checked comes from the rule above */
+    @media (forced-colors: active) {
+      background: Canvas;
     }
   }
 

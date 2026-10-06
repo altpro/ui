@@ -11,7 +11,7 @@
      </div>
      <button class="btn ghost" aria-label="Clear status">×</button>
    </div>
-   A fixed width, as a select has: the value runs to an ellipsis, and with
+   A fixed width, as a select has (a .field stretches it): the value runs to an ellipsis, and with
    more than one picked a count sits before the chevron. The clear button
    sits beside the trigger. The panel is at least as wide as the trigger,
    stops at 20rem and scrolls its options under the search box.
@@ -55,6 +55,14 @@
         &:hover, &[data-active] {
           background: var(--color-muted);
         }
+        /* forced colours drop the fill that marks the option the arrow keys are on */
+        &[data-active] {
+          @media (forced-colors: active) {
+            forced-color-adjust: none;
+            background: Highlight;
+            color: HighlightText;
+          }
+        }
         &[aria-disabled="true"] {
           opacity: 0.5;
           cursor: not-allowed;
@@ -67,6 +75,8 @@
           margin-inline-start: auto;
           background: currentColor;
           mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>') center / contain no-repeat;
+          /* forced colours repaint a background as Canvas, so the masked icon would vanish */
+          @media (forced-colors: active) { forced-color-adjust: none; }
         }
       }
       > p {
@@ -119,6 +129,8 @@
         mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>') center / contain no-repeat;
         order: 1;
         transition: rotate 0.15s;
+        /* forced colours repaint a background as Canvas, so the masked icon would vanish */
+        @media (forced-colors: active) { forced-color-adjust: none; background: currentColor; }
       }
       &[aria-expanded="true"]::after {
         rotate: 180deg;

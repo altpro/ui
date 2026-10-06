@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "copy.html", "datatable.html", "tooltip.html", "tree.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "repeater.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/dashboard.html", "app/products.html", "app/activity.html", "app/shell.html", "app/recipe-products.html", "app/recipe-product.html", "app/recipe-media.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "link.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "copy.html", "datatable.html", "tooltip.html", "tree.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "repeater.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/dashboard.html", "app/products.html", "app/activity.html", "app/shell.html", "app/recipe-products.html", "app/recipe-product.html", "app/recipe-media.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -461,7 +461,33 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2], ["tree.html", ".tree :is(a, summary)", 14]]) {
+    // an empty control is known only by its edge, which needs 3:1 on whatever it sits on (WCAG 1.4.11); axe does not check it.
+    // Paint the backgrounds behind it, then the border, on a canvas: it composites translucent fills for us.
+    for (const p of ["field.html", "check.html", "file.html", "combobox.html", "join.html", "table.html", "datatable.html"]) test(`${p}: control borders reach 3:1`, async ({ page }) => {
+      await page.goto("/" + p);
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const low = await page.evaluate(() => {
+        const x = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+        const paint = (c) => { x.fillStyle = c; x.fillRect(0, 0, 1, 1); return [...x.getImageData(0, 0, 1, 1).data]; };
+        const lum = ([r, g, b]) => [r, g, b].map((v) => (v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0);
+        const sel = "main :is(.input:not(label), label.input, input:is(.checkbox, .radio, .switch), :is(.checkbox, .radio, .switch) > input, .dropzone > label)";
+        return [...document.querySelectorAll(sel)].filter((el) => el.checkVisibility() && !el.matches(":checked, :disabled, :has(:disabled), :focus-within")).flatMap((el) => {
+          const fills = [];
+          for (let a = el.parentElement; a; a = a.parentElement) {
+            fills.unshift(getComputedStyle(a).backgroundColor);
+            if (paint(fills[0])[3] === 255) break;
+          }
+          x.clearRect(0, 0, 1, 1);
+          fills.forEach((f) => paint(f));
+          const bg = lum([...x.getImageData(0, 0, 1, 1).data]), edge = lum(paint(getComputedStyle(el).borderTopColor));
+          const ratio = (Math.max(bg, edge) + 0.05) / (Math.min(bg, edge) + 0.05);
+          return ratio < 3 ? [`${el.outerHTML.slice(0, 80)} ${ratio.toFixed(2)}`] : [];
+        });
+      });
+      expect(low).toEqual([]);
+    });
+
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 21], ["link.html", ".link", 9], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2], ["tree.html", ".tree :is(a, summary)", 14]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
@@ -542,7 +568,8 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
-    test(`${p}: every interactive element meets the 24px minimum target size`, async ({ page }) => {
+    // a link in a sentence is exempt from 2.5.8: the line height sets its size
+    if (cls !== ".link") test(`${p}: every interactive element meets the 24px minimum target size`, async ({ page }) => {
       await page.goto("/" + p);
       const small = [];
       for (const b of await page.locator(`main :is(a, button, input, select, textarea, label):is(${cls})`).all()) {
@@ -555,6 +582,50 @@ for (const colorScheme of ["light", "dark"]) {
     }
   });
 }
+
+// forced colours repaint every background as Canvas, so a state drawn only as a fill vanishes; read the pixels back
+test("forced colours: checked and filled states still differ from their opposites", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  const at = async (loc, x, y = 0.5) => (await shot(loc))(x, y);
+  await page.goto("/check.html");
+  await page.addStyleTag({ content: "*, ::before { transition: none !important }" });
+  const box = (name) => page.locator("main label", { hasText: new RegExp(`^\\s*${name}$`) }).first().locator("input");
+  // beside the mark, which is HighlightText and can match Canvas; on the switch, where the thumb sits when off
+  for (const [off, on, x, y] of [["Unchecked", "Checked", 0.2, 0.2], ["Team", "Free", 0.2, 0.2], ["Off", "On", 0.3, 0.5]]) {
+    expect(same(await at(box(off), x, y), await at(box(on), x, y)), `${off} looks like ${on}`).toBe(false);
+  }
+
+  await page.goto("/segmented.html");
+  const sort = page.locator("main [aria-label=Sort] > label");
+  expect(same(await at(sort.nth(0), 0.1), await at(sort.nth(1), 0.1))).toBe(false);
+
+  await page.goto("/progress.html");
+  await page.addStyleTag({ content: "* { transition: none !important }" });
+  const up = await shot(page.locator("#upload"));
+  expect(same(up(0.2, 0.5), up(0.8, 0.5))).toBe(false); // bar differs from track
+
+  await page.goto("/range.html");
+  const r = page.locator("#volume"), w = (await r.boundingBox()).width;
+  const range = await shot(r);
+  expect(same(range((10 + 0.4 * (w - 20)) / w, 0.5), range(0.9, 0.5))).toBe(false); // thumb differs from track
+});
+
+// an invoice printed from a dark screen: light whatever the OS or the switcher says, and only main on the page
+test("app/shell.html: print is light and shows only main", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/app/shell.html");
+  await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; document.querySelector("main").insertAdjacentHTML("beforeend", '<div class="inverse" id="flip">x</div>'); });
+  const bg = (sel) => page.locator(sel).evaluate((el) => getComputedStyle(el).backgroundColor);
+  const screen = await bg("body");
+  await page.emulateMedia({ media: "print", colorScheme: "dark" });
+  expect(await bg("body")).not.toBe(screen);
+  expect(await bg("#flip")).toBe(await bg("body"));
+  await expect(page.locator("aside")).toBeHidden();
+  await expect(page.locator("header")).toBeHidden();
+  await expect(page.locator("#toaster")).toBeHidden();
+  await expect(page.locator("main")).toBeVisible();
+});
 
 test("app/shell.html: the scheme switcher pins the scheme, remembers it and goes back to the OS", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });

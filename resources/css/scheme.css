@@ -41,6 +41,15 @@
   }
 }
 
+/* Print is light: an invoice or packing slip from a dark screen must not come
+   out as a black page. After the regions above, so it wins all of them. */
+@media print {
+  :root, .light, .dark, .inverse, [data-theme] {
+    color-scheme: light;
+    --scheme: light;
+  }
+}
+
 /* Regions paint their own ground so a .dark island is visibly dark. */
 .light, .dark, .inverse {
   background-color: var(--color-background);

@@ -10,7 +10,7 @@
    Tailwind wins. */
 @layer components {
   .dropzone {
-    --dropzone-border: var(--color-border);
+    --dropzone-border: var(--color-input);
     --dropzone-ring: var(--color-ring);
     /* capped: a pill-radius theme should not turn the box into an ellipse */
     --dropzone-radius: min(var(--radius), 1rem);

@@ -69,6 +69,19 @@
       outline-offset: 0;
     }
 
+    /* forced colours repaint the thumb as Canvas, the same as the track: a
+       Highlight thumb on a Canvas track with a CanvasText edge. Important, so
+       an accent set inline cannot bring a non-system colour back. */
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+      --range-track: Canvas !important;
+      --range-accent: Highlight !important;
+      --range-ring: Highlight !important;
+      &::-webkit-slider-runnable-track { box-shadow: inset 0 0 0 1px CanvasText; }
+      &::-moz-range-track { box-shadow: inset 0 0 0 1px CanvasText; }
+      &:disabled { --range-accent: GrayText !important; }
+    }
+
     /* sizes */
     &.sm { --range-h: 0.25rem; --range-thumb: 1rem; }
     &.lg { --range-h: 0.75rem; --range-thumb: 1.5rem; }

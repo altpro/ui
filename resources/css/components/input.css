@@ -12,7 +12,7 @@
   .input {
     --input-bg: var(--color-background);
     --input-fg: var(--color-foreground);
-    --input-border: var(--color-border);
+    --input-border: var(--color-input);
     --input-ring: var(--color-ring);
     --input-radius: var(--radius);
     --input-h: 2.25rem;
@@ -71,6 +71,8 @@
           mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>') center / contain no-repeat;
           color: var(--color-muted-foreground);
           transition: rotate 0.15s;
+          /* forced colours repaint a background as Canvas, so the masked icon would vanish */
+          @media (forced-colors: active) { forced-color-adjust: none; color: inherit; }
         }
         &:open::picker-icon {
           rotate: 180deg;
@@ -104,6 +106,14 @@
             outline: 0;
             background: var(--color-muted);
           }
+          /* forced colours drop the fill that marks the option the arrow keys are on */
+          &:focus-visible {
+            @media (forced-colors: active) {
+              forced-color-adjust: none;
+              background: Highlight;
+              color: HighlightText;
+            }
+          }
           &:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -117,6 +127,8 @@
             margin-inline-start: auto;
             background: currentColor;
             mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>') center / contain no-repeat;
+            /* forced colours repaint a background as Canvas, so the masked icon would vanish */
+            @media (forced-colors: active) { forced-color-adjust: none; }
           }
         }
         optgroup {
@@ -197,7 +209,7 @@
       font: inherit;
       font-size: 0.75em;
       line-height: 1.6;
-      border: 1px solid var(--input-border);
+      border: 1px solid var(--color-border);
       border-radius: min(var(--input-radius), 0.25rem);
       background: var(--color-muted);
     }

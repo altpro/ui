@@ -29,7 +29,7 @@ Activity feed on a record: a `<blockquote>` in an item is a note (indented behin
 ```html
 <li><p><b>Steve Rayner</b> changed Status <del>Pending</del> → <ins>Paid</ins></p><time>Today, 09:30</time></li>
 <li><p><b>Ann Okafor</b> left a note</p><blockquote>Courier left it with a neighbour.</blockquote><time>Yesterday</time></li>
-<li><p><b>Steve Rayner</b> attached <a class="underline" href="…">invoice-1042.pdf</a> <span class="muted">84 KB</span></p><time>12 Sep</time></li>
+<li><p><b>Steve Rayner</b> attached <a class="link" href="…">invoice-1042.pdf</a> <span class="muted">84 KB</span></p><time>12 Sep</time></li>
 ```
 
 Custom properties: `--timeline-dot --timeline-line --timeline-marker`.

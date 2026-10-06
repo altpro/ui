@@ -99,6 +99,10 @@
       color: var(--tabs-active-fg);
       font-weight: 600;
       &::after { background: var(--tabs-active); }
+      /* forced colours repaint the bar as Canvas */
+      @media (forced-colors: active) {
+        &::after { forced-color-adjust: none; background: Highlight; }
+      }
     }
 
     /* the radio is the click target and the focus stop; the label is the look */

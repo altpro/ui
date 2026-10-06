@@ -1,0 +1,26 @@
+/* Link: a link in content.
+   <p>Read the <a class="link" href="/terms">terms</a> first.</p>
+   Tailwind's reset leaves an <a> looking like the text around it, so a link
+   in a sentence, a .dl value, an .alert or a table cell takes this class.
+   The underline tells it apart by more than colour (WCAG 1.4.1); hover
+   thickens it. Not for links that are already a component (.btn, .nav,
+   .tabs, .breadcrumb). Layered so Tailwind utilities win. */
+@layer components {
+  .link {
+    --link-fg: var(--color-primary);
+
+    color: var(--link-fg);
+    text-decoration: underline;
+    text-decoration-thickness: 1px;
+    text-underline-offset: 0.2em;
+    border-radius: 0.125rem;
+
+    &:hover {
+      text-decoration-thickness: 2px;
+    }
+    &:focus-visible {
+      outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+      outline-offset: 2px;
+    }
+  }
+}

@@ -81,9 +81,11 @@ One base class, then bare modifier words in any order. No prefixes.
 
 Write `btn primary`, never `btn-primary` or `btn btn-primary`. Utilities always override component styles because components live in `@layer components`.
 
+Every `<a>` that is not already a component (a `.btn`, a `.nav` or `.tabs` item and so on) takes `class="link"`: a link in a sentence, a `.dl` value, an `.alert`, a table cell. Tailwind's reset makes a bare `<a>` look like plain text.
+
 ### Not daisyUI
 
-`btn`, `badge`, `card`, `join`, `tabs`, `steps` and `alert` are daisyUI names too, but nothing else carries over. There are no hyphenated modifiers and no part classes: write the modifier word, or the plain element the component already styles.
+`btn`, `badge`, `card`, `join`, `link`, `tabs`, `steps` and `alert` are daisyUI names too, but nothing else carries over. There are no hyphenated modifiers and no part classes: write the modifier word, or the plain element the component already styles.
 
 | daisyUI | altpro/ui |
 |---------|-----------|
@@ -104,11 +106,12 @@ Write `btn primary`, never `btn-primary` or `btn btn-primary`. Utilities always 
 | `loading loading-spinner` | `spinner`, or `loading` on a `.btn` |
 | `tooltip` with `data-tip` | `data-tooltip="…"` on the element |
 | `breadcrumbs`, `table-zebra` | `breadcrumb`, `table striped` |
+| `link-primary`, `link-hover` | `link` |
 
 Check your markup with this grep; it should print nothing. An `id` or `for` that starts with one of these words is a false alarm.
 
 ```sh
-grep -rnE '(^|[^[:alnum:]_/:-])(btn|badge|alert|card|join|tabs?|steps?|stats?|input|textarea|modal|menu|dropdown|collapse|toggle|loading|checkbox|radio|range|progress|avatar|tooltip|label|form)-[a-z$]|-(base-[0-9c]|[a-z]+-content[^-[:alnum:]])|class="([^"]*[[:space:]])?(modal|toggle|menu|navbar|tab|stats)[[:space:]"]' resources/js resources/views
+grep -rnE '(^|[^[:alnum:]_/:-])(btn|badge|alert|card|join|link|tabs?|steps?|stats?|input|textarea|modal|menu|dropdown|collapse|toggle|loading|checkbox|radio|range|progress|avatar|tooltip|label|form)-[a-z$]|-(base-[0-9c]|[a-z]+-content[^-[:alnum:]])|class="([^"]*[[:space:]])?(modal|toggle|menu|navbar|tab|stats)[[:space:]"]' resources/js resources/views
 ```
 
 ## Icons
@@ -143,6 +146,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | File input `.dropzone` | Drop zone and file list with previews and progress | CSS, Vue | [file-input.md](references/file-input.md) |
 | Checkbox, radio, switch | Restyled native checkboxes and radios | CSS | [check.md](references/check.md) |
 | Badge `.badge` | Status, counts, tags | CSS | [badge.md](references/badge.md) |
+| Link `.link` | A link in a sentence, a `.dl` value, an `.alert` or a table cell | CSS | [link.md](references/link.md) |
 | Avatar `.avatar` | A person's photo or initials | CSS | [avatar.md](references/avatar.md) |
 | Nav `.nav` | Vertical sidebar or settings menu | CSS | [nav.md](references/nav.md) |
 | Breadcrumb `.breadcrumb` | The path to the current page | CSS | [breadcrumb.md](references/breadcrumb.md) |
@@ -181,11 +185,13 @@ All colours are Tailwind theme variables, so `bg-primary`, `text-muted-foregroun
 background  foreground
 card        card-foreground
 muted       muted-foreground
-border      ring
+border      input       ring
 primary     secondary  info  success  warning  danger   (each with -foreground)
 red orange amber yellow lime green emerald teal cyan sky blue indigo violet purple fuchsia pink rose
             (hue fills: a tint in light, a deep shade in dark; pair with text derived from them, as .avatar does)
 ```
+
+`border` is for dividers and card edges and is too faint to be the only sign of a control. `input` is the edge of a control known by its border (an empty input, select, unticked checkbox, drop zone): 3:1 on `background`, `card` and `muted` in both schemes (WCAG 1.4.11). `.input`, the checks and `.dropzone` already use it; use `border-input` on anything of your own that works the same way, and keep 3:1 if you override it.
 
 Every token is `light-dark()`, so the same class is correct in both schemes. Do not write `dark:` variants for these colours.
 
@@ -218,6 +224,10 @@ Tailwind's `dark:` variant follows the OS media query and ignores these regions.
 ```css
 @custom-variant dark (@container style(--scheme: dark));
 ```
+
+## Print
+
+Printing is always light: every region, `.dark` and `.inverse` included, prints in the light scheme, and the toaster is hidden. Anything else that only makes sense on screen takes Tailwind's `print:hidden`: the [app shell](references/app-shell.md)'s sidebar and header and the [save bar](references/save-bar.md) already have it; add it to record-header actions, filters and pagination on a page people print, such as an invoice or a packing slip. Other `print:` utilities adjust the printed layout.
 
 ## Demo
 

@@ -15,6 +15,10 @@
   --color-muted-foreground: light-dark(oklch(0.5 0 0), oklch(0.708 0 0));
 
   --color-border: light-dark(oklch(0.9 0 0), oklch(0.386 0.024 266)); /* dark: #3e4451 */
+  /* the edge of a control known only by its border (an empty input, an unticked
+     box): 3:1 on background, card and muted in both schemes (WCAG 1.4.11).
+     --color-border is for dividers and is far lighter. */
+  --color-input: light-dark(oklch(0.62 0 0), oklch(0.6 0.02 264));
   --color-ring: var(--color-primary);
 
   --color-primary: light-dark(oklch(0.52 0.2 262), oklch(0.73 0.15 262));
