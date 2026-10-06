@@ -78,14 +78,13 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
     }
 
     // toast("Saved.", "success"): any alert colour, see toast.md
-    function toast(text, colour = "") {
-      const el = document.createElement("div");
-      el.className = `alert ${colour}`;
-      el.append(Object.assign(document.createElement("p"), { textContent: text }));
+    function toast(message, type = "") {
+      const el = Object.assign(document.createElement("div"), { className: `alert ${type}` });
+      el.append(Object.assign(document.createElement("p"), { textContent: message }));
       el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
       document.getElementById("toaster").append(el);
     }
-    @if (session('status')) toast(@js(session('status')), "success"); @endif
+    @if (session('toast')) toast(@js(session('toast.message')), @js(session('toast.type'))); @endif
   </script>
 </body>
 </html>
@@ -127,7 +126,7 @@ A page:
 @endsection
 ```
 
-A controller's `->with('status', 'Order saved.')` shows as a toast on the next page.
+A controller's `->with('toast', ['type' => 'success', 'message' => 'Order saved.'])` on the redirect shows as a toast on the next page, the same payload an Inertia controller flashes ([toast.md](toast.md)).
 
 ## Inertia (Vue)
 
@@ -274,20 +273,22 @@ Toasts: `resources/js/toast.js`, which any component can import:
 
 ```js
 // toast("Saved.", "success"): any alert colour, see toast.md
-export function toast(text, colour = "") {
-  const el = document.createElement("div");
-  el.className = `alert ${colour}`;
-  el.append(Object.assign(document.createElement("p"), { textContent: text }));
+export function toast(message, type = "") {
+  const el = Object.assign(document.createElement("div"), { className: `alert ${type}` });
+  el.append(Object.assign(document.createElement("p"), { textContent: message }));
   el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
   document.getElementById("toaster").append(el);
 }
 ```
 
-From the server: `Inertia::flash('toast', 'Order saved.')` in the controller, and in `resources/js/app.js`, before `createInertiaApp`:
+From the server: `Inertia::flash('toast', ['type' => 'success', 'message' => 'Order saved.'])` in the controller, and in `resources/js/app.js`, before `createInertiaApp`:
 
 ```js
 import { router } from "@inertiajs/vue3";
 import { toast } from "./toast";
 
-router.on("flash", (event) => event.detail.flash.toast && toast(event.detail.flash.toast, "success"));
+router.on("flash", (event) => {
+  const t = event.detail.flash.toast;
+  if (t) toast(t.message, t.type);
+});
 ```
