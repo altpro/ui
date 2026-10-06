@@ -62,6 +62,18 @@ Write `btn primary`, never `btn-primary` or `btn btn-primary`. Utilities always 
 
 Lucide, never hand-written paths: `@lucide/vue` in Vue (`<Plus class="size-4" aria-hidden="true" />`), `mallardduck/blade-lucide-icons` in Blade (`<x-lucide-plus class="size-4" aria-hidden="true" />`). An `<svg>…</svg>` in a reference file stands for one of these. Icons are `size-4` and `aria-hidden="true"`; an icon-only button gets its name from `aria-label`.
 
+## Headings
+
+One scale for page content, the same on every page. Pick the level from the page's outline, never for its size.
+
+| Heading | Classes | For |
+|---------|---------|-----|
+| `h1` | `text-2xl font-semibold tracking-tight`, plus `break-words` when it shows a record's name | The page title, one per page, in the [record header](references/record-header.md) |
+| `h2` | `text-lg font-semibold` | A section of the page, or of a [long form](references/long-form.md) |
+| `h3` | `font-semibold` | A group inside a section |
+
+Inside a `.card` or `.dialog` header, an `.alert` or a `.nav`, write the heading with no classes: the component sizes it.
+
 ## Components
 
 One line each: what it is for, and what it ships as. **CSS** is classes on native HTML, usable from Blade and Vue alike. **Vue** needs the Vue component. **Blade** has an `<x-ui::…>` component that saves markup. A *pattern* has no class of its own; it composes others. Read the reference file before writing the component's markup: it has the class table, the rules and a copy-paste example.
@@ -106,6 +118,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Empty state | What an empty list or panel says | pattern | [empty-state.md](references/empty-state.md) |
 | Record header | The top of a record page | pattern | [record-header.md](references/record-header.md) |
 | Save bar | Sticky Save and Discard on a long form | pattern | [save-bar.md](references/save-bar.md) |
+| Long form | A form split into `<fieldset>` sections with headings | pattern | [long-form.md](references/long-form.md) |
 
 ## Theme tokens
 

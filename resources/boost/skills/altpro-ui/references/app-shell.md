@@ -123,7 +123,7 @@ A page:
 @endsection
 
 @section('content')
-  <h1 class="text-2xl font-semibold">Order 1042</h1>
+  <h1 class="text-2xl font-semibold tracking-tight break-words">Order 1042</h1>
 @endsection
 ```
 
