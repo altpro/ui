@@ -2,6 +2,74 @@
 
 The components the first CMS, CRM and order-management apps need are built. This list is about making an app quicker to build with them, from two review passes (October 2026). Anything needing JavaScript stays a Vue component only.
 
+## Before tagging v0.1.0
+
+From a third pass (6 October 2026), before an agent builds the first app: a fresh `laravel new --vue --boost` app with this repo as a Composer path repository, a dry run of the skill as that agent, a code review, a comparison with daisyUI, Flux, shadcn and Nuxt UI, and a second agent's review. Everything below was checked against the source or the test app.
+
+Apps will start from our own Vue starter kit, a separate repo that requires altpro/ui and replaces shadcn with it. The kit therefore deals with shadcn and the app-side setup, and it is the real consumer. Build it against this repo as a Composer path repository, and tag `v0.1.0` once it installs and builds clean.
+
+### Installation
+
+An app cannot install altpro/ui as documented yet, and when it does, the agent may never load the skill. The kit ships the app side of each item below (`boost.json`, alias, tsconfig, Lucide, the pinned version), so the README covers apps that do not start from it.
+
+- [ ] **Publish the repo**: there is no git remote, and `README.md` still says `git@github.com:<owner>/ui.git`. Push to GitHub and fill in the owner.
+- [ ] **Boost opt-in**: `boost:list-skills` finds `altpro-ui`, but `boost:install -n` and `boost:update -n` never install it. It only lands (SKILL.md and all of `references/`) once the app's `boost.json` has `"packages": ["altpro/ui"]`, or someone ticks it at the interactive prompt. The kit ships that `boost.json`; say so in the README install steps for everything else.
+- [ ] **Boost guideline**: Boost writes guidelines into the app's AGENTS.md on every run but loads skills only when one triggers, and the test app's AGENTS.md never mentions altpro. Boost's own `tailwindcss-development` skill claims "cards, tables, navbars, forms, inputs, badges", so it can trigger first. Add `resources/boost/guidelines/core.blade.php`, 5–10 lines: use altpro/ui classes, load the altpro-ui skill before writing markup, `btn primary` not `btn-primary`, `danger` not `destructive`. Add one more line for apps made with Laravel's own `laravel new --vue`: shadcn's `@theme inline` tokens in `app.css` override altpro's (in the test build, `--color-primary` became `#171717` and `--radius` `.5rem`), so start from our kit instead. Removing shadcn is the kit's job, so the skill needs no starter-kit section. Check that the guideline reaches the app's AGENTS.md.
+- [ ] **TypeScript setup for both installs**: SKILL.md:45 gives only the Composer `paths` entry. With that entry, the Composer test app type-checks clean. A packed npm install fails a strict `vue-tsc` with missing declarations for Field.vue and Combobox.vue until the package's `resources/js` is in the app's tsconfig `include`. Document the full tsconfig for npm and for Composer.
+- [ ] **Lucide in the install steps**: SKILL.md:63 makes `@lucide/vue` and `mallardduck/blade-lucide-icons` the icon rule, but neither is installed anywhere. Add the two install commands to Setup and the README.
+- [ ] **Version-pinned install commands**: README and SKILL.md show `composer require altpro/ui` with no constraint. Use `altpro/ui:^0.1` (npm: `github:<owner>/ui#v0.1.0`).
+- [ ] **Changelog**: `CHANGELOG.md` with a **Breaking** heading per release. On 0.x a breaking change bumps the minor, which `^0.1` already stops at.
+- [ ] **Package contents**: `.claude/settings.local.json` is tracked and ships in the Composer download; untrack it and gitignore it. Add `export-ignore` for `TODO.md`, `CONTEXT.md`, `.claude`, `.github` and `tsconfig.json`.
+
+### Bugs
+
+- [ ] **Forced colours**: no file has a `forced-colors` rule. The checkbox tick, radio dot and switch thumb are `background: currentColor` on `::before` (`check.css:55`), which forced colours removes, so checked and unchecked look the same. Check the progress and range fills too. Add a Playwright case with `forcedColors: 'active'`.
+- [ ] **Control boundary contrast**: the light `--color-border` (`oklch(0.9 0 0)`) is about 1.35:1 on white. An empty input or checkbox identified only by its border needs 3:1 (WCAG 1.4.11). Add a control-border token for inputs, checks and the dropzone; keep `--color-border` for dividers. Test the 3:1 in `a11y.spec.js`.
+- [ ] **Combobox create guards**: `add()` (`Combobox.vue:162`) checks neither `creating` nor `capped`. Pressing Enter twice quickly sends two create requests, and at `max` "Add…" still creates a server record, then leaves it unselected. Guard inside `add()`, not just on the option. Add regression tests.
+- [ ] **Search is case-sensitive on Postgres**: `TableQuery.php:189` uses `orWhere($column, 'like', …)`. SQLite and MySQL ignore case, Postgres does not, and client mode does. Use `orWhereLike` (ILIKE on Postgres).
+- [ ] **Combobox in a Field is 12rem**: `combobox.css:22` fixes the width, `field.css` only stretches a `.join`, and `Field.vue` puts `class` on the `.field`. Customer and product pickers come out narrower than the inputs around them. Stretch `.field > .combobox`.
+- [ ] **CI on both Laravel versions**: composer.json allows Laravel 12 and 13, but with `composer.lock` gitignored CI only ever installs 13. Add a matrix with `--prefer-lowest` for 12.
+
+### Skill fixes
+
+The agent will copy these as written.
+
+- [ ] **One flash payload**: `app-shell.md:286-292` flashes a string and toasts `event.detail.flash.toast`; `toast.md` and `recipes.md` flash `['type' => …, 'message' => …]`. Mixed, the toast reads "[object Object]". The Blade side differs as well: `session('status')` in app-shell.md, `session('toast')` in toast.md. Use toast.md's shape and listener everywhere.
+- [ ] **DataTable sort key**: `datatable.md:14` names the column `created_at`, but `sortable: ['name', 'added' => 'created_at']` allows `added`. Sorting by "Added" quietly falls back to name while the arrow says otherwise. Make them agree.
+- [ ] **Authorization in the copied code**: the bulk and media controllers in `recipes.md` (around 325 and the photo actions) authorise only in the notes beneath (387, 588). Put `Gate::authorize` in the code. Show the app's permitted-record query, for example a scope, applied to both the index and `bulk()`, so "matching" selections cannot reach rows the list hides.
+- [ ] **One shell, matching the kit**: recipe pages do not use `AppLayout` though recipes.md:17 says the layout wraps them. Each draws its own breadcrumb while the shell draws one from a prop, so following both gives two. `scroll-pb-20` and the toaster's position are page-level instructions that live in the root view. The kit will have a real `AppLayout` too; if it differs from app-shell.md the agent gets two answers. Make app-shell.md describe the kit's layout and root view (with `scroll-pb-20` and the toaster), and wrap the recipes in it.
+- [ ] **Dialogs in `space-y-*`**: dialog.md:36 warns against a `space-y-*` parent, and every recipe page uses `space-y-gap`, so a dialog placed on the page sits off-centre. Use `flex flex-col gap-gap` in the recipes.
+- [ ] **Complete snippets**: `field.md`, `repeater.md`, `file-input.md` and `combobox.md` use `useForm`, `form` or `props` without a `<script setup>`; `datatable.md` uses `Link` without importing it and never declares `Brand`. Make each a complete SFC.
+- [ ] **Small contradictions**: `button.md:11` says a loading button names what is happening ("Saving"), while `save-bar.md:13` and the recipes keep "Save"; pick one. `app-shell.md:271` says a persistent layout reads the breadcrumb from `usePage().props`, but the code takes a prop.
+
+### Patterns
+
+Each one a reference file with complete code, and where there is behaviour, a `demo/app/` recipe page so the browser tests cover it.
+
+- [ ] **Validation failure**: an error summary announced on a failed save, focus on the summary or the first invalid field. Also where focus goes after an Inertia visit.
+- [ ] **Destructive action**: a confirm dialog with `useForm().delete`, a pending state, staying open on a 422 (wrong password) with the error in the dialog, closing on success, focus returned to the trigger. The kit's delete-account setting is the first real use; build it from this pattern.
+- [ ] **Unsaved changes**: a navigation guard to go with the save bar (`router.on('before')` plus `beforeunload` while `form.isDirty`). save-bar.md:25 calls it the app's job.
+- [ ] **Links**: Tailwind's reset leaves an `<a>` in text, `.dl` or `.alert` looking like plain text (WCAG 1.4.1). A link style for content, and a rule in SKILL.md.
+- [ ] **Headings and long forms**: one heading scale (the `h1` is written two ways, in app-shell.md:126 and record-header.md:9), form sections with `<fieldset>`, and switches that save on toggle (check.md:21 recommends them with no code).
+- [ ] **Print**: `@media print` forcing the light scheme and hiding nav, header, toaster and save bar, for invoices and packing slips.
+- [ ] **Not daisyUI**: the class names overlap (btn, badge, card, join, tabs, steps, stat), so an agent will write `card-body`, `join-item`, `badge-success`, `alert-error`, `modal`. A short table of what to write instead, and a grep for `\b(btn|badge|alert|card|join|tabs?|input)-[a-z]`.
+- [ ] **An app's own component**: how to add one in the app (`@layer components`, tokens, `--x-*` vars, bare modifier words). SKILL.md says never rebuild one but not how to add one.
+
+### If the kit ships SSR
+
+Laravel's Vue kit ships `build:ssr`; decide whether ours does. If it does, these are must-fix, not hypothetical. None of them has been reproduced yet.
+
+- [ ] `DataTable.vue:81-84` reads page size and hidden columns from `localStorage` in setup, so server and client render differently. Read them in `onMounted`.
+- [ ] `dataTable.ts:103` takes the locale from `document.documentElement.lang`, so the server formats dates as en-GB. Take it from a prop or page props.
+- [ ] `CopyButton.vue:39` teleports to `body` during hydration. Mount the Teleport after `onMounted`.
+
+### Then
+
+- [ ] **The kit as the real consumer**: build it against this repo as a path repository. Its CI covers install, Boost discovery, the type check and the build, so this repo needs no consumer fixture of its own. The recipes' list, bulk and upload controllers still only run against `demo/app/server.js`. Try each once in an app made from the kit (list and search, an invalid save, a successful save, an upload) before the first real app relies on them.
+- [ ] **Tag `v0.1.0`** (moved from below), once the kit installs and builds clean. The kit then pins `^0.1`.
+
+Considered and left out: llms.txt or an MCP server (the Boost skill does that job for a private library), RTL (mostly logical properties already; only `tooltip.css` uses left/right), theme presets, an i18n system (English strings are fine for UK apps; keep them overridable by props as `searchPlaceholder` is), a standalone `kbd`.
+
 ## Fix first
 
 - [x] **FileInput reset**: a native form reset empties the input's files but leaves the list and v-model populated. `FileInput.vue` never listens for the form's `reset` event (`domModel.js` does, for the other field types, but returns the model unchanged for `file`). Clear the model on reset, so `<Field type="file">` follows, and add a regression test to `tests/browsers.spec.js`.
@@ -28,7 +96,7 @@ In this order: the shell and recipes save the most time on the first app; the sp
 - [x] **Inventory test**: a `node --test` file asserting every `resources/css/components/*.css` is imported in `ui.css`, has a demo page, is in the `components` array in `demo/demo.js`, is in `pages` in `tests/a11y.spec.js`, and has a heading in SKILL.md; and that every `demo/**/*.html` is in the a11y scan. Turns the seven-step checklist in AGENTS.md into a failing test, and stops the hand-kept page lists drifting.
 - [x] **Type check**: `vue-tsc --noEmit` over `resources/js` and `tests/table-view.ts`, run first in `npm test`. The TypeScript in `DataTable.vue` and `dataTable.ts` is never checked today.
 - [x] **Focused test commands**: `test:unit` (PHP and Node), `test:a11y`, `test:browsers`, so a CSS change does not wait for the three-browser matrix. Note them in AGENTS.md.
-- [ ] **Tag `v0.1.0`**: with no tags a Composer VCS install can only track `dev-main`. Tag now, bump on breaking changes, and apps pin `^0.1` once adoption starts.
+- [ ] **Tag `v0.1.0`**: moved to "Before tagging v0.1.0" above. With no tags a Composer VCS install can only track `dev-main`. Bump on breaking changes; apps pin `^0.1`.
 
 ## Housekeeping
 
