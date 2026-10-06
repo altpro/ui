@@ -4,6 +4,7 @@ The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar, a
 
 - **Skip link** first in `body`: `sr-only` until focused, then a `btn primary` in the corner. It targets `<main id="main">`.
 - **Sidebar**: from `lg` an `<aside>`, sticky and full height, scrolling on its own. Below `lg` the aside is `hidden` and the same `.nav` is in the drawer. The nav is written once (a Blade partial, a Vue `v-for`) and rendered in both; only one is ever displayed, so there is one `Main` landmark at a time.
+- **Print**: the sidebar and header are `print:hidden`, so a printed page is just `main`; the toaster hides itself.
 - **Drawer**: the browser opens it, traps focus, closes it on Esc and returns focus to the menu button. `closedby="any"` closes it on a tap outside. Its top row is a `div`, not a `<header>`: the drawer sits at body level, where a `header` would be a second page banner.
 - **Current link**: `aria-current="page"` on the nav link for this page or the section it is in, and on the last breadcrumb item, which is a `<span>`.
 - **Scheme**: radios with `value` `""` (follow the OS), `light`, `dark`. The choice is kept in `localStorage.theme` and set as `data-theme` on `<html>` by a one-line script in `<head>` before the stylesheet, so a pinned scheme never flashes the other one first.
@@ -31,13 +32,13 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
   <a href="#main" class="btn primary sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50">Skip to content</a>
 
   <div class="flex min-h-dvh">
-    <aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex">
+    <aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex print:hidden">
       <a href="{{ route('dashboard') }}" class="flex h-11 items-center px-3 font-semibold">{{ config('app.name') }}</a>
       @include('layouts.navigation')
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="flex h-14 shrink-0 items-center gap-2 border-b border-border px-gap">
+      <header class="flex h-14 shrink-0 items-center gap-2 border-b border-border px-gap print:hidden">
         <button class="btn ghost sm -ms-2 px-2 lg:hidden" command="show-modal" commandfor="sidebar" aria-label="Open menu">
           <x-lucide-menu class="size-4" aria-hidden="true" />
         </button>
@@ -201,7 +202,7 @@ watch(scheme, (value) => {
   <a href="#main" class="btn primary sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50">Skip to content</a>
 
   <div class="flex min-h-dvh">
-    <aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex">
+    <aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex print:hidden">
       <Link href="/dashboard" class="flex h-11 items-center px-3 font-semibold">{{ appName }}</Link>
       <nav class="nav" aria-label="Main">
         <Link v-for="item in menu" :key="item.href" :href="item.href" :aria-current="current(item.href)">
@@ -211,7 +212,7 @@ watch(scheme, (value) => {
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
-      <header class="flex h-14 shrink-0 items-center gap-2 border-b border-border px-gap">
+      <header class="flex h-14 shrink-0 items-center gap-2 border-b border-border px-gap print:hidden">
         <button class="btn ghost sm -ms-2 px-2 lg:hidden" command="show-modal" commandfor="sidebar" aria-label="Open menu">
           <Menu class="size-4" aria-hidden="true" />
         </button>

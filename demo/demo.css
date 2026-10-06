@@ -104,4 +104,7 @@ header .btn[aria-pressed="true"] {
     .demo-main { padding: 24px 16px 12px; }
     body:has(#menu:checked) .demo-menu-scrim { inset-block-start: 66px; }
   }
+  @media print {
+    .demo-sidebar, .demo-header { display: none; }
+  }
 }

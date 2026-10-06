@@ -610,6 +610,23 @@ test("forced colours: checked and filled states still differ from their opposite
   expect(same(range((10 + 0.4 * (w - 20)) / w, 0.5), range(0.9, 0.5))).toBe(false); // thumb differs from track
 });
 
+// an invoice printed from a dark screen: light whatever the OS or the switcher says, and only main on the page
+test("app/shell.html: print is light and shows only main", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.emulateMedia({ colorScheme: "dark" });
+  await page.goto("/app/shell.html");
+  await page.evaluate(() => { document.documentElement.dataset.theme = "dark"; document.querySelector("main").insertAdjacentHTML("beforeend", '<div class="inverse" id="flip">x</div>'); });
+  const bg = (sel) => page.locator(sel).evaluate((el) => getComputedStyle(el).backgroundColor);
+  const screen = await bg("body");
+  await page.emulateMedia({ media: "print", colorScheme: "dark" });
+  expect(await bg("body")).not.toBe(screen);
+  expect(await bg("#flip")).toBe(await bg("body"));
+  await expect(page.locator("aside")).toBeHidden();
+  await expect(page.locator("header")).toBeHidden();
+  await expect(page.locator("#toaster")).toBeHidden();
+  await expect(page.locator("main")).toBeVisible();
+});
+
 test("app/shell.html: the scheme switcher pins the scheme, remembers it and goes back to the OS", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/app/shell.html");

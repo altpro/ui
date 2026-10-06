@@ -158,6 +158,10 @@ Tailwind's `dark:` variant follows the OS media query and ignores these regions.
 @custom-variant dark (@container style(--scheme: dark));
 ```
 
+## Print
+
+Printing is always light: every region, `.dark` and `.inverse` included, prints in the light scheme, and the toaster is hidden. Anything else that only makes sense on screen takes Tailwind's `print:hidden`: the [app shell](references/app-shell.md)'s sidebar and header and the [save bar](references/save-bar.md) already have it; add it to record-header actions, filters and pagination on a page people print, such as an invoice or a packing slip. Other `print:` utilities adjust the printed layout.
+
 ## Demo
 
 Run `npm run dev` inside the altpro/ui repository to browse every component with a theme and radius switcher.

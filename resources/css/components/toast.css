@@ -43,6 +43,9 @@
     @media (prefers-reduced-motion: reduce) {
       > * { animation-duration: 0s, var(--toast-life); }
     }
+    @media print {
+      display: none;
+    }
   }
 }
 @keyframes toast-in {
