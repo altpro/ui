@@ -31,7 +31,7 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
-    &:is([aria-invalid="true"], :user-invalid, :has([aria-invalid="true"], :user-invalid)) {
+    &:is([aria-invalid="true"], :user-invalid:not(form[novalidate] *), :has([aria-invalid="true"], :user-invalid:not(form[novalidate] *))) {
       --check-border: var(--color-danger);
       --check-ring: var(--color-danger);
     }

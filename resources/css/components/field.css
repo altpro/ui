@@ -8,7 +8,7 @@
    Children are styled by element and by the bare class words hint and
    error, so DOM order is display order. The field turns its control red
    when it holds a non-empty .error, when the control says aria-invalid,
-   or when native validation fails after the user touched it. A disabled
+   or when native validation fails after the user touched it (not in a novalidate form). A disabled
    control (or a disabled <fieldset class="field">) dims the label and hint. */
 @layer components {
   .field {

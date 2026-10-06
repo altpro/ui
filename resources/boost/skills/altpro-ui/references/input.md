@@ -5,7 +5,7 @@ One class for every text-like control: `<input>` of any text type, `<select>`, `
 | Kind | Classes / attributes |
 |------|----------------------|
 | Size | `xs` `sm` `lg` `xl`. Heights match `.btn`, so the two line up in a join. |
-| Invalid | `aria-invalid="true"`. Also automatic when native validation (`required`, `type="email"`, `pattern`) fails after the user has touched it. Border and focus ring turn red. |
+| Invalid | `aria-invalid="true"`. Also automatic when native validation (`required`, `type="email"`, `pattern`) fails after the user has touched it, except inside a `novalidate` form, where only the server's errors (`aria-invalid`) turn it red. Border and focus ring turn red. |
 | State | `disabled`, `readonly`. Focus ring on focus. |
 
 ```html

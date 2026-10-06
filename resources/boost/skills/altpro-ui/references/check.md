@@ -16,7 +16,7 @@ Restyled native inputs. Two ways to label, same result: the class on a `<label>`
 |------|----------------------|
 | Size | `xs` `sm` `lg` `xl`. No size = 1.5rem box, the 24px target minimum. A wrapping label stays 24px tall for the smaller sizes. |
 | State | `checked`, `disabled`, `required`. A checkbox also shows the `indeterminate` DOM property. |
-| Invalid | `aria-invalid="true"`, or native validation failing after interaction. Border and ring turn red. |
+| Invalid | `aria-invalid="true"`, or native validation failing after interaction outside a `novalidate` form. Border and ring turn red. |
 
 - A switch is a checkbox with `role="switch"`, so screen readers say on and off. Use it for a setting that applies at once, saved as it is switched (below); a checkbox for something submitted with a form.
 - A radio is always round and a switch always a pill. A checkbox follows `--radius`, capped at a quarter of its size.

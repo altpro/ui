@@ -351,6 +351,18 @@ for (const colorScheme of ["light", "dark"]) {
       expect(failures).toEqual([]);
     });
 
+    // a hidden bubble still counted as overflow, so a host at a dialog's edge made the dialog scroll sideways
+    test("tooltip.html: a hidden bubble does not widen its scroll container", async ({ page }) => {
+      await page.goto("/tooltip.html");
+      const box = await page.evaluate(() => {
+        const div = Object.assign(document.createElement("div"), { style: "overflow: auto; width: 10rem; text-align: end" });
+        div.innerHTML = `<button class="btn" data-tooltip="A tooltip much wider than its container">x</button>`;
+        document.querySelector("main").append(div);
+        return { scroll: div.scrollWidth, client: div.clientWidth };
+      });
+      expect(box.scroll).toBe(box.client);
+    });
+
     // the recipes' server answers arrive after load, so axe never sees them: errors and a toast, then file rows with progress and an error
     test("recipe pages: the error summary, a flash toast, uploading files and the delete dialog pass axe", async ({ page }) => {
       await page.goto("/app/recipe-product.html?id=1");

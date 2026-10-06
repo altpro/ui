@@ -4,7 +4,7 @@ A bordered box on `--color-card`. Children are styled by element, so no item cla
 
 | Child | Role |
 |-------|------|
-| `<header>` | Title row. A heading (`h2` to `h6`) sits left; the first thing after it is pushed to the far side. A `<p>` straight after the heading is a muted description on its own line. |
+| `<header>` | Title row. A heading (`h1` to `h6`; `h1` when the card is the whole page, such as a sign-in screen) sits left; the first thing after it is pushed to the far side. A `<p>` straight after the heading is a muted description on its own line. |
 | `<hgroup>` | Groups the heading and its `<p>` description inside the header when a control shares the row. |
 | `<footer>` | Action row. Flex, items centred, left-aligned; add `justify-end` to push buttons right. |
 | anything else | Body. Stacks with the card gap. |

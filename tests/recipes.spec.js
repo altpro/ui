@@ -20,6 +20,9 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
   await name.fill("");
   await price.fill("-5");
   await expect(status).toHaveText("Unsaved changes");
+  // novalidate: an emptied required field stays its normal colour until the server sends a message for it
+  const border = (input) => input.evaluate((el) => getComputedStyle(el.closest(".input")).borderTopColor);
+  expect(await border(name)).toBe(await border(page.getByLabel("SKU", { exact: true })));
   await page.getByRole("button", { name: "Save", exact: true }).click();
   // the summary lists every error and takes focus; Tab goes on to the first field
   await expect(summary).toBeFocused();

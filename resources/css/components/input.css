@@ -6,7 +6,8 @@
    unit, an icon) sits inside the same box. The border, focus ring and
    invalid colour come from --input-* vars so .field can redirect them.
    Invalid when `aria-invalid="true"` is set, or when native validation fails
-   after the user has touched the control (:user-invalid). Sizes match .btn
+   after the user has touched the control (:user-invalid), except in a
+   novalidate form, where the server's errors decide. Sizes match .btn
    so the two line up side by side or inside .join. Layered so Tailwind wins. */
 @layer components {
   .input {
@@ -47,7 +48,7 @@
       opacity: 0.5;
       cursor: not-allowed;
     }
-    &:is([aria-invalid="true"], :user-invalid, :has([aria-invalid="true"], :user-invalid)) {
+    &:is([aria-invalid="true"], :user-invalid:not(form[novalidate] *), :has([aria-invalid="true"], :user-invalid:not(form[novalidate] *))) {
       --input-border: var(--color-danger);
       --input-ring: var(--color-danger);
     }

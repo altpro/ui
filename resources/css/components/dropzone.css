@@ -57,7 +57,7 @@
         border-color: var(--color-muted-foreground);
         background: color-mix(in oklab, var(--color-muted) 50%, transparent);
       }
-      &:has([aria-invalid="true"], :user-invalid) {
+      &:has([aria-invalid="true"], :user-invalid:not(form[novalidate] *)) {
         --dropzone-border: var(--color-danger);
         --dropzone-ring: var(--color-danger);
       }

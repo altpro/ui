@@ -25,7 +25,10 @@
       background: var(--tooltip-bg);
       visibility: hidden;
       opacity: 0;
-      transition: opacity 0.15s, visibility 0.15s;
+      /* a hidden box still counts as overflow, so a host at a dialog's edge would scroll it sideways:
+         shrink it to nothing once the fade ends */
+      scale: 0;
+      transition: opacity 0.15s, visibility 0.15s, scale 0s 0.15s;
     }
     &::after {
       content: attr(data-tooltip);
@@ -64,6 +67,7 @@
     &:is(:hover, :focus-visible)::after {
       visibility: visible;
       opacity: 1;
+      scale: 1;
       transition-delay: 0.3s;
     }
   }

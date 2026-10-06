@@ -17,7 +17,7 @@ Stacks a label, a control, an optional hint and optional errors. Children are st
 | `.hint` | Help text, muted. Point `aria-describedby` at it. |
 | `.error` | Error text, red. A `<p>` for one, a `<ul>` of `<li>` for several. Hidden when empty, so a template can always render it. |
 
-The control turns red when the field holds a non-empty `.error`, when the control has `aria-invalid="true"`, or when native validation fails after interaction. Always set `aria-invalid` and `aria-describedby` alongside an `.error`; the colour alone does not reach screen readers.
+The control turns red when the field holds a non-empty `.error`, when the control has `aria-invalid="true"`, or when native validation fails after interaction, unless the form is `novalidate`: there the server's errors decide, so a `required` field never turns red without a message. Always set `aria-invalid` and `aria-describedby` alongside an `.error`; the colour alone does not reach screen readers.
 
 Disabled: `disabled` on the control, or `<fieldset class="field" disabled>` to disable everything inside it natively.
 
