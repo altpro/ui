@@ -133,6 +133,16 @@
         background: var(--btn-hover);
       }
     }
+    /* forced colours drop the fill that marks a checked toggle or the current page */
+    &:is(:has(:checked), [aria-current]:not([aria-current="false"])) {
+      @media (forced-colors: active) {
+        forced-color-adjust: none;
+        border-color: Highlight;
+        outline-color: CanvasText;
+        background: Highlight;
+        color: HighlightText;
+      }
+    }
     /* after .outlined so the ring colour wins the border on every variant */
     &:is(:focus-visible, :has(:focus-visible)) {
       border-color: var(--color-ring);

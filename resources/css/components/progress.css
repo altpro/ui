@@ -35,6 +35,18 @@
     /* sizes */
     &.sm { --progress-h: 0.25rem; }
     &.lg { --progress-h: 0.75rem; }
+
+    /* forced colours repaint the bar as Canvas, the same as the track: draw it
+       in Highlight inside a CanvasText outline. Important, so no colour word
+       or band can bring a non-system colour back. */
+    @media (forced-colors: active) {
+      forced-color-adjust: none;
+      outline: 1px solid CanvasText;
+      --progress-bg: Canvas !important;
+      --progress-fg: Highlight !important;
+      --progress-warn: Highlight !important;
+      --progress-danger: Highlight !important;
+    }
   }
 
   /* one vendor pseudo per rule: a list mixing -webkit- and -moz- is dropped whole by both engines */
@@ -68,6 +80,7 @@
   .meter {
     --progress-fg: var(--color-success);
     --progress-warn: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
+    --progress-danger: var(--color-danger);
 
     &::-webkit-meter-bar {
       border: 0;
@@ -82,9 +95,9 @@
     /* bands: the colour follows the value unless a colour word is set */
     &:not(.primary, .secondary, .info, .success, .warning, .danger, .error) {
       &::-webkit-meter-suboptimum-value { background: var(--progress-warn); }
-      &::-webkit-meter-even-less-good-value { background: var(--color-danger); }
+      &::-webkit-meter-even-less-good-value { background: var(--progress-danger); }
       &:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--progress-warn); }
-      &:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--color-danger); }
+      &:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--progress-danger); }
     }
   }
 }

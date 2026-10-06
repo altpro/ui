@@ -556,6 +556,33 @@ for (const colorScheme of ["light", "dark"]) {
   });
 }
 
+// forced colours repaint every background as Canvas, so a state drawn only as a fill vanishes; read the pixels back
+test("forced colours: checked and filled states still differ from their opposites", async ({ page }) => {
+  await page.emulateMedia({ forcedColors: "active" });
+  const at = async (loc, x, y = 0.5) => (await shot(loc))(x, y);
+  await page.goto("/check.html");
+  await page.addStyleTag({ content: "*, ::before { transition: none !important }" });
+  const box = (name) => page.locator("main label", { hasText: new RegExp(`^\\s*${name}$`) }).first().locator("input");
+  // beside the mark, which is HighlightText and can match Canvas; on the switch, where the thumb sits when off
+  for (const [off, on, x, y] of [["Unchecked", "Checked", 0.2, 0.2], ["Team", "Free", 0.2, 0.2], ["Off", "On", 0.3, 0.5]]) {
+    expect(same(await at(box(off), x, y), await at(box(on), x, y)), `${off} looks like ${on}`).toBe(false);
+  }
+
+  await page.goto("/segmented.html");
+  const sort = page.locator("main [aria-label=Sort] > label");
+  expect(same(await at(sort.nth(0), 0.1), await at(sort.nth(1), 0.1))).toBe(false);
+
+  await page.goto("/progress.html");
+  await page.addStyleTag({ content: "* { transition: none !important }" });
+  const up = await shot(page.locator("#upload"));
+  expect(same(up(0.2, 0.5), up(0.8, 0.5))).toBe(false); // bar differs from track
+
+  await page.goto("/range.html");
+  const r = page.locator("#volume"), w = (await r.boundingBox()).width;
+  const range = await shot(r);
+  expect(same(range((10 + 0.4 * (w - 20)) / w, 0.5), range(0.9, 0.5))).toBe(false); // thumb differs from track
+});
+
 test("app/shell.html: the scheme switcher pins the scheme, remembers it and goes back to the OS", async ({ page }) => {
   await page.emulateMedia({ colorScheme: "light" });
   await page.goto("/app/shell.html");

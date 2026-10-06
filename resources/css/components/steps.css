@@ -27,6 +27,18 @@
     font-size: var(--text-sm, 0.875rem);
     color: var(--steps-fg);
 
+    /* forced colours repaint markers and lines as Canvas: outlined markers,
+       done and current in Highlight */
+    @media (forced-colors: active) {
+      --steps-marker-bg: Canvas;
+      --steps-marker-fg: CanvasText;
+      --steps-active-bg: Highlight;
+      --steps-active-fg: HighlightText;
+      --steps-line: CanvasText;
+      > li::before, > li::after { forced-color-adjust: none; }
+      > li::before { box-shadow: inset 0 0 0 1px CanvasText; }
+    }
+
     > li {
       flex: 1 1 0;
       position: relative;

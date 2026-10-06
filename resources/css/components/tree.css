@@ -87,6 +87,12 @@
       background: var(--tree-active-bg);
       color: var(--tree-active-fg);
       font-weight: 500;
+      /* forced colours drop the fill, the main mark of the current page */
+      @media (forced-colors: active) {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+      }
     }
 
     /* chevron, drawn in CSS and centred in the gutter: points along the line closed, down open */
