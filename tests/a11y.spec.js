@@ -322,7 +322,7 @@ for (const colorScheme of ["light", "dark"]) {
       await expect(menu).toBeHidden();
       await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
       const small = [];
-      for (const el of await page.locator("aside a, header :is(a, label, button):visible").all()) {
+      for (const el of await page.locator("aside :is(a, button):visible, header :is(a, label, button):visible").all()) {
         const box = await el.boundingBox();
         if (box.width < 24 || box.height < 24) small.push(await el.evaluate((e) => e.outerHTML.slice(0, 60)));
       }

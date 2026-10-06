@@ -1,7 +1,7 @@
 // Demo only: the Laravel half of the recipe pages (recipe-*.html), so they run with no backend.
 // It plays the controllers in references/recipes.md, answers Inertia visits through a stand-in
 // HTTP client and the Combobox's fetch() calls through a stand-in fetch, and boots the Inertia app
-// as an app's app.js would. The page components in Pages/ are the code the recipes show.
+// as an app's app.js would. The page components in pages/ are the code the recipes show.
 import { createInertiaApp, http, router } from "@inertiajs/vue3";
 import { HttpCancelledError, HttpResponseError } from "@inertiajs/core";
 import { readView } from "@ui/dataTable";
@@ -53,6 +53,8 @@ const lower = (s) => s.toLowerCase();
 // ---- ProductController ----
 // the signed-in user, and Product::visibleTo($user): the index, its count and bulk() all start from it
 const user = { team_id: 1, is_manager: true };
+// HandleInertiaRequests::share(): every page gets the signed-in user, which the shell's user menu shows
+const shared = () => ({ auth: { user: { name: "Sam Taylor", email: "sam@forma.test" } } });
 const visible = () => db.products.filter((p) => p.team_id === user.team_id);
 const categories = ["Headphones", "Speakers", "Turntables"];
 const statuses = ["Active", "Draft", "Archived"];
@@ -87,7 +89,7 @@ function index(query) {
   const data = rows.slice((current - 1) * perPage, current * perPage)
     .map(({ id, name, sku, category, price, stock, status, updated_at }) => ({ id, name, sku, category, price, stock, status, updated_at }));
   const from = data.length ? (current - 1) * perPage + 1 : null;
-  return page("Products/Index", {
+  return page("products/Index", {
     products: { data, current_page: current, last_page: last, per_page: perPage, total: rows.length, from, to: from && from + data.length - 1 },
     filters,
     unfilteredTotal: visible().length,
@@ -106,7 +108,7 @@ function bulk(body) {
 }
 
 const productProps = (p) => ({ product: { ...p, tag_ids: undefined }, categories, statuses });
-const edit = (id) => page("Products/Edit", productProps(find(id)));
+const edit = (id) => page("products/Edit", productProps(find(id)));
 
 // UpdateProductRequest: the rules, with Laravel's default messages
 const blank = (v) => v == null || String(v).trim() === "";
@@ -142,7 +144,7 @@ function update(id, data) {
 const tagOption = (t) => ({ value: t.id, label: t.name });
 function media(id) {
   const p = find(id);
-  return page("Products/Media", {
+  return page("products/Media", {
     product: { id: p.id, name: p.name, sku: p.sku, status: p.status, tag_ids: p.tag_ids },
     tags: db.tags.filter((t) => p.tag_ids.includes(t.id)).map(tagOption),
   });
@@ -188,7 +190,7 @@ function destroyPhoto(id) {
 }
 
 // ---- AccountController: the signed-in user deletes their account, confirming with their password ----
-const settings = () => page("Settings/Account", {});
+const settings = () => page("settings/Account", {});
 function destroyAccount(data) {
   if (blank(data?.password)) return back({ errors: { password: "The password field is required." } });
   // the current_password rule; the demo user's password is "password", as in Laravel's UserFactory
@@ -211,6 +213,8 @@ const routes = [
   ["POST", /^\/tags$/, (m, q, body) => storeTag(body)],
   ["GET", /^\/settings$/, () => settings()],
   ["DELETE", /^\/account$/, (m, q, body) => destroyAccount(body)],
+  // Auth::logout() and redirect('/'), as the account deletion does
+  ["POST", /^\/logout$/, () => new Away("/")],
 ];
 
 // the app's URLs live in static demo pages: /products is recipe-products.html, /products/3/edit recipe-product.html?id=3
@@ -253,7 +257,7 @@ const route = (method, url) => {
 function visit(result, url, only) {
   const here = new URL(location.href);
   const res = result instanceof Back ? route("GET", toApp(here))() : result;
-  const props = { ...res.props, errors: result.errors ?? {} };
+  const props = { ...shared(), ...res.props, errors: result.errors ?? {} };
   if (only) for (const key of Object.keys(props)) if (key !== "errors" && !only.includes(key)) delete props[key];
   return {
     component: res.component, props, flash: result.flash ?? {},
@@ -317,10 +321,10 @@ router.on("flash", (event) => {
   if (t) toast(t.message, t.type);
 });
 
-const pages = import.meta.glob("./Pages/**/*.vue", { eager: true });
+const pages = import.meta.glob("./pages/**/*.vue", { eager: true });
 const first = route("GET", toApp(new URL(location.href)))();
 createInertiaApp({
-  page: { ...first, props: { ...first.props, errors: {} }, url: location.pathname + location.search, version: null, clearHistory: false, encryptHistory: false },
-  resolve: (name) => pages[`./Pages/${name}.vue`],
+  page: { ...first, props: { ...shared(), ...first.props, errors: {} }, url: location.pathname + location.search, version: null, clearHistory: false, encryptHistory: false },
+  resolve: (name) => pages[`./pages/${name}.vue`],
   title: (title) => `${title} · Forma`,
 });

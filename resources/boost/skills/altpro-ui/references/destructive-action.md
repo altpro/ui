@@ -3,13 +3,13 @@
 No class. A delete that cannot be undone asks first, in a [`.dialog`](dialog.md): the trigger opens it, the dialog's button sends `useForm().delete`, and while that runs the button shows it is busy. A 422 (a wrong password) keeps the dialog open with the error under its field; success closes it, and the browser returns focus to the trigger. Below is deleting your own account, confirmed with your password, as a settings page; `demo/app/recipe-settings.html` runs it (the demo user's password is `password`).
 
 ```vue
-<!-- resources/js/Pages/Settings/Account.vue -->
+<!-- resources/js/pages/settings/Account.vue -->
 <script setup>
 import { nextTick, ref } from "vue";
 import { Head, useForm } from "@inertiajs/vue3";
 import { Trash2, X } from "@lucide/vue";
 import Field from "@ui/Field.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 
 const dialog = ref();
 const form = useForm({ password: "" });
@@ -69,7 +69,7 @@ use App\Http\Controllers\AccountController;
 use Inertia\Inertia;
 
 Route::middleware('auth')->group(function () {
-    Route::get('/settings', fn () => Inertia::render('Settings/Account'))->name('settings');
+    Route::get('/settings', fn () => Inertia::render('settings/Account'))->name('settings');
     Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');
 });
 ```

@@ -136,7 +136,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 
 | Component | For | Ships as | Reference |
 |-----------|-----|----------|-----------|
-| App shell | The page frame: sidebar nav, header with breadcrumb and scheme switcher, main, toaster | pattern | [app-shell.md](references/app-shell.md) |
+| App shell | The page frame: sidebar nav with a user menu, header with breadcrumb, main, toaster; the sign-in layout; the colour scheme setting | pattern | [app-shell.md](references/app-shell.md) |
 | Page recipes | Whole Inertia screens: list page, edit page, tags and photo uploads, with controllers and endpoint responses | pattern | [recipes.md](references/recipes.md) |
 | Validation failure | A failed save: an error summary that is announced and takes focus; where focus goes after a visit | pattern | [validation-failure.md](references/validation-failure.md) |
 | Destructive action | A delete confirmed in a dialog: pending state, a 422 shown in it, focus back to the trigger | pattern | [destructive-action.md](references/destructive-action.md) |

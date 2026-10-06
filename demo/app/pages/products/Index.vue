@@ -3,7 +3,7 @@ import { Head, Link, router } from "@inertiajs/vue3";
 import { Archive, Pencil } from "@lucide/vue";
 import DataTable from "@ui/DataTable.vue";
 import type { DataTableColumn, DataTableFilter, DataTablePaginated, DataTableSelection } from "@ui/dataTable";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 
 interface Product {
   id: number;

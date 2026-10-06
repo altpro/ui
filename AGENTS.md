@@ -16,7 +16,7 @@ resources/boost/guidelines/  core.blade.php, the few lines Boost writes into the
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 src/TableQuery.php           server half of DataTable.vue: reads the view and filters from the query string as dataTable.ts does, then searches, sorts and pages
 demo/*.html                  one page per component, plus index and theme
-demo/app/                    sample store (Forma): one Vue app, Workspace.vue, behind four pages listed under Application in the menu; its screen styles are app.css. The recipe-*.html pages are the app shell's Inertia root view running the skill's app code (Layouts/AppLayout.vue, Pages/, composables/, toast.js, written as references/*.md show them) against server.js, a stand-in for the Laravel side; vite.config.js maps `@` to demo/app and @lucide/vue to lucide.js for them
+demo/app/                    sample store (Forma): one Vue app, Workspace.vue, behind four pages listed under Application in the menu; its screen styles are app.css. The recipe-*.html pages are the app shell's Inertia root view running the skill's app code (layouts/AppLayout.vue, components/UserMenu.vue, pages/, composables/, toast.js, written as references/*.md show them) against server.js, a stand-in for the Laravel side; vite.config.js maps `@` to demo/app and @lucide/vue to lucide.js for them
 demo/demo.css                Tailwind, ui.css and the shell's styles
 demo/demo.js                 shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 tests/blade.php              renders a Blade string through Testbench, for the browser tests

@@ -22,6 +22,23 @@
         <a href="activity.html"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg> Activity</a>
         <a href="../index.html"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"/><rect x="14" y="2" width="8" height="8" rx="1"/></svg> Components</a>
       </nav>
+      <div class="mt-auto">
+        <button type="button" class="btn ghost w-full justify-start px-2" popovertarget="user-menu">
+          <span class="avatar sm" aria-hidden="true">ST</span>
+          <span class="min-w-0 truncate">Sam Taylor</span>
+          <svg class="ms-auto size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+        </button>
+        <div id="user-menu" popover class="dropdown up w-56">
+          <div class="nav">
+            <p class="truncate px-3 py-2 text-sm text-muted-foreground">sam@forma.test</p>
+            <hr>
+            <a href="shell.html"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg> Settings</a>
+            <form action="../index.html" class="contents">
+              <button><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg> Log out</button>
+            </form>
+          </div>
+        </div>
+      </div>
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -31,17 +48,21 @@
           <a href="dashboard.html">Application</a>
           <span aria-current="page">App shell</span>
         </nav>
-        <div class="join ms-auto" role="radiogroup" aria-label="Colour scheme">
-          <label class="btn outlined sm px-2"><input type="radio" name="scheme" value="" aria-label="System"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg></label>
-          <label class="btn outlined sm px-2"><input type="radio" name="scheme" value="light" aria-label="Light"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg></label>
-          <label class="btn outlined sm px-2"><input type="radio" name="scheme" value="dark" aria-label="Dark"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg></label>
-        </div>
       </header>
 
       <main id="main" class="flex-1 p-gap">
         <div class="max-w-2xl space-y-4">
           <h1 class="text-2xl font-semibold tracking-tight">App shell</h1>
-          <p class="muted">The app-shell recipe as a plain page: a sidebar <code>.nav</code>, a header with the breadcrumb and a scheme switcher, this <code>main</code> and a toaster. Below the <code>lg</code> breakpoint the sidebar moves into a drawer behind the menu button.</p>
+          <p class="muted">The app-shell recipe as a plain page: a sidebar <code>.nav</code> with the user menu at its foot, a header with the breadcrumb, this <code>main</code> and a toaster. Below the <code>lg</code> breakpoint the sidebar moves into a drawer behind the menu button.</p>
+          <section class="space-y-2" aria-labelledby="scheme-heading">
+            <h2 id="scheme-heading" class="text-lg font-semibold">Colour scheme</h2>
+            <p class="text-sm muted">The setting an app puts on its appearance page.</p>
+            <div class="join" role="radiogroup" aria-label="Colour scheme">
+            <label class="btn outlined"><input type="radio" name="scheme" value=""><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="20" height="14" x="2" y="3" rx="2"/><line x1="8" x2="16" y1="21" y2="21"/><line x1="12" x2="12" y1="17" y2="21"/></svg> System</label>
+            <label class="btn outlined"><input type="radio" name="scheme" value="light"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2"/><path d="M12 20v2"/><path d="m4.93 4.93 1.41 1.41"/><path d="m17.66 17.66 1.41 1.41"/><path d="M2 12h2"/><path d="M20 12h2"/><path d="m6.34 17.66-1.41 1.41"/><path d="m19.07 4.93-1.41 1.41"/></svg> Light</label>
+            <label class="btn outlined"><input type="radio" name="scheme" value="dark"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.985 12.486a9 9 0 1 1-9.473-9.472c.405-.022.617.46.402.803a6 6 0 0 0 8.268 8.268c.344-.215.825-.004.803.401"/></svg> Dark</label>
+            </div>
+          </section>
           <button class="btn primary" onclick="toast('Your changes have been saved.', 'success')">Show a toast</button>
         </div>
       </main>
@@ -59,11 +80,28 @@
       <a href="activity.html"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/><path d="M12 7v5l4 2"/></svg> Activity</a>
       <a href="../index.html"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 22V7a1 1 0 0 0-1-1H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-5a1 1 0 0 0-1-1H2"/><rect x="14" y="2" width="8" height="8" rx="1"/></svg> Components</a>
     </nav>
+    <div class="mt-auto">
+      <button type="button" class="btn ghost w-full justify-start px-2" popovertarget="user-menu-drawer">
+        <span class="avatar sm" aria-hidden="true">ST</span>
+        <span class="min-w-0 truncate">Sam Taylor</span>
+        <svg class="ms-auto size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m7 15 5 5 5-5"/><path d="m7 9 5-5 5 5"/></svg>
+      </button>
+      <div id="user-menu-drawer" popover class="dropdown up w-56">
+        <div class="nav">
+          <p class="truncate px-3 py-2 text-sm text-muted-foreground">sam@forma.test</p>
+          <hr>
+          <a href="shell.html"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.671 4.136a2.34 2.34 0 0 1 4.659 0 2.34 2.34 0 0 0 3.319 1.915 2.34 2.34 0 0 1 2.33 4.033 2.34 2.34 0 0 0 0 3.831 2.34 2.34 0 0 1-2.33 4.033 2.34 2.34 0 0 0-3.319 1.915 2.34 2.34 0 0 1-4.659 0 2.34 2.34 0 0 0-3.32-1.915 2.34 2.34 0 0 1-2.33-4.033 2.34 2.34 0 0 0 0-3.831A2.34 2.34 0 0 1 6.35 6.051a2.34 2.34 0 0 0 3.319-1.915"/><circle cx="12" cy="12" r="3"/></svg> Settings</a>
+          <form action="../index.html" class="contents">
+            <button><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/></svg> Log out</button>
+          </form>
+        </div>
+      </div>
+    </div>
   </dialog>
 
   <div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
   <script>
-    // scheme switcher: "" follows the OS, the head script applies a saved choice before paint
+    // the colour scheme setting: "" follows the OS, the head script applies a saved choice before paint
     for (const radio of document.querySelectorAll("[name=scheme]")) {
       radio.checked = radio.value === (localStorage.theme ?? "");
       radio.onchange = () => {

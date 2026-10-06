@@ -3,7 +3,7 @@ import { nextTick, ref } from "vue";
 import { Head, useForm } from "@inertiajs/vue3";
 import { Trash2, X } from "@lucide/vue";
 import Field from "@ui/Field.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 
 const dialog = ref();
 const form = useForm({ password: "" });

@@ -3,7 +3,7 @@ import { computed, reactive, ref, watch } from "vue";
 import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 
 const props = defineProps({
   product: { type: Object, required: true },

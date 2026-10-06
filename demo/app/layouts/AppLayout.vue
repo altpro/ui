@@ -4,9 +4,10 @@ let loaded = false;
 </script>
 
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
-import { House, Menu, Monitor, Moon, Package, Settings, ShoppingCart, Sun, X } from "@lucide/vue";
+import { House, Menu, Package, Settings, ShoppingCart, X } from "@lucide/vue";
+import UserMenu from "@/components/UserMenu.vue";
 
 defineProps({
   // [{ label: "Orders", href: "/orders" }, { label: "Order 1042" }]: the last item is this page
@@ -36,20 +37,6 @@ onMounted(() => {
   if (loaded) main.value.focus({ preventScroll: true });
   loaded = true;
 });
-
-// "" follows the OS; app.blade.php applies the saved choice before paint
-const schemes = [
-  { value: "", label: "System", icon: Monitor },
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-];
-const scheme = ref("");
-onMounted(() => (scheme.value = localStorage.theme ?? ""));
-watch(scheme, (value) => {
-  localStorage.theme = value;
-  if (value) document.documentElement.dataset.theme = value;
-  else delete document.documentElement.dataset.theme;
-});
 </script>
 
 <template>
@@ -63,6 +50,7 @@ watch(scheme, (value) => {
           <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
         </Link>
       </nav>
+      <UserMenu id="user-menu" class="mt-auto" />
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -76,12 +64,6 @@ watch(scheme, (value) => {
             <Link v-else :href="crumb.href">{{ crumb.label }}</Link>
           </template>
         </nav>
-        <div class="join ms-auto" role="radiogroup" aria-label="Colour scheme">
-          <label v-for="s in schemes" :key="s.value" class="btn outlined sm px-2">
-            <input v-model="scheme" type="radio" name="scheme" :value="s.value" :aria-label="s.label">
-            <component :is="s.icon" class="size-4" aria-hidden="true" />
-          </label>
-        </div>
       </header>
 
       <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap outline-none">
@@ -102,5 +84,6 @@ watch(scheme, (value) => {
         <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
       </Link>
     </nav>
+    <UserMenu id="user-menu-drawer" class="mt-auto" />
   </dialog>
 </template>

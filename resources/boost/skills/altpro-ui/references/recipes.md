@@ -13,8 +13,8 @@ The demo pages run this Vue code as written against a stand-in for the server; `
 ## What the recipes assume
 
 - Inertia 3 with `@inertiajs/vue3`, Laravel with `inertiajs/inertia-laravel`, and the `@ui` alias from SKILL.md's setup.
-- Pages resolve from `resources/js/Pages/`, so `Inertia::render('Products/Edit')` is `resources/js/Pages/Products/Edit.vue`.
-- The app shell from [app-shell.md](app-shell.md): its root view (`scroll-pb-20` on `<html>`, the toaster at the top) and `resources/js/Layouts/AppLayout.vue`, which each page wraps itself in with its breadcrumb. The layout's `<main>` is `p-gap`, which the save bar's `-mx-gap px-gap` matches, and it draws the only breadcrumb.
+- Pages resolve from `resources/js/pages/`, so `Inertia::render('products/Edit')` is `resources/js/pages/products/Edit.vue`: lowercase folders, as Laravel's starter kit has them.
+- The app shell from [app-shell.md](app-shell.md): its root view (`scroll-pb-20` on `<html>`, the toaster at the top) and `resources/js/layouts/AppLayout.vue`, which each page wraps itself in with its breadcrumb. The layout's `<main>` is `p-gap`, which the save bar's `-mx-gap px-gap` matches, and it draws the only breadcrumb.
 - Saves confirm with a toast: the controller calls `Inertia::flash('toast', ['type' => 'success', 'message' => '…'])` and redirects, and `app.js` shows it, as [toast.md](toast.md) sets up.
 - Icons are Lucide, from `@lucide/vue`: `<Pencil class="size-4" aria-hidden="true" />`.
 - Laravel's default validation messages; the browser tests read them.
@@ -133,13 +133,13 @@ Route::middleware('auth')->group(function () {
 Record header, a grid of `Field`s bound to `useForm`, and the save bar, in the layout with its breadcrumb. The form's defaults are the saved record: Discard puts them back, and Inertia makes the saved data the new defaults after a successful save, so `isDirty` goes false by itself. A failed save shows and focuses an error summary ([validation-failure.md](validation-failure.md)), and leaving with unsaved changes asks first ([unsaved-changes.md](unsaved-changes.md)).
 
 ```vue
-<!-- resources/js/Pages/Products/Edit.vue -->
+<!-- resources/js/pages/products/Edit.vue -->
 <script setup>
 import { nextTick, ref } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { CircleAlert, Upload } from "@lucide/vue";
 import Field from "@ui/Field.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 import { useUnsavedChanges } from "@/composables/useUnsavedChanges";
 
 const props = defineProps({
@@ -231,7 +231,7 @@ public function edit(Product $product): Response
 {
     Gate::authorize('update', $product);
 
-    return Inertia::render('Products/Edit', [
+    return Inertia::render('products/Edit', [
         'product' => $product->only('id', 'name', 'sku', 'category', 'price', 'stock', 'status', 'description', 'updated_at'),
         'categories' => Product::CATEGORIES,
         'statuses' => Product::STATUSES,
@@ -280,7 +280,7 @@ What comes back:
 
 | Request | Response | On the page |
 |---------|----------|-------------|
-| `GET /products/{id}/edit` | Inertia page `Products/Edit` with `product`, `categories`, `statuses` | The form, clean. |
+| `GET /products/{id}/edit` | Inertia page `products/Edit` with `product`, `categories`, `statuses` | The form, clean. |
 | `PUT /products/{id}`, invalid | Laravel redirects back with the errors; Inertia receives the edit page with `errors: { name: "The name field is required.", price: "The price field must be at least 0." }` | The summary lists them and takes focus; each `Field` shows its message and sets `aria-invalid`. The form keeps what was typed (`put` preserves state) and stays dirty. |
 | `PUT /products/{id}`, valid | Redirect to the edit page, `errors: {}`, flash `toast` | Errors clear, the header shows the saved name, the status line says "Saved.", the toast shows, Discard disables. |
 
@@ -294,13 +294,13 @@ What comes back:
 A record-header-shaped title and a server-mode `DataTable`, in the layout: search, sort, filters and pages come from `TableQuery`, a table change reloads only `products`, and the selection drives a bulk action. The bulk endpoint gets either ids or, after "Select all N matching", the search and filters the table showed, and re-runs them through the same `filter()` and `TableQuery::search()` as the index.
 
 ```vue
-<!-- resources/js/Pages/Products/Index.vue -->
+<!-- resources/js/pages/products/Index.vue -->
 <script setup lang="ts">
 import { Head, Link, router } from "@inertiajs/vue3";
 import { Archive, Pencil } from "@lucide/vue";
 import DataTable from "@ui/DataTable.vue";
 import type { DataTableColumn, DataTableFilter, DataTablePaginated, DataTableSelection } from "@ui/dataTable";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 
 interface Product {
   id: number;
@@ -391,7 +391,7 @@ class ProductController extends Controller
             ->select('id', 'name', 'sku', 'category', 'price', 'stock', 'status', 'updated_at');
 
         // closures, so a table change (`only: ['products']`) runs the table's query and nothing else
-        return Inertia::render('Products/Index', [
+        return Inertia::render('products/Index', [
             'products' => fn () => TableQuery::paginate($query, $request,
                 searchable: self::SEARCHABLE,
                 sortable: ['name', 'sku', 'category', 'price', 'stock', 'updated_at'],
@@ -459,7 +459,7 @@ What comes back:
 
 | Request | Response |
 |---------|----------|
-| `GET /products?search=loop&status=Active&category[]=Turntables&sort=price&dir=desc&page=2&per_page=25` | Inertia page `Products/Index`. `products` is the paginator: `{ data: [{ id, name, sku, … }], current_page, last_page, per_page, total, from, to, … }`; `filters` the array above; `unfilteredTotal` a number. |
+| `GET /products?search=loop&status=Active&category[]=Turntables&sort=price&dir=desc&page=2&per_page=25` | Inertia page `products/Index`. `products` is the paginator: `{ data: [{ id, name, sku, … }], current_page, last_page, per_page, total, from, to, … }`; `filters` the array above; `unfilteredTotal` a number. |
 | The same, from a table change | DataTable sends `only: ['products']`, so the response carries `products` alone and the closures for the rest never run. |
 | `POST /products/bulk` with `{ action: "archive", selection: { mode: "ids", ids: [2, 9] } }` | Redirect back to the list URL it came from, flash `toast` "2 products archived.". |
 | `POST /products/bulk` with `{ action: "archive", selection: { mode: "matching", search: "", filters: { status: [], category: ["Speakers"] }, count: 5 } }` | The same, over every product the query matches now. `count` is what the table saw; the server counts again. |
@@ -476,13 +476,13 @@ What comes back:
 Two ways to send data from one page. Tags are an ordinary form: `Field type="combobox"` searches `GET /tags`, creates through `POST /tags`, and Save submits the ids. Photos upload as they are added, one `useHttp` request per file, so each file has its own progress bar and its own errors, and removing a file cancels its upload or deletes it on the server.
 
 ```vue
-<!-- resources/js/Pages/Products/Media.vue -->
+<!-- resources/js/pages/products/Media.vue -->
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
 import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -584,7 +584,7 @@ class ProductMediaController extends Controller
     {
         Gate::authorize('update', $product);
 
-        return Inertia::render('Products/Media', [
+        return Inertia::render('products/Media', [
             'product' => [...$product->only('id', 'name', 'sku'), 'tag_ids' => $product->tags->modelKeys()],
             'tags' => $product->tags->map(fn (Tag $tag) => ['value' => $tag->id, 'label' => $tag->name]),
         ]);

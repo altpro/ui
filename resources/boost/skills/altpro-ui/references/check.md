@@ -30,7 +30,7 @@ Custom properties, shared by all three: `--check-border --check-accent --check-f
 A settings page of switches has no Save button: each switch saves itself. It moves at once, goes back if the save fails, and ignores clicks until the server answers.
 
 ```vue
-<!-- resources/js/Pages/Settings/Notifications.vue -->
+<!-- resources/js/pages/settings/Notifications.vue -->
 <script setup>
 import { reactive } from "vue";
 import { router } from "@inertiajs/vue3";
@@ -100,7 +100,7 @@ class NotificationSettingsController extends Controller
 {
     public function edit(Request $request): Response
     {
-        return Inertia::render('Settings/Notifications', [
+        return Inertia::render('settings/Notifications', [
             'settings' => $request->user()->only('order_emails', 'weekly_report'),
         ]);
     }

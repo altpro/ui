@@ -3,7 +3,7 @@
 No class. A form longer than a screen is split into sections. Each section is a `<fieldset>` whose `<legend>` holds the section's `h2`, so screen readers announce the group name on entering it and list the heading among the page's headings. The [save bar](save-bar.md) is the form's last child. A form of a handful of fields needs no sections.
 
 ```vue
-<!-- resources/js/Pages/Customers/Edit.vue -->
+<!-- resources/js/pages/customers/Edit.vue -->
 <script setup>
 import { useForm } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";

@@ -1,13 +1,14 @@
 # App shell (pattern)
 
-The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar, a header with a [`.breadcrumb`](breadcrumb.md) and a [segmented](segmented.md) scheme switcher, `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Copy one of the two versions below and change the links; build nothing else for it. This is the layout: the page recipes ([recipes.md](recipes.md)) and the patterns that build on them wrap themselves in this `AppLayout` and assume this root view.
+The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar with a user menu at its foot, a header with a [`.breadcrumb`](breadcrumb.md), `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Copy one of the two versions below and change the links; build nothing else for it. This is the layout: the page recipes ([recipes.md](recipes.md)) and the patterns that build on them wrap themselves in this `AppLayout` and assume this root view. The sign-in pages use the [auth layout](#sign-in-pages) instead, and the colour scheme switcher goes on a [settings page](#colour-scheme-setting), not in the header.
 
 - **Skip link** first in `body`: `sr-only` until focused, then a `btn primary` in the corner. It targets `<main id="main">`.
 - **Sidebar**: from `lg` an `<aside>`, sticky and full height, scrolling on its own. Below `lg` the aside is `hidden` and the same `.nav` is in the drawer. The nav is written once (a Blade partial, a Vue `v-for`) and rendered in both; only one is ever displayed, so there is one `Main` landmark at a time.
+- **User menu**: the signed-in user's name at the foot of the sidebar and the drawer (`mt-auto`), opening a [`dropdown up`](dropdown.md) with their email, Settings and Log out. It is rendered twice, like the nav, so each copy takes its own popover `id`. Log out is a POST, as Laravel's `logout` route expects.
 - **Print**: the sidebar and header are `print:hidden`, so a printed page is just `main`; the toaster hides itself.
 - **Drawer**: the browser opens it, traps focus, closes it on Esc and returns focus to the menu button. `closedby="any"` closes it on a tap outside. Its top row is a `div`, not a `<header>`: the drawer sits at body level, where a `header` would be a second page banner.
 - **Current link**: `aria-current="page"` on the nav link for this page or the section it is in, and on the last breadcrumb item, which is a `<span>`.
-- **Scheme**: radios with `value` `""` (follow the OS), `light`, `dark`. The choice is kept in `localStorage.theme` and set as `data-theme` on `<html>` by a one-line script in `<head>` before the stylesheet, so a pinned scheme never flashes the other one first.
+- **Scheme**: the choice is kept in `localStorage.theme` (`""` follows the OS, or `light`, `dark`) and set as `data-theme` on `<html>` by a one-line script in `<head>` before the stylesheet, so a pinned scheme never flashes the other one first. The control that changes it is on a settings page: [Colour scheme setting](#colour-scheme-setting).
 - **Toaster**: the last thing in `body`, empty, from the first response, at the top (`toaster top`) so a toast never covers a [save bar](save-bar.md)'s Save. `toast(message, type)` appends an `.alert` and removes it when it fades.
 - **`scroll-pb-20` on `<html>`**: keeps a field the browser tabs to clear of a sticky save bar. Harmless on pages without one.
 - **Focus after a visit** (Inertia): a visit to a new page focuses `main` (`tabindex="-1"`), so a screen reader starts at the new content instead of on `<body>`, where the clicked link left it. Not on the first load, where the skip link comes first.
@@ -37,6 +38,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
     <aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex print:hidden">
       <a href="{{ route('dashboard') }}" class="flex h-11 items-center px-3 font-semibold">{{ config('app.name') }}</a>
       @include('layouts.navigation')
+      @include('layouts.user-menu', ['id' => 'user-menu'])
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -45,11 +47,6 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
           <x-lucide-menu class="size-4" aria-hidden="true" />
         </button>
         <nav class="breadcrumb min-w-0" aria-label="Breadcrumb">@yield('breadcrumb')</nav>
-        <div class="join ms-auto" role="radiogroup" aria-label="Colour scheme">
-          <label class="btn outlined sm px-2"><input type="radio" name="scheme" value="" aria-label="System"><x-lucide-monitor class="size-4" aria-hidden="true" /></label>
-          <label class="btn outlined sm px-2"><input type="radio" name="scheme" value="light" aria-label="Light"><x-lucide-sun class="size-4" aria-hidden="true" /></label>
-          <label class="btn outlined sm px-2"><input type="radio" name="scheme" value="dark" aria-label="Dark"><x-lucide-moon class="size-4" aria-hidden="true" /></label>
-        </div>
       </header>
 
       <main id="main" class="flex-1 p-gap">
@@ -66,20 +63,11 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
       </button>
     </div>
     @include('layouts.navigation')
+    @include('layouts.user-menu', ['id' => 'user-menu-drawer'])
   </dialog>
 
   <div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
   <script>
-    // scheme switcher: "" follows the OS; the script in <head> applies a saved choice before paint
-    for (const radio of document.querySelectorAll("[name=scheme]")) {
-      radio.checked = radio.value === (localStorage.theme ?? "");
-      radio.onchange = () => {
-        localStorage.theme = radio.value;
-        if (radio.value) document.documentElement.dataset.theme = radio.value;
-        else delete document.documentElement.dataset.theme;
-      };
-    }
-
     // toast("Saved.", "success"): any alert colour, see toast.md
     function toast(message, type = "") {
       const el = Object.assign(document.createElement("div"), { className: `alert ${type}` });
@@ -112,6 +100,30 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
 </nav>
 ```
 
+`resources/views/layouts/user-menu.blade.php`, included twice with its own `$id`:
+
+```blade
+@php($user = auth()->user())
+<div class="mt-auto">
+  <button type="button" class="btn ghost w-full justify-start px-2" popovertarget="{{ $id }}">
+    <span class="avatar sm" aria-hidden="true">{{ Str::of($user->name)->explode(' ')->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
+    <span class="min-w-0 truncate">{{ $user->name }}</span>
+    <x-lucide-chevrons-up-down class="ms-auto size-4" aria-hidden="true" />
+  </button>
+  <div id="{{ $id }}" popover class="dropdown up w-56">
+    <div class="nav">
+      <p class="truncate px-3 py-2 text-sm text-muted-foreground">{{ $user->email }}</p>
+      <hr>
+      <a href="{{ route('settings') }}"><x-lucide-settings class="size-4" aria-hidden="true" /> Settings</a>
+      <form method="POST" action="{{ route('logout') }}" class="contents">
+        @csrf
+        <button><x-lucide-log-out class="size-4" aria-hidden="true" /> Log out</button>
+      </form>
+    </div>
+  </div>
+</div>
+```
+
 A page:
 
 ```blade
@@ -133,7 +145,7 @@ A controller's `->with('toast', ['type' => 'success', 'message' => 'Order saved.
 
 ## Inertia (Vue)
 
-The root view, `resources/views/app.blade.php`, carries the scheme script, `scroll-pb-20` and the toaster, so all three are in place before Vue mounts and the toaster survives every visit:
+The root view, `resources/views/app.blade.php`, carries the scheme script, `scroll-pb-20` and the toaster, so all three are in place before Vue mounts and the toaster survives every visit. Keep whatever else the app's root view already has, such as favicons, `@fonts`, or the page entry Laravel's starter kit adds to `@vite`.
 
 ```blade
 <!doctype html>
@@ -152,19 +164,20 @@ The root view, `resources/views/app.blade.php`, carries the scheme script, `scro
 </html>
 ```
 
-The layout. `VITE_APP_NAME` is in Laravel's `.env` from the start; `@` is `resources/js`, as Laravel's Vite plugin sets it.
+The layout. `VITE_APP_NAME` is in Laravel's `.env` from the start; `@` is `resources/js`, as Laravel's Vite plugin sets it. With [Wayfinder](https://github.com/laravel/wayfinder), write `href: dashboard().url` in place of each string; `current()` compares URLs either way.
 
 ```vue
-<!-- resources/js/Layouts/AppLayout.vue -->
+<!-- resources/js/layouts/AppLayout.vue -->
 <script>
 // module scope, shared by every mount: the first is the page load, each later one a visit to a new page
 let loaded = false;
 </script>
 
 <script setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
-import { House, Menu, Monitor, Moon, Package, Settings, ShoppingCart, Sun, X } from "@lucide/vue";
+import { House, Menu, Package, Settings, ShoppingCart, X } from "@lucide/vue";
+import UserMenu from "@/components/UserMenu.vue";
 
 defineProps({
   // [{ label: "Orders", href: "/orders" }, { label: "Order 1042" }]: the last item is this page
@@ -194,20 +207,6 @@ onMounted(() => {
   if (loaded) main.value.focus({ preventScroll: true });
   loaded = true;
 });
-
-// "" follows the OS; app.blade.php applies the saved choice before paint
-const schemes = [
-  { value: "", label: "System", icon: Monitor },
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
-];
-const scheme = ref("");
-onMounted(() => (scheme.value = localStorage.theme ?? ""));
-watch(scheme, (value) => {
-  localStorage.theme = value;
-  if (value) document.documentElement.dataset.theme = value;
-  else delete document.documentElement.dataset.theme;
-});
 </script>
 
 <template>
@@ -221,6 +220,7 @@ watch(scheme, (value) => {
           <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
         </Link>
       </nav>
+      <UserMenu id="user-menu" class="mt-auto" />
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -234,12 +234,6 @@ watch(scheme, (value) => {
             <Link v-else :href="crumb.href">{{ crumb.label }}</Link>
           </template>
         </nav>
-        <div class="join ms-auto" role="radiogroup" aria-label="Colour scheme">
-          <label v-for="s in schemes" :key="s.value" class="btn outlined sm px-2">
-            <input v-model="scheme" type="radio" name="scheme" :value="s.value" :aria-label="s.label">
-            <component :is="s.icon" class="size-4" aria-hidden="true" />
-          </label>
-        </div>
       </header>
 
       <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap outline-none">
@@ -260,7 +254,44 @@ watch(scheme, (value) => {
         <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
       </Link>
     </nav>
+    <UserMenu id="user-menu-drawer" class="mt-auto" />
   </dialog>
+</template>
+```
+
+The user menu. `auth.user` is the signed-in user, which Laravel's `HandleInertiaRequests` middleware shares with every page.
+
+```vue
+<!-- resources/js/components/UserMenu.vue -->
+<script setup>
+import { computed } from "vue";
+import { Link, usePage } from "@inertiajs/vue3";
+import { ChevronsUpDown, LogOut, Settings } from "@lucide/vue";
+
+// the shell renders the menu twice, in the sidebar and in the drawer, so each copy needs its own popover id
+defineProps({ id: { type: String, required: true } });
+
+// auth.user is the signed-in user, which HandleInertiaRequests shares with every page
+const user = computed(() => usePage().props.auth.user);
+const initials = computed(() => user.value.name.split(" ").map((word) => word[0]).slice(0, 2).join("").toUpperCase());
+</script>
+
+<template>
+  <div>
+    <button type="button" class="btn ghost w-full justify-start px-2" :popovertarget="id">
+      <span class="avatar sm" aria-hidden="true">{{ initials }}</span>
+      <span class="min-w-0 truncate">{{ user.name }}</span>
+      <ChevronsUpDown class="ms-auto size-4" aria-hidden="true" />
+    </button>
+    <div :id="id" popover class="dropdown up w-56">
+      <div class="nav">
+        <p class="truncate px-3 py-2 text-sm text-muted-foreground">{{ user.email }}</p>
+        <hr>
+        <Link href="/settings"><Settings class="size-4" aria-hidden="true" /> Settings</Link>
+        <Link href="/logout" method="post" as="button" type="button"><LogOut class="size-4" aria-hidden="true" /> Log out</Link>
+      </div>
+    </div>
+  </div>
 </template>
 ```
 
@@ -269,7 +300,7 @@ A page wraps itself in the layout and passes its breadcrumb:
 ```vue
 <script setup>
 import { Head } from "@inertiajs/vue3";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 defineProps({ order: Object });
 </script>
 
@@ -281,9 +312,8 @@ defineProps({ order: Object });
 </template>
 ```
 
-- Not a persistent layout (`defineOptions({ layout: AppLayout })`): that one takes no props from the page, so it could not draw the page's breadcrumb, and it never mounts again, so it would not move focus after a visit.
+- Not a persistent layout (`defineOptions({ layout: AppLayout })`, or a `layout` callback in `createInertiaApp`): that one takes no props from the page, so it could not draw the page's breadcrumb, and it never mounts again, so it would not move focus after a visit.
 - A visit that keeps the page (a save, which redirects back, a DataTable change, any `preserveState` visit) keeps the layout too: nothing moves focus, and the page decides, as [validation-failure.md](validation-failure.md) does.
-- Give pages a `<Head :title>`; in `createInertiaApp`, ``title: (title) => `${title} · ${import.meta.env.VITE_APP_NAME}` `` adds the app's name.
 
 Toasts: `resources/js/toast.js`, which any component can import ([toast.md](toast.md)):
 
@@ -297,14 +327,114 @@ export function toast(message, type = "") {
 }
 ```
 
-From the server: `Inertia::flash('toast', ['type' => 'success', 'message' => 'Order saved.'])` in the controller, and in `resources/js/app.js`, before `createInertiaApp`:
+From the server: `Inertia::flash('toast', ['type' => 'success', 'message' => 'Order saved.'])` in the controller. In `resources/js/app.js`, the flash listener goes before `createInertiaApp`, which also names each page's `<Head :title>` and gives the progress bar the theme's colour:
 
 ```js
-import { router } from "@inertiajs/vue3";
+import { createInertiaApp, router } from "@inertiajs/vue3";
 import { toast } from "./toast";
 
 router.on("flash", (event) => {
   const t = event.detail.flash.toast;
   if (t) toast(t.message, t.type);
 });
+
+createInertiaApp({
+  title: (title) => `${title} · ${import.meta.env.VITE_APP_NAME}`,
+  progress: { color: "var(--color-primary)" },
+  // resolve, setup: as the app already has them
+});
 ```
+
+## Colour scheme setting
+
+The switcher goes on the app's appearance or profile settings page. It reads and writes `localStorage.theme`, which the root view's script applies before paint. Three radios in a [`.join`](join.md), each a `btn outlined` with an icon and its name:
+
+```vue
+<script setup>
+import { onMounted, ref, watch } from "vue";
+import { Monitor, Moon, Sun } from "@lucide/vue";
+
+// "" follows the OS; the root view applies the saved choice before paint
+const schemes = [
+  { value: "", label: "System", icon: Monitor },
+  { value: "light", label: "Light", icon: Sun },
+  { value: "dark", label: "Dark", icon: Moon },
+];
+const scheme = ref("");
+onMounted(() => (scheme.value = localStorage.theme ?? ""));
+watch(scheme, (value) => {
+  localStorage.theme = value;
+  if (value) document.documentElement.dataset.theme = value;
+  else delete document.documentElement.dataset.theme;
+});
+</script>
+
+<template>
+  <div class="join" role="radiogroup" aria-label="Colour scheme">
+    <label v-for="s in schemes" :key="s.value" class="btn outlined">
+      <input v-model="scheme" type="radio" name="scheme" :value="s.value">
+      <component :is="s.icon" class="size-4" aria-hidden="true" /> {{ s.label }}
+    </label>
+  </div>
+</template>
+```
+
+In Blade, the same radios with a script after them:
+
+```blade
+<div class="join" role="radiogroup" aria-label="Colour scheme">
+  <label class="btn outlined"><input type="radio" name="scheme" value=""><x-lucide-monitor class="size-4" aria-hidden="true" /> System</label>
+  <label class="btn outlined"><input type="radio" name="scheme" value="light"><x-lucide-sun class="size-4" aria-hidden="true" /> Light</label>
+  <label class="btn outlined"><input type="radio" name="scheme" value="dark"><x-lucide-moon class="size-4" aria-hidden="true" /> Dark</label>
+</div>
+<script>
+  // "" follows the OS; the layout's head script applies a saved choice before paint
+  for (const radio of document.querySelectorAll("[name=scheme]")) {
+    radio.checked = radio.value === (localStorage.theme ?? "");
+    radio.onchange = () => {
+      localStorage.theme = radio.value;
+      if (radio.value) document.documentElement.dataset.theme = radio.value;
+      else delete document.documentElement.dataset.theme;
+    };
+  }
+</script>
+```
+
+## Sign-in pages
+
+Log in, register, password reset and two-factor pages have no sidebar: a centred [`.card`](card.md) whose header holds the page's `h1`. Each page wraps itself in the layout and passes its title, as with `AppLayout`. It shares the root view, so the scheme script and the toaster are there too.
+
+```vue
+<!-- resources/js/layouts/AuthLayout.vue -->
+<script setup>
+import { onMounted, ref } from "vue";
+import { Link } from "@inertiajs/vue3";
+
+defineProps({
+  title: { type: String, required: true },
+  description: String,
+});
+
+const appName = import.meta.env.VITE_APP_NAME;
+
+// Browsers honour `autofocus` only on the first page load, and each sign-in page mounts this layout again,
+// so focus the page's autofocus field here: after "Forgot your password?", focus lands on the email field.
+const main = ref();
+onMounted(() => main.value.querySelector("[autofocus]")?.focus());
+</script>
+
+<template>
+  <main id="main" ref="main" class="flex min-h-dvh flex-col items-center justify-center gap-gap p-gap">
+    <Link href="/" class="font-semibold">{{ appName }}</Link>
+    <div class="card w-full max-w-sm [--card-p:1.5rem]">
+      <header>
+        <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
+        <p v-if="description">{{ description }}</p>
+      </header>
+      <slot />
+    </div>
+  </main>
+</template>
+```
+
+The form inside follows [validation-failure.md](validation-failure.md)'s `<Form>` example. A two-factor code is the one-time-code [`Field`](field.md).

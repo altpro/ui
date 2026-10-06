@@ -3,7 +3,7 @@ import { nextTick, ref } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { CircleAlert, Upload } from "@lucide/vue";
 import Field from "@ui/Field.vue";
-import AppLayout from "@/Layouts/AppLayout.vue";
+import AppLayout from "@/layouts/AppLayout.vue";
 import { useUnsavedChanges } from "@/composables/useUnsavedChanges";
 
 const props = defineProps({
