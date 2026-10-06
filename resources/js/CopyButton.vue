@@ -6,7 +6,7 @@
   `class="outlined"` beside an `.input` in a `.join`. The default slot replaces the icon; keep `label` starting with its text.
 -->
 <script setup>
-import { onBeforeUnmount, ref } from "vue";
+import { onBeforeUnmount, onMounted, ref } from "vue";
 
 defineOptions({ inheritAttrs: false });
 const props = defineProps({
@@ -28,6 +28,9 @@ const copy = async () => {
   timer = setTimeout(() => (said.value = null), 2000);
 };
 onBeforeUnmount(() => clearTimeout(timer));
+// the live region goes to body after mount: a server render has no body to teleport to, and hydration would not match
+const mounted = ref(false);
+onMounted(() => (mounted.value = true));
 </script>
 
 <template>
@@ -36,6 +39,6 @@ onBeforeUnmount(() => clearTimeout(timer));
       <svg v-if="said === 'Copied'" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
       <svg v-else class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
     </slot>
-    <Teleport to="body"><div class="sr-only" aria-live="polite"><p v-if="said" :key="n">{{ said }}</p></div></Teleport>
+    <Teleport v-if="mounted" to="body"><div class="sr-only" aria-live="polite"><p v-if="said" :key="n">{{ said }}</p></div></Teleport>
   </button>
 </template>

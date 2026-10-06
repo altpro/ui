@@ -5,6 +5,7 @@ import assert from "node:assert/strict";
 import fixture from "./table-urls.json" with { type: "json" };
 import {
   datePresets,
+  formatCellValue,
   keyOf,
   readView,
   tableView,
@@ -192,4 +193,10 @@ test("keyOf: a selectable row needs its key, a plain one falls back to its posit
   assert.equal(keyOf({ name: "No id" }, "id", 3), 3);
   // an index in { mode: "ids" } would send a bulk action at the wrong records
   assert.throws(() => keyOf({ name: "No id" }, "id", 3, true), /needs "id"/);
+});
+
+test("formats in the locale it is given, and en-GB with no document, as on a server render", () => {
+  assert.equal(formatCellValue("2026-01-05", "date", undefined, "en-US"), "Jan 05, 2026");
+  assert.equal(formatCellValue("2026-01-05", "date"), "05 Jan 2026");
+  assert.equal(formatCellValue(12.5, "currency", "EUR", "de-DE"), "12,50 €");
 });
