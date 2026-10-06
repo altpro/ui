@@ -44,6 +44,7 @@ tests/a11y.spec.js           axe and the hover, focus and target-size checks; it
 - Accessibility is WCAG 2.2 AA. Every text-on-fill pairing, text in the ghost and outlined variants, and every hover state must reach 4.5:1 in both schemes. Focus rings are 3px at half opacity, flush with the border, and a bordered control turns its border to the ring colour. Nothing interactive is smaller than 24px. `npm test` checks all of this with axe; a colour change that fails it is wrong, not the test.
 - Do not reference Tailwind palette variables such as `--color-blue-600`. Tailwind v4 only emits theme variables that are used, so use oklch literals in `theme.css`.
 - Do not use CSS counters for anything a user reads: WebKit miscounts them.
+- A change an app must act on (a renamed class, modifier, prop or token, changed markup) goes under **Breaking** in `CHANGELOG.md` and bumps the minor version while on 0.x.
 - Demo-only classes and custom properties are prefixed `demo-` and stay in `demo/` (`demo.css` for the shell, `demo/app/app.css` for the sample screens). They are scaffolding for the demo, not library API: never move one into `resources/` or document it in the skill.
 
 ## Adding a component
