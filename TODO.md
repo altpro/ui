@@ -13,28 +13,28 @@ The components the first CMS, CRM and order-management apps need are built. This
 
 In this order: the shell and recipes save the most time on the first app; the split and setup notes save it on every one after.
 
-- [ ] **App shell (pattern)**: the first thing every app needs and the one thing the skill does not have. A copy-paste Blade layout and an Inertia layout: sidebar `.nav`, header with `.breadcrumb` and a scheme switcher, `main` with `p-gap`, and how the sidebar collapses on a phone. `demo/demo.js` builds one in JavaScript; the recipe is the HTML it produces.
-- [ ] **Page recipes**: two screens that chain the patterns already documented. List page: breadcrumb, record header, DataTable. Edit page: breadcrumb, record header, form of `Field`s, save bar. Each with every import and the controller beside it.
-- [ ] **Complete, runnable recipes**: the component sections are thorough but assembling a screen still takes inference, and some snippets assume `useForm` is imported or a variable exists. Three end-to-end examples with every import, prop, endpoint response and submission handler: a Laravel/Inertia edit form (defaults, validation errors, save, discard); a server-driven DataTable (controller, filter declaration, `only`, a bulk action endpoint re-running `TableQuery::search()`); a combobox with `src` and `create` endpoints plus a FileInput upload handler with progress. Build them as `demo/app/` pages with a simulated server, as `Order.vue` does, so the browser tests cover them.
-- [ ] **Icons**: every svg in the skill is `…`. One line naming the icon package per stack (Lucide for Vue and Blade) and the `size-4 aria-hidden="true"` convention, so an app does not hand-write paths.
-- [ ] **Flash to toast**: the Toast section is a vanilla script. Add the Inertia form: a watcher on the page's flash prop that appends an `.alert` to the toaster, and the controller side (`->with('success', …)`).
-- [ ] **Vite alias for vendor imports**: `README.md` imports `../../vendor/altpro/ui/resources/js/Field.vue`, which depends on where the importing file lives. Document a `@ui` alias in the app's `vite.config.js` and use it in every example after.
-- [ ] **Dependency matrix in README**: three rows, CSS only, Vue components, DataTable (Vue and Inertia), with the packages and Vite plugins each needs and the versions supported.
-- [ ] **Lifecycle notes per Vue component**: under each component's props table, a short list of what happens when v-model, `options`, `errors` or the form's defaults change after mount. These matter more in an app than another modifier example. Start with Repeater (above), then Field, Combobox, FileInput.
-- [ ] **Split the skill**: SKILL.md is 82KB, about 20k tokens, and loads whole. Keep the rules, class composition, a component decision table (one line each: what it is for, CSS or Vue or Blade), tokens and scheme regions in SKILL.md; move each component section to a reference file beside it. Check first that Laravel Boost installs the whole skill directory, not the one file. Update AGENTS.md step 4.
+- [x] **App shell (pattern)**: the first thing every app needs and the one thing the skill does not have. A copy-paste Blade layout and an Inertia layout: sidebar `.nav`, header with `.breadcrumb` and a scheme switcher, `main` with `p-gap`, and how the sidebar collapses on a phone. `demo/demo.js` builds one in JavaScript; the recipe is the HTML it produces.
+- [x] **Page recipes**: two screens that chain the patterns already documented. List page: breadcrumb, record header, DataTable. Edit page: breadcrumb, record header, form of `Field`s, save bar. Each with every import and the controller beside it.
+- [x] **Complete, runnable recipes**: the component sections are thorough but assembling a screen still takes inference, and some snippets assume `useForm` is imported or a variable exists. Three end-to-end examples with every import, prop, endpoint response and submission handler: a Laravel/Inertia edit form (defaults, validation errors, save, discard); a server-driven DataTable (controller, filter declaration, `only`, a bulk action endpoint re-running `TableQuery::search()`); a combobox with `src` and `create` endpoints plus a FileInput upload handler with progress. Build them as `demo/app/` pages with a simulated server, as `Order.vue` does, so the browser tests cover them.
+- [x] **Icons**: every svg in the skill is `…`. One line naming the icon package per stack (Lucide for Vue and Blade) and the `size-4 aria-hidden="true"` convention, so an app does not hand-write paths.
+- [x] **Flash to toast**: the Toast section is a vanilla script. Add the Inertia form: a watcher on the page's flash prop that appends an `.alert` to the toaster, and the controller side (`->with('success', …)`).
+- [x] **Vite alias for vendor imports**: `README.md` imports `../../vendor/altpro/ui/resources/js/Field.vue`, which depends on where the importing file lives. Document a `@ui` alias in the app's `vite.config.js` and use it in every example after.
+- [x] **Dependency matrix in README**: three rows, CSS only, Vue components, DataTable (Vue and Inertia), with the packages and Vite plugins each needs and the versions supported.
+- [x] **Lifecycle notes per Vue component**: under each component's props table, a short list of what happens when v-model, `options`, `errors` or the form's defaults change after mount. These matter more in an app than another modifier example. Start with Repeater (above), then Field, Combobox, FileInput.
+- [x] **Split the skill**: SKILL.md is 82KB, about 20k tokens, and loads whole. Keep the rules, class composition, a component decision table (one line each: what it is for, CSS or Vue or Blade), tokens and scheme regions in SKILL.md; move each component section to a reference file beside it. Check first that Laravel Boost installs the whole skill directory, not the one file. Update AGENTS.md step 4.
 
 ## Make mistakes cheaper to catch
 
-- [ ] **Inventory test**: a `node --test` file asserting every `resources/css/components/*.css` is imported in `ui.css`, has a demo page, is in the `components` array in `demo/demo.js`, is in `pages` in `tests/a11y.spec.js`, and has a heading in SKILL.md; and that every `demo/**/*.html` is in the a11y scan. Turns the seven-step checklist in AGENTS.md into a failing test, and stops the hand-kept page lists drifting.
-- [ ] **Type check**: `vue-tsc --noEmit` over `resources/js` and `tests/table-view.ts`, run first in `npm test`. The TypeScript in `DataTable.vue` and `dataTable.ts` is never checked today.
-- [ ] **Focused test commands**: `test:unit` (PHP and Node), `test:a11y`, `test:browsers`, so a CSS change does not wait for the three-browser matrix. Note them in AGENTS.md.
-- [ ] **Tag `v0.1.0`**: with no tags a Composer VCS install can only track `dev-main`. Tag now, bump on breaking changes, and apps pin `^0.1` once adoption starts.
+- [x] **Inventory test**: a `node --test` file asserting every `resources/css/components/*.css` is imported in `ui.css`, has a demo page, is in the `components` array in `demo/demo.js`, is in `pages` in `tests/a11y.spec.js`, and has a heading in SKILL.md; and that every `demo/**/*.html` is in the a11y scan. Turns the seven-step checklist in AGENTS.md into a failing test, and stops the hand-kept page lists drifting.
+- [x] **Type check**: `vue-tsc --noEmit` over `resources/js` and `tests/table-view.ts`, run first in `npm test`. The TypeScript in `DataTable.vue` and `dataTable.ts` is never checked today.
+- [x] **Focused test commands**: `test:unit` (PHP and Node), `test:a11y`, `test:browsers`, so a CSS change does not wait for the three-browser matrix. Note them in AGENTS.md.
+- [x] **Tag `v0.1.0`**: with no tags a Composer VCS install can only track `dev-main`. Tag now, bump on breaking changes, and apps pin `^0.1` once adoption starts.
 
 ## Housekeeping
 
-- [ ] `CONTEXT.md` is a glossary for DataTable only. Grow it as terms arrive or fold it into the `TableQuery` docblock, which already explains most of it.
-- [ ] AGENTS.md: record that the Chrome-only `appearance: base-select` in `input.css` was signed off, and point the test description at the hand-rolled PNG reader in `tests/a11y.spec.js` so the next reader knows why it is there.
-- [ ] Delete the stray `undefined/` directory at the repo root (two gitignored screenshots from a tool mishap).
+- [x] `CONTEXT.md` is a glossary for DataTable only. Kept as the glossary; it grows as terms arrive.
+- [x] AGENTS.md: record that the Chrome-only `appearance: base-select` in `input.css` was signed off, and point the test description at the hand-rolled PNG reader in `tests/a11y.spec.js` so the next reader knows why it is there.
+- [x] Delete the stray `undefined/` directory at the repo root (two gitignored screenshots from a tool mishap).
 
 ## When an app asks
 
