@@ -15,14 +15,22 @@ Rule of thumb when writing markup:
 
 ## Setup (already done if the project uses altpro/ui)
 
-Laravel installs it with Composer (`composer require altpro/ui`). The Blade components register themselves. In `resources/css/app.css`:
+An app made from the altpro Vue starter kit has all of this. Laravel installs it with Composer from the private GitHub repository (`"repositories": [{ "type": "vcs", "url": "git@github.com:altpro/ui.git" }]` in `composer.json`), with Lucide for icons:
+
+```
+composer require altpro/ui:^0.1
+composer require mallardduck/blade-lucide-icons
+npm install @lucide/vue
+```
+
+The Blade components register themselves. In `resources/css/app.css`:
 
 ```css
 @import "tailwindcss";
 @import "../../vendor/altpro/ui/resources/css/ui.css";
 ```
 
-Elsewhere it is the npm package `@altpro/ui`:
+Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.1.0 @lucide/vue`):
 
 ```css
 @import "tailwindcss";
@@ -42,7 +50,21 @@ resolve: { alias: { "@ui": "@altpro/ui/js" } },
 import Field from "@ui/Field.vue";
 ```
 
-A TypeScript app also maps it in `tsconfig.json`: `"paths": { "@ui/*": ["./vendor/altpro/ui/resources/js/*"] }`.
+A TypeScript app also maps it in `tsconfig.json`, and needs `allowJs` because most of the Vue components are plain JavaScript. An npm install also adds the package to `include`, or a strict `vue-tsc` fails with missing declarations for Field.vue and Combobox.vue:
+
+```jsonc
+// Composer install
+"compilerOptions": {
+  "allowJs": true,
+  "paths": { "@ui/*": ["./vendor/altpro/ui/resources/js/*"] }
+}
+// npm install
+"compilerOptions": {
+  "allowJs": true,
+  "paths": { "@ui/*": ["./node_modules/@altpro/ui/resources/js/*"] }
+},
+"include": [/* the app's own entries, then */ "node_modules/@altpro/ui/resources/js"]
+```
 
 Every scrollbar gets a muted thumb on no track, set once with the inherited `scrollbar-color`, and it follows `.light` `.dark` `.inverse`. Add `scrollbar-thin` (Tailwind) to a scroll area for the slim width that `.nav`, dropdown panels and dialogs already have.
 
