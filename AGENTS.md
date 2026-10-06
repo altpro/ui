@@ -12,6 +12,7 @@ resources/css/components/    one file per component (button, join, input, field,
 resources/views/components/  Blade components, rendered as <x-ui::name>
 resources/js/                Vue components (Name.vue); domModel.js lets Field.vue work without v-model inside a form; DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs the whole directory. SKILL.md holds the rules and a component table; each component is a file in references/
+resources/boost/guidelines/  core.blade.php, the few lines Boost writes into the app's AGENTS.md/CLAUDE.md on every run: load the skill, the naming rule
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 src/TableQuery.php           server half of DataTable.vue: reads the view and filters from the query string as dataTable.ts does, then searches, sorts and pages
 demo/*.html                  one page per component, plus index and theme
