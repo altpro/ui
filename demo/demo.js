@@ -89,11 +89,11 @@ const components = [
    Menu items: a string is a heading, [href, label, icon?, extra?] a link,
    [label, icon, items] a collapsible group. */
 const menu = [
-  ["Application", "monitor", [["app/dashboard.html", "Overview", "gauge"], ["app/products.html", "Products", "blocks"], ["app/product.html", "Product detail", "tag"], ["app/activity.html", "Activity", "timeline"],
-    ["app/recipe-products.html", "Recipe: list page", "sheet"], ["app/recipe-product.html", "Recipe: edit page", "field"], ["app/recipe-media.html", "Recipe: tags and uploads", "upload"], ["app/shell.html", "App shell", "panel"]]],
   ["index.html", "Getting started", "house"],
   ["Components", "blocks", components],
   ["theme.html", "Theme", "palette"],
+  ["Application", "monitor", [["app/dashboard.html", "Overview", "gauge"], ["app/products.html", "Products", "blocks"], ["app/product.html", "Product detail", "tag"], ["app/activity.html", "Activity", "timeline"],
+    ["app/recipe-products.html", "Recipe: list page", "sheet"], ["app/recipe-product.html", "Recipe: edit page", "field"], ["app/recipe-media.html", "Recipe: tags and uploads", "upload"], ["app/shell.html", "App shell", "panel"]]],
 ];
 
 const inApp = location.pathname.includes("/app/");
