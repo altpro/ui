@@ -8,7 +8,7 @@ Works on `<button>`, `<a>`, `<input type="submit">`.
 | Style | `outlined` (transparent fill, coloured border and text), `ghost` (transparent, coloured text, no border) |
 | Size | `xs` `sm` `lg` `xl`. No size = default (2.25rem tall). |
 | Toggle | `<label class="btn outlined"><input type="checkbox"> Bold</label>`. The input is hidden over the label and the label takes the solid fill while checked. See [segmented.md](segmented.md). |
-| State | Use the native `disabled` attribute on buttons. A disabled link has no `href` and uses `role="link"` with `aria-disabled="true"`; if an app must retain its `href`, the app must also cancel activation. `loading` draws a spinner; pair it with `disabled`, `aria-busy="true"`, and a label saying what is happening (`Saving`). Focus rings appear on keyboard focus only. |
+| State | Use the native `disabled` attribute on buttons. A disabled link has no `href` and uses `role="link"` with `aria-disabled="true"`; if an app must retain its `href`, the app must also cancel activation. `loading` draws a spinner; pair it with `disabled` and `aria-busy="true"`, and keep the label (`Save`, not `Saving`): the spinner and `aria-busy` say it is working, and a stable label neither changes the button's width nor gets announced again. Focus rings appear on keyboard focus only. |
 
 Icons: put an inline SVG inside the button, sized with `size-4`. The button has `gap-2` built in.
 
