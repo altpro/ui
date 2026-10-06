@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "copy.html", "datatable.html", "tooltip.html", "tree.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/dashboard.html", "app/products.html", "app/activity.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "copy.html", "datatable.html", "tooltip.html", "tree.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/dashboard.html", "app/products.html", "app/activity.html", "app/shell.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -288,6 +288,45 @@ for (const colorScheme of ["light", "dark"]) {
       }
     });
 
+    // the app-shell recipe on a phone: the sidebar is a drawer behind the menu button, in square and pill
+    test("app/shell.html: on a phone the sidebar opens as a drawer, traps focus and closes back to the menu button", async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 700 });
+      await page.goto("/app/shell.html");
+      await page.addStyleTag({ content: "*, ::backdrop { transition: none !important }" });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+      const menu = page.getByRole("button", { name: "Open menu" });
+      const drawer = page.getByRole("dialog", { name: "Menu" });
+      await expect(page.getByRole("navigation", { name: "Main" })).toBeHidden();
+      for (const radius of ["0", "9999px"]) {
+        await page.evaluate((r) => document.documentElement.style.setProperty("--radius", r), radius);
+        await menu.click();
+        await expect(drawer).toBeVisible();
+        await expect(drawer.getByRole("navigation", { name: "Main" })).toBeVisible();
+        expect(await drawer.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+        for (let i = 0; i < 8; i++) await page.keyboard.press("Tab");
+        expect(await drawer.evaluate((el) => el.contains(document.activeElement))).toBe(true);
+        const { violations } = await axe(page).analyze();
+        expect(summary(violations)).toEqual([]);
+        await page.keyboard.press("Escape");
+        await expect(drawer).toBeHidden();
+        await expect(menu).toBeFocused();
+      }
+      await menu.click();
+      await drawer.getByRole("button", { name: "Close menu" }).click();
+      await expect(drawer).toBeHidden();
+      await expect(menu).toBeFocused();
+      // at lg the sidebar is inline and the menu button goes
+      await page.setViewportSize({ width: 1280, height: 700 });
+      await expect(menu).toBeHidden();
+      await expect(page.getByRole("navigation", { name: "Main" })).toBeVisible();
+      const small = [];
+      for (const el of await page.locator("aside a, header :is(a, label, button):visible").all()) {
+        const box = await el.boundingBox();
+        if (box.width < 24 || box.height < 24) small.push(await el.evaluate((e) => e.outerHTML.slice(0, 60)));
+      }
+      expect(small).toEqual([]);
+    });
+
     // the bubble is a pseudo-element: it hit-tests as the host, so elementFromPoint above the host finds it
     test("tooltip.html: hover shows a bubble above every host, inside the viewport", async ({ page }) => {
       // wide enough for the sidebar: below lg it hides and the first host sits at the page edge, where a centred bubble is off-screen by design
@@ -492,6 +531,38 @@ for (const colorScheme of ["light", "dark"]) {
     }
   });
 }
+
+test("app/shell.html: the scheme switcher pins the scheme, remembers it and goes back to the OS", async ({ page }) => {
+  await page.emulateMedia({ colorScheme: "light" });
+  await page.goto("/app/shell.html");
+  const html = page.locator("html");
+  const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
+  const light = await bg();
+  await expect(page.getByRole("radio", { name: "System" })).toBeChecked();
+  await expect(html).not.toHaveAttribute("data-theme");
+
+  await page.getByRole("radio", { name: "Dark" }).click();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  expect(await bg()).not.toBe(light);
+  await page.reload();
+  await expect(html).toHaveAttribute("data-theme", "dark");
+  await expect(page.getByRole("radio", { name: "Dark" })).toBeChecked();
+
+  // applied before paint: the head script has set it before the stylesheet loads
+  await page.route("**/shell.css", async (route) => { await new Promise((r) => setTimeout(r, 300)); await route.continue(); });
+  await page.goto("/app/shell.html", { waitUntil: "commit" });
+  await page.waitForSelector("head link[rel=stylesheet]", { state: "attached" });
+  expect(await page.evaluate(() => [document.documentElement.dataset.theme, document.styleSheets.length])).toEqual(["dark", 0]);
+  await page.unroute("**/shell.css");
+  await page.waitForLoadState();
+
+  await page.getByRole("radio", { name: "System" }).click();
+  await expect(html).not.toHaveAttribute("data-theme");
+  expect(await bg()).toBe(light);
+  await page.reload();
+  await expect(html).not.toHaveAttribute("data-theme");
+  await expect(page.getByRole("radio", { name: "System" })).toBeChecked();
+});
 
 test("disabled links have no URL and loading buttons cannot activate", async ({ page }) => {
   await page.goto("/button.html");
