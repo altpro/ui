@@ -22,6 +22,7 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
 | Kind | Attributes |
 |------|------------|
 | Open | `command="show-modal" commandfor="id"` on any button. |
+| Open from code | `showModal()` and `close()` on the element, for a dialog that opens when something finishes, such as a request. See the Vue example below. |
 | Close | `command="close" commandfor="id"` on any button, inside or outside the dialog. |
 | Non-modal | Add `popover="manual"` to the dialog and open it with `command="show-popover"`, close with `command="hide-popover"`. Same box, centred, no backdrop, the page stays usable. There is no non-modal dialog command. |
 | Dismiss | Esc by default. `closedby="any"` on the dialog adds click on the backdrop. `closedby="none"` removes Esc, for a dialog that must end with a button. |
@@ -45,6 +46,28 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
   <div class="field">…</div>
   <footer class="mt-auto justify-end"><button class="btn primary" command="close" commandfor="filters">Apply</button></footer>
 </dialog>
+```
+
+A dialog that opens after a request succeeds has no button to carry the command. Drive it from a `v-model`, and let `@close` write back, because Esc, a `command="close"` button and `closedby` all close it without Vue:
+
+```vue
+<script setup>
+import { useTemplateRef, watch } from "vue";
+
+const open = defineModel("open", { type: Boolean });
+const dialog = useTemplateRef("dialog");
+watch(open, (value) => (value ? dialog.value.showModal() : dialog.value.close()));
+</script>
+
+<template>
+  <dialog id="setup" ref="dialog" class="dialog" aria-labelledby="setup-title" @close="open = false">
+    <header>
+      <h3 id="setup-title">Set up two-factor authentication</h3>
+      <button class="btn ghost sm" command="close" commandfor="setup" aria-label="Close">…x…</button>
+    </header>
+    …
+  </dialog>
+</template>
 ```
 
 Custom properties: `--dialog-w --dialog-shadow --dialog-backdrop`, plus the card ones.

@@ -45,6 +45,32 @@ const save = () => form.put(`/products/${props.product.id}`, {
 - `novalidate`, so all the errors come from the server in one round trip and the browser's bubbles never disagree with Laravel's messages.
 - A form of one or two fields (a dialog, a search) needs no summary: focus the first invalid field instead, as [destructive-action.md](destructive-action.md) does.
 
+## With Inertia's `<Form>`
+
+The same rules apply when the page uses `<Form>` rather than `useForm`, as Laravel's starter kit does. `Field` needs no `v-model` inside it, because `<Form>` reads the inputs by name. The slot gives the errors.
+
+```vue
+<script setup>
+import { nextTick } from "vue";
+import { Form } from "@inertiajs/vue3";
+import Field from "@ui/Field.vue";
+
+// two fields, so no summary: a failed submit focuses the first field the server marked invalid
+const focusFirstInvalid = () => nextTick(() => document.querySelector('[aria-invalid="true"]')?.focus());
+</script>
+
+<template>
+  <Form action="/login" method="post" novalidate :reset-on-success="['password']" class="flex flex-col gap-4" @error="focusFirstInvalid" v-slot="{ errors, processing }">
+    <Field name="email" type="email" :errors="errors" required autocomplete="email" />
+    <Field name="password" type="password" :errors="errors" required autocomplete="current-password" />
+    <button class="btn primary" :class="{ loading: processing }" :disabled="processing" :aria-busy="processing">Log in</button>
+  </Form>
+</template>
+```
+
+- With Wayfinder, `v-bind="store.form()"` replaces `action` and `method`.
+- A longer form adds the summary above its first `Field`: `v-if="hasErrors"` from the slot, listing `errors`. `@error` focuses it through a template ref, as `save` does above.
+
 ## Where focus goes
 
 | After | Focus goes to | Done by |

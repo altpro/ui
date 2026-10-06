@@ -81,6 +81,8 @@ After mount (Vue):
 - After a failed submit, an unticked box or checkbox group stays empty rather than falling back to `value`, since the browser sends nothing for it.
 - Errors set `aria-invalid` and turn the control red; one shows as a `<p class="error">`, several as a `<ul>`.
 - A single checkbox or switch submits `1`, which Laravel's `boolean` rule accepts. Unticked, it submits nothing: read it with `$request->boolean('name')`.
+- A one-time code (two-factor, email confirmation) is a plain text field, so a pasted code and the phone's suggested code both work: `<Field name="code" label="Authentication code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" />`. Don't split it into one box per digit.
+- `autofocus` works on the first page load and in a dialog opened with `showModal()`. After an Inertia visit, browsers ignore it, so the layout focuses the field: `AuthLayout` in [app-shell.md](app-shell.md) does this for the sign-in pages.
 
 Inertia, Vue:
 

@@ -6,4 +6,4 @@
 - Classes are a base class plus bare modifier words: `btn primary sm`, never `btn-primary` or `btn btn-primary`.
 - The colour names are `primary`, `secondary`, `info`, `success`, `warning` and `danger`: write `danger`, not `destructive` or `error`.
 - Colours come from the theme tokens (`bg-primary`, `text-muted-foreground`), which already follow light and dark. Do not add `dark:` variants for them.
-- An app made with Laravel's own `laravel new --vue` has shadcn's `@theme inline` tokens in `resources/css/app.css`, and they override altpro/ui's (`--color-primary` becomes `#171717`, `--radius` `.5rem`). Start the app from the altpro Vue starter kit instead.
+- If `resources/css/app.css` has shadcn's `@theme inline` tokens (an app made with Laravel's own `laravel new --vue`), they override altpro/ui's: `--color-primary` becomes `#171717`, `--radius` `.5rem`. New apps start from the altpro Vue starter kit, which has none.
