@@ -11,7 +11,7 @@
      </div>
      <button class="btn ghost" aria-label="Clear status">×</button>
    </div>
-   A fixed width, as a select has: the value runs to an ellipsis, and with
+   A fixed width, as a select has (a .field stretches it): the value runs to an ellipsis, and with
    more than one picked a count sits before the chevron. The clear button
    sits beside the trigger. The panel is at least as wide as the trigger,
    stops at 20rem and scrolls its options under the search box.

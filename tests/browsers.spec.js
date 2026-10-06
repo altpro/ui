@@ -186,6 +186,16 @@ test("field: the Blade and Vue components render the same markup", async ({ page
 });
 });
 
+// on its own a combobox is a select's fixed 12rem; in a field it must line up with the inputs around it
+test("field: a combobox fills the field like an input", async ({ page }) => {
+  await page.goto("/field.html");
+  for (const combobox of await page.locator("main .field > .combobox").all()) {
+    const [w, field] = await combobox.evaluate((el) => [el.getBoundingClientRect().width, el.parentElement.getBoundingClientRect().width]);
+    expect(w).toBe(field);
+  }
+  expect(await page.locator("main .field > .combobox").count()).toBeGreaterThan(1);
+});
+
 test("field: labels, hints and errors reach the control, and models go out as ids", async ({ page }) => {
   await page.goto("/field.html");
   const demo = page.locator("#vue-demo"), output = demo.locator("output");

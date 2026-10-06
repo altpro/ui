@@ -43,6 +43,11 @@
       }
     }
 
+    /* a combobox has a select's fixed width on its own; in a field it fills the column like an input */
+    > .combobox {
+      width: auto;
+    }
+
     &:has(> .error:not(:empty)) .input {
       --input-border: var(--color-danger);
       --input-ring: var(--color-danger);
