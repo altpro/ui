@@ -24,8 +24,9 @@ const seed = () => ({
     ["Loop turntable", "LOP-CH", "Turntables", 279, 4, "Active"],
     ["Loop deluxe", "LOP-DX", "Turntables", 459, 0, "Draft"],
     ["Groove preamp", "GRV-SL", "Turntables", 89, 40, "Active"],
-  ].map(([name, sku, category, price, stock, status], i) => ({
-    id: i + 1, name, sku, category, price, stock, status, tag_ids: [1],
+    ["Pulse subwoofer", "PLS-SL", "Speakers", 499, 5, "Active", 2], // another team's: Product::visibleTo() hides it
+  ].map(([name, sku, category, price, stock, status, team_id = 1], i) => ({
+    id: i + 1, team_id, name, sku, category, price, stock, status, tag_ids: [1],
     description: `${name}, from the Forma ${category.toLowerCase()} range.`,
     updated_at: `2026-0${1 + (i % 9)}-1${i % 10}T09:30:00.000000Z`,
   })),
@@ -47,6 +48,9 @@ const back = (extra = {}) => new Back(extra);
 const lower = (s) => s.toLowerCase();
 
 // ---- ProductController ----
+// the signed-in user, and Product::visibleTo($user): the index, its count and bulk() all start from it
+const user = { team_id: 1, is_manager: true };
+const visible = () => db.products.filter((p) => p.team_id === user.team_id);
 const categories = ["Headphones", "Speakers", "Turntables"];
 const statuses = ["Active", "Draft", "Archived"];
 const options = (values) => values.map((value) => ({ value, label: value }));
@@ -72,7 +76,7 @@ function index(query) {
   // TableQuery::filters() and ::paginate(), read the same way through readView()
   const view = readView(query, { defaultSort: "name", defaultDirection: "asc", sortable, filters });
   const dir = view.direction === "desc" ? -1 : 1;
-  const rows = search(applyFilters(db.products, view.filters), view.search)
+  const rows = search(applyFilters(visible(), view.filters), view.search)
     .sort((a, b) => (compare(a[view.sort], b[view.sort]) || a.id - b.id) * dir);
   const perPage = view.perPage ?? 10;
   const last = Math.max(1, Math.ceil(rows.length / perPage));
@@ -83,7 +87,7 @@ function index(query) {
   return page("Products/Index", {
     products: { data, current_page: current, last_page: last, per_page: perPage, total: rows.length, from, to: from && from + data.length - 1 },
     filters,
-    unfilteredTotal: db.products.length,
+    unfilteredTotal: visible().length,
   });
 }
 
@@ -91,8 +95,8 @@ function bulk(body) {
   const { action, selection } = body;
   if (action !== "archive" || !selection) return back({ errors: { action: "The selected action is invalid." } });
   const rows = selection.mode === "ids"
-    ? db.products.filter((p) => selection.ids.includes(p.id))
-    : search(applyFilters(db.products, selection.filters ?? {}), selection.search ?? "");
+    ? visible().filter((p) => selection.ids.includes(p.id))
+    : search(applyFilters(visible(), selection.filters ?? {}), selection.search ?? "");
   for (const p of rows) Object.assign(p, { status: "Archived", updated_at: today() });
   commit();
   return back({ flash: { toast: { type: "success", message: `${rows.length} ${rows.length === 1 ? "product" : "products"} archived.` } } });

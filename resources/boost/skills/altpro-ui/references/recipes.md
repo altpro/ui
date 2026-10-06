@@ -23,14 +23,26 @@ The model and tables behind all three:
 
 ```php
 // app/Models/Product.php
-// products: id, name, sku (unique), category, price decimal(8,2), stock unsigned int, status, description text null, timestamps
+// products: id, team_id, name, sku (unique), category, price decimal(8,2), stock unsigned int, status, description text null, timestamps
 // tags: id, name; product_tag: product_id, tag_id; photos: id, product_id, name, path, timestamps
+// users: the usual columns, plus team_id and is_manager boolean
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 class Product extends Model
 {
     public const CATEGORIES = ['Headphones', 'Speakers', 'Turntables'];
     public const STATUSES = ['Active', 'Draft', 'Archived'];
 
     protected $fillable = ['name', 'sku', 'category', 'price', 'stock', 'status', 'description'];
+
+    /** The products this user may see. The list and every bulk action start from it. */
+    public function scopeVisibleTo(Builder $query, User $user): void
+    {
+        $query->where('team_id', $user->team_id);
+    }
 
     public function tags(): BelongsToMany
     {
@@ -43,6 +55,56 @@ class Product extends Model
     }
 }
 ```
+
+```php
+// app/Models/Photo.php
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class Photo extends Model
+{
+    protected $fillable = ['name', 'path'];
+
+    public function product(): BelongsTo
+    {
+        return $this->belongsTo(Product::class);
+    }
+}
+
+// app/Models/Tag.php
+class Tag extends Model
+{
+    protected $fillable = ['name'];
+}
+```
+
+```php
+// app/Policies/ProductPolicy.php: Laravel finds it by the model's name
+use App\Models\Product;
+use App\Models\User;
+
+class ProductPolicy
+{
+    // the list itself; which rows it holds is Product::visibleTo()
+    public function viewAny(User $user): bool
+    {
+        return true;
+    }
+
+    public function update(User $user, Product $product): bool
+    {
+        return $product->team_id === $user->team_id;
+    }
+
+    // whether a bulk action may run at all; the rows it reaches are Product::visibleTo() again
+    public function archive(User $user): bool
+    {
+        return $user->is_manager;
+    }
+}
+```
+
+Every action authorises in its own code: route model binding finds any record by its id.
 
 ```php
 // routes/web.php
@@ -148,11 +210,14 @@ const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.d
 use App\Http\Requests\UpdateProductRequest;
 use App\Models\Product;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
 public function edit(Product $product): Response
 {
+    Gate::authorize('update', $product);
+
     return Inertia::render('Products/Edit', [
         'product' => $product->only('id', 'name', 'sku', 'category', 'price', 'stock', 'status', 'description', 'updated_at'),
         'categories' => Product::CATEGORIES,
@@ -160,6 +225,7 @@ public function edit(Product $product): Response
     ]);
 }
 
+// UpdateProductRequest::authorize() checks the same `update` ability before this runs
 public function update(UpdateProductRequest $request, Product $product): RedirectResponse
 {
     $product->update($request->validated());
@@ -294,6 +360,7 @@ use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -305,8 +372,10 @@ class ProductController extends Controller
 
     public function index(Request $request): Response
     {
+        Gate::authorize('viewAny', Product::class);
+
         $filters = $this->filters();
-        $query = $this->filter(Product::query(), TableQuery::filters($request, $filters))
+        $query = $this->filter(Product::visibleTo($request->user()), TableQuery::filters($request, $filters))
             ->select('id', 'name', 'sku', 'category', 'price', 'stock', 'status', 'updated_at');
 
         // closures, so a table change (`only: ['products']`) runs the table's query and nothing else
@@ -318,12 +387,14 @@ class ProductController extends Controller
                 perPage: 10,
             ),
             'filters' => $filters,
-            'unfilteredTotal' => fn () => Product::count(),
+            'unfilteredTotal' => fn () => Product::visibleTo($request->user())->count(),
         ]);
     }
 
     public function bulk(Request $request): RedirectResponse
     {
+        Gate::authorize('archive', Product::class);
+
         $data = $request->validate([
             'action' => ['required', Rule::in(['archive'])],
             'selection.mode' => ['required', Rule::in(['ids', 'matching'])],
@@ -335,7 +406,8 @@ class ProductController extends Controller
         ]);
         $selection = $data['selection'];
 
-        $query = Product::query();
+        // the index's starting point, so neither ids nor "matching" reach a row the list would hide
+        $query = Product::visibleTo($request->user());
         if ($selection['mode'] === 'ids') {
             $query->whereKey($selection['ids']);
         } else {
@@ -379,12 +451,13 @@ What comes back:
 | The same, from a table change | DataTable sends `only: ['products']`, so the response carries `products` alone and the closures for the rest never run. |
 | `POST /products/bulk` with `{ action: "archive", selection: { mode: "ids", ids: [2, 9] } }` | Redirect back to the list URL it came from, flash `toast` "2 products archived.". |
 | `POST /products/bulk` with `{ action: "archive", selection: { mode: "matching", search: "", filters: { status: [], category: ["Speakers"] }, count: 5 } }` | The same, over every product the query matches now. `count` is what the table saw; the server counts again. |
+| `POST /products/bulk` from a user who is not a manager | `403`, and nothing changes. |
 
 - `defaultSort` and `perPage` match the component's `sort` and `:paginate`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`.
 - `selection.filters` has the shape `TableQuery::filters()` returns, so the one `filter()` serves both.
 - `onSuccess: clear` empties the selection once the server has answered. The page's new props show the archived rows; the rows that no longer match a filter drop out.
 - A destructive bulk action (delete) asks first: open a `.dialog` that says how many, and post from its confirm button.
-- Authorise inside `bulk()` as well (`Gate::authorize('archive', Product::class)`); the endpoint takes any ids it is sent.
+- `Product::visibleTo()` starts the index, its count and `bulk()`. The endpoint takes whatever ids and filters it is sent, so a bulk query starting from `Product::query()` would reach rows the list never showed. `Gate::authorize('archive', …)` is the other half: whether this user may archive at all.
 
 ## 3. Tags and photos
 
@@ -491,6 +564,7 @@ use App\Models\Tag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -499,6 +573,8 @@ class ProductMediaController extends Controller
 {
     public function edit(Product $product): Response
     {
+        Gate::authorize('update', $product);
+
         return Inertia::render('Products/Media', [
             'product' => [...$product->only('id', 'name', 'sku'), 'tag_ids' => $product->tags->modelKeys()],
             'tags' => $product->tags->map(fn (Tag $tag) => ['value' => $tag->id, 'label' => $tag->name]),
@@ -507,6 +583,8 @@ class ProductMediaController extends Controller
 
     public function updateTags(Request $request, Product $product): RedirectResponse
     {
+        Gate::authorize('update', $product);
+
         $data = $request->validate([
             'tag_ids' => ['array', 'max:5'],
             'tag_ids.*' => ['integer', 'exists:tags,id'],
@@ -520,6 +598,8 @@ class ProductMediaController extends Controller
     // one file per request, so each has its own progress and its own 422
     public function storePhoto(Request $request, Product $product): JsonResponse
     {
+        Gate::authorize('update', $product);
+
         $request->validate(['photo' => ['required', 'image', 'max:5120']]);
         $file = $request->file('photo');
         $photo = $product->photos()->create([
@@ -532,6 +612,8 @@ class ProductMediaController extends Controller
 
     public function destroyPhoto(Photo $photo): \Illuminate\Http\Response
     {
+        Gate::authorize('update', $photo->product);
+
         Storage::disk('public')->delete($photo->path);
         $photo->delete();
 
@@ -585,4 +667,4 @@ What comes back:
 - `FileInput` reads per-file errors by position (`photos.1`); the `errors` computed builds them from the file, so they stay with their file when another is removed.
 - `accept="image/*"` refuses other files in the browser before any request; `image` in the rules is the check that counts.
 - Saved photos are the app's to show (a grid of thumbnails above the drop zone, each with a delete button that calls `DELETE /photos/{id}`). The drop zone lists only this visit's uploads.
-- Authorise in each action (`Gate::authorize('update', $product)`, and the photo's product for `destroyPhoto`); route model binding alone lets anyone signed in delete any photo.
+- Each action authorises `update` on the product, `destroyPhoto` on the photo's product: route model binding alone would let anyone signed in delete any photo. A `403` on an upload lands in the `catch`, so the file says the upload failed.

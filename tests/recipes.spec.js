@@ -81,6 +81,8 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
   await dt.getByRole("button", { name: "Archive" }).click();
   await expect(toast(page).last()).toHaveText("14 products archived.");
   await expect(dt.locator("tbody .badge")).toHaveText(Array(10).fill("Archived"));
+  // "matching" re-runs the query from Product::visibleTo(), so another team's product, never listed, is untouched
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("demo-recipes")).products.find((p) => p.team_id === 2).status)).toBe("Active");
 
   // a row's Edit link is an Inertia visit to the edit page
   await dt.getByRole("link", { name: "Edit Arc headphones" }).click();
