@@ -99,22 +99,23 @@ const paginationMeta = <TRow>(rows: DataTablePaginated<TRow>): DataTablePaginati
   };
 };
 
-// <html lang> is set by the app layout, so the server render and the browser agree
-const locale = () => globalThis.document?.documentElement.lang || "en-GB";
+// <html lang>, set by the app layout, when the table is not given a locale. A server render has no document,
+// so it needs the locale prop to agree with the browser.
+const pageLocale = () => globalThis.document?.documentElement.lang || "en-GB";
 
 /* oxlint-disable typescript/no-base-to-string -- cell values arrive as scalars */
-export const formatCellValue = (value: unknown, format?: DataTableFormat, currency = "GBP"): string => {
+export const formatCellValue = (value: unknown, format?: DataTableFormat, currency = "GBP", locale = pageLocale()): string => {
   if (format === "boolean") return value ? "Yes" : "No";
   if (value === null || value === undefined || value === "" || format === undefined) return value == null ? "" : String(value);
   if (format === "currency") {
     const amount = Number(value);
-    return Number.isFinite(amount) ? new Intl.NumberFormat(locale(), { style: "currency", currency }).format(amount) : String(value);
+    return Number.isFinite(amount) ? new Intl.NumberFormat(locale, { style: "currency", currency }).format(amount) : String(value);
   }
   const text = String(value);
   const date = new Date(text);
   // an unparseable date shows what it was given; "Invalid Date" would hide which record is wrong
   if (Number.isNaN(date.getTime())) return text;
-  return new Intl.DateTimeFormat(locale(), {
+  return new Intl.DateTimeFormat(locale, {
     day: "2-digit",
     month: "short",
     year: "numeric",

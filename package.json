@@ -11,7 +11,8 @@
   },
   "style": "./resources/css/ui.css",
   "files": [
-    "resources"
+    "resources",
+    "CHANGELOG.md"
   ],
   "scripts": {
     "dev": "vite",

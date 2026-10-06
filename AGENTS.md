@@ -12,6 +12,7 @@ resources/css/components/    one file per component (button, join, input, field,
 resources/views/components/  Blade components, rendered as <x-ui::name>
 resources/js/                Vue components (Name.vue); domModel.js lets Field.vue work without v-model inside a form; DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs the whole directory. SKILL.md holds the rules and a component table; each component is a file in references/
+resources/boost/guidelines/  core.blade.php, the few lines Boost writes into the app's AGENTS.md/CLAUDE.md on every run: load the skill, the naming rule
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 src/TableQuery.php           server half of DataTable.vue: reads the view and filters from the query string as dataTable.ts does, then searches, sorts and pages
 demo/*.html                  one page per component, plus index and theme
@@ -44,6 +45,7 @@ tests/a11y.spec.js           axe and the hover, focus and target-size checks; it
 - Accessibility is WCAG 2.2 AA. Every text-on-fill pairing, text in the ghost and outlined variants, and every hover state must reach 4.5:1 in both schemes. Focus rings are 3px at half opacity, flush with the border, and a bordered control turns its border to the ring colour. Nothing interactive is smaller than 24px. `npm test` checks all of this with axe; a colour change that fails it is wrong, not the test.
 - Do not reference Tailwind palette variables such as `--color-blue-600`. Tailwind v4 only emits theme variables that are used, so use oklch literals in `theme.css`.
 - Do not use CSS counters for anything a user reads: WebKit miscounts them.
+- A change an app must act on (a renamed class, modifier, prop or token, changed markup) goes under **Breaking** in `CHANGELOG.md` and bumps the minor version while on 0.x.
 - Demo-only classes and custom properties are prefixed `demo-` and stay in `demo/` (`demo.css` for the shell, `demo/app/app.css` for the sample screens). They are scaffolding for the demo, not library API: never move one into `resources/` or document it in the skill.
 
 ## Adding a component

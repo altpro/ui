@@ -124,7 +124,7 @@ A page:
 @endsection
 
 @section('content')
-  <h1 class="text-2xl font-semibold tracking-tight">Order 1042</h1>
+  <h1 class="text-2xl font-semibold tracking-tight break-words">Order 1042</h1>
 @endsection
 ```
 
@@ -275,7 +275,7 @@ defineProps({ order: Object });
 <template>
   <Head :title="`Order ${order.number}`" />
   <AppLayout :breadcrumb="[{ label: 'Orders', href: '/orders' }, { label: `Order ${order.number}` }]">
-    <h1 class="text-2xl font-semibold tracking-tight">Order {{ order.number }}</h1>
+    <h1 class="text-2xl font-semibold tracking-tight break-words">Order {{ order.number }}</h1>
   </AppLayout>
 </template>
 ```

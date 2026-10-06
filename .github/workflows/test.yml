@@ -8,19 +8,35 @@ jobs:
   test:
     # 24.04 ships PHP 8.3 and Composer, which tests/blade.php needs
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # the newest of everything, and the whole suite
+          - laravel: 13
+            composer: composer update
+            browsers: chromium firefox webkit
+            test: npm run build && npm test
+          # the oldest Laravel 12 Composer will install (it skips releases with security advisories),
+          # and only the tests that run PHP: TableQuery and the Blade field against its Vue twin
+          - laravel: 12
+            composer: composer update --prefer-lowest --with laravel/framework:^12
+            browsers: chromium
+            test: php tests/table-query.php && npx playwright test browsers.spec.js -g Blade --project=chromium
+    name: test (Laravel ${{ matrix.laravel }})
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 24
           cache: npm
-      - run: composer install --no-interaction --no-progress
+      - run: ${{ matrix.composer }} --no-interaction --no-progress
+      - run: composer show laravel/framework | grep versions
       - run: npm ci
-      - run: npx playwright install --with-deps chromium firefox webkit
-      - run: npm run build
-      - run: npm test
+      - run: npx playwright install --with-deps ${{ matrix.browsers }}
+      - run: ${{ matrix.test }}
       - uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: test-results
+          name: test-results-laravel-${{ matrix.laravel }}
           path: test-results

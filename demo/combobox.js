@@ -81,7 +81,7 @@ const searchTags = async (q) => {
 {
   const picked = ref([1]), author = ref(null);
   mount("#create", () => row(
-    field("Tags", picked, { name: "tags", src: searchTags, create: createTag, multiple: true, options: tags }, "Add one that is not there."),
+    field("Tags", picked, { name: "tags", src: searchTags, create: createTag, multiple: true, max: 3, options: tags }, "Add one that is not there. Up to three."),
     field("Author", author, { name: "author_id", options: people, create: createTag }),
   ));
 }
