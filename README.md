@@ -2,6 +2,16 @@
 
 An HTML and CSS component layer for Tailwind v4. Tailwind does layout; altpro/ui does the components, so `<button class="btn primary lg">` replaces a line of utilities. Native `<dialog>`, popovers, `<details>` and friends do the interactive parts. Components that need JavaScript, such as the combobox and DataTable, are Vue components; a few Blade components, such as the field, save markup.
 
+## What each part needs
+
+| Using | Packages | Vite plugins | Supported |
+|-------|----------|--------------|-----------|
+| CSS only (any HTML, Blade) | `tailwindcss` | `@tailwindcss/vite` | Tailwind 4.1+, Vite 7+. Blade components: PHP 8.3+, Laravel 12 or 13 |
+| Vue components (Field, FileInput, Combobox, Repeater, CopyButton) | the above, plus `vue` | the above, plus `@vitejs/plugin-vue` | Vue 3.5+, plugin-vue 6+ |
+| DataTable | the above, plus `@inertiajs/vue3`; `TableQuery` on the server | the above | Inertia 3+ (client and `inertiajs/inertia-laravel`), Laravel 12 or 13. Written in TypeScript, which Vite compiles without extra setup |
+
+Current Chrome, Firefox and Safari. Some styling (the open `<select>` picker) is Chrome-only and falls back to the native control elsewhere.
+
 ## Install in Laravel
 
 Add the repository to the app's `composer.json`, then require it:

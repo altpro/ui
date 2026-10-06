@@ -25,6 +25,13 @@ const form = useForm({ photos: [] });
 | `name` `id` | On the input. `name` also picks the errors. |
 | default slot | An extra line inside the zone: limits, formats. |
 
+After mount:
+
+- **v-model** set from outside (`form.photos = []`, `reset()`): the list and the native input follow; previews of files that left are revoked.
+- **`errors`** change, including an in-place `setError`: `photos` shows at once; `photos.1` is tied to whichever file is second at that moment, then stays with that file when others are removed.
+- **`progress`** is read by position on every render; keep it in step with v-model when files are removed.
+- **A form reset**, native or `<Form>`, empties the list and v-model even with v-model, since a file input cannot be written back. `useForm`'s `reset()` sets v-model to its default, normally `null` or `[]`.
+
 - The native input covers the zone, invisible: click, Enter or Space opens the picker, and screen readers get the browser's file button. Dropping is the extra. The zone is a `<label>`, so the input is named by it and by any `<label for>` outside.
 - The native input always holds the same files as v-model, so `required`, a plain form post and Inertia's `<Form>` work.
 - A form reset, native or Inertia's `<Form>`, empties the list and v-model as it empties the input. Vue's `<Field type="file">` does the same.

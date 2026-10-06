@@ -24,13 +24,20 @@ const form = useForm({ lines: props.order.lines });
 | `errors` | `form.errors`, or a 422 body's `errors`. `lines` itself shows under the list. |
 | `disabled` | `form.processing`: add, remove and move are off while saving. |
 
+After mount:
+
+- **v-model** replaced (`reset()`, a reload): rows are matched to keys by object identity. `useForm`'s `reset()` clones its defaults, so every row is new: their errors no longer show. Call `clearErrors()` with it.
+- **`errors`**: any change (a response, `setError()`, `clearErrors()`) re-reads them by position and ties them to the rows. After a move that position can be stale; see the caveat below.
+- **`make`** runs on each "Add", so it can read current state (a default currency).
+- **`disabled`** applies at once to add, remove and move.
+
 | Slot prop | Gets |
 |-----------|------|
 | `row` | The row object; bind its fields with `v-model="row.qty"`. |
 | `index` | Its position now, for `name`: `lines.${index}.qty` is only where it sits in what is submitted. |
 | `errors` | Its errors, keyed by its current position, so `<Field :errors="errors">` finds them. |
 
-- Each row gets a key held in the component, not in the data, so nothing extra is submitted. Server errors are read by position when a new errors object arrives (Inertia replaces `form.errors` on every response), then belong to the row: they move with it, and go when it is removed.
+- Each row gets a key held in the component, not in the data, so nothing extra is submitted. Server errors are read by position when they change (Inertia replaces `form.errors` on every response), then belong to the row: they move with it, and go when it is removed.
 - Focus: after a move it stays on the moved row's button, or its other move button at the top or bottom; after a remove it goes to the remove button of the row now in that place, else the previous row's, else "Add"; after an add, to the new row's first field. A polite live region says what happened.
-- Errors are read by position only when a new errors object arrives. After a move, an in-place `form.setError('lines.1.qty', …)` or a partial `form.clearErrors('lines.1.qty')` names the position the row had when the errors last arrived, not where it is now. Errors from a response are always right; set or clear them in the client only before rows move, or replace the whole object.
+- Errors are read by position whenever they change. After a move, a `form.setError('lines.1.qty', …)` or a partial `form.clearErrors('lines.1.qty')` names the position the row had when the errors last arrived, not where it is now. Errors from a response are always right; set or clear them in the client only before rows move, or replace the whole object.
 - Moving the first row up and the last row down are disabled. Drag reordering is not there yet; when it comes it sits beside the buttons.

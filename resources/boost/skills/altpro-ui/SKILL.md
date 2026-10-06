@@ -58,6 +58,10 @@ One base class, then bare modifier words in any order. No prefixes.
 
 Write `btn primary`, never `btn-primary` or `btn btn-primary`. Utilities always override component styles because components live in `@layer components`.
 
+## Icons
+
+Lucide, never hand-written paths: `@lucide/vue` in Vue (`<Plus class="size-4" aria-hidden="true" />`), `mallardduck/blade-lucide-icons` in Blade (`<x-lucide-plus class="size-4" aria-hidden="true" />`). An `<svg>…</svg>` in a reference file stands for one of these. Icons are `size-4` and `aria-hidden="true"`; an icon-only button gets its name from `aria-label`.
+
 ## Components
 
 One line each: what it is for, and what it ships as. **CSS** is classes on native HTML, usable from Blade and Vue alike. **Vue** needs the Vue component. **Blade** has an `<x-ui::…>` component that saves markup. A *pattern* has no class of its own; it composes others. Read the reference file before writing the component's markup: it has the class table, the rules and a copy-paste example.

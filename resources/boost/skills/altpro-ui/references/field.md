@@ -54,6 +54,15 @@ const form = useForm({ category_id: props.post.category_id, tags: props.post.tag
 | `id` | Generated when left off. | Same. |
 | `now` | On a `date`, `time`, `datetime-local` or `month`, an empty value becomes the current one, in the app's timezone. | Same, in the browser's timezone; the value goes into v-model too. |
 
+After mount (Vue):
+
+- **v-model** changes: the control follows. A model or list of models is turned into ids again, so `useForm`'s `reset()` putting default models back submits ids too.
+- **`value`** is read once, when there is no v-model. Changing it later does nothing; the inputs are the truth.
+- **`now`** fills an empty date once, at mount. A later `reset()` to an empty default leaves it empty.
+- **`options`** change: the list re-renders and the value is matched to the new options (`1` matches `"1"`). A value missing from the new options stays in the model; a select then shows no option chosen.
+- **`errors`** change: messages, `aria-invalid` and the red border follow at once, so `clearErrors()` clears them.
+- **The form's defaults** (`form.defaults()`) only matter when the form resets. Without v-model, a native or `<Form>` reset reads the inputs back into the field. A file field empties on a native or `<Form>` reset even with v-model, since nothing can write a file input.
+
 - `class` lands on the `.field`; every other attribute (`required`, `placeholder`, `min`, `rows`, `autocomplete`, `max`, `disabled`…) on the control. On a `combobox` they go to `Combobox.vue`, so `multiple`, `max`, `src` and `create` work there.
 - `placeholder` on a select adds an empty first option, so `required` works on it.
 - After a failed submit, an unticked box or checkbox group stays empty rather than falling back to `value`, since the browser sends nothing for it.

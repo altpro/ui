@@ -31,6 +31,14 @@ import Combobox from "@ui/Combobox.vue";
 | `disabled` | Cannot open; nothing is submitted. |
 | `autofocus` | Focuses the trigger on load. |
 
+After mount:
+
+- **v-model** changes: the trigger follows, the hidden select is rewritten and fires `change`.
+- **`options`** change: labels are added to what it already knows and never dropped, so a selected value keeps its label after a search or an options swap. A selected value missing from the new options stays selected.
+- **The reset point** is the value at mount: it is written into the hidden select's `defaultSelected`, so a native or `<Form>` reset goes back to it. With `useForm`, `reset()` goes through v-model to the form's defaults, whatever they are now.
+- **`src`** and **`create`** are read on each search and add, so swapping them (a different customer's contacts) applies to the next keystroke.
+- It takes no `errors`: Field passes `aria-invalid` and the message for it.
+
 - `aria-*` attributes (`aria-describedby`, `aria-invalid`) go on the trigger; everything else, `class="w-64"` and listeners such as `@change`, on the wrapper. The width is `12rem` unless a utility changes it.
 - A native form reset, Inertia's `reset()` and `reset("field")` put the starting value back, and the trigger follows at once. Inertia's `<Form>` sees changes (`isDirty`).
 - A picked value that is no longer in `options` stays picked, and with `multiple` it is listed first in the panel so it can be unticked.
