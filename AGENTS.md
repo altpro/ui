@@ -24,7 +24,7 @@ tests/table-query.php        TableQuery against in-memory SQLite
 tests/table-view.ts          tableView (what DataTable.vue shows for a view) and readView/viewUrl under plain Node
 tests/table-urls.json        URL-to-view cases both of the above read, so the PHP and TS halves agree on the query-string format
 tests/inventory.test.js      the "Adding a component" checklist below as a test; a component whose demo page or reference has another name goes in its aliases map
-tests/skill-code.test.js     every reference code block headed with a resources/js/ path equals that file in demo/app/, so the skill shows the code the browser tests run
+tests/skill-code.test.js     a reference code block headed with a resources/js/ path equals that file in demo/app/ where the demo has it, and every demo page, layout and composable is one, so the skill shows the code the browser tests run
 tests/a11y.spec.js           axe and the hover, focus and target-size checks; its PNG reader reads pixels from screenshots, because getComputedStyle cannot see vendor pseudo-elements (::-webkit-progress-value, ::-webkit-slider-thumb), and it is a few lines over node:zlib rather than a dependency
 ```
 
