@@ -4,8 +4,16 @@ A Vue component for Inertia apps: search, sortable columns, declared filters, pa
 
 ```vue
 <script setup lang="ts">
+import { Link } from "@inertiajs/vue3";
 import DataTable from "@ui/DataTable.vue";
 import type { DataTableColumn, DataTableFilter } from "@ui/dataTable";
+
+interface Brand {
+  id: number;
+  name: string;
+  featured: boolean;
+  created_at: string;
+}
 
 defineProps<{ brands: Brand[] }>();
 
@@ -77,7 +85,7 @@ $query = Brand::query()->when($values['featured'], fn ($q) => $q->where('feature
 
 // closures, so a reload with `only` runs the table's query and none of the others
 return Inertia::render('Brands/Index', [
-    'brands' => fn () => TableQuery::paginate($query, $request, name: 'brands', searchable: ['name', 'slug'], sortable: ['name', 'added' => 'created_at'], defaultSort: 'name'),
+    'brands' => fn () => TableQuery::paginate($query, $request, name: 'brands', searchable: ['name', 'slug'], sortable: ['name', 'created_at'], defaultSort: 'name'),
     'filters' => $filters,
     'unfilteredTotal' => fn () => Brand::count(),
 ]);
@@ -87,7 +95,7 @@ return Inertia::render('Brands/Index', [
 <DataTable caption="Brands" name="brands" :columns="columns" :rows="brands" :filters="filters" :unfiltered-total="unfilteredTotal" :only="['brands']" sort="name" />
 ```
 
-- `sortable` is the allow-list: a sort column from the URL that is not on it falls back to `defaultSort`, so user input never reaches `order by`. `['added' => 'created_at']` maps the column key to a database column.
+- `sortable` is the allow-list of column keys: a sort column from the URL that is not on it falls back to `defaultSort`, so user input never reaches `order by`. List the key the column has in `columns` (`created_at` above). When that key is not the database column, map it: a column `{ key: "added" }` over rows whose `added` the controller derives from `created_at` takes `sortable: ['added' => 'created_at']`.
 - `defaultSort` and `defaultDirection` must match the component's `sort` and `direction`: a bare URL sorts by the controller's, and the header arrow shows the component's.
 - Declare the filters once and pass the same array to the page as the `filters` prop. `TableQuery::filters()` reads it the way the component writes it and returns each filter's values by key: `[]` for none, the `default` when the URL says nothing. A boolean is `['1']` when ticked. What a value means stays in the controller, as `when()` clauses.
 - A `daterange` on a timestamp column: start inclusive, end exclusive at the start of the next day, both in the app's timezone, so the whole of the last day is in.

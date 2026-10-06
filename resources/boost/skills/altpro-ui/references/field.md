@@ -34,11 +34,24 @@ Writes the whole `.field` from a name and a type: the label, generated ids tying
 
 ```vue
 <script setup>
+import { useForm } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
+
+const props = defineProps({
+  post: { type: Object, required: true },
+  categories: { type: Array, required: true }, // [{ value, label }]
+  tags: { type: Array, required: true }, // [{ value, label }]
+});
 const form = useForm({ category_id: props.post.category_id, tags: props.post.tags });
 </script>
 
-<Field v-model="form.tags" name="tags" type="combobox" multiple :options="tags" :errors="form.errors" :max="3" />
+<template>
+  <form class="flex flex-col gap-4" @submit.prevent="form.put(`/posts/${post.id}`)">
+    <Field v-model="form.category_id" name="category_id" type="select" :options="categories" placeholder="Choose one" :errors="form.errors" />
+    <Field v-model="form.tags" name="tags" type="combobox" multiple :options="tags" :errors="form.errors" :max="3" hint="Up to three." />
+    <div><button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button></div>
+  </form>
+</template>
 ```
 
 | Prop | Blade | Vue |

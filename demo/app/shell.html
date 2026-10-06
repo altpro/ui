@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- The app-shell recipe (resources/boost/skills/altpro-ui/references/app-shell.md) rendered as a plain page:
      no demo.js, no demo CSS. Blade's @include('layouts.navigation') is the nav written out twice; <x-lucide-*> are the inline svgs. -->
-<html lang="en">
+<html lang="en" class="scroll-pb-20">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -61,7 +61,7 @@
     </nav>
   </dialog>
 
-  <div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"></div>
+  <div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
   <script>
     // scheme switcher: "" follows the OS, the head script applies a saved choice before paint
     for (const radio of document.querySelectorAll("[name=scheme]")) {
@@ -74,10 +74,9 @@
     }
 
     // toast("Saved.", "success"): see toast.md
-    function toast(text, colour = "") {
-      const el = document.createElement("div");
-      el.className = `alert ${colour}`;
-      el.append(Object.assign(document.createElement("p"), { textContent: text }));
+    function toast(message, type = "") {
+      const el = Object.assign(document.createElement("div"), { className: `alert ${type}` });
+      el.append(Object.assign(document.createElement("p"), { textContent: message }));
       el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
       document.getElementById("toaster").append(el);
     }

@@ -1,30 +1,42 @@
-// The recipe pages in demo/app (references/recipes.md): Pages/Products/*.vue against the stand-in server in demo/app/server.js.
+// The recipe pages in demo/app (references/recipes.md, validation-failure.md, unsaved-changes.md, destructive-action.md):
+// Pages/ in Layouts/AppLayout.vue against the stand-in server in demo/app/server.js.
 // Each test gets a new context, so the stand-in's sessionStorage database starts from its seed.
 import { test, expect } from "@playwright/test";
 
 const toast = (page) => page.locator("#toaster .alert");
 
-test("edit page: server errors appear and clear, a save becomes the new defaults, and Discard goes back to them", async ({ page }) => {
+test("edit page: a failed save focuses the error summary, a save becomes the new defaults, and Discard goes back to them", async ({ page }) => {
   await page.goto("/app/recipe-product.html?id=2");
   const name = page.getByLabel("Name", { exact: true }), price = page.getByLabel("Price", { exact: true });
   const status = page.locator("form [role=status]"), discard = page.getByRole("button", { name: "Discard" });
+  const summary = page.locator("form").getByRole("alert"), fieldErrors = page.locator("form .field .error:visible");
   await expect(name).toHaveValue("Arc studio");
   await expect(discard).toBeDisabled();
+  // one shell: AppLayout draws the only breadcrumb, from the page's prop; on the page load the skip link is the first Tab
+  await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(1);
+  await page.keyboard.press("Tab");
+  await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
 
   await name.fill("");
   await price.fill("-5");
   await expect(status).toHaveText("Unsaved changes");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByText("The name field is required.")).toBeVisible();
-  await expect(page.getByText("The price field must be at least 0.")).toBeVisible();
+  // the summary lists every error and takes focus; Tab goes on to the first field
+  await expect(summary).toBeFocused();
+  await expect(summary.getByRole("heading")).toHaveText("The product was not saved");
+  await expect(summary.getByRole("listitem")).toHaveText(["The name field is required.", "The price field must be at least 0."]);
+  await expect(fieldErrors).toHaveText(["The name field is required.", "The price field must be at least 0."]);
   await expect(name).toHaveAttribute("aria-invalid", "true");
   await expect(price).toHaveAttribute("aria-invalid", "true");
+  await page.keyboard.press("Tab");
+  await expect(name).toBeFocused();
 
   await name.fill("Arc studio pro");
   await price.fill("399");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(toast(page)).toHaveText("Product saved.");
-  await expect(page.locator("form .error:visible")).toHaveCount(0);
+  await expect(summary).toHaveCount(0);
+  await expect(fieldErrors).toHaveCount(0);
   await expect(name).not.toHaveAttribute("aria-invalid", "true");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Arc studio pro");
   await expect(status).toHaveText("Saved.");
@@ -33,17 +45,99 @@ test("edit page: server errors appear and clear, a save becomes the new defaults
   // Discard puts back the saved values, not the ones the page loaded with, and clears errors
   await name.fill("");
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByText("The name field is required.")).toBeVisible();
+  await expect(summary).toBeFocused();
   await discard.click();
   await expect(name).toHaveValue("Arc studio pro");
   await expect(price).toHaveValue("399");
-  await expect(page.getByText("The name field is required.")).toBeHidden();
+  await expect(summary).toHaveCount(0);
+  await expect(fieldErrors).toHaveCount(0);
   await expect(discard).toBeDisabled();
 
-  // the list reads the same database
-  await page.getByRole("navigation", { name: "Breadcrumb" }).last().getByRole("link", { name: "Products" }).click();
+  // the list reads the same database; a clean form lets the visit go without asking
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
   await expect(page).toHaveURL(/recipe-products\.html$/);
   await expect(page.locator("tbody")).toContainText("Arc studio pro");
+});
+
+test("edit page: leaving with unsaved changes asks first, in the app and through the browser", async ({ page }) => {
+  await page.goto("/app/recipe-product.html?id=2");
+  const name = page.getByLabel("Name", { exact: true });
+  const products = page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" });
+  // what the browser's own prompt hangs on: a beforeunload that is cancelled
+  const unloadBlocked = () => page.evaluate(() => {
+    const event = new Event("beforeunload", { cancelable: true });
+    dispatchEvent(event);
+    return event.defaultPrevented;
+  });
+  const asked = [];
+  page.on("dialog", (dialog) => {
+    asked.push(dialog.message());
+    return asked.length === 1 ? dialog.dismiss() : dialog.accept();
+  });
+
+  expect(await unloadBlocked()).toBe(false);
+  await name.fill("Arc studio mk2");
+  expect(await unloadBlocked()).toBe(true);
+
+  // an Inertia visit asks with confirm(): Cancel stays on the page with the edit
+  await products.click();
+  await expect.poll(() => asked).toEqual(["You have unsaved changes. Leave this page and lose them?"]);
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await expect(name).toHaveValue("Arc studio mk2");
+
+  // a save is not leaving, and leaves nothing unsaved
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("form [role=status]")).toHaveText("Saved.");
+  expect(await unloadBlocked()).toBe(false);
+  expect(asked).toHaveLength(1);
+
+  // dirty again, and OK leaves; the new page puts focus on its main
+  await name.fill("Arc studio mk3");
+  await page.getByRole("link", { name: "Tags and photos" }).click();
+  await expect(page).toHaveURL(/recipe-media\.html\?id=2$/);
+  expect(asked).toHaveLength(2);
+  await expect(page.locator("#main")).toBeFocused();
+  expect(await unloadBlocked()).toBe(false);
+});
+
+test("delete account: a wrong password keeps the dialog open with the error in it, closing forgets it, and the right one deletes", async ({ page }) => {
+  await page.goto("/app/recipe-settings.html");
+  const open = page.locator("section").getByRole("button", { name: "Delete account" });
+  const dialog = page.getByRole("dialog", { name: "Delete your account?" });
+  const password = dialog.getByLabel("Password"), confirm = dialog.getByRole("button", { name: "Delete account" });
+  const error = dialog.locator(".error:visible");
+
+  await open.click();
+  await expect(dialog).toBeVisible();
+  await expect(password).toBeFocused();
+  await confirm.click();
+  await expect(error).toHaveText("The password field is required.");
+  await password.fill("wrong");
+  await confirm.click();
+  await expect(confirm).toHaveAttribute("aria-busy", "true");
+  await expect(confirm).toBeDisabled();
+  await expect(error).toHaveText("The password is incorrect.");
+  await expect(dialog).toBeVisible();
+  await expect(password).toHaveAttribute("aria-invalid", "true");
+  await expect(password).toBeFocused();
+  await expect(confirm).not.toHaveAttribute("aria-busy", "true");
+
+  // Esc closes it, focus goes back to the button that opened it, and the password and its error go with it
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(open).toBeFocused();
+  await open.click();
+  await expect(password).toHaveValue("");
+  await expect(error).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Cancel" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(open).toBeFocused();
+
+  // the right password: Laravel logs the user out and redirects home, which is a full page load
+  await open.click();
+  await password.fill("password");
+  await password.press("Enter");
+  await expect(page).toHaveURL(/:\d+\/$/);
 });
 
 test("list page: the server searches, filters and pages, and a bulk action runs on ids or on everything matching", async ({ page }) => {
@@ -81,11 +175,15 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
   await dt.getByRole("button", { name: "Archive" }).click();
   await expect(toast(page).last()).toHaveText("14 products archived.");
   await expect(dt.locator("tbody .badge")).toHaveText(Array(10).fill("Archived"));
+  // "matching" re-runs the query from Product::visibleTo(), so another team's product, never listed, is untouched
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("demo-recipes")).products.find((p) => p.team_id === 2).status)).toBe("Active");
 
   // a row's Edit link is an Inertia visit to the edit page
   await dt.getByRole("link", { name: "Edit Arc headphones" }).click();
   await expect(page).toHaveURL(/recipe-product\.html\?id=1$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Arc headphones");
+  // a visit to a new page puts focus on its main, not on <body> where the clicked link left it
+  await expect(page.locator("#main")).toBeFocused();
 });
 
 test("tags and photos: the combobox searches and creates on the server, and each photo uploads with progress and its own errors", async ({ page }) => {

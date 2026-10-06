@@ -14,8 +14,15 @@ const pages = Object.fromEntries(
 export default defineConfig({
   root: demo,
   plugins: [tailwindcss(), vue()],
-  // the same alias the skill tells apps to set, so demo imports read like app imports
-  resolve: { alias: { "@ui": resolve(import.meta.dirname, "resources/js") } },
+  // the same alias the skill tells apps to set, so demo imports read like app imports. The recipe pages in demo/app
+  // are app code: `@` is Laravel's resources/js, and @lucide/vue a stand-in holding the few icons they use.
+  resolve: {
+    alias: {
+      "@ui": resolve(import.meta.dirname, "resources/js"),
+      "@lucide/vue": resolve(demo, "app/lucide.js"),
+      "@": resolve(demo, "app"),
+    },
+  },
   build: {
     outDir: resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,

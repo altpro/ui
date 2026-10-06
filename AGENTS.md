@@ -16,7 +16,7 @@ resources/boost/guidelines/  core.blade.php, the few lines Boost writes into the
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 src/TableQuery.php           server half of DataTable.vue: reads the view and filters from the query string as dataTable.ts does, then searches, sorts and pages
 demo/*.html                  one page per component, plus index and theme
-demo/app/                    sample store (Forma): one Vue app, Workspace.vue, behind four pages listed under Application in the menu; its screen styles are app.css. The recipe-*.html pages are the skill's references/recipes.md: Inertia pages in Pages/ against server.js, a stand-in for the Laravel side
+demo/app/                    sample store (Forma): one Vue app, Workspace.vue, behind four pages listed under Application in the menu; its screen styles are app.css. The recipe-*.html pages are the app shell's Inertia root view running the skill's app code (Layouts/AppLayout.vue, Pages/, composables/, toast.js, written as references/*.md show them) against server.js, a stand-in for the Laravel side; vite.config.js maps `@` to demo/app and @lucide/vue to lucide.js for them
 demo/demo.css                Tailwind, ui.css and the shell's styles
 demo/demo.js                 shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 tests/blade.php              renders a Blade string through Testbench, for the browser tests
@@ -24,6 +24,7 @@ tests/table-query.php        TableQuery against in-memory SQLite
 tests/table-view.ts          tableView (what DataTable.vue shows for a view) and readView/viewUrl under plain Node
 tests/table-urls.json        URL-to-view cases both of the above read, so the PHP and TS halves agree on the query-string format
 tests/inventory.test.js      the "Adding a component" checklist below as a test; a component whose demo page or reference has another name goes in its aliases map
+tests/skill-code.test.js     a reference code block headed with a resources/js/ path equals that file in demo/app/ where the demo has it, and every demo page, layout and composable is one, so the skill shows the code the browser tests run
 tests/a11y.spec.js           axe and the hover, focus and target-size checks; its PNG reader reads pixels from screenshots, because getComputedStyle cannot see vendor pseudo-elements (::-webkit-progress-value, ::-webkit-slider-thumb), and it is a few lines over node:zlib rather than a dependency
 ```
 
@@ -64,7 +65,7 @@ composer install       Testbench, so the tests can render Blade (needs PHP 8.3+)
 npm run dev            demo site with live reload
 npm run build          production build of the demo into dist/
 npm test               test:unit, then every Playwright spec: test:a11y and test:browsers below, and the rest in Chromium
-npm run test:unit      vue-tsc type check, TableQuery, tableView and the inventory test; no browser
+npm run test:unit      vue-tsc type check, TableQuery, tableView, the inventory and skill-code tests; no browser
 npm run test:a11y      axe WCAG 2.2 AA scan of every demo page in light and dark, plus hover, focus and target-size checks (Chromium)
 npm run test:browsers  the Firefox/WebKit matrix
 ```

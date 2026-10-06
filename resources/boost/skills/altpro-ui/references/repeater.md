@@ -4,15 +4,26 @@ A list of rows the user can add to, remove from and reorder: order lines, contac
 
 ```vue
 <script setup>
+import { useForm } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import Repeater from "@ui/Repeater.vue";
+
+const props = defineProps({
+  order: { type: Object, required: true }, // { id, lines: [{ product_id, qty }] }
+  products: { type: Array, required: true }, // [{ value, label }]
+});
 const form = useForm({ lines: props.order.lines });
 </script>
 
-<Repeater v-model="form.lines" name="lines" item="line" :make="() => ({ product_id: '', qty: 1 })" :errors="form.errors" :disabled="form.processing" v-slot="{ row, index, errors }">
-  <Field v-model="row.product_id" :name="`lines.${index}.product_id`" label="Product" type="select" :options="products" :errors="errors" />
-  <Field v-model="row.qty" :name="`lines.${index}.qty`" label="Quantity" type="number" :errors="errors" />
-</Repeater>
+<template>
+  <form class="flex flex-col gap-4" @submit.prevent="form.put(`/orders/${order.id}`)">
+    <Repeater v-model="form.lines" name="lines" item="line" :make="() => ({ product_id: '', qty: 1 })" :errors="form.errors" :disabled="form.processing" v-slot="{ row, index, errors }">
+      <Field v-model="row.product_id" :name="`lines.${index}.product_id`" label="Product" type="select" :options="products" :errors="errors" />
+      <Field v-model="row.qty" :name="`lines.${index}.qty`" label="Quantity" type="number" :errors="errors" />
+    </Repeater>
+    <div><button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button></div>
+  </form>
+</template>
 ```
 
 | Prop | Meaning |

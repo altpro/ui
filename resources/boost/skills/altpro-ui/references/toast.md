@@ -23,7 +23,7 @@ A region fixed in a corner, in the page from load and empty. The app appends an 
 - One region per page, at the end of `body`. Keep the `role`, `aria-label` and `aria-live` attributes; the region must exist before the first toast so the announcement fires. Alerts inside carry no `role` of their own.
 - The app removes the element: listen for `animationend` with the name `toast-life`, as above. Without that listener a faded toast stays in the DOM.
 - Anything with an action, or that the user must read, is `pinned` with a dismiss cross (`btn ghost xs`, `aria-label="Dismiss"`, `onclick="this.closest('.alert').remove()"`), same as a dismissible alert. Never make a toast the only way to reach an action.
-- On a page with a save bar, put the toaster at the top (`toaster top`): in the bottom corner a toast covers Save.
+- On a page with a save bar, put the toaster at the top (`toaster top`): in the bottom corner a toast covers Save. The [app shell](app-shell.md)'s root view does, on every page.
 - Toasts are polite. Something that must interrupt is a dialog, not a toast.
 
 ## Flash messages (Laravel)

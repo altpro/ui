@@ -5,6 +5,7 @@
 import { createInertiaApp, http, router } from "@inertiajs/vue3";
 import { HttpCancelledError, HttpResponseError } from "@inertiajs/core";
 import { readView } from "@ui/dataTable";
+import { toast } from "./toast.js";
 
 // ---- the database, kept for the tab so an edit shows on the list ----
 const today = () => new Date().toISOString();
@@ -24,8 +25,9 @@ const seed = () => ({
     ["Loop turntable", "LOP-CH", "Turntables", 279, 4, "Active"],
     ["Loop deluxe", "LOP-DX", "Turntables", 459, 0, "Draft"],
     ["Groove preamp", "GRV-SL", "Turntables", 89, 40, "Active"],
-  ].map(([name, sku, category, price, stock, status], i) => ({
-    id: i + 1, name, sku, category, price, stock, status, tag_ids: [1],
+    ["Pulse subwoofer", "PLS-SL", "Speakers", 499, 5, "Active", 2], // another team's: Product::visibleTo() hides it
+  ].map(([name, sku, category, price, stock, status, team_id = 1], i) => ({
+    id: i + 1, team_id, name, sku, category, price, stock, status, tag_ids: [1],
     description: `${name}, from the Forma ${category.toLowerCase()} range.`,
     updated_at: `2026-0${1 + (i % 9)}-1${i % 10}T09:30:00.000000Z`,
   })),
@@ -44,9 +46,14 @@ const page = (component, props) => ({ component, props });
 const json = (body, status = 200) => ({ json: body, status });
 // redirect()->back(): the page the request came from, with the session's errors and flash
 const back = (extra = {}) => new Back(extra);
+// redirect('/') and the like: a URL outside these routes, which the browser loads in full
+class Away { constructor(url) { this.url = url; } }
 const lower = (s) => s.toLowerCase();
 
 // ---- ProductController ----
+// the signed-in user, and Product::visibleTo($user): the index, its count and bulk() all start from it
+const user = { team_id: 1, is_manager: true };
+const visible = () => db.products.filter((p) => p.team_id === user.team_id);
 const categories = ["Headphones", "Speakers", "Turntables"];
 const statuses = ["Active", "Draft", "Archived"];
 const options = (values) => values.map((value) => ({ value, label: value }));
@@ -72,7 +79,7 @@ function index(query) {
   // TableQuery::filters() and ::paginate(), read the same way through readView()
   const view = readView(query, { defaultSort: "name", defaultDirection: "asc", sortable, filters });
   const dir = view.direction === "desc" ? -1 : 1;
-  const rows = search(applyFilters(db.products, view.filters), view.search)
+  const rows = search(applyFilters(visible(), view.filters), view.search)
     .sort((a, b) => (compare(a[view.sort], b[view.sort]) || a.id - b.id) * dir);
   const perPage = view.perPage ?? 10;
   const last = Math.max(1, Math.ceil(rows.length / perPage));
@@ -83,7 +90,7 @@ function index(query) {
   return page("Products/Index", {
     products: { data, current_page: current, last_page: last, per_page: perPage, total: rows.length, from, to: from && from + data.length - 1 },
     filters,
-    unfilteredTotal: db.products.length,
+    unfilteredTotal: visible().length,
   });
 }
 
@@ -91,8 +98,8 @@ function bulk(body) {
   const { action, selection } = body;
   if (action !== "archive" || !selection) return back({ errors: { action: "The selected action is invalid." } });
   const rows = selection.mode === "ids"
-    ? db.products.filter((p) => selection.ids.includes(p.id))
-    : search(applyFilters(db.products, selection.filters ?? {}), selection.search ?? "");
+    ? visible().filter((p) => selection.ids.includes(p.id))
+    : search(applyFilters(visible(), selection.filters ?? {}), selection.search ?? "");
   for (const p of rows) Object.assign(p, { status: "Archived", updated_at: today() });
   commit();
   return back({ flash: { toast: { type: "success", message: `${rows.length} ${rows.length === 1 ? "product" : "products"} archived.` } } });
@@ -180,6 +187,16 @@ function destroyPhoto(id) {
   return json(null, 204);
 }
 
+// ---- AccountController: the signed-in user deletes their account, confirming with their password ----
+const settings = () => page("Settings/Account", {});
+function destroyAccount(data) {
+  if (blank(data?.password)) return back({ errors: { password: "The password field is required." } });
+  // the current_password rule; the demo user's password is "password", as in Laravel's UserFactory
+  if (data.password !== "password") return back({ errors: { password: "The password is incorrect." } });
+  // Auth::logout(), $user->delete(), then redirect('/'): the demo has no session to end, so it goes to its home page
+  return new Away("/");
+}
+
 // ---- routes/web.php ----
 const routes = [
   ["GET", /^\/products$/, (m, q) => index(q)],
@@ -192,6 +209,8 @@ const routes = [
   ["DELETE", /^\/photos\/(\d+)$/, ([, id]) => destroyPhoto(id)],
   ["GET", /^\/tags$/, (m, q) => searchTags(q)],
   ["POST", /^\/tags$/, (m, q, body) => storeTag(body)],
+  ["GET", /^\/settings$/, () => settings()],
+  ["DELETE", /^\/account$/, (m, q, body) => destroyAccount(body)],
 ];
 
 // the app's URLs live in static demo pages: /products is recipe-products.html, /products/3/edit recipe-product.html?id=3
@@ -199,6 +218,7 @@ const demoPages = [
   [/^\/products$/, () => "/app/recipe-products.html"],
   [/^\/products\/(\d+)\/edit$/, (id) => `/app/recipe-product.html?id=${id}`],
   [/^\/products\/(\d+)\/media$/, (id) => `/app/recipe-media.html?id=${id}`],
+  [/^\/settings$/, () => "/app/recipe-settings.html"],
 ];
 const toDemo = (url) => {
   for (const [re, to] of demoPages) {
@@ -215,7 +235,7 @@ const toApp = (url) => {
   const id = url.searchParams.get("id") ?? "1";
   const app = new URL(url);
   app.searchParams.delete("id");
-  const path = { "/app/recipe-products.html": "/products", "/app/recipe-product.html": `/products/${id}/edit`, "/app/recipe-media.html": `/products/${id}/media` }[url.pathname];
+  const path = { "/app/recipe-products.html": "/products", "/app/recipe-product.html": `/products/${id}/edit`, "/app/recipe-media.html": `/products/${id}/media`, "/app/recipe-settings.html": "/settings" }[url.pathname];
   if (path) app.pathname = path;
   return app;
 };
@@ -262,9 +282,14 @@ http.setClient({
       }
     } else await wait(200, config.signal);
     const handler = route(method, url);
-    // not one of these routes (the breadcrumb's home link): answer as Laravel does for a non-Inertia page, with a full page load
-    if (!handler) throw new HttpResponseError("Conflict", { status: 409, data: "", headers: { "x-inertia-location": new URL(config.url, location.href).href } }, config.url);
-    const result = handler(body);
+    // not one of these routes (the menu's other links), or a redirect away from them: answer as Laravel does for a
+    // non-Inertia page, with a full page load. The demo's Overview stands in for the dashboard.
+    const result = handler?.(body);
+    if (!handler || result instanceof Away) {
+      const away = new URL(result?.url ?? config.url, location.href);
+      if (away.pathname === "/dashboard") away.pathname = "/app/dashboard.html";
+      throw new HttpResponseError("Conflict", { status: 409, data: "", headers: { "x-inertia-location": away.href } }, config.url);
+    }
     if (headers["x-inertia"]) {
       const data = visit(result, url, headers["x-inertia-partial-data"]?.split(","));
       return { status: 200, data: JSON.stringify(data), headers: { "x-inertia": "true", "content-type": "application/json" } };
@@ -287,13 +312,9 @@ window.fetch = async (input, init = {}) => {
 };
 
 // ---- app.js: flash to toast (see references/toast.md), then boot on the page the URL names ----
-const toaster = document.getElementById("toaster");
-router.on("flash", ({ detail: { flash } }) => {
-  if (!flash.toast) return;
-  const el = Object.assign(document.createElement("div"), { className: `alert ${flash.toast.type}` });
-  el.append(Object.assign(document.createElement("p"), { textContent: flash.toast.message }));
-  el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
-  toaster.append(el);
+router.on("flash", (event) => {
+  const t = event.detail.flash.toast;
+  if (t) toast(t.message, t.type);
 });
 
 const pages = import.meta.glob("./Pages/**/*.vue", { eager: true });
@@ -301,4 +322,5 @@ const first = route("GET", toApp(new URL(location.href)))();
 createInertiaApp({
   page: { ...first, props: { ...first.props, errors: {} }, url: location.pathname + location.search, version: null, clearHistory: false, encryptHistory: false },
   resolve: (name) => pages[`./Pages/${name}.vue`],
+  title: (title) => `${title} · Forma`,
 });

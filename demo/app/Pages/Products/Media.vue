@@ -1,8 +1,9 @@
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
-import { Link, useForm, useHttp } from "@inertiajs/vue3";
+import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
+import AppLayout from "@/Layouts/AppLayout.vue";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -50,40 +51,36 @@ const uploading = computed(() => progress.value.filter((p) => p != null).length)
 </script>
 
 <template>
-  <div class="space-y-gap">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <Link href="/">Dashboard</Link>
-      <Link href="/products">Products</Link>
-      <Link :href="`/products/${product.id}/edit`">{{ product.name }}</Link>
-      <span aria-current="page">Tags and photos</span>
-    </nav>
+  <Head :title="`Tags and photos · ${product.name}`" />
+  <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
+    <div class="flex flex-col gap-gap">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
+        <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
+      </div>
 
-    <div class="min-w-0">
-      <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
-      <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
+      <div class="grid items-start gap-gap lg:grid-cols-2">
+        <form class="card" @submit.prevent="saveTags">
+          <h2 class="text-lg font-semibold">Tags</h2>
+          <Field v-model="form.tag_ids" name="tag_ids" label="Tags" type="combobox" multiple :max="5"
+              src="/tags" create="/tags" :options="tags" :errors="form.errors" hint="Up to five. Type to search, or add a new one." />
+          <div class="flex items-center justify-end gap-2">
+            <p class="me-auto text-sm" role="status">{{ form.recentlySuccessful ? "Saved." : "" }}</p>
+            <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save tags</button>
+          </div>
+        </form>
+
+        <section class="card" aria-labelledby="photos-heading">
+          <h2 id="photos-heading" class="text-lg font-semibold">Photos</h2>
+          <div class="field">
+            <label for="photos">Add photos</label>
+            <FileInput v-model="photos" id="photos" name="photos" accept="image/*" multiple :progress="progress" :errors="errors">
+              <span>PNG or JPEG, up to 5 MB each. Each one uploads as you add it.</span>
+            </FileInput>
+          </div>
+          <p class="text-sm muted" role="status">{{ uploading ? `Uploading ${uploading} of ${photos.length}…` : "" }}</p>
+        </section>
+      </div>
     </div>
-
-    <div class="grid items-start gap-gap lg:grid-cols-2">
-      <form class="card" @submit.prevent="saveTags">
-        <h2 class="text-lg font-semibold">Tags</h2>
-        <Field v-model="form.tag_ids" name="tag_ids" label="Tags" type="combobox" multiple :max="5"
-            src="/tags" create="/tags" :options="tags" :errors="form.errors" hint="Up to five. Type to search, or add a new one." />
-        <div class="flex items-center justify-end gap-2">
-          <p class="me-auto text-sm" role="status">{{ form.recentlySuccessful ? "Saved." : "" }}</p>
-          <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save tags</button>
-        </div>
-      </form>
-
-      <section class="card" aria-labelledby="photos-heading">
-        <h2 id="photos-heading" class="text-lg font-semibold">Photos</h2>
-        <div class="field">
-          <label for="photos">Add photos</label>
-          <FileInput v-model="photos" id="photos" name="photos" accept="image/*" multiple :progress="progress" :errors="errors">
-            <span>PNG or JPEG, up to 5 MB each. Each one uploads as you add it.</span>
-          </FileInput>
-        </div>
-        <p class="text-sm muted" role="status">{{ uploading ? `Uploading ${uploading} of ${photos.length}…` : "" }}</p>
-      </section>
-    </div>
-  </div>
+  </AppLayout>
 </template>

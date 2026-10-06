@@ -138,6 +138,9 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 |-----------|-----|----------|-----------|
 | App shell | The page frame: sidebar nav, header with breadcrumb and scheme switcher, main, toaster | pattern | [app-shell.md](references/app-shell.md) |
 | Page recipes | Whole Inertia screens: list page, edit page, tags and photo uploads, with controllers and endpoint responses | pattern | [recipes.md](references/recipes.md) |
+| Validation failure | A failed save: an error summary that is announced and takes focus; where focus goes after a visit | pattern | [validation-failure.md](references/validation-failure.md) |
+| Destructive action | A delete confirmed in a dialog: pending state, a 422 shown in it, focus back to the trigger | pattern | [destructive-action.md](references/destructive-action.md) |
+| Unsaved changes | Ask before leaving a form with unsaved changes, in the app and in the browser | pattern | [unsaved-changes.md](references/unsaved-changes.md) |
 | Button `.btn` | Actions and links that look like buttons | CSS | [button.md](references/button.md) |
 | Join `.join` | Buttons and inputs fused into one bar | CSS | [join.md](references/join.md) |
 | Segmented control | One choice from a few, as a bar of buttons | pattern | [segmented.md](references/segmented.md) |
