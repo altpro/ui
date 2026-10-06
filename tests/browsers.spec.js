@@ -60,8 +60,8 @@ test("the sample app tabs expose valid complete panels", async ({ page }) => {
   await page.goto("/app/product.html");
   const tabs = page.locator("main .tabs > label");
   const panels = page.locator("main .tabs > div");
-  await expect(tabs).toHaveCount(4);
-  await expect(panels).toHaveCount(4);
+  await expect(tabs).toHaveCount(3);
+  await expect(panels).toHaveCount(3);
   for (const tab of await tabs.all()) {
     await tab.click();
     const visiblePanels = await panels.evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== "none").length);
@@ -81,22 +81,21 @@ for (const radius of ["0", "9999px"]) {
   });
 }
 
-test('product panels and pack editor fit on mobile', async ({ page }) => {
+test('product panels and finish editor fit on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/app/product.html');
   for (const tab of await page.locator('main .tabs > label').all()) {
     await tab.click();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   }
-  await page.locator('main .tabs > label').first().click();
-  await page.getByRole('button', { name: 'Edit 32 tablets', exact: true }).click();
-  const dialog = page.locator('#variant-dialog');
+  await page.getByRole('radio', { name: /Finishes/ }).check();
+  await page.getByRole('button', { name: 'Edit Slate finish', exact: true }).click();
+  const dialog = page.getByRole('dialog', { name: 'Edit finish', exact: true });
   await expect(dialog).toHaveCSS('opacity', '1');
-  await dialog.locator('details').evaluateAll((els) => els.forEach((el) => el.open = true));
   const widths = await dialog.evaluate((el) => ({ client: el.clientWidth, scroll: el.scrollWidth }));
   expect(widths.scroll).toBe(widths.client);
   await page.keyboard.press('Escape');
-  await expect(page.getByRole('button', { name: 'Edit 32 tablets', exact: true })).toBeFocused();
+  await expect(page.getByRole('button', { name: 'Edit Slate finish', exact: true })).toBeFocused();
 });
 
 test('coloured divided card sections reach the edges and keep their content inset', async ({ page }) => {

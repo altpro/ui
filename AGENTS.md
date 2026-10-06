@@ -15,7 +15,8 @@ resources/boost/skills/      reference for agents in consuming projects; Laravel
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
 src/TableQuery.php           server half of DataTable.vue: reads the view and filters from the query string as dataTable.ts does, then searches, sorts and pages
 demo/*.html                  one page per component, plus index and theme
-demo/app/*.html              e-commerce sample pages; same skeleton and demo.js, listed under Application in the menu
+demo/app/                    sample store (Forma): one Vue app, Workspace.vue, behind four pages listed under Application in the menu; its screen styles are app.css
+demo/demo.css                Tailwind, ui.css and the shell's styles
 demo/demo.js                 shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 tests/blade.php              renders a Blade string through Testbench, for the browser tests
 tests/table-query.php        TableQuery against in-memory SQLite; npm test runs it first
@@ -40,6 +41,7 @@ tests/table-urls.json        URL-to-view cases both of the above read, so the PH
 - Accessibility is WCAG 2.2 AA. Every text-on-fill pairing, text in the ghost and outlined variants, and every hover state must reach 4.5:1 in both schemes. Focus rings are 3px at half opacity, flush with the border, and a bordered control turns its border to the ring colour. Nothing interactive is smaller than 24px. `npm test` checks all of this with axe; a colour change that fails it is wrong, not the test.
 - Do not reference Tailwind palette variables such as `--color-blue-600`. Tailwind v4 only emits theme variables that are used, so use oklch literals in `theme.css`.
 - Do not use CSS counters for anything a user reads: WebKit miscounts them.
+- Demo-only classes and custom properties are prefixed `demo-` and stay in `demo/` (`demo.css` for the shell, `demo/app/app.css` for the sample screens). They are scaffolding for the demo, not library API: never move one into `resources/` or document it in SKILL.md.
 
 ## Adding a component
 

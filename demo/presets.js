@@ -46,6 +46,28 @@ export const presetStyles = `@layer components {
 }`;
 export const presets = {
   default: { name: 'Default', description: 'The original altpro/ui palette and typography.', values: {} },
+  sol: {
+    name: 'Sol', description: 'Mineral blue, porcelain surfaces and cobalt. A calm workspace for everyday work.',
+    values: {
+      ...palette({
+        background: ['#f3f5f9', '#141b29'], foreground: ['#202b43', '#edf2ff'],
+        card: ['#ffffff', '#1d2739'], 'card-foreground': ['#202b43', '#edf2ff'],
+        muted: ['#e9edf5', '#2c374d'], 'muted-foreground': ['#56637b', '#b4c0d8'],
+        border: ['#dbe1ec', '#404e66'], primary: ['#3455c5', '#a8baff'],
+        'primary-foreground': ['#ffffff', '#142044'], secondary: ['#e5eafe', '#34416b'],
+        'secondary-foreground': ['#314788', '#e2e8ff'],
+      }),
+      '--radius': '0.625rem', '--color-ring': 'var(--color-primary)',
+      '--demo-chrome-bg': 'var(--color-card)', '--demo-chrome-fg': 'var(--color-foreground)',
+      '--font-sans': '"Segoe UI", "Helvetica Neue", Arial, sans-serif',
+      '--demo-heading-font': '"Avenir Next", "Segoe UI", sans-serif',
+      '--demo-stage': pair('#e7eafa', '#303c62'),
+      '--demo-stage-alt': pair('#e2edea', '#2a4446'),
+      '--demo-object': pair('#303c65', '#b9c8ed'),
+      '--demo-object-edge': pair('#62739a', '#8298c4'),
+      '--demo-object-highlight': pair('#a2b1d2', '#e4ecff'),
+    },
+  },
   aurora: {
     name: 'Aurora', description: 'Violet and blue gradients, cool surfaces and soft corners.',
     values: {

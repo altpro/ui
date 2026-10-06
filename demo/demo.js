@@ -39,6 +39,9 @@ const icons = {
   search: '<path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/>',
   upload: '<path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>',
   x: '<path d="M18 6 6 18"/><path d="m6 6 12 12"/>',
+  headphones: '<path d="M3 14h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-7a9 9 0 0 1 18 0v7a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3"/>',
+  speaker: '<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M12 6h.01"/><circle cx="12" cy="14" r="4"/><path d="M12 14h.01"/>',
+  disc: '<circle cx="12" cy="12" r="10"/><path d="M6 12c0-1.7.7-3.2 1.8-4.2"/><circle cx="12" cy="12" r="2"/><path d="M18 12c0 1.7-.7 3.2-1.8 4.2"/>',
   palette: '<circle cx="13.5" cy="6.5" r=".5" fill="currentColor"/><circle cx="17.5" cy="10.5" r=".5" fill="currentColor"/><circle cx="8.5" cy="7.5" r=".5" fill="currentColor"/><circle cx="6.5" cy="12.5" r=".5" fill="currentColor"/><path d="M12 2C6.5 2 2 6.5 2 12s4.5 10 10 10c.926 0 1.648-.746 1.648-1.688 0-.437-.18-.835-.437-1.125-.29-.289-.438-.652-.438-1.125a1.64 1.64 0 0 1 1.668-1.668h1.996c3.051 0 5.555-2.503 5.555-5.554C21.965 6.012 17.461 2 12 2z"/>',
 };
 export const icon = (name) =>
@@ -83,10 +86,10 @@ const components = [
    Menu items: a string is a heading, [href, label, icon?, extra?] a link,
    [label, icon, items] a collapsible group. */
 const menu = [
+  ["Application", "monitor", [["app/dashboard.html", "Overview", "gauge"], ["app/products.html", "Products", "blocks"], ["app/product.html", "Product detail", "tag"], ["app/activity.html", "Activity", "timeline"]]],
   ["index.html", "Getting started", "house"],
   ["Components", "blocks", components],
   ["theme.html", "Theme", "palette"],
-  ["Application", "monitor", [["app/product.html", "Product"], ["app/order.html", "Order"]]],
 ];
 
 const inApp = location.pathname.includes("/app/");
@@ -102,31 +105,30 @@ const link = ([href, label, ic, extra = ""], group) => {
 };
 const item = (it) =>
   typeof it === "string" ? `<h2>${it}</h2>`
-  : Array.isArray(it[2]) ? `<details open><summary>${icon(it[1])} ${it[0]}</summary>${it[2].map((c) => link(c, it[0])).join("")}</details>`
+  : Array.isArray(it[2]) ? `<details${it[0] === "Application" || !inApp ? " open" : ""}><summary>${icon(it[1])} ${it[0]}</summary>${it[2].map((c) => link(c, it[0])).join("")}</details>`
   : link(it);
 const nav = menu.map(item).join("");
 
 const aside = document.querySelector("aside");
 aside.id = "sidebar";
-aside.className = "fixed inset-y-0 start-0 z-20 flex w-64 shrink-0 flex-col border-e border-border lg:sticky lg:top-0 lg:h-screen";
+aside.className = "demo-sidebar";
+document.body.classList.add("demo-shell");
 aside.innerHTML = `
-  <div class="flex h-14 items-center gap-3 border-b border-border px-3">
-    <span class="avatar rounded-lg sm">${icon("blocks")}</span>
-    <div class="min-w-0 text-sm leading-tight">
-      <p class="truncate font-semibold">altpro/ui</p>
-      <p class="truncate text-xs demo-sidebar-description">Tailwind v4 components</p>
-    </div>
-  </div>
-  <nav class="nav flex-1 overflow-y-auto p-3" aria-label="Main">${nav}</nav>`;
+  <a class="demo-brand" href="${root}index.html">
+    <span class="demo-mark" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="10" stroke="currentColor" stroke-width="5"/><path d="M16 1v6M16 25v6M1 16h6M25 16h6" stroke="currentColor" stroke-width="2"/></svg></span>
+    <span>altpro/ui<span class="demo-brand-caption demo-sidebar-description">Tailwind v4 components</span></span>
+  </a>
+  <nav class="nav demo-navigation" aria-label="Main">${nav}</nav>
+  <div class="demo-sidebar-footer"><span class="avatar sm blue">AM</span><div><strong>Alex Morgan</strong><span>Store owner</span></div><span class="badge outlined sm">Demo</span></div>`;
 
 // a page can put its own controls inside <header>; they keep their place before the scheme switcher and theme button
 const header = document.querySelector("header");
 const extras = header.innerHTML;
-header.className = "demo-header flex h-14 items-center gap-3 border-b border-border px-gap";
+header.className = "demo-header";
 header.innerHTML = `
   <label class="btn ghost sm px-2"><input type="checkbox" id="menu" aria-label="Toggle sidebar">${icon("panel")}</label>
   <nav class="breadcrumb" aria-label="Breadcrumb">
-    ${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${root}index.html">${c}</a>` : `<span aria-current="page">${c}</span>`)).join("")}
+    ${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${root + (c === "Application" ? "app/dashboard.html" : "index.html")}">${c}</a>` : `<span aria-current="page">${c}</span>`)).join("")}
   </nav>
   <div class="ml-auto flex items-center gap-2 text-sm">
     ${extras}
@@ -138,7 +140,7 @@ header.innerHTML = `
     <button class="btn outlined sm px-2" command="show-modal" commandfor="theme" title="Theme" aria-label="Theme">${icon("palette")}</button>
   </div>`;
 // app pages are full-width screens, docs pages a readable column
-document.querySelector("main").className = inApp ? "w-full space-y-gap p-gap" : "w-full max-w-5xl space-y-10 p-gap";
+document.querySelector("main").className = inApp ? "demo-main" : "demo-docs w-full max-w-5xl space-y-10 p-gap";
 
 const themeBtns = document.querySelectorAll("header [data-value]");
 const setTheme = (v) => {
@@ -252,6 +254,15 @@ document.getElementById("theme-copy").onclick = async ({ currentTarget: b }) => 
   b.textContent = "Copied";
   setTimeout(() => (b.textContent = "Copy CSS"), 1500);
 };
-document.querySelector('[command="show-modal"][commandfor="theme"]').onclick = sync;
+document.querySelector('[command="show-modal"][commandfor="theme"]').onclick = (event) => { event.preventDefault(); sync(); drawer.showModal(); };
+drawer.querySelector('[command="close"]').onclick = (event) => { event.preventDefault(); drawer.close(); };
+const menuToggle = document.getElementById('menu');
+const scrim = document.createElement('button');
+scrim.className = 'demo-menu-scrim'; scrim.setAttribute('aria-label', 'Close sidebar');
+scrim.onclick = () => { menuToggle.checked = false; menuToggle.focus(); };
+document.body.append(scrim);
+document.addEventListener('keydown', event => {
+  if (event.key === 'Escape' && menuToggle.checked && matchMedia('(width < 64rem)').matches) { menuToggle.checked = false; menuToggle.focus(); }
+});
 
 sync();

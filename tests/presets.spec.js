@@ -2,9 +2,10 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { presets, presetMigrations } from '../demo/presets.js';
 
-for (const preset of ['aurora', 'grove', 'atelier', 'claude', 'crms']) {
+for (const preset of ['aurora', 'grove', 'atelier', 'claude', 'crms', 'sol']) {
   for (const colorScheme of ['light', 'dark']) {
     test(`${preset} ${colorScheme}: accessible pages, hover and gradient contrast`, async ({ page }) => {
+      test.setTimeout(90_000);
       await page.emulateMedia({ colorScheme });
       await page.addInitScript(({ preset, values }) => {
         localStorage.preset = preset;

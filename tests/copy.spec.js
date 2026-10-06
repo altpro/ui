@@ -19,7 +19,7 @@ test("copies the value, shows Copied in the tooltip, announces it, then goes bac
   // a second copy puts a new node in the region, so it is announced again
   const first = await live.locator("p").elementHandle();
   await button.click();
-  expect(await first.evaluate((p) => p.isConnected)).toBe(false);
+  await expect.poll(() => first.evaluate((p) => p.isConnected)).toBe(false);
   await expect(live.filter({ hasText: "Copied" })).toHaveCount(1);
 
   await expect(button).toHaveAttribute("data-tooltip", "Copy tracking code", { timeout: 3000 });
