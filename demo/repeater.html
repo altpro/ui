@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Repeater</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Repeater</h1>
+    <p class="muted"><code>Repeater.vue</code>: rows the user adds, removes and reorders. Order lines, contact methods, product attributes. Each row is a <code>.card</code> with its title and move and remove buttons; the row's fields come from the slot. Vue only.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Order lines</h2>
+    <p class="text-sm muted"><code>make</code> returns the row "Add" appends. <code>item</code> names a row in its title and the button labels, and a screen reader hears each add, move and remove.</p>
+    <div id="repeater-lines"></div>
+<pre>&lt;script setup&gt;
+import Field from "@ui/Field.vue";
+import Repeater from "@ui/Repeater.vue";
+const form = useForm({ lines: props.order.lines });
+&lt;/script&gt;
+
+&lt;Repeater v-model="form.lines" name="lines" item="line"
+  :make="() =&gt; ({ product: '', qty: 1 })"
+  :errors="form.errors" :disabled="form.processing"
+  v-slot="{ row, index, errors }"&gt;
+  &lt;Field v-model="row.product" :name="`lines.${index}.product`"
+    label="Product" :errors="errors" /&gt;
+  &lt;Field v-model="row.qty" :name="`lines.${index}.qty`"
+    label="Quantity" type="number" :errors="errors" /&gt;
+&lt;/Repeater&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Server errors</h2>
+    <p class="text-sm muted">Errors arrive keyed by position, <code>lines.1.qty</code>, then belong to the row: move it and they go with it, remove it and they go. An error on <code>lines</code> itself shows under the list.</p>
+    <div id="repeater-errors"></div>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="repeater.js"></script>
+</body>
+</html>

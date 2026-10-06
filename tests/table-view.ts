@@ -28,7 +28,7 @@ const columns: DataTableColumn<Row>[] = [
   { key: "actions", label: "", virtual: true },
 ];
 const at = (patch: Partial<DataTableView> = {}): DataTableView => ({ search: "", filters: {}, sort: "", direction: "asc", page: 1, ...patch });
-const ids = (result: { rows: Row[] }) => result.rows.map((r) => r.id);
+const ids = (result: { rows: { id: number }[] }) => result.rows.map((r) => r.id);
 
 test("search is case-insensitive over data columns, or only the searchable ones", () => {
   assert.deepEqual(ids(tableView({ rows, columns }, at({ search: "  ITEM " }), 25)), [1, 2]);
