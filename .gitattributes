@@ -12,3 +12,4 @@
 /CONTEXT.md export-ignore
 /.claude export-ignore
 /.github export-ignore
+/.githooks export-ignore

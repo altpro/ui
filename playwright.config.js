@@ -1,6 +1,8 @@
+import { createHash } from "node:crypto";
 import { defineConfig, devices } from "@playwright/test";
 
-const port = process.env.UI_TEST_PORT || "5199";
+// a port per checkout, so parallel worktrees never test each other's code; UI_TEST_PORT overrides it
+const port = process.env.UI_TEST_PORT || String(5200 + (createHash("md5").update(process.cwd()).digest().readUInt16BE(0) % 700));
 
 export default defineConfig({
   testDir: "tests",
@@ -14,6 +16,7 @@ export default defineConfig({
   webServer: {
     command: `npx vite --port ${port} --strictPort`,
     url: `http://localhost:${port}`,
-    reuseExistingServer: true,
+    // a second run on the same port fails here instead of borrowing a server the first run will stop
+    reuseExistingServer: false,
   },
 });

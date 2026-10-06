@@ -3,7 +3,8 @@
 // TableQuery against an in-memory SQLite table: php tests/table-query.php
 // Run by `npm test` before the browser suite. Exits non-zero on the first failure.
 
-require __DIR__.'/../vendor/autoload.php';
+// first, so a worktree with a symlinked vendor/ loads its own src/ and not the main checkout's
+(require __DIR__.'/../vendor/autoload.php')->addPsr4('Altpro\\Ui\\', __DIR__.'/../src', true);
 
 use Altpro\Ui\TableQuery;
 use Illuminate\Database\Eloquent\Model;

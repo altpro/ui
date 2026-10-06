@@ -1,0 +1,3 @@
+#!/bin/sh
+# A commit or merge that breaks the demo build stops here (about 2s). Enable with: git config core.hooksPath .githooks
+npm run build --silent > /dev/null 2>&1 || { echo "pre-commit: npm run build failed; run it to see why" >&2; exit 1; }

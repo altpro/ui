@@ -14,4 +14,4 @@ The screens were designed in the theme drawer's **Sol** preset and work in every
 
 `catalogue.json` supplies the starting data, and `store.js` makes up a daily sales history that is the same every time for a given day. Edits stay in sessionStorage in the current browser tab; Reset workspace restores the original data. There is no backend. Product illustrations are local SVGs that follow the theme.
 
-Run `npm run build` and `npm test`. To test an isolated checkout alongside another preview, set `UI_TEST_PORT` (for example `UI_TEST_PORT=5201 npm test`).
+Run `npm run build` and `npm test`. Each checkout tests on its own port; `UI_TEST_PORT` picks another.

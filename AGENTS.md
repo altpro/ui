@@ -54,7 +54,7 @@ tests/a11y.spec.js           axe and the hover, focus and target-size checks; it
 2. Import it from `resources/css/ui.css`.
 3. `demo/<name>.html`. Copy the head and footer from `demo/button.html`. Add the page to the `components` array in `demo/demo.js` with a Lucide icon name, plus `js` as a fourth item if it has a Vue component.
 4. Add `resources/boost/skills/altpro-ui/references/<name>.md` with the class table and one copy-paste example, and a row for it in the Components table in SKILL.md.
-5. Add the page to `pages` in `tests/a11y.spec.js` and give it a hover-contrast loop if it has hover states.
+5. If it has hover states, give it a hover-contrast loop in `tests/a11y.spec.js`. The axe scan finds the page itself.
 6. If it needs JavaScript: `resources/js/<Name>.vue` and a Vue instance on the demo page. A markup-only Blade component goes in `resources/views/components/<name>.blade.php`.
 7. `npm run build` and `npm test` must pass. Check the demo page in light, dark, pill and square.
 
@@ -62,6 +62,7 @@ tests/a11y.spec.js           axe and the hover, focus and target-size checks; it
 
 ```
 composer install       Testbench, so the tests can render Blade (needs PHP 8.3+)
+git config core.hooksPath .githooks   pre-commit and pre-merge-commit run npm run build
 npm run dev            demo site with live reload
 npm run build          production build of the demo into dist/
 npm test               test:unit, then every Playwright spec: test:a11y and test:browsers below, and the rest in Chromium
