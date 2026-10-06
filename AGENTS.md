@@ -19,9 +19,11 @@ demo/app/                    sample store (Forma): one Vue app, Workspace.vue, b
 demo/demo.css                Tailwind, ui.css and the shell's styles
 demo/demo.js                 shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 tests/blade.php              renders a Blade string through Testbench, for the browser tests
-tests/table-query.php        TableQuery against in-memory SQLite; npm test runs it first
-tests/table-view.ts          tableView (what DataTable.vue shows for a view) and readView/viewUrl under plain Node; npm test runs it second
+tests/table-query.php        TableQuery against in-memory SQLite
+tests/table-view.ts          tableView (what DataTable.vue shows for a view) and readView/viewUrl under plain Node
 tests/table-urls.json        URL-to-view cases both of the above read, so the PHP and TS halves agree on the query-string format
+tests/inventory.test.js      the "Adding a component" checklist below as a test; a component whose demo page or reference has another name goes in its aliases map
+tests/a11y.spec.js           axe and the hover, focus and target-size checks; its PNG reader reads pixels from screenshots, because getComputedStyle cannot see vendor pseudo-elements (::-webkit-progress-value, ::-webkit-slider-thumb), and it is a few lines over node:zlib rather than a dependency
 ```
 
 ## Rules
@@ -31,7 +33,7 @@ tests/table-urls.json        URL-to-view cases both of the above read, so the PH
 - No JavaScript in `resources/css/`. Use native HTML first: `<dialog>`, `popover`, anchor positioning, `<details>`, `:has()`, style container queries.
 - When CSS cannot do it, the behaviour goes in a Vue component, `resources/js/<Name>.vue`. JavaScript components are Vue only: no custom elements and no Blade version of them. Blade pages get the CSS and native HTML.
 - A Blade component only where it saves real markup and needs no JavaScript. A button does not need `<x-ui::button>`. Where a Blade component has a Vue twin (field), both render the same markup and `tests/browsers.spec.js` compares them.
-- Browser target: current Chrome, Firefox, Safari. No Safari-only features. Chrome-only features need sign-off from Steve first.
+- Browser target: current Chrome, Firefox, Safari. No Safari-only features. Chrome-only features need sign-off from Steve first. Signed off so far: `appearance: base-select` on selects in `input.css`, behind `@supports`, so other browsers keep the native select.
 - Colours come from tokens only. Never a literal colour inside a component.
 - Everything in a component file sits in `@layer components` so Tailwind utilities override it.
 - Nested CSS. One top-level block per component.
@@ -56,8 +58,11 @@ tests/table-urls.json        URL-to-view cases both of the above read, so the PH
 ## Commands
 
 ```
-composer install  Testbench, so the tests can render Blade (needs PHP 8.3+)
-npm run dev       demo site with live reload
-npm run build     production build of the demo into dist/
-npm test          TableQuery and tableView checks, then axe WCAG 2.2 AA scan of every demo page in light and dark, plus hover, focus and target-size checks, and the Firefox/WebKit matrix
+composer install       Testbench, so the tests can render Blade (needs PHP 8.3+)
+npm run dev            demo site with live reload
+npm run build          production build of the demo into dist/
+npm test               test:unit, then every Playwright spec: test:a11y and test:browsers below, and the rest in Chromium
+npm run test:unit      vue-tsc type check, TableQuery, tableView and the inventory test; no browser
+npm run test:a11y      axe WCAG 2.2 AA scan of every demo page in light and dark, plus hover, focus and target-size checks (Chromium)
+npm run test:browsers  the Firefox/WebKit matrix
 ```
