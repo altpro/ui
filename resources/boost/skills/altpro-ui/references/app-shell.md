@@ -1,17 +1,19 @@
 # App shell (pattern)
 
-The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar, a header with a [`.breadcrumb`](breadcrumb.md) and a [segmented](segmented.md) scheme switcher, `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Copy one of the two versions below and change the links; build nothing else for it.
+The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar, a header with a [`.breadcrumb`](breadcrumb.md) and a [segmented](segmented.md) scheme switcher, `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Copy one of the two versions below and change the links; build nothing else for it. This is the layout: the page recipes ([recipes.md](recipes.md)) and the patterns that build on them wrap themselves in this `AppLayout` and assume this root view.
 
 - **Skip link** first in `body`: `sr-only` until focused, then a `btn primary` in the corner. It targets `<main id="main">`.
 - **Sidebar**: from `lg` an `<aside>`, sticky and full height, scrolling on its own. Below `lg` the aside is `hidden` and the same `.nav` is in the drawer. The nav is written once (a Blade partial, a Vue `v-for`) and rendered in both; only one is ever displayed, so there is one `Main` landmark at a time.
 - **Drawer**: the browser opens it, traps focus, closes it on Esc and returns focus to the menu button. `closedby="any"` closes it on a tap outside. Its top row is a `div`, not a `<header>`: the drawer sits at body level, where a `header` would be a second page banner.
 - **Current link**: `aria-current="page"` on the nav link for this page or the section it is in, and on the last breadcrumb item, which is a `<span>`.
 - **Scheme**: radios with `value` `""` (follow the OS), `light`, `dark`. The choice is kept in `localStorage.theme` and set as `data-theme` on `<html>` by a one-line script in `<head>` before the stylesheet, so a pinned scheme never flashes the other one first.
-- **Toaster**: the last thing in `body`, empty, from the first response. `toast(text, colour)` appends an `.alert` and removes it when it fades.
+- **Toaster**: the last thing in `body`, empty, from the first response, at the top (`toaster top`) so a toast never covers a [save bar](save-bar.md)'s Save. `toast(message, type)` appends an `.alert` and removes it when it fades.
+- **`scroll-pb-20` on `<html>`**: keeps a field the browser tabs to clear of a sticky save bar. Harmless on pages without one.
+- **Focus after a visit** (Inertia): a visit to a new page focuses `main` (`tabindex="-1"`), so a screen reader starts at the new content instead of on `<body>`, where the clicked link left it. Not on the first load, where the skip link comes first.
 
 Icons are Lucide, `size-4` with `aria-hidden="true"`. Blade uses `mallardduck/blade-lucide-icons` 2.x: `<x-lucide-{name}>`, where `{name}` is the kebab-case name on lucide.dev (`<x-lucide-shopping-cart>`). Vue uses `@lucide/vue` (not the deprecated `lucide-vue-next`): PascalCase exports, `import { ShoppingCart } from "@lucide/vue"`.
 
-Change the drawer breakpoint by changing every `lg:` in the shell together. The demo page `demo/app/shell.html` is this markup rendered as plain HTML.
+Change the drawer breakpoint by changing every `lg:` in the shell together. The demo page `demo/app/shell.html` is the Blade markup rendered as plain HTML; the recipe pages (`demo/app/recipe-*.html`) are the Inertia root view, and run the `AppLayout` below as it is written here.
 
 ## Blade
 
@@ -19,7 +21,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
 
 ```blade
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pb-20">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -65,7 +67,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
     @include('layouts.navigation')
   </dialog>
 
-  <div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"></div>
+  <div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
   <script>
     // scheme switcher: "" follows the OS; the script in <head> applies a saved choice before paint
     for (const radio of document.querySelectorAll("[name=scheme]")) {
@@ -97,11 +99,11 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
   <a href="{{ route('dashboard') }}" @if (request()->routeIs('dashboard')) aria-current="page" @endif>
     <x-lucide-house class="size-4" aria-hidden="true" /> Dashboard
   </a>
+  <a href="{{ route('products.index') }}" @if (request()->routeIs('products.*')) aria-current="page" @endif>
+    <x-lucide-package class="size-4" aria-hidden="true" /> Products
+  </a>
   <a href="{{ route('orders.index') }}" @if (request()->routeIs('orders.*')) aria-current="page" @endif>
     <x-lucide-shopping-cart class="size-4" aria-hidden="true" /> Orders
-  </a>
-  <a href="{{ route('customers.index') }}" @if (request()->routeIs('customers.*')) aria-current="page" @endif>
-    <x-lucide-users class="size-4" aria-hidden="true" /> Customers
   </a>
   <a href="{{ route('settings') }}" @if (request()->routeIs('settings')) aria-current="page" @endif>
     <x-lucide-settings class="size-4" aria-hidden="true" /> Settings
@@ -122,7 +124,7 @@ A page:
 @endsection
 
 @section('content')
-  <h1 class="text-2xl font-semibold">Order 1042</h1>
+  <h1 class="text-2xl font-semibold tracking-tight">Order 1042</h1>
 @endsection
 ```
 
@@ -130,11 +132,11 @@ A controller's `->with('toast', ['type' => 'success', 'message' => 'Order saved.
 
 ## Inertia (Vue)
 
-The root view, `resources/views/app.blade.php`, carries the scheme script and the toaster, so both are in place before Vue mounts and the toaster survives every visit:
+The root view, `resources/views/app.blade.php`, carries the scheme script, `scroll-pb-20` and the toaster, so all three are in place before Vue mounts and the toaster survives every visit:
 
 ```blade
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pb-20">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -144,18 +146,24 @@ The root view, `resources/views/app.blade.php`, carries the scheme script and th
 </head>
 <body class="bg-background text-foreground">
   @inertia
-  <div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"></div>
+  <div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
 </body>
 </html>
 ```
 
-`resources/js/Layouts/AppLayout.vue`:
+The layout. `VITE_APP_NAME` is in Laravel's `.env` from the start; `@` is `resources/js`, as Laravel's Vite plugin sets it.
 
 ```vue
+<!-- resources/js/Layouts/AppLayout.vue -->
+<script>
+// module scope, shared by every mount: the first is the page load, each later one a visit to a new page
+let loaded = false;
+</script>
+
 <script setup>
-import { onMounted, onUnmounted, ref, watch } from "vue";
-import { Link, router, usePage } from "@inertiajs/vue3";
-import { House, Menu, Monitor, Moon, Settings, ShoppingCart, Sun, Users, X } from "@lucide/vue";
+import { onMounted, ref, watch } from "vue";
+import { Link, usePage } from "@inertiajs/vue3";
+import { House, Menu, Monitor, Moon, Package, Settings, ShoppingCart, Sun, X } from "@lucide/vue";
 
 defineProps({
   // [{ label: "Orders", href: "/orders" }, { label: "Order 1042" }]: the last item is this page
@@ -165,8 +173,8 @@ defineProps({
 const appName = import.meta.env.VITE_APP_NAME;
 const menu = [
   { href: "/dashboard", label: "Dashboard", icon: House },
+  { href: "/products", label: "Products", icon: Package },
   { href: "/orders", label: "Orders", icon: ShoppingCart },
-  { href: "/customers", label: "Customers", icon: Users },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
@@ -177,9 +185,14 @@ const current = (href) => {
   return path === href || path.startsWith(href + "/") ? "page" : undefined;
 };
 
-// a persistent layout outlives the visit, so close the phone drawer when a link in it navigates
-const sidebar = ref();
-onUnmounted(router.on("navigate", () => sidebar.value?.close()));
+// Each page wraps itself in this layout, so a visit to a new page mounts it again, drawer closed. The link that was
+// clicked has gone with the old page: move focus to main, where a screen reader starts reading and the next Tab
+// goes into the page. Not on the page load, where the skip link comes first.
+const main = ref();
+onMounted(() => {
+  if (loaded) main.value.focus({ preventScroll: true });
+  loaded = true;
+});
 
 // "" follows the OS; app.blade.php applies the saved choice before paint
 const schemes = [
@@ -228,13 +241,13 @@ watch(scheme, (value) => {
         </div>
       </header>
 
-      <main id="main" class="flex-1 p-gap">
+      <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap outline-none">
         <slot />
       </main>
     </div>
   </div>
 
-  <dialog id="sidebar" ref="sidebar" class="dialog drawer start w-72" closedby="any" aria-label="Menu">
+  <dialog id="sidebar" class="dialog drawer start w-72" closedby="any" aria-label="Menu">
     <div class="flex items-center justify-between">
       <Link href="/dashboard" class="px-3 font-semibold">{{ appName }}</Link>
       <button class="btn ghost sm px-2" command="close" commandfor="sidebar" aria-label="Close menu">
@@ -250,7 +263,7 @@ watch(scheme, (value) => {
 </template>
 ```
 
-A page:
+A page wraps itself in the layout and passes its breadcrumb:
 
 ```vue
 <script setup>
@@ -262,17 +275,19 @@ defineProps({ order: Object });
 <template>
   <Head :title="`Order ${order.number}`" />
   <AppLayout :breadcrumb="[{ label: 'Orders', href: '/orders' }, { label: `Order ${order.number}` }]">
-    <h1 class="text-2xl font-semibold">Order {{ order.number }}</h1>
+    <h1 class="text-2xl font-semibold tracking-tight">Order {{ order.number }}</h1>
   </AppLayout>
 </template>
 ```
 
-A persistent layout (`defineOptions({ layout: AppLayout })`) keeps the sidebar's scroll position between visits but takes no per-page props: pass the breadcrumb as a page prop and read it from `usePage().props` instead.
+- Not a persistent layout (`defineOptions({ layout: AppLayout })`): that one takes no props from the page, so it could not draw the page's breadcrumb, and it never mounts again, so it would not move focus after a visit.
+- A visit that keeps the page (a save, which redirects back, a DataTable change, any `preserveState` visit) keeps the layout too: nothing moves focus, and the page decides, as [validation-failure.md](validation-failure.md) does.
+- Give pages a `<Head :title>`; in `createInertiaApp`, ``title: (title) => `${title} · ${import.meta.env.VITE_APP_NAME}` `` adds the app's name.
 
-Toasts: `resources/js/toast.js`, which any component can import:
+Toasts: `resources/js/toast.js`, which any component can import ([toast.md](toast.md)):
 
 ```js
-// toast("Saved.", "success"): any alert colour, see toast.md
+// resources/js/toast.js
 export function toast(message, type = "") {
   const el = Object.assign(document.createElement("div"), { className: `alert ${type}` });
   el.append(Object.assign(document.createElement("p"), { textContent: message }));

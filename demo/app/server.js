@@ -5,6 +5,7 @@
 import { createInertiaApp, http, router } from "@inertiajs/vue3";
 import { HttpCancelledError, HttpResponseError } from "@inertiajs/core";
 import { readView } from "@ui/dataTable";
+import { toast } from "./toast.js";
 
 // ---- the database, kept for the tab so an edit shows on the list ----
 const today = () => new Date().toISOString();
@@ -45,6 +46,8 @@ const page = (component, props) => ({ component, props });
 const json = (body, status = 200) => ({ json: body, status });
 // redirect()->back(): the page the request came from, with the session's errors and flash
 const back = (extra = {}) => new Back(extra);
+// redirect('/') and the like: a URL outside these routes, which the browser loads in full
+class Away { constructor(url) { this.url = url; } }
 const lower = (s) => s.toLowerCase();
 
 // ---- ProductController ----
@@ -184,6 +187,16 @@ function destroyPhoto(id) {
   return json(null, 204);
 }
 
+// ---- AccountController: the signed-in user deletes their account, confirming with their password ----
+const settings = () => page("Settings/Account", {});
+function destroyAccount(data) {
+  if (blank(data?.password)) return back({ errors: { password: "The password field is required." } });
+  // the current_password rule; the demo user's password is "password", as in Laravel's UserFactory
+  if (data.password !== "password") return back({ errors: { password: "The password is incorrect." } });
+  // Auth::logout(), $user->delete(), then redirect('/'): the demo has no session to end, so it goes to its home page
+  return new Away("/");
+}
+
 // ---- routes/web.php ----
 const routes = [
   ["GET", /^\/products$/, (m, q) => index(q)],
@@ -196,6 +209,8 @@ const routes = [
   ["DELETE", /^\/photos\/(\d+)$/, ([, id]) => destroyPhoto(id)],
   ["GET", /^\/tags$/, (m, q) => searchTags(q)],
   ["POST", /^\/tags$/, (m, q, body) => storeTag(body)],
+  ["GET", /^\/settings$/, () => settings()],
+  ["DELETE", /^\/account$/, (m, q, body) => destroyAccount(body)],
 ];
 
 // the app's URLs live in static demo pages: /products is recipe-products.html, /products/3/edit recipe-product.html?id=3
@@ -203,6 +218,7 @@ const demoPages = [
   [/^\/products$/, () => "/app/recipe-products.html"],
   [/^\/products\/(\d+)\/edit$/, (id) => `/app/recipe-product.html?id=${id}`],
   [/^\/products\/(\d+)\/media$/, (id) => `/app/recipe-media.html?id=${id}`],
+  [/^\/settings$/, () => "/app/recipe-settings.html"],
 ];
 const toDemo = (url) => {
   for (const [re, to] of demoPages) {
@@ -219,7 +235,7 @@ const toApp = (url) => {
   const id = url.searchParams.get("id") ?? "1";
   const app = new URL(url);
   app.searchParams.delete("id");
-  const path = { "/app/recipe-products.html": "/products", "/app/recipe-product.html": `/products/${id}/edit`, "/app/recipe-media.html": `/products/${id}/media` }[url.pathname];
+  const path = { "/app/recipe-products.html": "/products", "/app/recipe-product.html": `/products/${id}/edit`, "/app/recipe-media.html": `/products/${id}/media`, "/app/recipe-settings.html": "/settings" }[url.pathname];
   if (path) app.pathname = path;
   return app;
 };
@@ -266,9 +282,14 @@ http.setClient({
       }
     } else await wait(200, config.signal);
     const handler = route(method, url);
-    // not one of these routes (the breadcrumb's home link): answer as Laravel does for a non-Inertia page, with a full page load
-    if (!handler) throw new HttpResponseError("Conflict", { status: 409, data: "", headers: { "x-inertia-location": new URL(config.url, location.href).href } }, config.url);
-    const result = handler(body);
+    // not one of these routes (the menu's other links), or a redirect away from them: answer as Laravel does for a
+    // non-Inertia page, with a full page load. The demo's Overview stands in for the dashboard.
+    const result = handler?.(body);
+    if (!handler || result instanceof Away) {
+      const away = new URL(result?.url ?? config.url, location.href);
+      if (away.pathname === "/dashboard") away.pathname = "/app/dashboard.html";
+      throw new HttpResponseError("Conflict", { status: 409, data: "", headers: { "x-inertia-location": away.href } }, config.url);
+    }
     if (headers["x-inertia"]) {
       const data = visit(result, url, headers["x-inertia-partial-data"]?.split(","));
       return { status: 200, data: JSON.stringify(data), headers: { "x-inertia": "true", "content-type": "application/json" } };
@@ -291,13 +312,9 @@ window.fetch = async (input, init = {}) => {
 };
 
 // ---- app.js: flash to toast (see references/toast.md), then boot on the page the URL names ----
-const toaster = document.getElementById("toaster");
-router.on("flash", ({ detail: { flash } }) => {
-  if (!flash.toast) return;
-  const el = Object.assign(document.createElement("div"), { className: `alert ${flash.toast.type}` });
-  el.append(Object.assign(document.createElement("p"), { textContent: flash.toast.message }));
-  el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
-  toaster.append(el);
+router.on("flash", (event) => {
+  const t = event.detail.flash.toast;
+  if (t) toast(t.message, t.type);
 });
 
 const pages = import.meta.glob("./Pages/**/*.vue", { eager: true });
@@ -305,4 +322,5 @@ const first = route("GET", toApp(new URL(location.href)))();
 createInertiaApp({
   page: { ...first, props: { ...first.props, errors: {} }, url: location.pathname + location.search, version: null, clearHistory: false, encryptHistory: false },
   resolve: (name) => pages[`./Pages/${name}.vue`],
+  title: (title) => `${title} · Forma`,
 });

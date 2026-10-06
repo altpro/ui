@@ -1,23 +1,18 @@
 <!doctype html>
+<!-- The Inertia root view from app-shell.md (resources/views/app.blade.php) as a static page: no demo.js, no demo CSS.
+     @vite is shell.css and server.js, which stands in for Laravel and boots a page from Pages/ into #app, as @inertia would. -->
 <html lang="en" class="scroll-pb-20">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Tags and photos recipe · Forma</title>
-  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
-  <link rel="stylesheet" href="../demo.css">
-  <link rel="stylesheet" href="app.css">
+  <title>Tags and photos · Forma</title>
+  <script>if (localStorage.theme) document.documentElement.dataset.theme = localStorage.theme</script>
+  <link rel="stylesheet" href="shell.css">
   <link rel="icon" href="../favicon.svg" type="image/svg+xml">
 </head>
-<body class="flex min-h-screen bg-background text-foreground">
-<aside></aside>
-<div class="flex min-w-0 flex-1 flex-col">
-  <header></header>
-  <!-- a recipe from resources/boost/skills/altpro-ui/references/recipes.md: Pages/Products/*.vue, served by the stand-in in server.js -->
-  <main><div id="app" class="demo-recipe"></div></main>
-</div>
-<div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
-<script type="module" src="../demo.js"></script>
-<script type="module" src="./server.js"></script>
+<body class="bg-background text-foreground">
+  <div id="app"></div>
+  <div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
+  <script type="module" src="./server.js"></script>
 </body>
 </html>

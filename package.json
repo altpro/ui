@@ -18,7 +18,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "npm run test:unit && playwright test",
-    "test:unit": "vue-tsc --noEmit && php tests/table-query.php && node --test tests/table-view.ts tests/inventory.test.js",
+    "test:unit": "vue-tsc --noEmit && php tests/table-query.php && node --test tests/table-view.ts tests/inventory.test.js tests/skill-code.test.js",
     "test:a11y": "playwright test a11y.spec.js --project=chromium",
     "test:browsers": "playwright test --project=firefox --project=webkit"
   },

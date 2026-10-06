@@ -8,14 +8,14 @@ Three screens built from the documented components, each with the Vue page, the 
 | [2. List page](#2-list-page) | breadcrumb, record header, server-mode `DataTable` with filters, `only` and a bulk action | `demo/app/recipe-products.html` |
 | [3. Tags and photos](#3-tags-and-photos) | `Combobox` with `src` and `create` endpoints; `FileInput` uploading each file with progress | `demo/app/recipe-media.html` |
 
-The demo pages run this Vue code (with the demo's own icon helper in place of `@lucide/vue`) against a stand-in for the server; `tests/recipes.spec.js` drives them. Run `npm run dev` in the altpro/ui repository and open them under Application.
+The demo pages run this Vue code as written against a stand-in for the server; `tests/recipes.spec.js` drives them. Run `npm run dev` in the altpro/ui repository and open them under Application.
 
 ## What the recipes assume
 
 - Inertia 3 with `@inertiajs/vue3`, Laravel with `inertiajs/inertia-laravel`, and the `@ui` alias from SKILL.md's setup.
 - Pages resolve from `resources/js/Pages/`, so `Inertia::render('Products/Edit')` is `resources/js/Pages/Products/Edit.vue`.
-- The layout wraps each page in `<main class="p-gap">`, which the save bar's `-mx-gap px-gap` matches, and puts `class="scroll-pb-20"` on `<html>` (see [save-bar.md](save-bar.md)).
-- Saves confirm with a toast: the controller calls `Inertia::flash('toast', ['type' => 'success', 'message' => '…'])` and redirects, and `app.js` shows it, as [toast.md](toast.md) sets up. With a save bar on the page, put the toaster at the top (`class="toaster top"`): in the bottom corner a toast covers Save.
+- The app shell from [app-shell.md](app-shell.md): its root view (`scroll-pb-20` on `<html>`, the toaster at the top) and `resources/js/Layouts/AppLayout.vue`, which each page wraps itself in with its breadcrumb. The layout's `<main>` is `p-gap`, which the save bar's `-mx-gap px-gap` matches, and it draws the only breadcrumb.
+- Saves confirm with a toast: the controller calls `Inertia::flash('toast', ['type' => 'success', 'message' => '…'])` and redirects, and `app.js` shows it, as [toast.md](toast.md) sets up.
 - Icons are Lucide, from `@lucide/vue`: `<Pencil class="size-4" aria-hidden="true" />`.
 - Laravel's default validation messages; the browser tests read them.
 
@@ -130,14 +130,17 @@ Route::middleware('auth')->group(function () {
 
 ## 1. Edit page
 
-Breadcrumb, record header, a grid of `Field`s bound to `useForm`, and the save bar. The form's defaults are the saved record: Discard puts them back, and Inertia makes the saved data the new defaults after a successful save, so `isDirty` goes false by itself.
+Record header, a grid of `Field`s bound to `useForm`, and the save bar, in the layout with its breadcrumb. The form's defaults are the saved record: Discard puts them back, and Inertia makes the saved data the new defaults after a successful save, so `isDirty` goes false by itself. A failed save shows and focuses an error summary ([validation-failure.md](validation-failure.md)), and leaving with unsaved changes asks first ([unsaved-changes.md](unsaved-changes.md)).
 
 ```vue
 <!-- resources/js/Pages/Products/Edit.vue -->
 <script setup>
-import { Link, useForm } from "@inertiajs/vue3";
-import { Upload } from "@lucide/vue";
+import { nextTick, ref } from "vue";
+import { Head, Link, useForm } from "@inertiajs/vue3";
+import { CircleAlert, Upload } from "@lucide/vue";
 import Field from "@ui/Field.vue";
+import AppLayout from "@/Layouts/AppLayout.vue";
+import { useUnsavedChanges } from "@/composables/useUnsavedChanges";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -155,8 +158,14 @@ const form = useForm({
   status: props.product.status,
   description: props.product.description,
 });
+useUnsavedChanges(form);
 
-const save = () => form.put(`/products/${props.product.id}`, { preserveScroll: true });
+// a failed save focuses the error summary: it is read out, and Tab goes on to the first field
+const summary = ref();
+const save = () => form.put(`/products/${props.product.id}`, {
+  preserveScroll: true,
+  onError: () => nextTick(() => summary.value.focus()),
+});
 const discard = () => {
   form.reset();
   form.clearErrors();
@@ -166,42 +175,46 @@ const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.d
 </script>
 
 <template>
-  <div class="space-y-gap">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <Link href="/">Dashboard</Link>
-      <Link href="/products">Products</Link>
-      <span aria-current="page">{{ product.name }}</span>
-    </nav>
-
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight break-words">{{ product.name }}</h1>
-          <span class="badge" :class="statusClass[product.status]">{{ product.status }}</span>
+  <Head :title="product.name" />
+  <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name }]">
+    <div class="flex flex-col gap-gap">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+            <h1 class="text-2xl font-semibold tracking-tight break-words">{{ product.name }}</h1>
+            <span class="badge" :class="statusClass[product.status]">{{ product.status }}</span>
+          </div>
+          <p class="mt-1 text-sm muted">SKU {{ product.sku }} · {{ product.category }} · Updated <time :datetime="product.updated_at">{{ updated(product.updated_at) }}</time></p>
         </div>
-        <p class="mt-1 text-sm muted">SKU {{ product.sku }} · {{ product.category }} · Updated <time :datetime="product.updated_at">{{ updated(product.updated_at) }}</time></p>
+        <div class="flex flex-wrap gap-2">
+          <Link :href="`/products/${product.id}/media`" class="btn outlined"><Upload class="size-4" aria-hidden="true" /> Tags and photos</Link>
+        </div>
       </div>
-      <div class="flex flex-wrap gap-2">
-        <Link :href="`/products/${product.id}/media`" class="btn outlined"><Upload class="size-4" aria-hidden="true" /> Tags and photos</Link>
-      </div>
+
+      <form class="grid max-w-3xl gap-x-gap gap-y-4 sm:grid-cols-2" novalidate @submit.prevent="save">
+        <div v-if="form.hasErrors" ref="summary" class="alert danger col-span-full" role="alert" tabindex="-1">
+          <CircleAlert class="size-4" aria-hidden="true" />
+          <h2>The product was not saved</h2>
+          <ul class="list-disc ps-5">
+            <li v-for="(message, field) in form.errors" :key="field">{{ message }}</li>
+          </ul>
+        </div>
+        <Field v-model="form.name" name="name" :errors="form.errors" required class="sm:col-span-2" />
+        <Field v-model="form.sku" name="sku" label="SKU" :errors="form.errors" required />
+        <Field v-model="form.category" name="category" type="select" :options="categories" :errors="form.errors" required />
+        <Field v-model="form.price" name="price" type="number" prepend="£" step="0.01" min="0" :errors="form.errors" required />
+        <Field v-model="form.stock" name="stock" type="number" step="1" min="0" hint="Units on the shelf." :errors="form.errors" required />
+        <Field v-model="form.status" name="status" type="select" :options="statuses" :errors="form.errors" />
+        <Field v-model="form.description" name="description" type="textarea" rows="4" :errors="form.errors" class="sm:col-span-2" />
+
+        <div class="sticky bottom-0 z-10 col-span-full -mx-gap flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background px-gap py-3">
+          <p class="me-auto text-sm" role="status">{{ form.isDirty ? "Unsaved changes" : form.recentlySuccessful ? "Saved." : "" }}</p>
+          <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="discard">Discard</button>
+          <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>
+        </div>
+      </form>
     </div>
-
-    <form class="grid max-w-3xl gap-x-gap gap-y-4 sm:grid-cols-2" novalidate @submit.prevent="save">
-      <Field v-model="form.name" name="name" :errors="form.errors" required class="sm:col-span-2" />
-      <Field v-model="form.sku" name="sku" label="SKU" :errors="form.errors" required />
-      <Field v-model="form.category" name="category" type="select" :options="categories" :errors="form.errors" required />
-      <Field v-model="form.price" name="price" type="number" prepend="£" step="0.01" min="0" :errors="form.errors" required />
-      <Field v-model="form.stock" name="stock" type="number" step="1" min="0" hint="Units on the shelf." :errors="form.errors" required />
-      <Field v-model="form.status" name="status" type="select" :options="statuses" :errors="form.errors" />
-      <Field v-model="form.description" name="description" type="textarea" rows="4" :errors="form.errors" class="sm:col-span-2" />
-
-      <div class="sticky bottom-0 z-10 col-span-full -mx-gap flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background px-gap py-3">
-        <p class="me-auto text-sm" role="status">{{ form.isDirty ? "Unsaved changes" : form.recentlySuccessful ? "Saved." : "" }}</p>
-        <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="discard">Discard</button>
-        <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>
-      </div>
-    </form>
-  </div>
+  </AppLayout>
 </template>
 ```
 
@@ -268,7 +281,7 @@ What comes back:
 | Request | Response | On the page |
 |---------|----------|-------------|
 | `GET /products/{id}/edit` | Inertia page `Products/Edit` with `product`, `categories`, `statuses` | The form, clean. |
-| `PUT /products/{id}`, invalid | Laravel redirects back with the errors; Inertia receives the edit page with `errors: { name: "The name field is required.", price: "The price field must be at least 0." }` | Each `Field` shows its message and sets `aria-invalid`. The form keeps what was typed (`put` preserves state) and stays dirty. |
+| `PUT /products/{id}`, invalid | Laravel redirects back with the errors; Inertia receives the edit page with `errors: { name: "The name field is required.", price: "The price field must be at least 0." }` | The summary lists them and takes focus; each `Field` shows its message and sets `aria-invalid`. The form keeps what was typed (`put` preserves state) and stays dirty. |
 | `PUT /products/{id}`, valid | Redirect to the edit page, `errors: {}`, flash `toast` | Errors clear, the header shows the saved name, the status line says "Saved.", the toast shows, Discard disables. |
 
 - `novalidate` lets the server answer every field in one round trip, so the browser's own bubbles never disagree with Laravel's messages. Drop it to get the browser's checks first as well.
@@ -278,15 +291,16 @@ What comes back:
 
 ## 2. List page
 
-Breadcrumb, a record-header-shaped title, and a server-mode `DataTable`: search, sort, filters and pages come from `TableQuery`, a table change reloads only `products`, and the selection drives a bulk action. The bulk endpoint gets either ids or, after "Select all N matching", the search and filters the table showed, and re-runs them through the same `filter()` and `TableQuery::search()` as the index.
+A record-header-shaped title and a server-mode `DataTable`, in the layout: search, sort, filters and pages come from `TableQuery`, a table change reloads only `products`, and the selection drives a bulk action. The bulk endpoint gets either ids or, after "Select all N matching", the search and filters the table showed, and re-runs them through the same `filter()` and `TableQuery::search()` as the index.
 
 ```vue
 <!-- resources/js/Pages/Products/Index.vue -->
 <script setup lang="ts">
-import { Link, router } from "@inertiajs/vue3";
+import { Head, Link, router } from "@inertiajs/vue3";
 import { Archive, Pencil } from "@lucide/vue";
 import DataTable from "@ui/DataTable.vue";
 import type { DataTableColumn, DataTableFilter, DataTablePaginated, DataTableSelection } from "@ui/dataTable";
+import AppLayout from "@/Layouts/AppLayout.vue";
 
 interface Product {
   id: number;
@@ -323,33 +337,31 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 </script>
 
 <template>
-  <div class="space-y-gap">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <Link href="/">Dashboard</Link>
-      <span aria-current="page">Products</span>
-    </nav>
-
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0">
-        <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
-        <p class="mt-1 text-sm muted">{{ unfilteredTotal }} products in the catalogue</p>
+  <Head title="Products" />
+  <AppLayout :breadcrumb="[{ label: 'Products' }]">
+    <div class="flex flex-col gap-gap">
+      <div class="flex flex-wrap items-start justify-between gap-4">
+        <div class="min-w-0">
+          <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
+          <p class="mt-1 text-sm muted">{{ unfilteredTotal }} products in the catalogue</p>
+        </div>
       </div>
-    </div>
 
-    <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
-        :only="['products']" sort="name" :paginate="10" selectable
-        empty-message="No products yet." no-matches-message="No products match.">
-      <template #cell-status="{ row }">
-        <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
-      </template>
-      <template #cell-actions="{ row }">
-        <Link :href="`/products/${row.id}/edit`" class="btn ghost sm"><Pencil class="size-4" aria-hidden="true" /> Edit <span class="sr-only">{{ row.name }}</span></Link>
-      </template>
-      <template #bulk-actions="{ selection, clear }">
-        <button type="button" class="btn outlined sm" @click="archive(selection, clear)"><Archive class="size-4" aria-hidden="true" /> Archive</button>
-      </template>
-    </DataTable>
-  </div>
+      <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
+          :only="['products']" sort="name" :paginate="10" selectable
+          empty-message="No products yet." no-matches-message="No products match.">
+        <template #cell-status="{ row }">
+          <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
+        </template>
+        <template #cell-actions="{ row }">
+          <Link :href="`/products/${row.id}/edit`" class="btn ghost sm"><Pencil class="size-4" aria-hidden="true" /> Edit <span class="sr-only">{{ row.name }}</span></Link>
+        </template>
+        <template #bulk-actions="{ selection, clear }">
+          <button type="button" class="btn outlined sm" @click="archive(selection, clear)"><Archive class="size-4" aria-hidden="true" /> Archive</button>
+        </template>
+      </DataTable>
+    </div>
+  </AppLayout>
 </template>
 ```
 
@@ -456,7 +468,7 @@ What comes back:
 - `defaultSort` and `perPage` match the component's `sort` and `:paginate`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`.
 - `selection.filters` has the shape `TableQuery::filters()` returns, so the one `filter()` serves both.
 - `onSuccess: clear` empties the selection once the server has answered. The page's new props show the archived rows; the rows that no longer match a filter drop out.
-- A destructive bulk action (delete) asks first: open a `.dialog` that says how many, and post from its confirm button.
+- A destructive bulk action (delete) asks first: a `.dialog` that says how many, built as [destructive-action.md](destructive-action.md) builds one.
 - `Product::visibleTo()` starts the index, its count and `bulk()`. The endpoint takes whatever ids and filters it is sent, so a bulk query starting from `Product::query()` would reach rows the list never showed. `Gate::authorize('archive', …)` is the other half: whether this user may archive at all.
 
 ## 3. Tags and photos
@@ -467,9 +479,10 @@ Two ways to send data from one page. Tags are an ordinary form: `Field type="com
 <!-- resources/js/Pages/Products/Media.vue -->
 <script setup>
 import { computed, reactive, ref, watch } from "vue";
-import { Link, useForm, useHttp } from "@inertiajs/vue3";
+import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
+import AppLayout from "@/Layouts/AppLayout.vue";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -517,42 +530,38 @@ const uploading = computed(() => progress.value.filter((p) => p != null).length)
 </script>
 
 <template>
-  <div class="space-y-gap">
-    <nav class="breadcrumb" aria-label="Breadcrumb">
-      <Link href="/">Dashboard</Link>
-      <Link href="/products">Products</Link>
-      <Link :href="`/products/${product.id}/edit`">{{ product.name }}</Link>
-      <span aria-current="page">Tags and photos</span>
-    </nav>
+  <Head :title="`Tags and photos · ${product.name}`" />
+  <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
+    <div class="flex flex-col gap-gap">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
+        <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
+      </div>
 
-    <div class="min-w-0">
-      <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
-      <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
+      <div class="grid items-start gap-gap lg:grid-cols-2">
+        <form class="card" @submit.prevent="saveTags">
+          <h2 class="text-lg font-semibold">Tags</h2>
+          <Field v-model="form.tag_ids" name="tag_ids" label="Tags" type="combobox" multiple :max="5"
+              src="/tags" create="/tags" :options="tags" :errors="form.errors" hint="Up to five. Type to search, or add a new one." />
+          <div class="flex items-center justify-end gap-2">
+            <p class="me-auto text-sm" role="status">{{ form.recentlySuccessful ? "Saved." : "" }}</p>
+            <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save tags</button>
+          </div>
+        </form>
+
+        <section class="card" aria-labelledby="photos-heading">
+          <h2 id="photos-heading" class="text-lg font-semibold">Photos</h2>
+          <div class="field">
+            <label for="photos">Add photos</label>
+            <FileInput v-model="photos" id="photos" name="photos" accept="image/*" multiple :progress="progress" :errors="errors">
+              <span>PNG or JPEG, up to 5 MB each. Each one uploads as you add it.</span>
+            </FileInput>
+          </div>
+          <p class="text-sm muted" role="status">{{ uploading ? `Uploading ${uploading} of ${photos.length}…` : "" }}</p>
+        </section>
+      </div>
     </div>
-
-    <div class="grid items-start gap-gap lg:grid-cols-2">
-      <form class="card" @submit.prevent="saveTags">
-        <h2 class="text-lg font-semibold">Tags</h2>
-        <Field v-model="form.tag_ids" name="tag_ids" label="Tags" type="combobox" multiple :max="5"
-            src="/tags" create="/tags" :options="tags" :errors="form.errors" hint="Up to five. Type to search, or add a new one." />
-        <div class="flex items-center justify-end gap-2">
-          <p class="me-auto text-sm" role="status">{{ form.recentlySuccessful ? "Saved." : "" }}</p>
-          <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save tags</button>
-        </div>
-      </form>
-
-      <section class="card" aria-labelledby="photos-heading">
-        <h2 id="photos-heading" class="text-lg font-semibold">Photos</h2>
-        <div class="field">
-          <label for="photos">Add photos</label>
-          <FileInput v-model="photos" id="photos" name="photos" accept="image/*" multiple :progress="progress" :errors="errors">
-            <span>PNG or JPEG, up to 5 MB each. Each one uploads as you add it.</span>
-          </FileInput>
-        </div>
-        <p class="text-sm muted" role="status">{{ uploading ? `Uploading ${uploading} of ${photos.length}…` : "" }}</p>
-      </section>
-    </div>
-  </div>
+  </AppLayout>
 </template>
 ```
 

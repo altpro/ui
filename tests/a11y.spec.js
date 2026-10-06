@@ -31,7 +31,7 @@ const pixels = (png) => {
 const same = (a, b) => a.every((v, i) => Math.abs(v - b[i]) <= 2);
 const shot = async (loc) => pixels(await loc.screenshot());
 
-const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "copy.html", "datatable.html", "tooltip.html", "tree.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "repeater.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/dashboard.html", "app/products.html", "app/activity.html", "app/shell.html", "app/recipe-products.html", "app/recipe-product.html", "app/recipe-media.html"];
+const pages = ["index.html", "button.html", "join.html", "segmented.html", "field.html", "file.html", "check.html", "badge.html", "dl.html", "avatar.html", "nav.html", "breadcrumb.html", "dropdown.html", "combobox.html", "copy.html", "datatable.html", "tooltip.html", "tree.html", "card.html", "dialog.html", "accordion.html", "table.html", "alert.html", "tabs.html", "progress.html", "range.html", "repeater.html", "pagination.html", "loading.html", "steps.html", "timeline.html", "stat.html", "toast.html", "theme.html", "app/product.html", "app/dashboard.html", "app/products.html", "app/activity.html", "app/shell.html", "app/recipe-products.html", "app/recipe-product.html", "app/recipe-media.html", "app/recipe-settings.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
 const summary = (violations) =>
@@ -350,11 +350,11 @@ for (const colorScheme of ["light", "dark"]) {
     });
 
     // the recipes' server answers arrive after load, so axe never sees them: errors and a toast, then file rows with progress and an error
-    test("recipe pages: server errors, a flash toast and uploading files pass axe", async ({ page }) => {
+    test("recipe pages: the error summary, a flash toast, uploading files and the delete dialog pass axe", async ({ page }) => {
       await page.goto("/app/recipe-product.html?id=1");
       await page.getByLabel("Name", { exact: true }).fill("");
       await page.getByRole("button", { name: "Save", exact: true }).click();
-      await expect(page.getByText("The name field is required.")).toBeVisible();
+      await expect(page.locator("form").getByRole("alert")).toBeFocused();
       expect(summary((await axe(page).analyze()).violations)).toEqual([]);
       await page.getByLabel("Name", { exact: true }).fill("Arc");
       await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -371,6 +371,15 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary((await axe(page).include(".dropzone").analyze()).violations)).toEqual([]);
       await expect(page.getByText("The photo field must not be greater than 5120 kilobytes.")).toBeVisible();
       expect(summary((await axe(page).include(".dropzone").analyze()).violations)).toEqual([]);
+
+      // the delete-account dialog, open with a wrong password's error in it
+      await page.goto("/app/recipe-settings.html");
+      await page.locator("section").getByRole("button", { name: "Delete account" }).click();
+      const dialog = page.getByRole("dialog", { name: "Delete your account?" });
+      await dialog.getByLabel("Password").fill("wrong");
+      await dialog.getByRole("button", { name: "Delete account" }).click();
+      await expect(dialog.getByText("The password is incorrect.")).toBeVisible();
+      expect(summary((await axe(page).include("#delete-account").analyze()).violations)).toEqual([]);
     });
 
     // row hover is a tint on the cells: hover every body row of a .hover table and check the text still reads
