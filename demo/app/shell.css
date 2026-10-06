@@ -1,0 +1,3 @@
+/* exactly what an app imports: no demo CSS, so the shell is proved to need none */
+@import "tailwindcss";
+@import "../../resources/css/ui.css";

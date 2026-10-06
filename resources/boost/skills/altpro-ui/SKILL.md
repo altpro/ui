@@ -68,6 +68,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 
 | Component | For | Ships as | Reference |
 |-----------|-----|----------|-----------|
+| App shell | The page frame: sidebar nav, header with breadcrumb and scheme switcher, main, toaster | pattern | [app-shell.md](references/app-shell.md) |
 | Button `.btn` | Actions and links that look like buttons | CSS | [button.md](references/button.md) |
 | Join `.join` | Buttons and inputs fused into one bar | CSS | [join.md](references/join.md) |
 | Segmented control | One choice from a few, as a bar of buttons | pattern | [segmented.md](references/segmented.md) |

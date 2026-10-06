@@ -88,7 +88,7 @@ const components = [
    Menu items: a string is a heading, [href, label, icon?, extra?] a link,
    [label, icon, items] a collapsible group. */
 const menu = [
-  ["Application", "monitor", [["app/dashboard.html", "Overview", "gauge"], ["app/products.html", "Products", "blocks"], ["app/product.html", "Product detail", "tag"], ["app/activity.html", "Activity", "timeline"]]],
+  ["Application", "monitor", [["app/dashboard.html", "Overview", "gauge"], ["app/products.html", "Products", "blocks"], ["app/product.html", "Product detail", "tag"], ["app/activity.html", "Activity", "timeline"], ["app/shell.html", "App shell", "panel"]]],
   ["index.html", "Getting started", "house"],
   ["Components", "blocks", components],
   ["theme.html", "Theme", "palette"],
