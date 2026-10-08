@@ -26,7 +26,7 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
 | Close | `command="close" commandfor="id"` on any button, inside or outside the dialog. |
 | Non-modal | Add `popover="manual"` to the dialog and open it with `command="show-popover"`, close with `command="hide-popover"`. Same box, centred, no backdrop, the page stays usable. There is no non-modal dialog command. |
 | Dismiss | Esc by default. `closedby="any"` on the dialog adds click on the backdrop. `closedby="none"` removes Esc, for a dialog that must end with a button. |
-| Width | 32rem, capped at the viewport minus a `gap` each side. Narrower with `max-w-sm`, wider with `w-[48rem]`. |
+| Width | 32rem, capped at the viewport minus a `gap` each side. Set another with `[--dialog-w:24rem]` or `[--dialog-w:48rem]`; the cap still applies. Not `max-w-*` or `w-*`: `max-w-sm` replaces the cap, so the dialog runs off a phone screen. |
 | Height | Capped at the viewport minus a `gap` each side; taller content scrolls inside. The header and footer scroll with it. |
 | Drawer | `drawer`: a full-height panel, 24rem wide, that slides in from the end edge. `drawer start` slides from the start edge. Everything else is unchanged. `mt-auto` on the footer pins it to the bottom. |
 

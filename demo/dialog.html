@@ -86,7 +86,7 @@
     <h2 class="text-xl font-semibold">A form</h2>
     <div class="flex flex-wrap gap-2">
       <button class="btn" command="show-modal" commandfor="d-form">Invite a member</button>
-    <dialog id="d-form" class="dialog max-w-sm" aria-labelledby="d-form-title">
+    <dialog id="d-form" class="dialog [--dialog-w:24rem]" aria-labelledby="d-form-title">
       <header>
         <h3 id="d-form-title">Invite a member</h3>
         <button class="btn ghost sm" command="close" commandfor="d-form" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
@@ -112,7 +112,7 @@
     </dialog>
     </div>
     <p class="text-sm muted">The form wraps the fields with <code>class="contents"</code> so they stack with the card gap, and <code>method="dialog"</code> closes the dialog on submit. The footer stays a direct child of the dialog; its submit button points at the form with <code>form="invite"</code>. <code>autofocus</code> on the first field puts the cursor there on open; without it the close button takes focus. <code>max-w-sm</code> narrows it.</p>
-<pre>&lt;dialog id="d" class="dialog max-w-sm" aria-labelledby="d-title"&gt;
+<pre>&lt;dialog id="d" class="dialog [--dialog-w:24rem]" aria-labelledby="d-title"&gt;
   &lt;header&gt;…&lt;/header&gt;
   &lt;form id="invite" method="dialog" class="contents"&gt;
     &lt;div class="field"&gt;…&lt;input class="input" autofocus&gt;&lt;/div&gt;
@@ -130,19 +130,19 @@
       <button class="btn" command="show-modal" commandfor="d-any">Click outside to close</button>
       <button class="btn" command="show-modal" commandfor="d-none">Buttons only</button>
       <button class="btn" command="show-popover" commandfor="d-show">Non-modal</button>
-    <dialog id="d-any" class="dialog max-w-sm" closedby="any" aria-labelledby="d-any-title">
+    <dialog id="d-any" class="dialog [--dialog-w:24rem]" closedby="any" aria-labelledby="d-any-title">
       <header>
         <h3 id="d-any-title">Light dismiss</h3>
         <button class="btn ghost sm" command="close" commandfor="d-any" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>
       </header>
       <p><code>closedby="any"</code>. A click on the backdrop closes it, as does Esc.</p>
     </dialog>
-    <dialog id="d-none" class="dialog max-w-sm" closedby="none" aria-labelledby="d-none-title">
+    <dialog id="d-none" class="dialog [--dialog-w:24rem]" closedby="none" aria-labelledby="d-none-title">
       <header><h3 id="d-none-title">Session expired</h3></header>
       <p><code>closedby="none"</code>. Esc does nothing. The only way out is a button.</p>
       <footer class="justify-end"><button class="btn primary" command="close" commandfor="d-none">Sign in again</button></footer>
     </dialog>
-    <dialog id="d-show" class="dialog max-w-sm" popover="manual" aria-labelledby="d-show-title">
+    <dialog id="d-show" class="dialog [--dialog-w:24rem]" popover="manual" aria-labelledby="d-show-title">
       <header>
         <h3 id="d-show-title">Non-modal</h3>
         <button class="btn ghost sm" command="hide-popover" commandfor="d-show" aria-label="Close"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg></button>

@@ -71,6 +71,14 @@ createInertiaApp({ /* … */ });
 
 - Use the `flash` event, not a watcher on a shared `flash` prop. Inertia fires it once per flash, including on first load, and keeps flash data out of history, so Back does not replay an old toast.
 - The message goes in with `textContent`. It often contains user input (an order reference, a customer's name), so never put it in `innerHTML`.
+- In TypeScript, `event.detail.flash.toast` is untyped until the app declares its flash data, in a `.d.ts` file such as `resources/js/types/global.d.ts`:
+  ```ts
+  declare module "@inertiajs/core" {
+    export interface InertiaConfig {
+      flashDataType: { toast?: { type: string; message: string } };
+    }
+  }
+  ```
 - A component toasts with `import { toast } from "@/toast"`, or with `router.flash("toast", { type: "info", message: "Link copied." })`, which goes through the same listener.
 
 On a Blade page without Inertia, flash with `->with('toast', [...])` on the redirect instead, and after the region, put the same function in a classic `<script>` (without `export`), then:

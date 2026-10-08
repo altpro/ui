@@ -315,6 +315,39 @@ defineProps({ order: Object });
 - Not a persistent layout (`defineOptions({ layout: AppLayout })`, or a `layout` callback in `createInertiaApp`): that one takes no props from the page, so it could not draw the page's breadcrumb, and it never mounts again, so it would not move focus after a visit.
 - A visit that keeps the page (a save, which redirects back, a DataTable change, any `preserveState` visit) keeps the layout too: nothing moves focus, and the page decides, as [validation-failure.md](validation-failure.md) does.
 
+A section with several pages, such as settings, wraps `AppLayout` in a layout of its own. It adds the section's heading and a [`.tabs`](tabs.md) row of links, and each page in the section wraps itself in that layout instead:
+
+```vue
+<!-- resources/js/layouts/settings/Layout.vue -->
+<script setup>
+import { Link, usePage } from "@inertiajs/vue3";
+import AppLayout from "@/layouts/AppLayout.vue";
+
+// the page's tab, for the breadcrumb
+defineProps({ title: { type: String, required: true } });
+
+const tabs = [
+  { label: "Profile", href: "/settings/profile" },
+  { label: "Security", href: "/settings/security" },
+  { label: "Appearance", href: "/settings/appearance" },
+];
+const page = usePage();
+const current = (href) => (page.url.split("?")[0] === href ? "page" : undefined);
+</script>
+
+<template>
+  <AppLayout :breadcrumb="[{ label: 'Settings', href: '/settings' }, { label: title }]">
+    <div class="flex max-w-2xl flex-col gap-gap">
+      <h1 class="text-2xl font-semibold tracking-tight">Settings</h1>
+      <nav class="tabs" aria-label="Settings">
+        <Link v-for="tab in tabs" :key="tab.href" :href="tab.href" :aria-current="current(tab.href)">{{ tab.label }}</Link>
+      </nav>
+      <slot />
+    </div>
+  </AppLayout>
+</template>
+```
+
 Toasts: `resources/js/toast.js`, which any component can import ([toast.md](toast.md)):
 
 ```js
@@ -402,7 +435,7 @@ In Blade, the same radios with a script after them:
 
 ## Sign-in pages
 
-The welcome page and the sign-in pages are Blade views: log in, register, password reset, email verification, password confirmation and the two-factor challenge. Fortify's `loginView()` and its siblings return `view(...)`. Vue and Inertia start only after sign-in, on the first page in `AppLayout`. Each sign-in page is a centred [`.card`](card.md) whose header holds the page's `h1`, in a layout of its own that loads the CSS and no Vue:
+The welcome page and the sign-in pages are Blade views: log in, register, password reset, email verification, password confirmation and the two-factor challenge. Fortify's `loginView()` and its siblings return `view(...)`. Vue and Inertia start only after sign-in, on the first page in `AppLayout`. Each sign-in page is a centred [`.card`](card.md) whose header holds the page's `h1`, in a layout of its own. The layout loads the CSS and one small script, and no Vue:
 
 ```blade
 {{-- resources/views/layouts/guest.blade.php --}}
@@ -413,7 +446,7 @@ The welcome page and the sign-in pages are Blade views: log in, register, passwo
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@yield('title') · {{ config('app.name') }}</title>
   <script>if (localStorage.theme) document.documentElement.dataset.theme = localStorage.theme</script>
-  @vite(['resources/css/app.css'])
+  @vite(['resources/css/app.css', 'resources/js/guest.js'])
 </head>
 <body class="bg-background text-foreground">
   <main id="main" class="flex min-h-dvh flex-col items-center justify-center gap-gap p-gap">
@@ -426,6 +459,14 @@ The welcome page and the sign-in pages are Blade views: log in, register, passwo
       @yield('content')
     </div>
   </main>
+
+  {{-- guest.js puts a copy beside every password field --}}
+  <template id="reveal">
+    <button type="button" class="btn ghost sm -me-2 px-2" aria-label="Show password" aria-pressed="false">
+      <x-lucide-eye class="size-4" aria-hidden="true" />
+      <x-lucide-eye-off class="hidden size-4" aria-hidden="true" />
+    </button>
+  </template>
 </body>
 </html>
 ```
@@ -474,6 +515,28 @@ class LoadInFull
 }
 ```
 
-Put it on the welcome route and on Fortify's routes (`'middleware' => ['web', LoadInFull::class]` in `config/fortify.php`). It only acts on an Inertia `GET`, so the JSON routes that the two-factor settings call with `fetch` are not affected.
+Put it on the welcome route and on Fortify's routes (`'middleware' => ['web', LoadInFull::class]` in `config/fortify.php`). It only acts on an Inertia `GET`, so the JSON routes that the two-factor settings call with `fetch` are not affected. The browser's console logs each hand-over as a failed request (`409 Conflict`). That is how `Inertia::location()` works, not an error.
 
-In the Vue app, a password field gets [`Field`](field.md)'s `reveal`. The Blade field has no reveal, because it needs JavaScript. An app that wants it, or passkey sign-in, on these pages adds its own small script to the guest layout's `@vite`.
+In the Vue app, a password field gets [`Field`](field.md)'s `reveal`. The Blade field has no reveal, because it needs JavaScript, so `guest.js` gives every password field on these pages the same button. The button is the `<template>` at the end of the guest layout, so its icons come from Blade:
+
+```js
+// resources/js/guest.js
+// Show and hide a password, as Field.vue's reveal does: an aria-pressed button inside a div.input
+for (const input of document.querySelectorAll("input[type=password]")) {
+  const wrapper = Object.assign(document.createElement("div"), { className: "input" });
+  const toggle = document.getElementById("reveal").content.firstElementChild.cloneNode(true);
+  input.classList.remove("input");
+  input.replaceWith(wrapper);
+  wrapper.append(input, toggle);
+  // moving the input drops the focus autofocus gave it
+  if (input.autofocus) input.focus();
+  toggle.addEventListener("click", () => {
+    const shown = input.type === "password";
+    input.type = shown ? "text" : "password";
+    toggle.setAttribute("aria-pressed", String(shown));
+    for (const icon of toggle.children) icon.classList.toggle("hidden");
+  });
+}
+```
+
+Passkey sign-in on these pages goes in the same script. Laravel's starter kit does it with `@laravel/passkeys`.
