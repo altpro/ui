@@ -1,6 +1,6 @@
 # App shell (pattern)
 
-The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar with a user menu at its foot, a header with a [`.breadcrumb`](breadcrumb.md), `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Copy one of the two versions below and change the links; build nothing else for it. This is the layout: the page recipes ([recipes.md](recipes.md)) and the patterns that build on them wrap themselves in this `AppLayout` and assume this root view. The sign-in pages use the [auth layout](#sign-in-pages) instead, and the colour scheme switcher goes on a [settings page](#colour-scheme-setting), not in the header.
+The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar with a user menu at its foot, a header with a [`.breadcrumb`](breadcrumb.md), `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Copy one of the two versions below and change the links; build nothing else for it. This is the layout: the page recipes ([recipes.md](recipes.md)) and the patterns that build on them wrap themselves in this `AppLayout` and assume this root view. The welcome and sign-in pages are Blade views in a [layout of their own](#sign-in-pages), and the colour scheme switcher goes on a [settings page](#colour-scheme-setting), not in the header.
 
 - **Skip link** first in `body`: `sr-only` until focused, then a `btn primary` in the corner. It targets `<main id="main">`.
 - **Sidebar**: from `lg` an `<aside>`, sticky and full height, scrolling on its own. Below `lg` the aside is `hidden` and the same `.nav` is in the drawer. The nav is written once (a Blade partial, a Vue `v-for`) and rendered in both; only one is ever displayed, so there is one `Main` landmark at a time.
@@ -402,39 +402,78 @@ In Blade, the same radios with a script after them:
 
 ## Sign-in pages
 
-Log in, register, password reset and two-factor pages have no sidebar: a centred [`.card`](card.md) whose header holds the page's `h1`. Each page wraps itself in the layout and passes its title, as with `AppLayout`. It shares the root view, so the scheme script and the toaster are there too.
+The welcome page and the sign-in pages are Blade views: log in, register, password reset, email verification, password confirmation and the two-factor challenge. Fortify's `loginView()` and its siblings return `view(...)`. Vue and Inertia start only after sign-in, on the first page in `AppLayout`. Each sign-in page is a centred [`.card`](card.md) whose header holds the page's `h1`, in a layout of its own that loads the CSS and no Vue:
 
-```vue
-<!-- resources/js/layouts/AuthLayout.vue -->
-<script setup>
-import { onMounted, ref } from "vue";
-import { Link } from "@inertiajs/vue3";
-
-defineProps({
-  title: { type: String, required: true },
-  description: String,
-});
-
-const appName = import.meta.env.VITE_APP_NAME;
-
-// Browsers honour `autofocus` only on the first page load, and each sign-in page mounts this layout again,
-// so focus the page's autofocus field here: after "Forgot your password?", focus lands on the email field.
-const main = ref();
-onMounted(() => main.value.querySelector("[autofocus]")?.focus());
-</script>
-
-<template>
-  <main id="main" ref="main" class="flex min-h-dvh flex-col items-center justify-center gap-gap p-gap">
-    <Link href="/" class="font-semibold">{{ appName }}</Link>
+```blade
+{{-- resources/views/layouts/guest.blade.php --}}
+<!doctype html>
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>@yield('title') · {{ config('app.name') }}</title>
+  <script>if (localStorage.theme) document.documentElement.dataset.theme = localStorage.theme</script>
+  @vite(['resources/css/app.css'])
+</head>
+<body class="bg-background text-foreground">
+  <main id="main" class="flex min-h-dvh flex-col items-center justify-center gap-gap p-gap">
+    <a href="{{ url('/') }}" class="font-semibold">{{ config('app.name') }}</a>
     <div class="card w-full max-w-sm [--card-p:1.5rem]">
       <header>
-        <h1 class="text-2xl font-semibold tracking-tight">{{ title }}</h1>
-        <p v-if="description">{{ description }}</p>
+        <h1 class="text-2xl font-semibold tracking-tight">@yield('title')</h1>
+        @hasSection('description')<p>@yield('description')</p>@endif
       </header>
-      <slot />
+      @yield('content')
     </div>
   </main>
-</template>
+</body>
+</html>
 ```
 
-The form inside follows [validation-failure.md](validation-failure.md)'s `<Form>` example. A two-factor code is the one-time-code [`Field`](field.md).
+A page posts an ordinary form to Fortify's route. A failed post loads the page again with the errors and the old input, and `<x-ui::field>` shows both. Each page load honours `autofocus`, so the first field with an error takes it, or the first field when there are none:
+
+```blade
+@extends('layouts.guest')
+
+@section('title', 'Log in')
+
+@section('content')
+  @session('status')
+    <div class="alert success" role="status"><p>{{ $value }}</p></div>
+  @endsession
+  <form method="POST" action="{{ route('login') }}" novalidate class="flex flex-col gap-4">
+    @csrf
+    <x-ui::field name="email" type="email" required autocomplete="email" :autofocus="! $errors->any() || $errors->has('email')" />
+    <x-ui::field name="password" type="password" required autocomplete="current-password" :autofocus="$errors->has('password') && ! $errors->has('email')" />
+    <x-ui::field name="remember" type="checkbox" label="Remember me" />
+    <button class="btn primary w-full">Log in</button>
+  </form>
+@endsection
+```
+
+An Inertia visit that ends on one of these pages must load it in full, or Inertia shows the Blade page's HTML in an error modal. That happens when the user logs out, when the session has expired, and when a route behind `password.confirm` sends the user to confirm their password. Inertia follows the redirect with its `X-Inertia` header, so a middleware on the Blade pages answers that request with `Inertia::location()`:
+
+```php
+// app/Http/Middleware/LoadInFull.php
+namespace App\Http\Middleware;
+
+use Closure;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\Response;
+
+/** A Blade page reached from the Inertia app loads in full, not inside Inertia's error modal. */
+class LoadInFull
+{
+    public function handle(Request $request, Closure $next): Response
+    {
+        return $request->isMethod('GET') && $request->header('X-Inertia')
+            ? Inertia::location($request->fullUrl())
+            : $next($request);
+    }
+}
+```
+
+Put it on the welcome route and on Fortify's routes (`'middleware' => ['web', LoadInFull::class]` in `config/fortify.php`). It only acts on an Inertia `GET`, so the JSON routes that the two-factor settings call with `fetch` are not affected.
+
+In the Vue app, a password field gets [`Field`](field.md)'s `reveal`. The Blade field has no reveal, because it needs JavaScript. An app that wants it, or passkey sign-in, on these pages adds its own small script to the guest layout's `@vite`.
