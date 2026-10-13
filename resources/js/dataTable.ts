@@ -282,8 +282,9 @@ export interface DataTableUrlOptions {
 
 const parameter = (name: string | undefined, key: string) => (name ? `${name}_${key}` : key);
 
-// a page number as TableQuery accepts it: digits, no sign, no leading zero
+// a page number as TableQuery accepts it: digits, no sign, no leading zero, and no further than it goes
 const pageNumber = /^[1-9]\d*$/;
+const MAX_PAGE = 1_000_000_000;
 
 // a day as a date input writes it; 2026-02-30 rolls over into March, so it is not one
 const isDate = (value: string) => {
@@ -321,7 +322,7 @@ export const readView = (query: URLSearchParams, options: DataTableUrlOptions): 
     filters,
     sort: options.sortable.includes(sort) ? sort : options.defaultSort,
     direction: direction === "asc" || direction === "desc" ? direction : options.defaultDirection,
-    page: pageNumber.test(page) ? Number(page) : 1,
+    page: pageNumber.test(page) ? Math.min(Number(page), MAX_PAGE) : 1,
     perPage: PAGE_SIZES.map(String).includes(perPage) ? Number(perPage) : null,
   };
 };

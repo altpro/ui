@@ -81,6 +81,7 @@ $page = fn (string $url): array => [
 ];
 $check($page('/?page=2'), [2, ['Calpol']], 'reads the page from the request it was given');
 $check($page('/?page=9'), [2, ['Calpol']], 'shows the last page for a page past the end');
+$check($page('/?page=9223372036854775807'), [2, ['Calpol']], 'shows the last page for a page too big for an offset');
 
 // the URL format, case by case, from the fixture tests/table-view.ts reads too
 $fixture = json_decode((string) file_get_contents(__DIR__.'/table-urls.json'), true, flags: JSON_THROW_ON_ERROR);

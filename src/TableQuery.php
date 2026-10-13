@@ -21,6 +21,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final class TableQuery
 {
+    /** The highest page a URL can ask for; readView() in dataTable.ts stops at the same. */
+    private const MAX_PAGE = 1_000_000_000;
+
     /**
      * Page sizes the picker offers, from resources/js/dataTable.json, which
      * DataTable.vue reads too. Anything else in the URL is ignored, so a
@@ -119,7 +122,8 @@ final class TableQuery
                 'asc', 'desc' => $direction,
                 default => $defaultDirection === 'desc' ? 'desc' : 'asc',
             },
-            'page' => preg_match('/^[1-9][0-9]*$/', $page) === 1 ? (int) $page : 1,
+            // a page past a billion is past the end of any list, and kept there so the offset stays an int
+            'page' => preg_match('/^[1-9][0-9]*$/', $page) === 1 ? min((int) $page, self::MAX_PAGE) : 1,
             'perPage' => in_array($perPage, array_map(strval(...), self::pageSizes()), true) ? (int) $perPage : null,
         ];
     }
@@ -208,8 +212,11 @@ final class TableQuery
             $value = $request->query($end);
             // as for a select, an array (`placed_from[]=`) is another parameter to the browser, so absent
             $present = $present || ($request->query->has($end) && ! is_array($value));
-            // a day as a date input writes it; 2026-02-30 rolls over into March, so it is not one
-            $date = is_string($value) ? DateTimeImmutable::createFromFormat('!Y-m-d', $value) : false;
+            // a day as a date input writes it; 2026-02-30 rolls over into March, so it is not one.
+            // The pattern goes first: createFromFormat throws on a null byte (`%00`)
+            $date = is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $value) === 1
+                ? DateTimeImmutable::createFromFormat('!Y-m-d', $value)
+                : false;
             $ends[] = $date !== false && $date->format('Y-m-d') === $value ? $value : '';
         }
 
