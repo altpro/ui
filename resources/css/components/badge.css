@@ -141,7 +141,9 @@
     }
 
     /* sizes */
+    &.xs { --badge-h: 1rem;    --badge-px: 0.375rem; --badge-text: 0.625rem; }
     &.sm { --badge-h: 1.25rem; --badge-px: 0.5rem; }
-    &.lg { --badge-h: 1.75rem; --badge-px: 0.75rem; --badge-text: var(--text-sm, 0.875rem); }
+    &.lg { --badge-h: 1.75rem; --badge-px: 0.75rem;  --badge-text: var(--text-sm, 0.875rem); }
+    &.xl { --badge-h: 2rem;    --badge-px: 0.875rem; --badge-text: var(--text-base, 1rem); }
   }
 }

@@ -74,6 +74,7 @@
       &:has(> .avatar:first-child)::before { display: none; }
 
       &.primary { --timeline-dot: var(--color-primary); }
+      &.secondary { --timeline-dot: var(--color-secondary-foreground); }
       &.info    { --timeline-dot: var(--color-info); }
       &.success { --timeline-dot: var(--color-success); }
       &.warning { --timeline-dot: var(--color-warning-accent); }

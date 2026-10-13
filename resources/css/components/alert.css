@@ -65,11 +65,12 @@
 
     /* colour variants */
     &.primary { --alert-accent: var(--color-primary); }
+    &.secondary { --alert-accent: var(--color-secondary-foreground); }
     &.info    { --alert-accent: var(--color-info); }
     &.success { --alert-accent: var(--color-success); }
     &.warning { --alert-accent: var(--color-warning-accent); }
     &.danger, &.error { --alert-accent: var(--color-danger); }
-    &:is(.primary, .info, .success, .warning, .danger, .error) {
+    &:is(.primary, .secondary, .info, .success, .warning, .danger, .error) {
       --alert-bg: color-mix(in oklab, var(--alert-accent) 10%, transparent);
       --alert-border: color-mix(in oklab, var(--alert-accent) 30%, transparent);
     }

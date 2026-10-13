@@ -21,7 +21,7 @@ The first thing after the icon shares its row, so `<svg>` then `<p>` is a one-li
 
 | Kind | Classes |
 |------|---------|
-| Colour | `primary` `info` `success` `warning` `danger` (`error` is an alias). Tints the box and colours the border and icon. No colour = a bordered box on the card colour. Text is always the page foreground. |
+| Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias). Tints the box and colours the border and icon. No colour = a bordered box on the card colour. Text is always the page foreground. |
 
 - Content present at page load needs no role. Something that appears after an action gets `role="status"` (polite) or `role="alert"` (interrupts); the role goes on the box so screen readers announce it.
 - The radius is `--radius` capped at 1rem, like a card.

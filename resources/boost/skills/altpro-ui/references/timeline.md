@@ -18,7 +18,7 @@ An `<ol>` of events, a dot each joined by a line. For an audit history or activi
 
 | Kind | Classes |
 |------|---------|
-| Dot colour, on the `<li>` | `primary` `info` `success` `warning` `danger` |
+| Dot colour, on the `<li>` | `primary` `secondary` `info` `success` `warning` `danger` |
 
 - An `.avatar` as the first child of an item replaces the dot and is sized to the marker.
 - A `<time>` is drawn muted on its own line. Anything else inside the item is ordinary content.

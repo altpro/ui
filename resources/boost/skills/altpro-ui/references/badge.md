@@ -7,7 +7,7 @@ Small label for status, counts and tags. Same modifier words as the button. A `<
 | Colour | `primary` `secondary` `info` `success` `warning` `danger` (`error` is an alias). No colour = neutral grey. |
 | Hue | Any Tailwind hue name, the same set the avatar takes: `red` `orange` `amber` `yellow` `lime` `green` `emerald` `teal` `cyan` `sky` `blue` `indigo` `violet` `purple` `fuchsia` `pink` `rose`. |
 | Style | `outlined`, `ghost` |
-| Size | `sm` `lg`. No size = default (1.5rem tall, 24px, the minimum for a link or button badge). |
+| Size | `xs` `sm` `lg` `xl`. No size = default (1.5rem tall, 24px, the minimum for a link or button badge, so `xs` and `sm` are for a `<span>`). |
 
 ```html
 <span class="badge success">Active</span>
