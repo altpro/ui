@@ -65,7 +65,8 @@
         <label class="{{ $type === 'switch' ? 'switch' : 'checkbox' }}"><input {{ $control->merge(['type' => 'checkbox', 'value' => '1', 'role' => $type === 'switch' ? 'switch' : null, 'id' => $id, 'name' => $name, 'aria-describedby' => $describedby, 'aria-invalid' => $invalid]) }} @checked($value)> {{ $label }}</label>
     @else
         <label for="{{ $id }}">{{ $label }}</label>
-        @php($control = $control->merge(['id' => $id, 'name' => $name, 'aria-describedby' => $describedby, 'aria-invalid' => $invalid]))
+        {{-- several files under one name need [], or PHP keeps the last --}}
+        @php($control = $control->merge(['id' => $id, 'name' => $type === 'file' && $attributes->get('multiple') ? $base.'[]' : $name, 'aria-describedby' => $describedby, 'aria-invalid' => $invalid]))
         @if ($type === 'textarea')
             <textarea {{ $control->class('input') }}>{{ $value }}</textarea>
         @elseif ($type === 'select')

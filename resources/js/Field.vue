@@ -140,7 +140,7 @@ onFormReset(root, () => props.type === "file" && file({ target: root.value.query
         </button>
       </component>
       <!-- a file input cannot take a value: it hands back the File, or an array of them when multiple -->
-      <input v-else-if="type === 'file'" class="input" type="file" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()" @change="file">
+      <input v-else-if="type === 'file'" class="input" type="file" :id="id" :name="[undefined, false].includes($attrs.multiple) ? name : `${base}[]`" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()" @change="file">
       <input v-else v-model="model" :class="type === 'range' ? 'range' : 'input'" :type="type" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()">
     </template>
     <p v-if="hasHint" class="hint" :id="`${id}-hint`"><slot name="hint">{{ hint }}</slot></p>

@@ -116,7 +116,7 @@ const control = () => {
 <template>
   <div ref="root" class="dropzone" :class="[$attrs.class, { dragging }]" @dragover.prevent="dragging = !disabled" @dragleave="dragging = false" @drop.prevent="drop">
     <label>
-      <input ref="input" v-bind="control()" type="file" :id="id" :name="name" :accept="accept" :multiple="multiple" :disabled="disabled" :aria-invalid="messages.length ? 'true' : null" :aria-describedby="describedby" @change="announcing || add($event.target.files)">
+      <input ref="input" v-bind="control()" type="file" :id="id" :name="name && multiple ? `${name.replace(/\[\]$/, '')}[]` : name" :accept="accept" :multiple="multiple" :disabled="disabled" :aria-invalid="messages.length ? 'true' : null" :aria-describedby="describedby" @change="announcing || add($event.target.files)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
       <span><strong>{{ multiple ? "Choose files" : "Choose a file" }}</strong> or drop {{ multiple ? "them" : "it" }} here</span>
       <slot />

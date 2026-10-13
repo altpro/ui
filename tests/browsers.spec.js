@@ -152,6 +152,7 @@ const bladeFields = render([
   `<x-ui::field name="published_on" type="date" now />`,
   // a Carbon, as a date cast gives, against the ISO string Inertia makes of it
   `<x-ui::field name="available_from" type="datetime-local" :value="\\Illuminate\\Support\\Carbon::create(2026, 10, 13, 9, 30)" />`,
+  `<x-ui::field name="attachments" type="file" multiple />`,
 ].map((tag) => tag.replace(" />", ` :errors="${fieldErrors}" />`)).join(""));
 
 // `now` is today in the app's timezone for Blade (UTC under Testbench) and in the browser's for Vue
@@ -177,7 +178,7 @@ test("field: the Blade and Vue components render the same markup", async ({ page
     return shape(field);
   }));
   const [blade, vue] = await Promise.all([shapes("#blade > .field"), shapes("#vue-demo > div > .field")]);
-  expect([blade.length, vue.length]).toEqual([9, 11]);
+  expect([blade.length, vue.length]).toEqual([10, 12]);
   for (const [i, shape] of blade.entries()) expect(shape, `field ${i + 1}`).toEqual(vue[i]);
   // parity would pass if both left it out, so check each one: every control an error describes is invalid
   for (const [root, count] of [["#blade", 1], ["#vue-demo", 2]]) {
@@ -185,6 +186,8 @@ test("field: the Blade and Vue components render the same markup", async ({ page
     await expect(described).toHaveCount(count);
     for (const control of await described.all()) await expect(control).toHaveAttribute("aria-invalid", "true");
   }
+  // several files under one name need [], or PHP keeps the last
+  for (const root of ["#blade", "#vue-demo"]) await expect(page.locator(`${root} input[type=file]`)).toHaveAttribute("name", "attachments[]");
 });
 });
 
@@ -536,6 +539,9 @@ test("file input: choose, list, remove, drop, reset, and accept filters dropped 
   await expect(output).toHaveText("v-model: [a.png, b.png, c.png]");
   await expect(zone.locator("li")).toHaveCount(3);
   expect(await input.evaluate((el) => [...el.files].map((f) => f.name))).toEqual(["a.png", "b.png", "c.png"]);
+  // under photos[], so PHP keeps all three rather than the last
+  expect(await input.evaluate((el) => [...new FormData(el.form)].filter(([k]) => k.startsWith("photos")).map(([k, f]) => `${k}=${f.name}`)))
+    .toEqual(["photos[]=a.png", "photos[]=b.png", "photos[]=c.png"]);
   // the browser announced c.png alone; the component announces the merged list after it
   expect(await lastChange()).toBe("a.png,b.png,c.png");
   const src = await zone.locator("li img").nth(1).getAttribute("src");

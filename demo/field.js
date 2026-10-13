@@ -10,7 +10,7 @@ createApp({
     const categories = [{ id: 1, name: "News" }, { id: 2, name: "Sport" }, { id: 3, name: "Culture" }];
     const tags = [{ id: 1, name: "Laravel", slug: "laravel" }, { id: 2, name: "Vue", slug: "vue" }, { id: 3, name: "Tailwind", slug: "tailwind" }];
     const errors = { "tags.1": ["The selected tag is invalid."], bio: ["At least 20 characters.", "Mention where you work."] };
-    const form = reactive({ email: "", category_id: categories[1], tags: [tags[0], tags[2]], price: "12.50", size: "m", extras: ["gift"], newsletter: 1, bio: "Hi", published_on: null, available_from: "2026-10-13T09:30:00.000000Z", password: "" });
+    const form = reactive({ email: "", category_id: categories[1], tags: [tags[0], tags[2]], price: "12.50", size: "m", extras: ["gift"], newsletter: 1, bio: "Hi", published_on: null, available_from: "2026-10-13T09:30:00.000000Z", attachments: [], password: "" });
     const field = (key, props) => h(Field, { modelValue: form[key], "onUpdate:modelValue": (v) => (form[key] = v), errors, ...props });
     return () => h("div", { class: "grid max-w-3xl gap-6 md:grid-cols-2" }, [
       field("email", { name: "email", type: "email", required: true, autocomplete: "email", hint: "We never share it." }),
@@ -23,6 +23,7 @@ createApp({
       field("published_on", { name: "published_on", type: "date", now: true }),
       // a datetime cast as Inertia sends it; the field keeps the part the input takes
       field("available_from", { name: "available_from", type: "datetime-local" }),
+      field("attachments", { name: "attachments", type: "file", multiple: true }),
       // Vue only, so they come after the fields the Blade parity test compares
       field("tags", { name: "tags", type: "combobox", multiple: true, options: tags, max: 2, hint: "Up to two." }),
       field("password", { name: "password", type: "password", reveal: true, autocomplete: "new-password" }),

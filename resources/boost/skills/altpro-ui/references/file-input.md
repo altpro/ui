@@ -34,7 +34,7 @@ const upload = () => form.post(`/products/${props.product.id}/photos`, { onSucce
 | `accept` `multiple` `disabled` | As on the native input. `accept` also filters dropped files; refused ones are named in an alert and left out. |
 | `errors` | A string or array for the whole field, or Laravel's errors object: `photos` shows under the zone, `photos.1` on the second file. A file's errors stay with it when another file is removed. |
 | `progress` | Array of 0 to 100 by position in v-model; `null` (or a short array) shows no bar for that file. Draws a `.progress sm`. |
-| `name` `id` | On the input. `name` also picks the errors. |
+| `name` `id` | On the input. With `multiple` the name gets `[]` (`photos[]`), so a plain post or `<Form>` sends every file rather than PHP keeping the last. `name` also picks the errors. |
 | default slot | An extra line inside the zone: limits, formats. |
 
 After mount:
