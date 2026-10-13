@@ -497,9 +497,11 @@ test("datatable: the header box selects the page, and the rest of the matches is
   await expect(dt.locator(".bulk")).toHaveCount(0);
   await expect(output).toHaveText("selection: null");
   await dt.getByRole("checkbox", { name: "Select Trail Tee" }).first().check();
+  // v-model:selection works both ways: the page sets it to null, and the ticks go
   await dt.getByRole("button", { name: "Discontinue" }).click();
   await expect(output).toHaveText("1 discontinued.");
   await expect(dt.locator("tbody input:checked")).toHaveCount(0);
+  await expect(dt.locator(".bulk")).toHaveCount(0);
 });
 
 test("datatable: hiding a column removes it from every row and survives a reload", async ({ page }) => {

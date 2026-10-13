@@ -42,6 +42,8 @@ const props = defineProps<{
   emptyMessage?: string;
   noMatchesMessage?: string;
   selectable?: boolean;
+  /** For `v-model:selection`. Setting it to null clears the ticks; to `{ mode: "ids", ids }` ticks those rows. */
+  selection?: DataTableSelection | null;
   /** The field that identifies a row, and what a selection hands over. Default `id`; selectable rows must have it. */
   rowKey?: keyof TRow & string;
   /** Server mode: the row count before any search or filter, so an empty table can say which kind of empty it is. */
@@ -165,6 +167,16 @@ const toggleAllVisible = () => {
   selectedIds.value = allVisibleSelected.value ? [] : [...visibleIds.value];
 };
 watch(selection, (value) => emit("update:selection", value));
+// and back: a parent that clears its copy after a bulk action clears the ticks. The emit above comes back here equal, and stops.
+watch(
+  () => props.selection,
+  (value) => {
+    if (value === undefined || JSON.stringify(value) === JSON.stringify(selection.value)) return;
+    allMatching.value = value?.mode === "matching";
+    selectedIds.value = value?.mode === "ids" ? [...value.ids] : allMatching.value ? [...visibleIds.value] : [];
+  },
+  { immediate: true },
+);
 // a selection describes a list; change the list and it means nothing
 watch([state.searchInput, state.filters, state.sort, state.direction, () => view.value.page], clearSelection);
 

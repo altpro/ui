@@ -48,7 +48,8 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match?, presets? }`. `default` applies when the URL says nothing. A select always offers "All". `match(row, values)` covers what a field comparison cannot. |
 | `sort`, `direction` | Default sort. Without `sort`, the first sortable column, ascending. |
 | `paginate` | Rows per page until the user picks another (10, 25, 50, 100). Default 25. |
-| `selectable` | Adds the checkbox column and the bulk bar. `@update:selection` gives `null`, `{ mode: "ids", ids }` or `{ mode: "matching", search, filters, count }`. |
+| `selectable` | Adds the checkbox column and the bulk bar. |
+| `v-model:selection` | `null`, `{ mode: "ids", ids }` or `{ mode: "matching", search, filters, count }`. Both ways: set it to `null` and the ticks clear, as the bulk bar's `clear` does. |
 | `row-key` | The field that identifies a row, and what `ids` holds. Default `id`. A selectable table throws on a row without it rather than hand over positions. |
 | `empty-message`, `no-matches-message` | "Nothing yet" and "nothing matches", which show differently: the second offers to clear the search. |
 | `unfiltered-total` | Server mode: the count before search and filters, so the table can say "filtered from" and pick the right empty message. |

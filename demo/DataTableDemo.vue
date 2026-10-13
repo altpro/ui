@@ -79,10 +79,10 @@ const done = ref("");
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Selection and bulk actions</h2>
-    <p class="text-sm muted">The header box ticks the page and no more. Once the page is ticked and more rows match, the bar offers the rest, and that selection carries the search and filters instead of ids, so the action re-runs the query on the server.</p>
-    <DataTable caption="Products under review" name="review" :columns="reviewColumns" :rows="products" :searchable="['name', 'sku', 'brand']" :paginate="10" selectable @update:selection="selection = $event">
-      <template #bulk-actions="{ count, clear }">
-        <button type="button" class="btn sm primary" @click="done = `${count} discontinued.`; clear()">Discontinue</button>
+    <p class="text-sm muted">The header box ticks the page and no more. Once the page is ticked and more rows match, the bar offers the rest, and that selection carries the search and filters instead of ids, so the action re-runs the query on the server. <code>v-model:selection</code> works both ways: Discontinue sets it to <code>null</code>, which clears the ticks.</p>
+    <DataTable caption="Products under review" name="review" :columns="reviewColumns" :rows="products" :searchable="['name', 'sku', 'brand']" :paginate="10" selectable v-model:selection="selection">
+      <template #bulk-actions="{ count }">
+        <button type="button" class="btn sm primary" @click="done = `${count} discontinued.`; selection = null">Discontinue</button>
       </template>
     </DataTable>
     <output class="block text-sm">{{ done || `selection: ${JSON.stringify(selection)}` }}</output>
