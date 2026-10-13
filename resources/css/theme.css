@@ -20,6 +20,11 @@
      --color-border is for dividers and is far lighter. */
   --color-input: light-dark(oklch(0.62 0 0), oklch(0.6 0.02 264));
   --color-ring: var(--color-primary);
+  /* shadows take this at 30-40% alpha; the backdrop sits behind a modal */
+  --color-shadow: oklch(0 0 0);
+  --color-backdrop: light-dark(oklch(0 0 0 / 0.5), oklch(0 0 0 / 0.7));
+  /* a solid fill's hover is the fill with 10% of this mixed in: darker in light, lighter in dark */
+  --color-hover-mix: light-dark(oklch(0 0 0), oklch(1 0 0));
 
   --color-primary: light-dark(oklch(0.52 0.2 262), oklch(0.73 0.15 262));
   --color-primary-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));

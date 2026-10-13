@@ -20,8 +20,8 @@
 @layer components {
   .dialog {
     --dialog-w: 32rem;
-    --dialog-shadow: 0 16px 48px -12px oklch(0 0 0 / 0.4);
-    --dialog-backdrop: light-dark(oklch(0 0 0 / 0.5), oklch(0 0 0 / 0.7));
+    --dialog-shadow: 0 16px 48px -12px color-mix(in oklab, var(--color-shadow) 40%, transparent);
+    --dialog-backdrop: var(--color-backdrop);
 
     /* Tailwind preflight zeroes dialog margins; auto is what centres it.
        A space-y-* parent would set them again, so keep the dialog out of one. */

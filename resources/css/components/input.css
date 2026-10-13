@@ -93,7 +93,7 @@
           background: var(--color-card);
           color: var(--color-card-foreground);
           font-size: var(--input-text);
-          box-shadow: 0 8px 24px -8px oklch(0 0 0 / 0.3);
+          box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent);
         }
         option {
           display: flex;
@@ -173,7 +173,7 @@
         transition: background-color 0.15s;
       }
       &:hover::file-selector-button {
-        background: color-mix(in oklab, var(--color-muted), light-dark(black, white) 10%);
+        background: color-mix(in oklab, var(--color-muted), var(--color-hover-mix) 10%);
       }
       &:disabled {
         cursor: not-allowed;

@@ -13,7 +13,7 @@
   .toaster {
     --toaster-w: 22rem;
     --toaster-gap: 0.5rem;
-    --toaster-shadow: 0 8px 24px -8px oklch(0 0 0 / 0.3);
+    --toaster-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent);
     --toast-life: 6s;
 
     position: fixed;

@@ -191,6 +191,7 @@ muted       muted-foreground
 border      input       ring
 primary     secondary  info  success  warning  danger   (each with -foreground)
 warning-accent   (warning as text, an icon or a mark on the page: darkened in light, where amber is too pale)
+shadow      backdrop    hover-mix   (shadow colour, used at 30-40% alpha; a modal's backdrop; mixed 10% into a solid fill on hover)
 red orange amber yellow lime green emerald teal cyan sky blue indigo violet purple fuchsia pink rose
             (hue fills: a tint in light, a deep shade in dark; pair with text derived from them, as .avatar does)
 ```

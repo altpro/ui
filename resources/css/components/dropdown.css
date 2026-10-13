@@ -16,7 +16,7 @@
     /* capped: a pill-radius theme should not turn a panel into an ellipse */
     --dropdown-radius: min(var(--radius), 1rem);
     --dropdown-gap: 0.25rem;
-    --dropdown-shadow: 0 8px 24px -8px oklch(0 0 0 / 0.3);
+    --dropdown-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent);
 
     position-anchor: auto;
     position-area: var(--dropdown-y) var(--dropdown-x);

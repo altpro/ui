@@ -13,7 +13,7 @@
     --btn-fg: var(--color-foreground);
     --btn-accent: var(--color-foreground);
     --btn-outline: var(--color-border);
-    --btn-hover: color-mix(in oklab, var(--btn-bg), light-dark(black, white) 10%);
+    --btn-hover: color-mix(in oklab, var(--btn-bg), var(--color-hover-mix) 10%);
     --btn-radius: var(--radius);
     --btn-h: 2.25rem;
     --btn-px: 1rem;

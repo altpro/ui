@@ -10,7 +10,7 @@
     --badge-fg: var(--color-foreground);
     --badge-accent: var(--color-foreground);
     --badge-outline: var(--color-border);
-    --badge-hover: color-mix(in oklab, var(--badge-bg), light-dark(black, white) 10%);
+    --badge-hover: color-mix(in oklab, var(--badge-bg), var(--color-hover-mix) 10%);
     --badge-radius: var(--radius);
     --badge-h: 1.5rem;
     --badge-px: 0.625rem;
