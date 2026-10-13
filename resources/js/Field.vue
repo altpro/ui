@@ -66,6 +66,8 @@ const options = computed(() => (Array.isArray(props.options)
 const group = computed(() => options.value.length > 0 && ["radio", "checkbox"].includes(props.type));
 const multi = computed(() => (props.type === "combobox" && ![undefined, false].includes(attrs.multiple)) || (group.value && props.type === "checkbox"));
 const boolean = computed(() => !group.value && ["checkbox", "switch"].includes(props.type));
+// ticked as Blade's @checked reads it, so an uncast column's 1 or "1" ticks the box; v-model would want true
+const ticked = computed(() => ![false, 0, "0", "", null, undefined].includes(model.value));
 
 // the model as option values: models become ids, and 1 matches the "1" an object key gives
 const match = (v) => options.value.find((o) => String(o.value) === String(v))?.value ?? v;
@@ -113,7 +115,7 @@ onFormReset(root, () => props.type === "file" && file({ target: root.value.query
       <legend>{{ label }}</legend>
       <label v-for="o in options" :key="o.value" :class="type"><input v-model="picked" :type="type" :name="multi ? `${base}[]` : name" :value="o.value" :aria-invalid="invalid" v-bind="control()"> {{ o.label }}</label>
     </template>
-    <label v-else-if="boolean" :class="type === 'switch' ? 'switch' : 'checkbox'"><input v-model="model" type="checkbox" value="1" :role="type === 'switch' ? 'switch' : null" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()"> {{ label }}</label>
+    <label v-else-if="boolean" :class="type === 'switch' ? 'switch' : 'checkbox'"><input :checked="ticked" type="checkbox" value="1" @change="model = $event.target.checked" :role="type === 'switch' ? 'switch' : null" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()"> {{ label }}</label>
     <template v-else-if="type === 'combobox'">
       <!-- no `for`: the trigger is named by its own aria-label, and its text is the value -->
       <label>{{ label }}</label>

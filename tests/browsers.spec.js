@@ -147,7 +147,7 @@ const bladeFields = render([
   `<x-ui::field name="price" type="number" prepend="£" step="0.01" value="12.50" />`,
   `<x-ui::field name="size" type="radio" :options="['s' => 'Small', 'm' => 'Medium', 'l' => 'Large']" value="m" />`,
   `<x-ui::field name="extras[]" type="checkbox" :options="['gift' => 'Gift wrap', 'card' => 'Card']" :value="['gift']" />`,
-  `<x-ui::field name="newsletter" type="switch" label="Send me the newsletter" :value="true" />`,
+  `<x-ui::field name="newsletter" type="switch" label="Send me the newsletter" :value="1" />`,
   `<x-ui::field name="bio" type="textarea" rows="3" value="Hi" />`,
   `<x-ui::field name="published_on" type="date" now />`,
   // a Carbon, as a date cast gives, against the ISO string Inertia makes of it
@@ -233,7 +233,10 @@ test("field: labels, hints and errors reach the control, and models go out as id
   await expect(tags).toHaveText("Laravel, Tailwind");
   await expect(tags).toHaveAccessibleDescription("Up to two. The selected tag is invalid.");
   await expect(demo.getByRole("group", { name: "Size" })).toBeVisible();
+  // the model is 1, an uncast column, which ticks the box as Blade's @checked does
   await expect(demo.getByRole("switch", { name: "Send me the newsletter" })).toBeChecked();
+  await demo.getByRole("switch", { name: "Send me the newsletter" }).uncheck();
+  await expect(output).toContainText('"newsletter":false');
 
   await demo.getByLabel("Category").selectOption("Culture");
   await expect(output).toContainText('"category_id":3');
