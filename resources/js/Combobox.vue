@@ -224,7 +224,8 @@ function keydown(e) {
     active.value = moves[e.key];
   } else if (e.key === "Enter" || (selectOnly.value && e.key === " ")) {
     e.preventDefault();
-    pick(active.value);
+    // while a search runs the results are the last query's, so a fast typist or a barcode scanner would get the wrong one
+    if (!loading.value) pick(active.value);
   } else if (selectOnly.value && char) {
     typeahead(e.key);
   }

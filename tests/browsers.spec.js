@@ -906,6 +906,24 @@ test("combobox: with src and no create, arrows and Enter on no results create no
   expect(posts).toEqual([]);
 });
 
+test("combobox: Enter while a search runs picks nothing, not the last query's first result", async ({ page }) => {
+  await page.route("**/api/suppliers**", (route) => {
+    const q = new URL(route.request().url()).searchParams.get("q");
+    route.fulfill({ json: q ? [{ value: 2, label: "Beta" }] : [{ value: 1, label: "Alpha" }, { value: 2, label: "Beta" }] });
+  });
+  await page.goto("/combobox.html");
+  const box = combobox(page, "urls"), trigger = box.getByRole("combobox", { name: "Supplier", exact: true });
+  await trigger.click();
+  await expect(box.getByRole("option")).toHaveText(["Alpha", "Beta"]);
+  // a barcode scanner: the query and Enter inside the debounce
+  await page.keyboard.type("Bet");
+  await page.keyboard.press("Enter");
+  await expect(box.getByRole("option")).toHaveText(["Beta", "Add “Bet”"]);
+  await expect(trigger).toHaveText("");
+  await page.keyboard.press("Enter");
+  await expect(trigger).toHaveText("Beta");
+});
+
 test("combobox: create sends one request for a double Enter, and none once multiple is at max", async ({ page }) => {
   let posts = 0;
   await page.route("**/api/suppliers**", async (route) => {
