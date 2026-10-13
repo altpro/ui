@@ -32,13 +32,14 @@ const form = useForm({ lines: props.order.lines });
 | `make` | Required. Returns a new row for "Add". |
 | `name` | The array's key in the errors, `lines` for `lines.0.qty`. |
 | `item` | What a row is called, default `row`. Titles read "Line 2", buttons "Add line", "Move line 2 up", "Remove line 2". |
-| `errors` | `form.errors`, or a 422 body's `errors`. `lines` itself shows under the list. |
+| `errors` | `form.errors`, or a 422 body's `errors`. `lines` itself shows under the list, every message (one in a `p`, several in a `ul`). As with Field, a string or an array is the list's own messages, shown under it, for errors you set yourself. |
+| `heading-level` | The level of the row titles, default `3`. Set it to sit one below the heading the Repeater is under: `:heading-level="4"` under an `h3`. |
 | `disabled` | `form.processing`: add, remove and move are off while saving. |
 
 After mount:
 
 - **v-model** replaced (`reset()`, a reload): rows are matched to keys by object identity. `useForm`'s `reset()` clones its defaults, so every row is new: their errors no longer show. Call `clearErrors()` with it.
-- **`errors`**: any change (a response, `setError()`, `clearErrors()`) re-reads them by position and ties them to the rows. After a move that position can be stale; see the caveat below.
+- **`errors`** (an object): any change (a response, `setError()`, `clearErrors()`) re-reads them by position and ties them to the rows. After a move that position can be stale; see the caveat below.
 - **`make`** runs on each "Add", so it can read current state (a default currency).
 - **`disabled`** applies at once to add, remove and move.
 

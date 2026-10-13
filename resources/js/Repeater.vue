@@ -5,18 +5,26 @@
   Rows are objects, edited in place. Each gets a key held here, outside the data, so `lines.0` is only a position.
   Errors are read from position whenever they change (Inertia replaces form.errors on every response; setError writes into it),
   then belong to the row's key: they move with it and go when it is removed. The slot gets them keyed by the row's current position.
+  As in Field, errors can also be a string or an array: the list's own messages, shown under it.
+  Row titles are h3 unless heading-level says otherwise.
 -->
 <script setup>
-import { nextTick, ref, toRaw, watch } from "vue";
+import { computed, nextTick, ref, toRaw, watch } from "vue";
 
 const model = defineModel({ type: Array, required: true });
 const props = defineProps({
   make: { type: Function, required: true },
   name: String,
   item: { type: String, default: "row" },
-  errors: Object,
+  headingLevel: { type: Number, default: 3 },
+  errors: [String, Array, Object],
   disabled: Boolean,
 });
+
+// as Field takes them: a string or an array is the list's own messages, an object is Laravel's errors
+const own = computed(() => typeof props.errors === "string" || Array.isArray(props.errors));
+const bag = computed(() => (own.value ? {} : props.errors ?? {}));
+const messages = computed(() => [...new Set([own.value ? props.errors : (props.name && bag.value[props.name]) ?? []].flat(Infinity))]);
 
 const keys = new WeakMap();
 let last = 0;
@@ -26,9 +34,9 @@ const keyOf = (row) => keys.get(toRaw(row)) ?? keys.set(toRaw(row), ++last).get(
 const byKey = ref({});
 // deep, so setError (which writes into the same object) is seen too.
 // ponytail: an in-place setError or a partial clearErrors after a move maps stale positions; fine while errors come from responses
-watch(() => props.errors, (errors) => {
+watch(bag, (errors) => {
   const next = {}, prefix = `${props.name}.`;
-  for (const [k, m] of Object.entries(errors ?? {})) {
+  for (const [k, m] of Object.entries(errors)) {
     const [, i, rest] = (k.startsWith(prefix) && k.slice(prefix.length).match(/^(\d+)((?:\..*)?)$/)) || [];
     const row = i && model.value[i];
     if (row) (next[keyOf(row)] ??= {})[rest] = m;
@@ -79,7 +87,7 @@ function move(i, by) {
     <ol ref="list">
       <li v-for="(row, i) in model" :key="keyOf(row)" class="card">
         <header>
-          <h3>{{ title(i) }}</h3>
+          <component :is="`h${headingLevel}`">{{ title(i) }}</component>
           <div>
             <button type="button" class="btn ghost sm" data-up :aria-label="`Move ${item} ${i + 1} up`" :disabled="disabled || i === 0" @click="move(i, -1)">
               <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12 7-7 7 7" /><path d="M12 19V5" /></svg>
@@ -95,7 +103,10 @@ function move(i, by) {
         <slot :row="row" :index="i" :errors="rowErrors(row, i)" />
       </li>
     </ol>
-    <p v-if="name && errors?.[name]" class="error">{{ [errors[name]].flat()[0] }}</p>
+    <p v-if="messages.length === 1" class="error">{{ messages[0] }}</p>
+    <ul v-else-if="messages.length" class="error">
+      <li v-for="m in messages" :key="m">{{ m }}</li>
+    </ul>
     <button ref="addButton" type="button" class="btn outlined sm" :disabled="disabled" @click="add">
       <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14" /><path d="M12 5v14" /></svg>
       Add {{ item }}

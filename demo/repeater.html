@@ -44,6 +44,15 @@ const form = useForm({ lines: props.order.lines });
     <p class="text-sm muted">Errors arrive keyed by position, <code>lines.1.qty</code>, then belong to the row: move it and they go with it, remove it and they go. An error on <code>lines</code> itself shows under the list.</p>
     <div id="repeater-errors"></div>
   </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Its own errors, deeper in the outline</h2>
+    <p class="text-sm muted"><code>errors</code> also takes a string or an array, as Field does: the list's own messages, shown under it. Row titles are <code>h3</code>; <code>heading-level</code> changes that to fit the page's outline, here <code>h4</code> under this section's <code>h3</code>.</p>
+    <h3 class="font-semibold">Gift order</h3>
+    <div id="repeater-own"></div>
+<pre>&lt;Repeater v-model="lines" item="line" :heading-level="4"
+  :errors="['Add at least two lines.', 'A gift card cannot be the only item.']" …&gt;</pre>
+  </section>
 </main>
 </div>
 <script type="module" src="demo.js"></script>

@@ -961,3 +961,16 @@ test("combobox: create sends one request for a double Enter, and none once multi
   await page.keyboard.press("Escape");
   await expect(tags.getByRole("combobox", { name: "Tags", exact: true })).toHaveText("Laravel, Vue, CSS");
 });
+
+// Repeater on repeater.html: errors take Field's shapes, and the row titles take a heading level
+test("repeater: errors as an object or an array show under the list, and heading-level sets the row titles", async ({ page }) => {
+  await page.goto("/repeater.html");
+  const errors = page.locator("#repeater-errors .repeater"), own = page.locator("#repeater-own .repeater");
+  await expect(errors.locator("> .error")).toHaveText("An order can have at most five lines.");
+  await expect(errors.getByRole("heading", { level: 3 })).toHaveText(["Line 1", "Line 2"]);
+  await expect(own.locator("> ul.error > li")).toHaveText(["Add at least two lines.", "A gift card cannot be the only item."]);
+  await expect(own.getByRole("heading", { level: 4 })).toHaveText(["Line 1"]);
+  await expect(own.getByRole("heading", { level: 3 })).toHaveCount(0);
+  // the list's own messages are not a row's
+  await expect(own.locator("[aria-invalid]")).toHaveCount(0);
+});
