@@ -432,7 +432,8 @@ export const useTableState = (options: {
     clearTimeout(searchTimer);
     searchTimer = undefined;
     searchInput.value = "";
-    apply({ search: "", filters: {} });
+    // every filter present but empty, as clearing one does: a default that matches nothing would come straight back
+    apply({ search: "", filters: Object.fromEntries(options.url().filters.map((f) => [f.key, []])) });
   };
 
   // any visit dims the table, since a server-mode visit may come from elsewhere; one that leaves the page unmounts it

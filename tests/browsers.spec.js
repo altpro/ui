@@ -449,6 +449,16 @@ test("datatable: a search that matches nothing says so in the table and offers t
   await expect(page).not.toHaveURL(/basic_search/);
 });
 
+test("datatable: Clear filters clears a default that matches nothing, rather than put it back", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Guests");
+  await expect(dt.locator("tbody td[colspan]")).toContainText("No guests on the team.");
+  await dt.getByRole("button", { name: "Clear filters" }).click();
+  await expect(page).toHaveURL(/guests_role=(&|$)/);
+  await expect(dt.getByRole("combobox", { name: "Role" })).toHaveValue("");
+  await expect(dt.getByRole("status")).toHaveText("Showing 1–7 of 7");
+});
+
 test("datatable: an empty table carries its message in one spanning cell, and every table keeps a status", async ({ page }) => {
   await page.goto("/datatable.html");
   const dt = datatable(page, "Archived team members");

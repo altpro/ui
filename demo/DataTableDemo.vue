@@ -54,6 +54,7 @@ const productFilters = [
   { key: "brand", label: "Brand", type: "multiple", options: options("Northline", "Orbit", "Acme") },
   { key: "added", label: "Added", type: "daterange", presets: true },
 ];
+const guestFilters = [{ key: "role", label: "Role", type: "select", options: options("Admin", "Editor", "Viewer", "Guest"), default: ["Guest"] }];
 
 const selection = ref(null);
 const done = ref("");
@@ -91,5 +92,7 @@ const done = ref("");
     <h2 class="text-xl font-semibold">Nothing to show</h2>
     <p class="text-sm muted">The message is the table's only row, one cell spanning every column, under the caption that names it. "Nothing yet" shows <code>empty-message</code> and the <code>#empty</code> slot; "nothing matches" shows <code>no-matches-message</code> and a button to clear. The count beneath is a <code>role="status"</code> present in every state, so a search that empties the table is announced.</p>
     <DataTable caption="Archived team members" name="archived" :columns="memberColumns" :rows="[]" empty-message="No archived members." />
+    <p class="text-sm muted">A filter's <code>default</code> can match nothing too. Clear filters clears it, as clearing that one filter would, rather than put it back.</p>
+    <DataTable caption="Guests" name="guests" :columns="memberColumns" :rows="members" :filters="guestFilters" no-matches-message="No guests on the team." />
   </section>
 </template>
