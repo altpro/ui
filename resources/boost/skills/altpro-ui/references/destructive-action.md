@@ -76,6 +76,8 @@ Route::middleware('auth')->group(function () {
 
 ```php
 // app/Http/Controllers/AccountController.php
+namespace App\Http\Controllers;
+
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

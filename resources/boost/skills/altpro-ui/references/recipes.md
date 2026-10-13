@@ -26,6 +26,8 @@ The model and tables behind all three:
 // products: id, team_id, name, sku (unique), category, price decimal(8,2), stock unsigned int, status, description text null, timestamps
 // tags: id, name; product_tag: product_id, tag_id; photos: id, product_id, name, path, timestamps
 // users: the usual columns, plus team_id and is_manager boolean
+namespace App\Models;
+
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -58,6 +60,8 @@ class Product extends Model
 
 ```php
 // app/Models/Photo.php
+namespace App\Models;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -70,8 +74,14 @@ class Photo extends Model
         return $this->belongsTo(Product::class);
     }
 }
+```
 
+```php
 // app/Models/Tag.php
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+
 class Tag extends Model
 {
     protected $fillable = ['name'];
@@ -80,6 +90,8 @@ class Tag extends Model
 
 ```php
 // app/Policies/ProductPolicy.php: Laravel finds it by the model's name
+namespace App\Policies;
+
 use App\Models\Product;
 use App\Models\User;
 
@@ -250,6 +262,8 @@ public function update(UpdateProductRequest $request, Product $product): Redirec
 
 ```php
 // app/Http/Requests/UpdateProductRequest.php
+namespace App\Http\Requests;
+
 use App\Models\Product;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -367,6 +381,8 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 
 ```php
 // app/Http/Controllers/ProductController.php (index and bulk)
+namespace App\Http\Controllers;
+
 use Altpro\Ui\TableQuery;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
@@ -567,6 +583,8 @@ const uploading = computed(() => progress.value.filter((p) => p != null).length)
 
 ```php
 // app/Http/Controllers/ProductMediaController.php
+namespace App\Http\Controllers;
+
 use App\Models\Photo;
 use App\Models\Product;
 use App\Models\Tag;
@@ -633,6 +651,8 @@ class ProductMediaController extends Controller
 
 ```php
 // app/Http/Controllers/TagController.php: the combobox's `src` and `create`
+namespace App\Http\Controllers;
+
 use App\Models\Tag;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
