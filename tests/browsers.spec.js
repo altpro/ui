@@ -590,6 +590,19 @@ test("file input: choose, list, remove, drop, reset, and accept filters dropped 
   expect(warnings).toEqual([]);
 });
 
+// the reset handler runs a task later, by which time the reset may have unmounted the component
+test("file input: a reset that unmounts it throws nothing", async ({ page }) => {
+  await page.goto("/file.html");
+  const errors = await page.evaluate(() => new Promise((resolve) => {
+    const errors = [];
+    addEventListener("error", (e) => errors.push(e.message));
+    document.querySelector("#vue-demo form").reset();
+    document.querySelector("#vue-demo").__vue_app__.unmount();
+    setTimeout(() => setTimeout(() => resolve(errors)));
+  }));
+  expect(errors).toEqual([]);
+});
+
 // Combobox: keyboard, selection, resets and the server, on the examples of combobox.html.
 const combobox = (page, section, n = 0) => page.locator(`#${section} .combobox`).nth(n);
 const submitted = (box) => box.locator("select").evaluate((s) => (s.disabled ? [] : [...s.selectedOptions].map((o) => o.value).filter(Boolean)));

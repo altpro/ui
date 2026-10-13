@@ -20,8 +20,9 @@ export function useDomModel(model, root, read) {
 
 // Runs fn once the form holding root's first control has reset.
 // Inertia fires reset after writing the inputs, the browser before, so wait either way.
+// A reset that unmounts the component empties root by then: nothing left to do.
 export function onFormReset(root, fn) {
-  const later = () => setTimeout(fn);
+  const later = () => setTimeout(() => root.value && fn());
   let form;
   onMounted(() => (form = root.value.querySelector("input, select, textarea")?.form)?.addEventListener("reset", later));
   onBeforeUnmount(() => form?.removeEventListener("reset", later));
