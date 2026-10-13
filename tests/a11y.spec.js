@@ -454,7 +454,7 @@ for (const colorScheme of ["light", "dark"]) {
     });
 
     // the list is empty at load, so axe never sees it: choose files, then show progress, a file error and a field error
-    test("file.html: the file list with progress and errors passes axe", async ({ page }) => {
+    test("file.html: the file list with progress and errors passes axe, and an invalid zone stays red on hover", async ({ page }) => {
       await page.goto("/file.html");
       const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
       await page.locator("#photos").setInputFiles([{ name: "a.png", mimeType: "image/png", buffer: png }, { name: "b.png", mimeType: "image/png", buffer: png }]);
@@ -464,6 +464,13 @@ for (const colorScheme of ["light", "dark"]) {
       await expect(page.locator("main .dropzone li .error")).toHaveCount(1);
       await page.getByRole("button", { name: "Show a field error" }).click();
       expect(summary((await axe(page).include("main .dropzone").analyze()).violations)).toEqual([]);
+      // an invalid zone stays red on hover
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const zone = page.locator("main .dropzone > label").first();
+      const danger = await page.evaluate(() => { const d = document.createElement("div"); d.style.color = "var(--color-danger)"; document.body.append(d); const c = getComputedStyle(d).color; d.remove(); return c; });
+      await expect(zone).toHaveCSS("border-top-color", danger);
+      await zone.hover();
+      await expect(zone).toHaveCSS("border-top-color", danger);
     });
 
     // the ring is on the thumb pseudo, not the input, so the shared focus test below cannot see it

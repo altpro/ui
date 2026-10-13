@@ -53,8 +53,9 @@
         width: 1.5rem;
         height: 1.5rem;
       }
+      /* the var, not border-color, so the invalid red below still wins */
       &:hover {
-        border-color: var(--color-muted-foreground);
+        --dropzone-border: var(--color-muted-foreground);
         background: color-mix(in oklab, var(--color-muted) 50%, transparent);
       }
       &:has([aria-invalid="true"], :user-invalid:not(form[novalidate] *)) {
