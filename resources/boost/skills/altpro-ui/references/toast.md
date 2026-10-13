@@ -6,12 +6,13 @@ A region fixed in a corner, in the page from load and empty. The app appends an 
 <div id="toaster" class="toaster" role="region" aria-label="Notifications" aria-live="polite"></div>
 
 <script>
-  const toast = (html, cls = "") => {
-    const el = Object.assign(document.createElement("div"), { className: `alert ${cls}`, innerHTML: html });
+  const toast = (message, cls = "") => {
+    const el = Object.assign(document.createElement("div"), { className: `alert ${cls}` });
+    el.append(Object.assign(document.createElement("p"), { textContent: message }));
     el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
     toaster.append(el);
   };
-  toast("<p>Your changes have been saved.</p>", "success");
+  toast("Your changes have been saved.", "success");
 </script>
 ```
 
