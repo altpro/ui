@@ -19,6 +19,24 @@ for (const colorScheme of ["light", "dark"]) {
   }
 }
 
+// .inverse is a style container query on the inherited --scheme: it flips relative to the nearest region, at any depth
+for (const colorScheme of ["light", "dark"]) test(`.inverse flips the scheme around it, nested and at the root, in ${colorScheme}`, async ({ page }) => {
+  await page.emulateMedia({ colorScheme });
+  await page.goto("/theme.html");
+  const flipped = colorScheme === "light" ? "dark" : "light";
+  const regions = await page.evaluate(() => {
+    document.querySelector("main").insertAdjacentHTML("beforeend", '<div class="inverse" id="flip"><div class="inverse" id="back">x</div></div>');
+    const read = (el) => ({ scheme: getComputedStyle(el).colorScheme, bg: getComputedStyle(el).backgroundColor });
+    const dark = document.querySelector("main .dark.panel"), light = dark.querySelector(".light"), inv = light.querySelector(".inverse"), again = inv.querySelector(".inverse");
+    return { dark: read(dark), light: read(light), inv: read(inv), again: read(again), body: read(document.body), flip: read(document.getElementById("flip")), back: read(document.getElementById("back")) };
+  });
+  expect(regions.inv).toEqual(regions.dark);
+  expect(regions.again).toEqual(regions.light);
+  expect(regions.flip).toEqual(regions[flipped]);
+  expect(regions.back.scheme).toBe(colorScheme);
+  expect(regions.back.bg).toBe(regions[colorScheme].bg);
+});
+
 test("native disclosure and popover interactions work", async ({ page }) => {
   await page.goto("/accordion.html");
   const disclosure = page.locator("main details").nth(1);
