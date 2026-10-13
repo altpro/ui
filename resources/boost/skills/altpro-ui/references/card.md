@@ -30,6 +30,6 @@ A bordered box on `--color-card`. Children are styled by element, so no item cla
 - More than one control in the header goes in a `.join` or a `div class="flex gap-2"`.
 - The radius is `--radius` capped at 1rem, so a pill theme does not round a card into an ellipse.
 
-Custom properties: `--card-bg --card-fg --card-border --card-radius --card-p`.
+Custom properties: `--card-bg --card-fg --card-border --card-radius --card-p`. `--card-inner` is internal: the radius inside the border, worked out from `--card-radius`; set that instead.
 
 In a `divided` card, a first-child header and last-child footer extend to the outer border and inherit its inner corners. Their contents keep the `--card-p` inset, so `bg-muted` on either section fills the edge without a padding strip. This also applies to divided dialogs.

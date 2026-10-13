@@ -70,4 +70,4 @@ watch(open, (value) => (value ? dialog.value.showModal() : dialog.value.close())
 </template>
 ```
 
-Custom properties: `--dialog-w --dialog-shadow --dialog-backdrop`, plus the card ones.
+Custom properties: `--dialog-w --dialog-shadow --dialog-backdrop`, plus the card ones. `--drawer-from` is internal: the drawer's slide-in offset, which `start` flips; use `start`, not the var.

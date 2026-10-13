@@ -51,3 +51,5 @@ After mount:
 - Removing a file moves focus to the next remove button, or back to the zone.
 - `class` lands on the `.dropzone`; every other attribute (`required`, `aria-describedby`, `form`) on the input.
 - Uploading as files are added (a CMS media library): watch v-model, send each new file, and build `progress` from your own per-file state, e.g. `photos.map((f) => percent.get(f))`.
+
+Custom properties, on the `.dropzone`: `--dropzone-border` (the dashed edge at rest; hover and invalid replace it), `--dropzone-ring` (focus and drag-over; invalid makes it danger), `--dropzone-radius` (the zone and each file row; `--radius` capped at 1rem).

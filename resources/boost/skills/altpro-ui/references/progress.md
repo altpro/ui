@@ -24,4 +24,4 @@ Native `<progress>` and `<meter>`, restyled. The browser owns the value and anno
 - Width is the container's. Use `w-48`, `max-w-md` or a grid column.
 - Works inside `.field` and `.card`; a `label class="flex justify-between"` puts the value on the right.
 
-Custom properties, shared by both: `--progress-bg --progress-fg --progress-h --progress-radius`.
+Custom properties, shared by both: `--progress-bg --progress-fg --progress-h --progress-radius`. A `.meter` adds `--progress-warn` and `--progress-danger` for its warning and danger bands; `--progress-fg` is its optimum band.
