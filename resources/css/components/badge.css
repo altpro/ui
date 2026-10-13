@@ -74,8 +74,7 @@
     &.warning {
       --badge-bg: var(--color-warning);
       --badge-fg: var(--color-warning-foreground);
-      /* amber is too light to read as text on a light page: darken it for outlined/ghost */
-      --badge-accent: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
+      --badge-accent: var(--color-warning-accent);
       --badge-outline: var(--badge-accent);
     }
     &.danger, &.error {

@@ -190,6 +190,7 @@ card        card-foreground
 muted       muted-foreground
 border      input       ring
 primary     secondary  info  success  warning  danger   (each with -foreground)
+warning-accent   (warning as text, an icon or a mark on the page: darkened in light, where amber is too pale)
 red orange amber yellow lime green emerald teal cyan sky blue indigo violet purple fuchsia pink rose
             (hue fills: a tint in light, a deep shade in dark; pair with text derived from them, as .avatar does)
 ```

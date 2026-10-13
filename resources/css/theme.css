@@ -35,6 +35,9 @@
 
   --color-warning: light-dark(oklch(0.8 0.17 80), oklch(0.82 0.17 80));
   --color-warning-foreground: oklch(0.2 0.02 80);
+  /* warning drawn on the page rather than as a fill (outlined and ghost text,
+     an icon, a bar, a dot): amber is too light on white, so light darkens it */
+  --color-warning-accent: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
 
   --color-danger: light-dark(oklch(0.55 0.22 27), oklch(0.74 0.18 27));
   --color-danger-foreground: light-dark(oklch(0.985 0 0), oklch(0.145 0 0));

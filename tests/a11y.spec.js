@@ -273,6 +273,19 @@ for (const colorScheme of ["light", "dark"]) {
       expect(await before(1, 0, "display")).toBe("none");
       expect(await before(2, 0, "backgroundColor")).toBe(await token("danger"));
       expect(await before(2, 2, "backgroundColor")).toBe(await token("success"));
+      // a dot is the only sign of its colour, so it needs 3:1 on what it sits on (WCAG 1.4.11); axe does not check pseudos
+      const low = await page.evaluate(() => {
+        const x = document.createElement("canvas").getContext("2d", { willReadFrequently: true });
+        const lum = (c) => { x.clearRect(0, 0, 1, 1); x.fillStyle = c; x.fillRect(0, 0, 1, 1); return [...x.getImageData(0, 0, 1, 1).data].slice(0, 3).map((v) => (v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4).reduce((s, v, i) => s + v * [0.2126, 0.7152, 0.0722][i], 0); };
+        return [...document.querySelectorAll("main .timeline > li:not(:has(> .avatar:first-child))")].flatMap((li) => {
+          let a = li;
+          while (getComputedStyle(a).backgroundColor === "rgba(0, 0, 0, 0)") a = a.parentElement;
+          const [d, b] = [lum(getComputedStyle(li, "::before").backgroundColor), lum(getComputedStyle(a).backgroundColor)];
+          const ratio = (Math.max(d, b) + 0.05) / (Math.min(d, b) + 0.05);
+          return ratio < 3 ? [`${li.className || "plain"} ${ratio.toFixed(2)}`] : [];
+        });
+      });
+      expect(low).toEqual([]);
       const { violations } = await axe(page).include("main .timeline").analyze();
       expect(summary(violations)).toEqual([]);
     });

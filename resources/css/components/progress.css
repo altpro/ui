@@ -24,12 +24,12 @@
     color: var(--progress-fg);
     overflow: hidden;
 
-    /* colour variants; warning is darkened on a light page as the button does */
+    /* colour variants */
     &.primary { --progress-fg: var(--color-primary); }
     &.secondary { --progress-fg: var(--color-secondary-foreground); }
     &.info { --progress-fg: var(--color-info); }
     &.success { --progress-fg: var(--color-success); }
-    &.warning { --progress-fg: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning)); }
+    &.warning { --progress-fg: var(--color-warning-accent); }
     &.danger, &.error { --progress-fg: var(--color-danger); }
 
     /* sizes */
@@ -79,7 +79,7 @@
 
   .meter {
     --progress-fg: var(--color-success);
-    --progress-warn: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
+    --progress-warn: var(--color-warning-accent);
     --progress-danger: var(--color-danger);
 
     &::-webkit-meter-bar {

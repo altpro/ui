@@ -90,8 +90,7 @@
     &.warning {
       --btn-bg: var(--color-warning);
       --btn-fg: var(--color-warning-foreground);
-      /* amber is too light to read as text on a light page: darken it for outlined/ghost */
-      --btn-accent: light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning));
+      --btn-accent: var(--color-warning-accent);
       --btn-outline: var(--btn-accent);
     }
     &.danger, &.error {

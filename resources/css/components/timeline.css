@@ -76,7 +76,7 @@
       &.primary { --timeline-dot: var(--color-primary); }
       &.info    { --timeline-dot: var(--color-info); }
       &.success { --timeline-dot: var(--color-success); }
-      &.warning { --timeline-dot: var(--color-warning); }
+      &.warning { --timeline-dot: var(--color-warning-accent); }
       &.danger, &.error { --timeline-dot: var(--color-danger); }
     }
   }
