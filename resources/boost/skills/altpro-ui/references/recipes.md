@@ -40,17 +40,23 @@ class Product extends Model
 
     protected $fillable = ['name', 'sku', 'category', 'price', 'stock', 'status', 'description'];
 
-    /** The products this user may see. The list and every bulk action start from it. */
+    /**
+     * The products this user may see. The list and every bulk action start from it.
+     *
+     * @param  Builder<Product>  $query
+     */
     public function scopeVisibleTo(Builder $query, User $user): void
     {
         $query->where('team_id', $user->team_id);
     }
 
+    /** @return BelongsToMany<Tag, $this> */
     public function tags(): BelongsToMany
     {
         return $this->belongsToMany(Tag::class);
     }
 
+    /** @return HasMany<Photo, $this> */
     public function photos(): HasMany
     {
         return $this->hasMany(Photo::class);
@@ -69,6 +75,7 @@ class Photo extends Model
 {
     protected $fillable = ['name', 'path'];
 
+    /** @return BelongsTo<Product, $this> */
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
@@ -275,6 +282,7 @@ class UpdateProductRequest extends FormRequest
         return $this->user()->can('update', $this->route('product'));
     }
 
+    /** @return array<string, mixed> */
     public function rules(): array
     {
         return [
@@ -450,7 +458,11 @@ class ProductController extends Controller
         return back();
     }
 
-    /** Declared once: DataTable's `filters` prop, and what TableQuery::filters() reads. */
+    /**
+     * Declared once: DataTable's `filters` prop, and what TableQuery::filters() reads.
+     *
+     * @return list<array<string, mixed>>
+     */
     private function filters(): array
     {
         $options = fn (array $values) => array_map(fn ($v) => ['value' => $v, 'label' => $v], $values);
@@ -461,7 +473,13 @@ class ProductController extends Controller
         ];
     }
 
-    /** What each filter means, for the index and for a bulk action over everything matching. */
+    /**
+     * What each filter means, for the index and for a bulk action over everything matching.
+     *
+     * @param  Builder<Product>  $query
+     * @param  array<string, array<int, string>>  $values
+     * @return Builder<Product>
+     */
     private function filter(Builder $query, array $values): Builder
     {
         return $query
