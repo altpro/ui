@@ -72,7 +72,7 @@ onMounted(() => {
     </div>
   </div>
 
-  <dialog id="sidebar" class="dialog drawer start w-72" closedby="any" aria-label="Menu">
+  <dialog id="sidebar" class="dialog drawer start [--dialog-w:18rem]" closedby="any" aria-label="Menu">
     <div class="flex items-center justify-between">
       <Link href="/dashboard" class="px-3 font-semibold">{{ appName }}</Link>
       <button class="btn ghost sm px-2" command="close" commandfor="sidebar" aria-label="Close menu">

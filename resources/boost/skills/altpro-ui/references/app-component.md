@@ -115,6 +115,6 @@ The rules, the same ones the library follows:
 - **Focus**: on `:focus-visible`, or `:has(:focus-visible)` when the element wraps its control, the border turns `var(--color-ring)` with a 3px outline of the ring at 50%, offset 0, as above.
 - **Contrast**, in light and dark: 4.5:1 for text on every fill, including hover and the outlined and ghost styles; 3:1 for a border or edge that shows state. A `warning` accent used as text or a border needs darkening on a light page, as `.btn` does: `light-dark(oklch(from var(--color-warning) 0.5 c h), var(--color-warning))`.
 - **Targets** are at least 24px in each direction.
-- **Native HTML first**, and no JavaScript in the CSS file. If the component needs behaviour, write a Vue component in `resources/js/Components/` that renders this markup.
+- **Native HTML first**, and no JavaScript in the CSS file. If the component needs behaviour, write a Vue component in `resources/js/components/` that renders this markup.
 
 Check it in both schemes (`data-theme="light"` and `"dark"` on `<html>`) and with `:root { --radius: 0 }` and `9999px`.

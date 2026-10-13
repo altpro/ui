@@ -64,7 +64,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
     </div>
   </div>
 
-  <dialog id="sidebar" class="dialog drawer start w-72" closedby="any" aria-label="Menu">
+  <dialog id="sidebar" class="dialog drawer start [--dialog-w:18rem]" closedby="any" aria-label="Menu">
     <div class="flex items-center justify-between">
       <a href="{{ route('dashboard') }}" class="px-3 font-semibold">{{ config('app.name') }}</a>
       <button class="btn ghost sm px-2" command="close" commandfor="sidebar" aria-label="Close menu">
@@ -114,7 +114,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
 @php($user = auth()->user())
 <div class="ms-auto">
   <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="User menu">
-    <span class="avatar sm" aria-hidden="true">{{ Str::of($user->name)->explode(' ')->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
+    <span class="avatar sm" aria-hidden="true">{{ Str::of($user->name)->explode(' ')->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->take(2)->implode('') }}</span>
   </button>
   <div id="user-menu" popover class="dropdown right w-56">
     <div class="nav">
@@ -251,7 +251,7 @@ onMounted(() => {
     </div>
   </div>
 
-  <dialog id="sidebar" class="dialog drawer start w-72" closedby="any" aria-label="Menu">
+  <dialog id="sidebar" class="dialog drawer start [--dialog-w:18rem]" closedby="any" aria-label="Menu">
     <div class="flex items-center justify-between">
       <Link href="/dashboard" class="px-3 font-semibold">{{ appName }}</Link>
       <button class="btn ghost sm px-2" command="close" commandfor="sidebar" aria-label="Close menu">

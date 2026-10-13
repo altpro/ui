@@ -10,11 +10,11 @@ Works on `<button>`, `<a>`, `<input type="submit">`.
 | Toggle | `<label class="btn outlined"><input type="checkbox"> Bold</label>`. The input is hidden over the label and the label takes the solid fill while checked. See [segmented.md](segmented.md). |
 | State | Use the native `disabled` attribute on buttons. A disabled link has no `href` and uses `role="link"` with `aria-disabled="true"`; if an app must retain its `href`, the app must also cancel activation. `loading` draws a spinner; pair it with `disabled` and `aria-busy="true"`, and keep the label (`Save`, not `Saving`): the spinner and `aria-busy` say it is working, and a stable label neither changes the button's width nor gets announced again. Focus rings appear on keyboard focus only. |
 
-Icons: put an inline SVG inside the button, sized with `size-4`. The button has `gap-2` built in.
+Icons: put a Lucide icon inside the button, `size-4` and `aria-hidden="true"`. The button has `gap-2` built in.
 
-```html
+```vue
 <button class="btn primary">
-  <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+  <Plus class="size-4" aria-hidden="true" />
   New item
 </button>
 ```

@@ -85,7 +85,7 @@ $values = TableQuery::filters($request, $filters, name: 'brands');
 $query = Brand::query()->when($values['featured'], fn ($q) => $q->where('featured', true));
 
 // closures, so a reload with `only` runs the table's query and none of the others
-return Inertia::render('Brands/Index', [
+return Inertia::render('brands/Index', [
     'brands' => fn () => TableQuery::paginate($query, $request, name: 'brands', searchable: ['name', 'slug'], sortable: ['name', 'created_at'], defaultSort: 'name'),
     'filters' => $filters,
     'unfilteredTotal' => fn () => Brand::count(),
@@ -102,6 +102,8 @@ return Inertia::render('Brands/Index', [
 - A `daterange` on a timestamp column: start inclusive, end exclusive at the start of the next day, both in the app's timezone, so the whole of the last day is in.
 
   ```php
+  use Illuminate\Support\Facades\Date;
+
   [$from, $to] = $values['placed'] + ['', ''];
   $query
       ->when($from !== '', fn ($q) => $q->where('placed_at', '>=', Date::parse($from)->startOfDay()))

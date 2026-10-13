@@ -8,7 +8,7 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
   <header>
     <hgroup><h3 id="confirm-title">Delete this project?</h3><p>This cannot be undone.</p></hgroup>
     <button class="btn ghost sm" command="close" commandfor="confirm" aria-label="Close">
-      <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+      <svg class="size-4" aria-hidden="true">…</svg>
     </button>
   </header>
   <p>Members lose access as soon as you press delete.</p>

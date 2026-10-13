@@ -65,7 +65,7 @@ const discard = () => {
         </div>
       </fieldset>
 
-      <div class="sticky bottom-0 z-10 -mx-gap flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background px-gap py-3">
+      <div class="sticky bottom-0 z-10 -mx-gap flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background px-gap py-3 print:hidden">
         <p class="me-auto text-sm" role="status">{{ form.isDirty ? "Unsaved changes" : form.recentlySuccessful ? "Saved." : "" }}</p>
         <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="discard">Discard</button>
         <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>

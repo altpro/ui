@@ -17,7 +17,7 @@ Spinner: a turning ring in `currentColor`, so `text-primary` colours it. It says
 ```html
 <span class="spinner" role="status"><span class="sr-only">Loading</span></span>
 <p class="flex items-center gap-2" role="status"><span class="spinner sm"></span>Saving changes</p>
-<button class="btn primary loading" disabled aria-busy="true">Saving</button>
+<button class="btn primary loading" disabled aria-busy="true">Save</button>
 ```
 
 | Kind | Classes |
