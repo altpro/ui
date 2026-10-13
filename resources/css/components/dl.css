@@ -21,7 +21,7 @@
     }
     & dd {
       margin: 0;
-      margin-top: 0.25rem;
+      margin-block-start: 0.25rem;
     }
 
     &.horizontal > div {
@@ -35,7 +35,7 @@
       }
       & dd {
         flex: 999 1 8rem;
-        margin-top: 0;
+        margin-block-start: 0;
       }
     }
   }
