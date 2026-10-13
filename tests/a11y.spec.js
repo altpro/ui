@@ -673,6 +673,17 @@ test("forced colours: checked and filled states still differ from their opposite
   const sort = page.locator("main [aria-label=Sort] > label");
   expect(same(await at(sort.nth(0), 0.1), await at(sort.nth(1), 0.1))).toBe(false);
 
+  await page.goto("/table.html");
+  const rows = page.locator("main tr:has(td input[aria-label^=Select])");
+  const cell = async (i) => at(rows.nth(i).locator("td").nth(2), 0.9, 0.2); // past the text
+  expect(same(await cell(0), await cell(1)), "a checked row looks unselected").toBe(false);
+  expect(same(await cell(2), await cell(1)), "an aria-selected row looks unselected").toBe(false);
+
+  // inside the edge, which forced colours draw on both
+  await page.goto("/badge.html");
+  const badge = (style) => page.locator(`main button.badge.primary${style}`).first();
+  expect(same(await at(badge(":not(.outlined, .ghost)"), 0.05), await at(badge(".outlined"), 0.05)), "a solid badge looks outlined").toBe(false);
+
   await page.goto("/progress.html");
   await page.addStyleTag({ content: "* { transition: none !important }" });
   const up = await shot(page.locator("#upload"));

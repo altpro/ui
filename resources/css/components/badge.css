@@ -128,6 +128,17 @@
       outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
       outline-offset: 0;
     }
+    /* forced colours repaint the fill as Canvas, so solid would look outlined:
+       invert it instead. Important, so no colour word brings its fill back. */
+    &:not(.outlined, .ghost) {
+      @media (forced-colors: active) {
+        forced-color-adjust: none;
+        border-color: CanvasText;
+        --badge-bg: CanvasText !important;
+        --badge-fg: Canvas !important;
+        --badge-hover: CanvasText !important;
+      }
+    }
 
     /* sizes */
     &.sm { --badge-h: 1.25rem; --badge-px: 0.5rem; }

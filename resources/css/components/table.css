@@ -66,6 +66,15 @@
     /* row backgrounds sit on the cells, see the note above */
     tbody tr:is([aria-selected="true"], :has(> :first-child input:checked)) > :is(th, td) {
       background: var(--table-selected);
+      /* forced colours repaint the tint as Canvas, and with it the only sign of the
+         selection: fill the cells with Highlight, and hand the content back */
+      @media (forced-colors: active) {
+        forced-color-adjust: none;
+        background: Highlight;
+        color: HighlightText;
+        /* forced again, the content gets Canvas backplates behind its text, so its text is CanvasText */
+        > * { forced-color-adjust: auto; color: CanvasText; }
+      }
     }
     &.striped tbody tr:nth-child(even):not([aria-selected="true"]) > :is(th, td) {
       background: var(--table-stripe);
