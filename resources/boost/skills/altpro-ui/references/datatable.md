@@ -97,7 +97,7 @@ return Inertia::render('Brands/Index', [
 ```
 
 - `sortable` is the allow-list of column keys: a sort column from the URL that is not on it falls back to `defaultSort`, so user input never reaches `order by`. List the key the column has in `columns` (`created_at` above). When that key is not the database column, map it: a column `{ key: "added" }` over rows whose `added` the controller derives from `created_at` takes `sortable: ['added' => 'created_at']`.
-- `defaultSort` and `defaultDirection` must match the component's `sort` and `direction`: a bare URL sorts by the controller's, and the header arrow shows the component's.
+- `defaultSort` and `defaultDirection` must match the component's `sort` and `direction`: a bare URL sorts by the controller's, and the header arrow shows the component's. Left out, both sort by their first sortable key, ascending: the first entry in `sortable` and the first `sortable: true` column, which agree when they come in the same order.
 - Declare the filters once and pass the same array to the page as the `filters` prop. `TableQuery::filters()` reads it the way the component writes it and returns each filter's values by key: `[]` for none, the `default` when the URL says nothing. A boolean is `['1']` when ticked. What a value means stays in the controller, as `when()` clauses.
 - A `daterange` on a timestamp column: start inclusive, end exclusive at the start of the next day, both in the app's timezone, so the whole of the last day is in.
 

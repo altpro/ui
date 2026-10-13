@@ -68,7 +68,9 @@ $orders = function (string $url): array {
     return array_map(fn (array $o): string => $o['column'].' '.$o['direction'], $query->getQuery()->orders);
 };
 $check($orders('/?sort=name&dir=desc'), ['name desc', 'brands.id desc'], 'breaks ties by the key, so a page boundary is stable');
-$check($orders('/'), ['brands.id asc'], 'orders by the key when there is no sort');
+$check($orders('/'), ['name asc', 'brands.id asc'], 'with no default sort, sorts by the first sortable key, as DataTable does');
+TableQuery::paginate($unsorted = Brand::query(), Request::create('/'));
+$check(array_column($unsorted->getQuery()->orders, 'column'), ['brands.id'], 'orders by the key when nothing is sortable');
 
 $perPage = fn (string $url): int => TableQuery::paginate(Brand::query(), Request::create($url), perPage: 2)->perPage();
 $check($perPage('/?per_page=100000'), 2, 'ignores a page size it does not offer');

@@ -39,8 +39,8 @@ final class TableQuery
     /**
      * `$sortable` takes `['name']` when the column and the parameter share a
      * name, or `['sent_at' => 'created_at']` when they do not. `$name` prefixes
-     * every parameter and matches the component's `name` prop. `$perPage`
-     * defaults to the shared default page size.
+     * every parameter and matches the component's `name` prop. `$defaultSort`
+     * defaults to the first sortable key, and `$perPage` to the shared default page size.
      *
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
@@ -93,7 +93,7 @@ final class TableQuery
      * The view the query string asks for, without the filters (see filters()),
      * plus the page size it asks for: null when that is not one on offer.
      *
-     * @param  array<int, string>  $sortable  keys a URL may sort by; any other falls back to `$defaultSort`
+     * @param  array<int, string>  $sortable  keys a URL may sort by; any other falls back to `$defaultSort`, or without one the first of these
      * @return array{search: string, sort: string, direction: 'asc'|'desc', page: int, perPage: int|null}
      */
     public static function view(
@@ -117,7 +117,8 @@ final class TableQuery
 
         return [
             'search' => trim($at('search')),
-            'sort' => in_array($sort, $sortable, true) ? $sort : ($defaultSort ?? ''),
+            // with no default, the first sortable key, as DataTable takes its first sortable column
+            'sort' => in_array($sort, $sortable, true) ? $sort : ($defaultSort ?? array_values($sortable)[0] ?? ''),
             'direction' => match ($direction) {
                 'asc', 'desc' => $direction,
                 default => $defaultDirection === 'desc' ? 'desc' : 'asc',
