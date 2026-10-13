@@ -4,7 +4,7 @@ The components the first CMS, CRM and order-management apps need are built, and 
 
 ## Before tagging v0.1.0
 
-- [ ] **The kit as the real consumer**: build it against this repo as a path repository. Its CI covers install, Boost discovery, the type check and the build, so this repo needs no consumer fixture of its own. The recipes' list, bulk and upload controllers still only run against `demo/app/server.js`. Try each once in an app made from the kit (list and search, an invalid save, a successful save, an upload) before the first real app relies on them. The DataTable `paginate` prop is now `per-page`, and TableQuery sorts by the first sortable key when no `defaultSort` is given; check the kit's tables for both.
+- [x] **The kit as the real consumer** (13 October 2026): it builds and passes CI against this repo as a path repository. List and search, an invalid save, a successful save, an upload and a bulk archive all worked in an app made from the kit. The recipe PHP needed PHPDoc for Larastan (07f8d75). A path repository symlinks `vendor/altpro/ui`, so Vite bundled a second Inertia from `../ui/node_modules`; the kit dedupes `@inertiajs/vue3` until it installs from GitHub. The kit has no tables yet, so the `per-page` rename and default sort wait for its first one. Not tried: creating tags through the combobox.
 - [ ] **Date the changelog**: `CHANGELOG.md` says "0.1.0 (unreleased)".
 - [ ] **Tag `v0.1.0`** once the kit installs and builds clean. The kit then pins `^0.1`.
 

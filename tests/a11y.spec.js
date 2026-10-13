@@ -170,10 +170,12 @@ for (const colorScheme of ["light", "dark"]) {
         await t.evaluate((el) => el.remove());
       }
       expect(failures).toEqual([]);
-      // the clock runs out and the app's listener removes the toast; hover pauses it
-      await page.locator("main [data-toast]").first().evaluate((b) => { b.click(); document.querySelector("#toaster > .alert").style.setProperty("--toast-life", "0.3s"); });
+      // the clock runs out and the app's listener removes the toast; hover pauses it.
+      // Hover inside the default 6s life, then shorten it, so a slow hover under load cannot miss the toast
+      await page.locator("main [data-toast]").first().click();
       const t = page.locator("#toaster > .alert");
       await t.hover();
+      await t.evaluate((el) => el.style.setProperty("--toast-life", "0.3s"));
       await page.waitForTimeout(600);
       await expect(t).toHaveCount(1);
       await page.mouse.move(0, 0);
