@@ -21,10 +21,9 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
   await price.fill("-5");
   await expect(status).toHaveText("Unsaved changes");
   // novalidate: an emptied required field stays its normal colour until the server sends a message for it.
-  // Name has just lost focus, so end its border's transition back from the ring colour before reading it.
-  await page.addStyleTag({ content: ".input { transition: none !important }" });
+  // Name has just lost focus, so poll until its border's transition back from the ring colour ends.
   const border = (input) => input.evaluate((el) => getComputedStyle(el.closest(".input")).borderTopColor);
-  expect(await border(name)).toBe(await border(page.getByLabel("SKU", { exact: true })));
+  await expect.poll(() => border(name)).toBe(await border(page.getByLabel("SKU", { exact: true })));
   await page.getByRole("button", { name: "Save", exact: true }).click();
   // the summary lists every error and takes focus; Tab goes on to the first field
   await expect(summary).toBeFocused();
