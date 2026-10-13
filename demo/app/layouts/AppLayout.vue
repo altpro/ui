@@ -50,7 +50,6 @@ onMounted(() => {
           <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
         </Link>
       </nav>
-      <UserMenu id="user-menu" class="mt-auto" />
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -64,6 +63,7 @@ onMounted(() => {
             <Link v-else :href="crumb.href">{{ crumb.label }}</Link>
           </template>
         </nav>
+        <UserMenu class="ms-auto" />
       </header>
 
       <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap outline-none">
@@ -84,6 +84,5 @@ onMounted(() => {
         <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
       </Link>
     </nav>
-    <UserMenu id="user-menu-drawer" class="mt-auto" />
   </dialog>
 </template>

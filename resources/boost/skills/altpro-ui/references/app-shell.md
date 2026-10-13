@@ -1,10 +1,19 @@
 # App shell (pattern)
 
-The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar with a user menu at its foot, a header with a [`.breadcrumb`](breadcrumb.md), `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Copy one of the two versions below and change the links; build nothing else for it. This is the layout: the page recipes ([recipes.md](recipes.md)) and the patterns that build on them wrap themselves in this `AppLayout` and assume this root view. The welcome and sign-in pages are Blade views in a [layout of their own](#sign-in-pages), and the colour scheme switcher goes on a [settings page](#colour-scheme-setting), not in the header.
+The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar, a header with a [`.breadcrumb`](breadcrumb.md) and the user menu, `main`, and a [`.toaster`](toast.md). Utilities do the layout. Below `lg` the sidebar moves into a [`dialog drawer start`](dialog.md) behind a menu button. Start the app from one of the two versions below, with your own links in place of the sample ones.
+
+Once copied, the layout is the app's own. Moving the user menu into the sidebar, putting the nav along the top or adding a search box are all fine. When the app's layout differs from this file, follow the app's code and don't move things back to match this file. The page recipes ([recipes.md](recipes.md)) and the patterns that build on them depend only on these parts, so keep them:
+
+- the root view: `scroll-pb-20` on `<html>`, the scheme script in `<head>`, and `<div id="toaster" class="toaster top">` last in `body`;
+- `AppLayout` takes a `breadcrumb` prop, each page wraps itself in it (not a persistent layout), and on each visit to a new page it focuses `<main id="main" tabindex="-1">`;
+- `main` keeps its `p-gap` padding;
+- the skip link, landmarks and `aria-current` rules below.
+
+The welcome and sign-in pages are Blade views in a [layout of their own](#sign-in-pages), and the colour scheme switcher goes on a [settings page](#colour-scheme-setting), not in the header.
 
 - **Skip link** first in `body`: `sr-only` until focused, then a `btn primary` in the corner. It targets `<main id="main">`.
 - **Sidebar**: from `lg` an `<aside>`, sticky and full height, scrolling on its own. Below `lg` the aside is `hidden` and the same `.nav` is in the drawer. The nav is written once (a Blade partial, a Vue `v-for`) and rendered in both; only one is ever displayed, so there is one `Main` landmark at a time.
-- **User menu**: the signed-in user's name at the foot of the sidebar and the drawer (`mt-auto`), opening a [`dropdown up`](dropdown.md) with their email, Settings and Log out. It is rendered twice, like the nav, so each copy takes its own popover `id`. Log out is a POST, as Laravel's `logout` route expects.
+- **User menu**: the signed-in user's initials in an [`.avatar`](avatar.md) at the end of the header (`ms-auto`), a round ghost button labelled "User menu". It opens a [`dropdown right`](dropdown.md), lined up with the avatar's right edge, with their name and email, Settings and Log out. The header is on every screen size, so the menu is rendered once, not in the drawer. Log out is a POST, as Laravel's `logout` route expects.
 - **Print**: the sidebar and header are `print:hidden`, so a printed page is just `main`; the toaster hides itself.
 - **Drawer**: the browser opens it, traps focus, closes it on Esc and returns focus to the menu button. `closedby="any"` closes it on a tap outside. Its top row is a `div`, not a `<header>`: the drawer sits at body level, where a `header` would be a second page banner.
 - **Current link**: `aria-current="page"` on the nav link for this page or the section it is in, and on the last breadcrumb item, which is a `<span>`.
@@ -38,7 +47,6 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
     <aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex print:hidden">
       <a href="{{ route('dashboard') }}" class="flex h-11 items-center px-3 font-semibold">{{ config('app.name') }}</a>
       @include('layouts.navigation')
-      @include('layouts.user-menu', ['id' => 'user-menu'])
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -47,6 +55,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
           <x-lucide-menu class="size-4" aria-hidden="true" />
         </button>
         <nav class="breadcrumb min-w-0" aria-label="Breadcrumb">@yield('breadcrumb')</nav>
+        @include('layouts.user-menu')
       </header>
 
       <main id="main" class="flex-1 p-gap">
@@ -63,7 +72,6 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
       </button>
     </div>
     @include('layouts.navigation')
-    @include('layouts.user-menu', ['id' => 'user-menu-drawer'])
   </dialog>
 
   <div id="toaster" class="toaster top" role="region" aria-label="Notifications" aria-live="polite"></div>
@@ -100,19 +108,20 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. The 
 </nav>
 ```
 
-`resources/views/layouts/user-menu.blade.php`, included twice with its own `$id`:
+`resources/views/layouts/user-menu.blade.php`:
 
 ```blade
 @php($user = auth()->user())
-<div class="mt-auto">
-  <button type="button" class="btn ghost w-full justify-start px-2" popovertarget="{{ $id }}">
+<div class="ms-auto">
+  <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="User menu">
     <span class="avatar sm" aria-hidden="true">{{ Str::of($user->name)->explode(' ')->map(fn ($word) => mb_substr($word, 0, 1))->take(2)->implode('') }}</span>
-    <span class="min-w-0 truncate">{{ $user->name }}</span>
-    <x-lucide-chevrons-up-down class="ms-auto size-4" aria-hidden="true" />
   </button>
-  <div id="{{ $id }}" popover class="dropdown up w-56">
+  <div id="user-menu" popover class="dropdown right w-56">
     <div class="nav">
-      <p class="truncate px-3 py-2 text-sm text-muted-foreground">{{ $user->email }}</p>
+      <div class="px-3 py-2 text-sm">
+        <p class="truncate font-medium">{{ $user->name }}</p>
+        <p class="truncate text-muted-foreground">{{ $user->email }}</p>
+      </div>
       <hr>
       <a href="{{ route('settings') }}"><x-lucide-settings class="size-4" aria-hidden="true" /> Settings</a>
       <form method="POST" action="{{ route('logout') }}" class="contents">
@@ -220,7 +229,6 @@ onMounted(() => {
           <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
         </Link>
       </nav>
-      <UserMenu id="user-menu" class="mt-auto" />
     </aside>
 
     <div class="flex min-w-0 flex-1 flex-col">
@@ -234,6 +242,7 @@ onMounted(() => {
             <Link v-else :href="crumb.href">{{ crumb.label }}</Link>
           </template>
         </nav>
+        <UserMenu class="ms-auto" />
       </header>
 
       <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap outline-none">
@@ -254,7 +263,6 @@ onMounted(() => {
         <component :is="item.icon" class="size-4" aria-hidden="true" /> {{ item.label }}
       </Link>
     </nav>
-    <UserMenu id="user-menu-drawer" class="mt-auto" />
   </dialog>
 </template>
 ```
@@ -266,10 +274,7 @@ The user menu. `auth.user` is the signed-in user, which Laravel's `HandleInertia
 <script setup>
 import { computed } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
-import { ChevronsUpDown, LogOut, Settings } from "@lucide/vue";
-
-// the shell renders the menu twice, in the sidebar and in the drawer, so each copy needs its own popover id
-defineProps({ id: { type: String, required: true } });
+import { LogOut, Settings } from "@lucide/vue";
 
 // auth.user is the signed-in user, which HandleInertiaRequests shares with every page
 const user = computed(() => usePage().props.auth.user);
@@ -278,14 +283,15 @@ const initials = computed(() => user.value.name.split(" ").map((word) => word[0]
 
 <template>
   <div>
-    <button type="button" class="btn ghost w-full justify-start px-2" :popovertarget="id">
+    <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="User menu">
       <span class="avatar sm" aria-hidden="true">{{ initials }}</span>
-      <span class="min-w-0 truncate">{{ user.name }}</span>
-      <ChevronsUpDown class="ms-auto size-4" aria-hidden="true" />
     </button>
-    <div :id="id" popover class="dropdown up w-56">
+    <div id="user-menu" popover class="dropdown right w-56">
       <div class="nav">
-        <p class="truncate px-3 py-2 text-sm text-muted-foreground">{{ user.email }}</p>
+        <div class="px-3 py-2 text-sm">
+          <p class="truncate font-medium">{{ user.name }}</p>
+          <p class="truncate text-muted-foreground">{{ user.email }}</p>
+        </div>
         <hr>
         <Link href="/settings"><Settings class="size-4" aria-hidden="true" /> Settings</Link>
         <Link href="/logout" method="post" as="button" type="button"><LogOut class="size-4" aria-hidden="true" /> Log out</Link>

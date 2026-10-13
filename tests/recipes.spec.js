@@ -238,14 +238,20 @@ test("tags and photos: the combobox searches and creates on the server, and each
   await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("demo-recipes")).photos.length)).toBe(0);
 });
 
-test("user menu: the shared user's name opens a menu with their email, and Log out posts and leaves the app", async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
+test("user menu: the avatar in the header opens a menu with the shared user's name and email, and Log out posts and leaves the app", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
   await page.goto("/app/recipe-products.html");
-  const sidebar = page.locator("aside");
-  await sidebar.getByRole("button", { name: "Sam Taylor" }).click();
+  const avatar = page.locator("header").getByRole("button", { name: "User menu" });
+  await expect(avatar).toHaveText("ST");
+  await avatar.click();
   const menu = page.locator("#user-menu");
   await expect(menu).toBeVisible();
+  await expect(menu).toContainText("Sam Taylor");
   await expect(menu).toContainText("sam@forma.test");
+  // lined up with the avatar's right edge, and on screen on a phone
+  const [a, m] = [await avatar.boundingBox(), await menu.boundingBox()];
+  expect(Math.abs(a.x + a.width - (m.x + m.width))).toBeLessThan(1);
+  expect(m.x).toBeGreaterThanOrEqual(0);
   await menu.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(/\/(index\.html)?$/);
 });
