@@ -2,13 +2,13 @@
 
 Three screens built from the documented components, each with the Vue page, the controller, the routes and what every endpoint returns. Copy them and rename. They share one `Product` model, so together they are a small products area: a list, an edit form, and a tags-and-photos page.
 
-| Recipe | Chains | Demo page |
+| Recipe | Chains | Demo page, in the altpro/ui repository |
 |--------|--------|-----------|
 | [1. Edit page](#1-edit-page) | breadcrumb, record header, `Field`s, save bar; defaults, server errors, save, discard | `demo/app/recipe-product.html` |
 | [2. List page](#2-list-page) | breadcrumb, record header, server-mode `DataTable` with filters, `only` and a bulk action | `demo/app/recipe-products.html` |
 | [3. Tags and photos](#3-tags-and-photos) | `Combobox` with `src` and `create` endpoints; `FileInput` uploading each file with progress | `demo/app/recipe-media.html` |
 
-The demo pages run this Vue code as written against a stand-in for the server; `tests/recipes.spec.js` drives them. Run `npm run dev` in the altpro/ui repository and open them under Application.
+The demo pages run this Vue code as written against a stand-in for the server, and `tests/recipes.spec.js` drives them; both are in the altpro/ui repository, not in the installed package. Run `npm run dev` there and open them under Application.
 
 ## What the recipes assume
 

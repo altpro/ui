@@ -1,6 +1,6 @@
 # Validation failure (pattern)
 
-No class. What a form does when the server sends back errors: an error summary at the top of the form, announced and focused, and each [`Field`](field.md) showing its own message. And where focus goes after an Inertia visit, which the [app shell](app-shell.md) handles. The edit page in [recipes.md](recipes.md) is this pattern in full; `demo/app/recipe-product.html` runs it.
+No class. What a form does when the server sends back errors: an error summary at the top of the form, announced and focused, and each [`Field`](field.md) showing its own message. And where focus goes after an Inertia visit, which the [app shell](app-shell.md) handles. The edit page in [recipes.md](recipes.md) is this pattern in full; `demo/app/recipe-product.html` in the altpro/ui repository runs it.
 
 ```vue
 <script setup>

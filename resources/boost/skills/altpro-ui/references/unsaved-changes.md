@@ -1,6 +1,6 @@
 # Unsaved changes (pattern)
 
-No class. Asks before the user leaves a form with changes they have not saved: Inertia's `router.on("before")` for visits inside the app, and `beforeunload` for a reload, a closed tab or a typed URL. It goes with the [save bar](save-bar.md), whose status line already says "Unsaved changes" while `form.isDirty`. The edit page in [recipes.md](recipes.md) uses it, and `demo/app/recipe-product.html` runs it.
+No class. Asks before the user leaves a form with changes they have not saved: Inertia's `router.on("before")` for visits inside the app, and `beforeunload` for a reload, a closed tab or a typed URL. It goes with the [save bar](save-bar.md), whose status line already says "Unsaved changes" while `form.isDirty`. The edit page in [recipes.md](recipes.md) uses it, and `demo/app/recipe-product.html` in the altpro/ui repository runs it.
 
 A composable the app keeps once:
 

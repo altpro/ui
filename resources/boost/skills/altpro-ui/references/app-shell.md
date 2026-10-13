@@ -24,7 +24,7 @@ The welcome and sign-in pages are Blade views in a [layout of their own](#sign-i
 
 Icons are Lucide, `size-4` with `aria-hidden="true"`. Blade uses `mallardduck/blade-lucide-icons` 2.x: `<x-lucide-{name}>`, where `{name}` is the kebab-case name on lucide.dev (`<x-lucide-shopping-cart>`). Vue uses `@lucide/vue` (not the deprecated `lucide-vue-next`): PascalCase exports, `import { ShoppingCart } from "@lucide/vue"`.
 
-Change the drawer breakpoint by changing every `lg:` in the shell together. The demo page `demo/app/shell.html` is the Blade markup rendered as plain HTML; the recipe pages (`demo/app/recipe-*.html`) are the Inertia root view, and run the `AppLayout` below as it is written here.
+Change the drawer breakpoint by changing every `lg:` in the shell together. In the altpro/ui repository, the demo page `demo/app/shell.html` is the Blade markup rendered as plain HTML; the recipe pages (`demo/app/recipe-*.html`) are the Inertia root view, and run the `AppLayout` below as it is written here.
 
 ## Blade
 

@@ -1,6 +1,6 @@
 # Destructive action (pattern)
 
-No class. A delete that cannot be undone asks first, in a [`.dialog`](dialog.md): the trigger opens it, the dialog's button sends `useForm().delete`, and while that runs the button shows it is busy. A 422 (a wrong password) keeps the dialog open with the error under its field; success closes it, and the browser returns focus to the trigger. Below is deleting your own account, confirmed with your password, as a settings page; `demo/app/recipe-settings.html` runs it (the demo user's password is `password`).
+No class. A delete that cannot be undone asks first, in a [`.dialog`](dialog.md): the trigger opens it, the dialog's button sends `useForm().delete`, and while that runs the button shows it is busy. A 422 (a wrong password) keeps the dialog open with the error under its field; success closes it, and the browser returns focus to the trigger. Below is deleting your own account, confirmed with your password, as a settings page; `demo/app/recipe-settings.html` in the altpro/ui repository runs it (the demo user's password is `password`).
 
 ```vue
 <!-- resources/js/pages/settings/Account.vue -->
