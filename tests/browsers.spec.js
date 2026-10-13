@@ -150,6 +150,8 @@ const bladeFields = render([
   `<x-ui::field name="newsletter" type="switch" label="Send me the newsletter" :value="true" />`,
   `<x-ui::field name="bio" type="textarea" rows="3" value="Hi" />`,
   `<x-ui::field name="published_on" type="date" now />`,
+  // a Carbon, as a date cast gives, against the ISO string Inertia makes of it
+  `<x-ui::field name="available_from" type="datetime-local" :value="\\Illuminate\\Support\\Carbon::create(2026, 10, 13, 9, 30)" />`,
 ].map((tag) => tag.replace(" />", ` :errors="${fieldErrors}" />`)).join(""));
 
 // `now` is today in the app's timezone for Blade (UTC under Testbench) and in the browser's for Vue
@@ -175,7 +177,7 @@ test("field: the Blade and Vue components render the same markup", async ({ page
     return shape(field);
   }));
   const [blade, vue] = await Promise.all([shapes("#blade > .field"), shapes("#vue-demo > div > .field")]);
-  expect([blade.length, vue.length]).toEqual([8, 10]);
+  expect([blade.length, vue.length]).toEqual([9, 11]);
   for (const [i, shape] of blade.entries()) expect(shape, `field ${i + 1}`).toEqual(vue[i]);
   // parity would pass if both left it out, so check each one: every control an error describes is invalid
   for (const [root, count] of [["#blade", 1], ["#vue-demo", 2]]) {
@@ -247,6 +249,8 @@ test("field: labels, hints and errors reach the control, and models go out as id
   const today = await page.evaluate(() => new Date().toLocaleDateString("sv"));
   await expect(demo.getByLabel("Published on")).toHaveValue(today);
   await expect(output).toContainText(`"published_on":"${today}"`);
+  // Inertia's ISO string is trimmed in the model too, so saving sends what the input shows
+  await expect(output).toContainText('"available_from":"2026-10-13T09:30"');
 });
 
 test("field: inside Inertia's <Form>, reset() sticks when the fields render again", async ({ page }) => {

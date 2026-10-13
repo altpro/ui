@@ -8,6 +8,7 @@
   Without v-model (Inertia's <Form>), `value` is the starting value and the inputs are the truth.
   `reveal` on a password adds a button that shows and hides it. Vue only: the Blade field has no twin for it.
   `now` fills an empty date, time, datetime-local or month with the current one, in the browser's timezone, and emits it.
+  On those types an ISO string (Inertia's 2026-10-13T09:30:00.000000Z) is trimmed to what the input takes, in v-model too.
   Errors take a string, an array, or Laravel's errors object (Inertia's, or a 422 body's `errors`).
   `class` lands on the .field, every other attribute on the control.
 -->
@@ -52,6 +53,10 @@ if (props.now && (model.value == null || model.value === "")) {
   const value = { date, time, month: date.slice(0, 7), "datetime-local": `${date}T${time}` }[props.type];
   if (value) model.value = value;
 }
+// Inertia sends a date cast as 2026-10-13T09:30:00.000000Z, which a date input rejects: keep the part the type takes,
+// as the Blade field formats a Carbon. A watch, as useForm's reset() puts the default string back.
+const iso = { date: [0, 10], month: [0, 7], "datetime-local": [0, 16], time: [11, 16] };
+watch(model, (v) => iso[props.type] && /^\d{4}-\d\d-\d\dT\d\d:\d\d:/.test(v) && (model.value = v.slice(...iso[props.type])), { immediate: true });
 
 const isObject = (v) => v !== null && typeof v === "object";
 const toId = (v) => (isObject(v) ? v.id ?? v.value : v);

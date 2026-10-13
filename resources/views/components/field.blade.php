@@ -6,7 +6,7 @@
     A label, a control and its hint and errors, tied together by generated ids.
     The label defaults to the name: category_id and post[categoryId] both read "Category".
     Options take value => label, a list of strings, or models and arrays with id and name.
-    The value takes old input first, and models are reduced to their ids.
+    The value takes old input first, and models are reduced to their ids. A date on a date-type input is formatted for it.
     `now` fills an empty date, time, datetime-local or month with the current one, in the app's timezone.
     Errors default to the page's $errors; a string, an array or another MessageBag also works.
     `class` lands on the .field, every other attribute on the control.
@@ -38,10 +38,14 @@
     if ($now && blank($value) && isset($formats[$type])) {
         $value = now()->format($formats[$type]);
     }
+    // a date cast is a Carbon, which would print as Y-m-d H:i:s, and a date input takes none of that
+    if ($value instanceof DateTimeInterface && isset($formats[$type])) {
+        $value = $value->format($formats[$type]);
+    }
     if ($options) {
         $value = $multi ? collect($value)->map($toId)->all() : $toId($value);
+        $picked = array_map('strval', (array) $value);
     }
-    $picked = array_map('strval', (array) $value);
 
     $errors = $errors instanceof ViewErrorBag ? $errors->getBag($bag) : $errors;
     $errors = $errors instanceof MessageBag ? $errors->toArray() : (array) $errors;

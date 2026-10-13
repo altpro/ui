@@ -63,14 +63,14 @@ const form = useForm({ category_id: props.post.category_id, tags: props.post.tag
 | `prepend` / `append` | Text inside the input's border (`£`, `kg`). A slot goes in as written, for a select or an icon. Inputs only. | Same; `#prepend` / `#append` slots. |
 | `reveal` | None: showing a password needs JavaScript. | On a `password`: an eye button inside the border that shows and hides it (`aria-pressed`). `<Field name="password" type="password" reveal autocomplete="current-password" />` |
 | `options` | `value => label`, a list of strings (value is the string), or a collection of models or arrays: value from `id` (else `value`), label from `name` (else `label`). | `[{ value, label }]`, `{ value: label }`, strings, or models as above. |
-| `value` / `v-model` | Current value. `old()` wins automatically. A model or collection of models becomes its ids. | `v-model` with `useForm`; models are handed straight back as ids. `value` without v-model, in Inertia's `<Form>`. `type="number"` emits a number, `file` a `File` (an array when `multiple`). |
+| `value` / `v-model` | Current value. `old()` wins automatically. A model or collection of models becomes its ids. A date (a Carbon from a `date` or `datetime` cast) is formatted for a `date`, `time`, `datetime-local` or `month` input. | `v-model` with `useForm`; models are handed straight back as ids. `value` without v-model, in Inertia's `<Form>`. `type="number"` emits a number, `file` a `File` (an array when `multiple`). On those four date types, the ISO string Inertia makes of a cast (`2026-10-13T09:30:00.000000Z`) is trimmed to what the input takes (`2026-10-13`, `09:30`…), in v-model too. |
 | `errors` | Defaults to the page's `$errors`. Also takes a `MessageBag`, an array keyed by field (`tags.0` counts for `tags`), or a string or list for this field. `bag` picks a named error bag. | A string, an array, or Laravel's errors object keyed by field: Inertia's `form.errors`, or a 422 body's `errors`. |
 | `id` | Generated when left off. | Same. |
 | `now` | On a `date`, `time`, `datetime-local` or `month`, an empty value becomes the current one, in the app's timezone. | Same, in the browser's timezone; the value goes into v-model too. |
 
 After mount (Vue):
 
-- **v-model** changes: the control follows. A model or list of models is turned into ids again, so `useForm`'s `reset()` putting default models back submits ids too.
+- **v-model** changes: the control follows. A model or list of models is turned into ids again, so `useForm`'s `reset()` putting default models back submits ids too. An ISO date string is trimmed again, the same way.
 - **`value`** is read once, when there is no v-model. Changing it later does nothing; the inputs are the truth.
 - **`now`** fills an empty date once, at mount. A later `reset()` to an empty default leaves it empty.
 - **`options`** change: the list re-renders and the value is matched to the new options (`1` matches `"1"`). A value missing from the new options stays in the model; a select then shows no option chosen.
@@ -81,12 +81,13 @@ After mount (Vue):
 - `placeholder` on a select adds an empty first option, so `required` works on it.
 - After a failed submit, an unticked box or checkbox group stays empty rather than falling back to `value`, since the browser sends nothing for it.
 - Errors set `aria-invalid` and turn the control red; one shows as a `<p class="error">`, several as a `<ul>`.
+- A trimmed ISO string is the time in UTC, as Laravel serialises dates, so Blade and Vue show the same value when the app's timezone is UTC, Laravel's default. With another timezone (a `date` cast in London then arrives a day early all summer), give the cast a format: `'starts_at' => 'datetime:Y-m-d\TH:i'` (`'date:Y-m-d'` for a date) serialises in the app's timezone, and the field reads it as written.
 - A single checkbox or switch submits `1`, which Laravel's `boolean` rule accepts. Unticked, it submits nothing: read it with `$request->boolean('name')`.
 - A one-time code (two-factor, email confirmation) is a plain text field, so a pasted code and the phone's suggested code both work: `<Field name="code" label="Authentication code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" pattern="[0-9]*" />`. Don't split it into one box per digit.
 - `autofocus` works on the first page load and in a dialog opened with `showModal()`. After an Inertia visit, browsers ignore it: focus the field from the page's `onMounted`. On a Blade page every visit is a page load, so `:autofocus` works, as the sign-in pages in [app-shell.md](app-shell.md) use it.
 
 Inertia, Vue:
 
-- `useForm`: `<Field v-model="form.title" name="title" :errors="form.errors" />`. Model ids and `now` are written into the form after `useForm` took its defaults, so `isDirty` starts true. Call `onMounted(() => form.defaults())` if you show it.
+- `useForm`: `<Field v-model="form.title" name="title" :errors="form.errors" />`. Model ids, trimmed dates and `now` are written into the form after `useForm` took its defaults, so `isDirty` starts true. Call `onMounted(() => form.defaults())` if you show it.
 - `<Form>`: no v-model. Give the start as `value` and pass the slot's `errors`: `<Form #default="{ errors }"><Field name="title" :value="post.title" :errors="errors" /></Form>`. Values come from the inputs, so every field needs a `name`. `reset()` and `reset("field")` work, including the combobox.
 - Precognition: listeners land on the control, so `@change="form.validate('title')"` works. On a combobox they land on the wrapper: use `@change` or `@focusout`, since `blur` does not bubble.
