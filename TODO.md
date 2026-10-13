@@ -6,7 +6,8 @@ The components the first CMS, CRM and order-management apps need are built, and 
 
 - [x] **The kit as the real consumer** (13 October 2026): it builds and passes CI against this repo as a path repository. List and search, an invalid save, a successful save, an upload and a bulk archive all worked in an app made from the kit. The recipe PHP needed PHPDoc for Larastan (07f8d75). A path repository symlinks `vendor/altpro/ui`, so Vite bundled a second Inertia from `../ui/node_modules`; the kit dedupes `@inertiajs/vue3` until it installs from GitHub. The kit has no tables yet, so the `per-page` rename and default sort wait for its first one. Not tried: creating tags through the combobox.
 - [x] **Date the changelog** and **tag `v0.1.0`** (13 October 2026).
-- [ ] **Switch the kit to the GitHub repository** and pin `^0.1`. Its CI needs a secret that can read this private repo. The `dedupe` line in its `vite.config.ts` can go then.
+- [x] **Switch the kit to the GitHub repository** at `^0.1` (kit 17c0a69), and drop its `dedupe` line.
+- [ ] **The kit's `ALTPRO_UI_TOKEN` secret**: a fine-grained token with read access to this repo's contents. The kit's CI fails at `composer setup` until it is set.
 
 ## When an app asks
 
