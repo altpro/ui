@@ -486,6 +486,29 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
+    // a joined member's start border is the divider until focus turns it to the ring, like the other three sides
+    for (const p of ["join.html", "segmented.html", "field.html", "pagination.html"]) test(`${p}: a focused member of a .join rings its whole border`, async ({ page }) => {
+      await page.goto("/" + p);
+      await page.addStyleTag({ content: "* { transition: none !important }" });
+      const members = page.locator("main .join > :not(:first-child)");
+      const wrong = [];
+      let checked = 0;
+      for (let i = 0; i < (await members.count()); i++) {
+        const m = members.nth(i);
+        const target = m.locator("xpath=self::*[self::button or self::a[@href] or self::input or self::select] | .//*[self::button or self::a[@href] or self::input or self::select]").first();
+        if (!(await m.isVisible()) || !(await target.count()) || (await target.isDisabled().catch(() => false))) continue;
+        await target.focus();
+        const sides = await m.evaluate((el) => {
+          const s = getComputedStyle(el);
+          return el.matches(":focus-visible, :has(:focus-visible)") && s.outlineStyle !== "none" ? [s.borderLeftColor, s.borderTopColor] : null;
+        });
+        if (sides) checked++;
+        if (sides && sides[0] !== sides[1]) wrong.push(`${(await m.evaluate((el) => el.outerHTML)).slice(0, 80)}: start ${sides[0]}, top ${sides[1]}`);
+      }
+      expect(wrong).toEqual([]);
+      expect(checked).toBeGreaterThan(0);
+    });
+
     // an empty control is known only by its edge, which needs 3:1 on whatever it sits on (WCAG 1.4.11); axe does not check it.
     // Paint the backgrounds behind it, then the border, on a canvas: it composites translucent fills for us.
     for (const p of ["field.html", "check.html", "file.html", "combobox.html", "join.html", "table.html", "datatable.html"]) test(`${p}: control borders reach 3:1`, async ({ page }) => {
@@ -531,6 +554,7 @@ for (const colorScheme of ["light", "dark"]) {
 
     test(`${p}: keyboard focus shows a ring`, async ({ page }) => {
       await page.goto("/" + p);
+      await page.addStyleTag({ content: "* { transition: none !important }" });
       for (let i = 0; i < 60; i++) {
         await page.keyboard.press("Tab");
         if (await page.evaluate((cls) => document.activeElement.closest("main " + cls), cls)) break;
@@ -539,11 +563,16 @@ for (const colorScheme of ["light", "dark"]) {
       const outline = await page.evaluate((cls) => {
         const el = document.activeElement.closest("main " + cls);
         const s = getComputedStyle(el ?? document.activeElement);
-        return { matches: !!el, style: s.outlineStyle, width: parseFloat(s.outlineWidth) };
+        const rgb = (c) => { const x = document.createElement("canvas").getContext("2d"); x.fillStyle = c; x.fillRect(0, 0, 1, 1); return [...x.getImageData(0, 0, 1, 1).data].slice(0, 3); };
+        // a bordered control turns every side of its border to the ring colour (the ring is it at half opacity, so compare rgb)
+        const ring = rgb(s.outlineColor);
+        const border = parseFloat(s.borderTopWidth) ? ["Top", "Right", "Bottom", "Left"].filter((side) => rgb(s[`border${side}Color`]).some((v, i) => Math.abs(v - ring[i]) > 3)) : [];
+        return { matches: !!el, style: s.outlineStyle, width: parseFloat(s.outlineWidth), border };
       }, cls);
       expect(outline.matches).toBe(true);
       expect(outline.style).not.toBe("none");
       expect(outline.width).toBeGreaterThanOrEqual(2);
+      expect(outline.border, "border sides not in the ring colour").toEqual([]);
     });
 
     // the invalid ring is a colour change only, so check it is also 2px and red

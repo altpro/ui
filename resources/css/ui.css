@@ -5,8 +5,9 @@
 */
 @import "./theme.css";
 @import "./scheme.css";
-@import "./components/button.css";
+/* join first: its child rules tie with a member's focus border, and the member must win */
 @import "./components/join.css";
+@import "./components/button.css";
 @import "./components/input.css";
 @import "./components/field.css";
 @import "./components/dropzone.css";
