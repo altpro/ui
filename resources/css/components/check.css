@@ -100,53 +100,54 @@
         }
       }
     }
-  }
 
-  .checkbox:is(input), .checkbox > input {
-    &::before {
-      mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>') center / contain no-repeat;
+    /* the kinds. :where() adds nothing, so each rule weighs what its bare
+       class would (.switch > input), and the checked and invalid rules
+       above still beat it */
+    &:where(.checkbox):is(input), &:where(.checkbox) > input {
+      &::before {
+        mask: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>') center / contain no-repeat;
+      }
+      &:indeterminate::before {
+        mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>');
+      }
     }
-    &:indeterminate::before {
-      mask-image: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="black" stroke-width="3" stroke-linecap="round"><path d="M5 12h14"/></svg>');
-    }
-  }
 
-  .radio:is(input), .radio > input {
-    --check-radius: 50%;
-    &::before {
-      width: calc(var(--check-size) * 0.4);
-      height: calc(var(--check-size) * 0.4);
-      border-radius: 50%;
+    &:where(.radio):is(input), &:where(.radio) > input {
+      --check-radius: 50%;
+      &::before {
+        width: calc(var(--check-size) * 0.4);
+        height: calc(var(--check-size) * 0.4);
+        border-radius: 50%;
+      }
     }
-  }
 
-  /* the track is the input, the thumb its ::before; off is muted, on is the accent */
-  .switch:is(input), .switch > input {
-    --check-radius: 9999px;
-    --check-border: var(--color-muted-foreground);
-    width: calc(var(--check-size) * 1.75);
-    padding: 2px;
-    justify-content: start;
-    background: var(--color-muted-foreground);
+    /* the track is the input, the thumb its ::before; off is muted, on is the accent */
+    &:where(.switch):is(input), &:where(.switch) > input {
+      --check-radius: 9999px;
+      --check-border: var(--color-muted-foreground);
+      width: calc(var(--check-size) * 1.75);
+      padding: 2px;
+      justify-content: start;
+      background: var(--color-muted-foreground);
 
-    &::before {
-      width: calc(var(--check-size) - 6px);
-      height: calc(var(--check-size) - 6px);
-      border-radius: 50%;
-      scale: 1;
-      transition: translate 0.15s;
+      &::before {
+        width: calc(var(--check-size) - 6px);
+        height: calc(var(--check-size) - 6px);
+        border-radius: 50%;
+        scale: 1;
+        transition: translate 0.15s;
+      }
+      &:checked::before {
+        translate: calc(var(--check-size) * 0.75);
+      }
+      /* the muted track is not a system colour; checked comes from the rule above */
+      @media (forced-colors: active) {
+        background: Canvas;
+      }
     }
-    &:checked::before {
-      translate: calc(var(--check-size) * 0.75);
-    }
-    /* the muted track is not a system colour; checked comes from the rule above */
-    @media (forced-colors: active) {
-      background: Canvas;
-    }
-  }
 
-  /* sizes */
-  :is(.checkbox, .radio, .switch) {
+    /* sizes */
     &.xs { --check-size: 1rem;    --check-text: var(--text-xs, 0.75rem); }
     &.sm { --check-size: 1.25rem; }
     &.lg { --check-size: 1.75rem; --check-text: var(--text-base, 1rem); }
