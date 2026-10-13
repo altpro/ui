@@ -52,18 +52,22 @@ The same rules apply when the page uses `<Form>` rather than `useForm`, as Larav
 ```vue
 <script setup>
 import { nextTick } from "vue";
-import { Form } from "@inertiajs/vue3";
+import { Form, usePage } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
+
+const user = usePage().props.auth.user;
 
 // two fields, so no summary: a failed submit focuses the first field the server marked invalid
 const focusFirstInvalid = () => nextTick(() => document.querySelector('[aria-invalid="true"]')?.focus());
 </script>
 
 <template>
-  <Form action="/login" method="post" novalidate :reset-on-success="['password']" class="flex flex-col gap-4" @error="focusFirstInvalid" v-slot="{ errors, processing }">
-    <Field name="email" type="email" :errors="errors" required autocomplete="email" />
-    <Field name="password" type="password" :errors="errors" required autocomplete="current-password" />
-    <button class="btn primary" :class="{ loading: processing }" :disabled="processing" :aria-busy="processing">Log in</button>
+  <Form action="/settings/profile" method="patch" novalidate class="flex max-w-xl flex-col gap-4" @error="focusFirstInvalid" v-slot="{ errors, processing }">
+    <Field name="name" :value="user.name" :errors="errors" required autocomplete="name" />
+    <Field name="email" type="email" :value="user.email" :errors="errors" required autocomplete="email" />
+    <div>
+      <button class="btn primary" :class="{ loading: processing }" :disabled="processing" :aria-busy="processing">Save</button>
+    </div>
   </Form>
 </template>
 ```
