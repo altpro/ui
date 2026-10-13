@@ -32,6 +32,8 @@
     overflow: auto;
     scrollbar-width: thin;
     box-shadow: var(--dialog-shadow);
+    /* only Chromium transitions overlay; Firefox and WebKit close at once, without
+       the fade but without a jump either, so no @supports (browsers.spec.js checks) */
     transition: opacity 0.15s, scale 0.15s, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
 
     /* the cross sits on the heading's line and its padding overhangs into the card padding */

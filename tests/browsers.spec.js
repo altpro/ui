@@ -53,6 +53,25 @@ test("native disclosure and popover interactions work", async ({ page }) => {
 });
 
 // a branch that is a page: the link navigates without toggling, the summary over its gutter toggles from mouse and keyboard
+// the exit fade keeps the dialog in the top layer through `overlay`, which only Chromium transitions;
+// elsewhere it must vanish at once rather than fade out of place
+test("dialog: a closing modal or drawer fades where it was, or is gone", async ({ page }) => {
+  await page.goto("/dialog.html");
+  for (const id of ["d-basic", "d-drawer"]) {
+    const r = await page.evaluate(async (id) => {
+      const d = document.getElementById(id), box = () => { const b = d.getBoundingClientRect(); return Math.round(b.y + b.height / 2); }; // the centre: the fade scales the box
+      d.style.transitionDuration = "1s";
+      d.showModal();
+      await new Promise((r) => setTimeout(r, 1200));
+      const open = box();
+      d.close();
+      await new Promise((r) => setTimeout(r, 200));
+      return { open, mid: getComputedStyle(d).display === "none" ? open : box() };
+    }, id);
+    expect(Math.abs(r.mid - r.open), id).toBeLessThanOrEqual(1);
+  }
+});
+
 test("tree: a page branch's link navigates and its 24px chevron toggles", async ({ page }) => {
   await page.goto("/tree.html");
   const li = page.locator("main .tree > li").nth(1);
