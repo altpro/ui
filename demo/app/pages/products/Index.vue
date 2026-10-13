@@ -51,7 +51,7 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
       </div>
 
       <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
-          :only="['products']" sort="name" :paginate="10" selectable
+          :only="['products']" sort="name" :per-page="10" selectable
           empty-message="No products yet." no-matches-message="No products match.">
         <template #cell-status="{ row }">
           <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>

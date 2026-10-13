@@ -32,7 +32,8 @@ const props = defineProps<{
   caption: string;
   /** Prefixes the query parameters and the stored preferences. Needed when two tables share a page. */
   name?: string;
-  paginate?: number;
+  /** Rows per page until the reader picks another; one of the page sizes on offer. */
+  perPage?: number;
   /** Keys to search. Defaults to every data column. */
   searchable?: ReadonlyArray<keyof TRow & string>;
   filters?: ReadonlyArray<DataTableFilter<TRow>>;
@@ -83,7 +84,7 @@ const state = useTableState({
 
 // page size and hidden columns are preferences, not the view: a link you send shows the rows, not your column choices.
 // They are read on mount, so a server render and the hydrating browser start from the same table.
-const preferredSize = ref(props.paginate ?? DEFAULT_PAGE_SIZE);
+const preferredSize = ref(props.perPage ?? DEFAULT_PAGE_SIZE);
 const hiddenColumns = ref<string[]>([]);
 
 const setPageSize = (size: number) => {

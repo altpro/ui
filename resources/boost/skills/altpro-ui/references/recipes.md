@@ -348,7 +348,7 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
       </div>
 
       <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
-          :only="['products']" sort="name" :paginate="10" selectable
+          :only="['products']" sort="name" :per-page="10" selectable
           empty-message="No products yet." no-matches-message="No products match.">
         <template #cell-status="{ row }">
           <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
@@ -465,7 +465,7 @@ What comes back:
 | `POST /products/bulk` with `{ action: "archive", selection: { mode: "matching", search: "", filters: { status: [], category: ["Speakers"] }, count: 5 } }` | The same, over every product the query matches now. `count` is what the table saw; the server counts again. |
 | `POST /products/bulk` from a user who is not a manager | `403`, and nothing changes. |
 
-- `defaultSort` and `perPage` match the component's `sort` and `:paginate`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`.
+- `defaultSort` and `perPage` match the component's `sort` and `:per-page`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`.
 - `selection.filters` has the shape `TableQuery::filters()` returns, so the one `filter()` serves both.
 - `onSuccess: clear` empties the selection once the server has answered. The page's new props show the archived rows; the rows that no longer match a filter drop out.
 - A destructive bulk action (delete) asks first: a `.dialog` that says how many, built as [destructive-action.md](destructive-action.md) builds one.

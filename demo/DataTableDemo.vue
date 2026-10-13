@@ -64,13 +64,13 @@ const done = ref("");
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Columns and rows</h2>
     <p class="text-sm muted">All a searchable, sortable, paged table needs. <code>caption</code> is required: it names the table, the search box and the pagination. <code>name</code> prefixes the query parameters, so two tables on a page do not share one: sort this one and the URL gains <code>basic_sort</code>.</p>
-    <DataTable caption="Team members" name="basic" :columns="memberColumns" :rows="members" :searchable="['name', 'email', 'role']" sort="name" :paginate="5" />
+    <DataTable caption="Team members" name="basic" :columns="memberColumns" :rows="members" :searchable="['name', 'email', 'role']" sort="name" :per-page="5" />
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Filters and formats</h2>
     <p class="text-sm muted">Declared filters belong to the table: it keeps them in the URL, counts what they hide, and offers to clear them when nothing matches. <code>format</code> renders dates, money and booleans in the page's <code>lang</code>; a <code>#cell-&lt;key&gt;</code> slot on the same column wins.</p>
-    <DataTable caption="Products" name="products" :columns="productColumns" :rows="products" :filters="productFilters" :searchable="['name', 'sku', 'brand']" :paginate="10" empty-message="No products yet." no-matches-message="No products match the selected filters.">
+    <DataTable caption="Products" name="products" :columns="productColumns" :rows="products" :filters="productFilters" :searchable="['name', 'sku', 'brand']" :per-page="10" empty-message="No products yet." no-matches-message="No products match the selected filters.">
       <template #cell-availability="{ row }">
         <span class="badge sm" :class="row.in_stock ? 'success' : 'warning'">{{ row.in_stock ? "In stock" : "Out of stock" }}</span>
       </template>
@@ -80,7 +80,7 @@ const done = ref("");
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Selection and bulk actions</h2>
     <p class="text-sm muted">The header box ticks the page and no more. Once the page is ticked and more rows match, the bar offers the rest, and that selection carries the search and filters instead of ids, so the action re-runs the query on the server. <code>v-model:selection</code> works both ways: Discontinue sets it to <code>null</code>, which clears the ticks.</p>
-    <DataTable caption="Products under review" name="review" :columns="reviewColumns" :rows="products" :searchable="['name', 'sku', 'brand']" :paginate="10" selectable v-model:selection="selection">
+    <DataTable caption="Products under review" name="review" :columns="reviewColumns" :rows="products" :searchable="['name', 'sku', 'brand']" :per-page="10" selectable v-model:selection="selection">
       <template #bulk-actions="{ count }">
         <button type="button" class="btn sm primary" @click="done = `${count} discontinued.`; selection = null">Discontinue</button>
       </template>
