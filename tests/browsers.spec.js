@@ -518,6 +518,17 @@ test("file input: choose, list, remove, drop, reset, and accept filters dropped 
   const zone = page.locator("#vue-demo .dropzone").first(), input = page.locator("#photos"), output = page.locator("#vue-demo output").first();
   const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==", "base64");
   const file = (name) => ({ name, mimeType: "image/png", buffer: png });
+  // what the form hears: Inertia's <Form> works out dirty state from the inputs on each change event
+  await page.locator("#vue-demo form").evaluate((form) => {
+    window.changes = [];
+    form.addEventListener("change", (e) => e.target.id === "photos" && window.changes.push([...e.target.files].map((f) => f.name).join()));
+  });
+  const lastChange = () => page.evaluate(() => window.changes.at(-1));
+
+  // a file in v-model at mount is in the native input as well
+  const archived = page.locator("#vue-demo .dropzone").nth(2);
+  await expect(archived.locator("li")).toHaveText(/delivery-note.pdf/);
+  expect(await page.locator("#archived").evaluate((el) => [...el.files].map((f) => f.name))).toEqual(["delivery-note.pdf"]);
 
   // multiple: a second pick adds to the list, and the native input holds every file
   await input.setInputFiles([file("a.png"), file("b.png")]);
@@ -525,6 +536,8 @@ test("file input: choose, list, remove, drop, reset, and accept filters dropped 
   await expect(output).toHaveText("v-model: [a.png, b.png, c.png]");
   await expect(zone.locator("li")).toHaveCount(3);
   expect(await input.evaluate((el) => [...el.files].map((f) => f.name))).toEqual(["a.png", "b.png", "c.png"]);
+  // the browser announced c.png alone; the component announces the merged list after it
+  expect(await lastChange()).toBe("a.png,b.png,c.png");
   const src = await zone.locator("li img").nth(1).getAttribute("src");
   expect(src).toMatch(/^blob:/);
 
@@ -534,6 +547,7 @@ test("file input: choose, list, remove, drop, reset, and accept filters dropped 
   expect(await page.evaluate(() => window.revoked)).toEqual([src]);
   await expect(zone.getByRole("button", { name: "Remove c.png" })).toBeFocused();
   expect(await input.evaluate((el) => el.files.length)).toBe(2);
+  expect(await lastChange()).toBe("a.png,c.png");
 
   // drop: an image is added, a PDF is refused by accept="image/*" and named in an alert
   const dataTransfer = await page.evaluateHandle(() => {
@@ -548,6 +562,7 @@ test("file input: choose, list, remove, drop, reset, and accept filters dropped 
   await expect(zone).not.toHaveClass(/dragging/);
   await expect(output).toHaveText("v-model: [a.png, c.png, d.png]");
   await expect(zone.getByRole("alert")).toHaveText("Not an accepted file type: e.pdf.");
+  expect(await lastChange()).toBe("a.png,c.png,d.png");
 
   // single: a new file replaces the old one
   const contract = page.locator("#contract");
@@ -564,7 +579,6 @@ test("file input: choose, list, remove, drop, reset, and accept filters dropped 
   expect(await input.evaluate((el) => el.files.length)).toBe(0);
 
   // disabled: a drop does nothing
-  const archived = page.locator("#vue-demo .dropzone").nth(2);
   await archived.locator("label").dispatchEvent("drop", { dataTransfer });
   await expect(archived.locator("li")).toHaveCount(0);
   expect(warnings).toEqual([]);

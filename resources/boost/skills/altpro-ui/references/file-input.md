@@ -45,7 +45,7 @@ After mount:
 - **A form reset**, native or `<Form>`, empties the list and v-model even with v-model, since a file input cannot be written back. `useForm`'s `reset()` sets v-model to its default, normally `null` or `[]`.
 
 - The native input covers the zone, invisible: click, Enter or Space opens the picker, and screen readers get the browser's file button. Dropping is the extra. The zone is a `<label>`, so the input is named by it and by any `<label for>` outside.
-- The native input always holds the same files as v-model, so `required`, a plain form post and Inertia's `<Form>` work.
+- The native input always holds the same files as v-model, from mount on, so `required`, a plain form post and Inertia's `<Form>` work. After a drop, a remove, or a pick added to the list, it fires `change` on the input, so `<Form>`'s `isDirty` and `@change` listeners see the files it ends up with. Setting v-model from outside fires nothing.
 - A form reset, native or Inertia's `<Form>`, empties the list and v-model as it empties the input. Vue's `<Field type="file">` does the same.
 - Image previews are object URLs, revoked when their file is removed or the component unmounts.
 - Removing a file moves focus to the next remove button, or back to the zone.

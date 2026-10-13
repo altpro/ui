@@ -7,6 +7,8 @@ createApp({
   setup() {
     const photos = ref([]), progress = ref([]), errors = ref({});
     const contract = ref(null);
+    // a file the page already holds at mount, as a step of a wizard would, which the native input holds too
+    const archived = ref([new File(["%PDF-1.7"], "delivery-note.pdf", { type: "application/pdf" })]);
     const upload = () => {
       errors.value = {};
       progress.value = photos.value.map(() => 0);
@@ -38,7 +40,7 @@ createApp({
       ]),
       h("div", { class: "field" }, [
         h("label", { for: "archived" }, "Archived attachments"),
-        h(FileInput, { id: "archived", multiple: true, disabled: true }),
+        h(FileInput, { modelValue: archived.value, "onUpdate:modelValue": (v) => (archived.value = v), id: "archived", multiple: true, disabled: true }),
       ]),
     ]);
   },

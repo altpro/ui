@@ -3,7 +3,8 @@
   A drop zone round a native file input, and the list of chosen files with previews and remove buttons.
   It never uploads: v-model is the File (an array of them when `multiple`), and the app sends them.
   Choosing or dropping more adds to the list when `multiple`, and replaces the file when not.
-  The native input is kept holding the same files, so a plain form post, `required` and Inertia's <Form> see them.
+  The native input is kept holding the same files, so a plain form post, `required` and Inertia's <Form> see them,
+  and it fires `change` after a drop, a remove or a pick added to the list.
   `accept` filters dropped files as the picker does; the rest are named in an error and left out.
   `progress` is an array of 0 to 100 by position in v-model; null shows no bar.
   Errors take a string, an array, or Laravel's errors object: `photos` shows under the zone and `photos.1` on the
@@ -12,7 +13,7 @@
   A form reset (native or Inertia's <Form>) empties the list and v-model.
 -->
 <script setup>
-import { computed, nextTick, onBeforeUnmount, ref, shallowRef, useAttrs, useId, watch } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useAttrs, useId, watch } from "vue";
 import { onFormReset } from "./domModel.js";
 
 defineOptions({ inheritAttrs: false });
@@ -32,7 +33,12 @@ const id = computed(() => props.id ?? uid);
 const root = ref(), input = ref(), dragging = ref(false), rejected = ref([]);
 
 const files = computed(() => [model.value ?? []].flat());
-const set = (list) => (model.value = props.multiple ? list : list[0] ?? null);
+// own: the change is the component's (a pick, drop or remove), so the write announces itself
+let own = false;
+const set = (list) => {
+  own = true;
+  model.value = props.multiple ? list : list[0] ?? null;
+};
 
 // the browser's own reading of accept: extensions, exact types and type/* wildcards
 const accepts = (file) => !props.accept || props.accept.split(",").map((a) => a.trim().toLowerCase()).some((a) =>
@@ -43,7 +49,7 @@ const add = (list) => {
   rejected.value = list.filter((f) => !accepts(f)).map((f) => f.name);
   const ok = list.filter(accepts);
   if (ok.length) set(props.multiple ? [...files.value, ...ok] : ok);
-  else write(files.value); // the picker replaced the input's files with nothing usable
+  else write(files.value, true); // the picker replaced the input's files with nothing usable
 };
 const drop = (e) => {
   dragging.value = false;
@@ -56,12 +62,25 @@ const remove = async (i) => {
   (buttons[Math.min(i, buttons.length - 1)] ?? input.value).focus();
 };
 
-const write = (list) => {
+// Setting files fires no event, so after its own changes the component sends the change a pick would have,
+// for Inertia's <Form> dirty state and @change listeners. The browser's change for a pick came before the merge.
+let announcing = false;
+const write = (list, announce) => {
+  const el = input.value;
+  if (list.length === el.files.length && list.every((f, i) => f === el.files[i])) return;
   const dt = new DataTransfer();
   list.forEach((f) => dt.items.add(f));
-  input.value.files = dt.files;
+  el.files = dt.files;
+  announcing = announce;
+  if (announce) el.dispatchEvent(new Event("change", { bubbles: true }));
+  announcing = false;
 };
-watch(files, write, { flush: "post" });
+// on mount as well, so a file passed in at the start is in the input too
+onMounted(() => write(files.value));
+watch(files, (list) => {
+  write(list, own);
+  own = false;
+}, { flush: "post" });
 // a reset empties the input, so the list and v-model follow, with or without v-model
 onFormReset(root, () => {
   rejected.value = [];
@@ -97,7 +116,7 @@ const control = () => {
 <template>
   <div ref="root" class="dropzone" :class="[$attrs.class, { dragging }]" @dragover.prevent="dragging = !disabled" @dragleave="dragging = false" @drop.prevent="drop">
     <label>
-      <input ref="input" v-bind="control()" type="file" :id="id" :name="name" :accept="accept" :multiple="multiple" :disabled="disabled" :aria-invalid="messages.length ? 'true' : null" :aria-describedby="describedby" @change="add($event.target.files)">
+      <input ref="input" v-bind="control()" type="file" :id="id" :name="name" :accept="accept" :multiple="multiple" :disabled="disabled" :aria-invalid="messages.length ? 'true' : null" :aria-describedby="describedby" @change="announcing || add($event.target.files)">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v12"/><path d="m17 8-5-5-5 5"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/></svg>
       <span><strong>{{ multiple ? "Choose files" : "Choose a file" }}</strong> or drop {{ multiple ? "them" : "it" }} here</span>
       <slot />
