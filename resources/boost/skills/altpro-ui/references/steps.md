@@ -1,13 +1,13 @@
 # Steps: `.steps`
 
-An `<ol>` of numbered markers joined by a line. Put `aria-current="step"` on the current `<li>`; steps before it are drawn done (primary marker and line), the current one is bold, later ones are muted. No done or todo classes.
+An `<ol>` of numbered markers joined by a line. Each `<li>` carries its number in `data-step="1"`, `"2"` and so on; the marker shows it (CSS counters are not used, because WebKit miscounts them). Put `aria-current="step"` on the current `<li>`; steps before it are drawn done (primary marker and line), the current one is bold, later ones are muted. No done or todo classes.
 
 ```html
 <ol class="steps">
-  <li><a href="/cart">Cart</a></li>
-  <li><a href="/delivery">Delivery</a></li>
-  <li aria-current="step">Payment</li>
-  <li>Review</li>
+  <li data-step="1"><a href="/cart">Cart</a></li>
+  <li data-step="2"><a href="/delivery">Delivery</a></li>
+  <li data-step="3" aria-current="step">Payment</li>
+  <li data-step="4">Review</li>
 </ol>
 ```
 

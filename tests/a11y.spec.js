@@ -257,6 +257,8 @@ for (const colorScheme of ["light", "dark"]) {
       expect(await bg(2, "::after")).not.toBe(primary);
       expect(await bg(3, "::before")).not.toBe(primary);
       expect(await li.nth(2).evaluate((el) => getComputedStyle(el).fontWeight)).toBe("600");
+      // the number comes from the markup, not a CSS counter (WebKit miscounts those); Chromium resolves attr() here
+      expect(await li.evaluateAll((els) => els.map((el) => getComputedStyle(el, "::before").content))).toEqual(['"1"', '"2"', '"3"', '"4"']);
       const { violations } = await axe(page).include("main .steps").analyze();
       expect(summary(violations)).toEqual([]);
     });

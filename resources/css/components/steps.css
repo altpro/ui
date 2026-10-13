@@ -1,10 +1,11 @@
 /* Steps: where the user is in a sequence.
    <ol class="steps">
-     <li><a href="/cart">Cart</a></li>
-     <li aria-current="step">Delivery</li>
-     <li>Payment</li>
+     <li data-step="1"><a href="/cart">Cart</a></li>
+     <li data-step="2" aria-current="step">Delivery</li>
+     <li data-step="3">Payment</li>
    </ol>
-   Numbered markers joined by a line. Steps before the aria-current one
+   Numbered markers joined by a line. The number is the li's data-step, not
+   a CSS counter, which WebKit miscounts. Steps before the aria-current one
    are done (marker and the line after it in primary), the current one is
    bold, the rest are muted. State comes from position, so there are no
    done or todo classes. Horizontal, or `vertical` for a stacked list.
@@ -20,7 +21,6 @@
     --steps-marker: 2rem;
 
     display: flex;
-    counter-reset: step;
     margin: 0;
     padding: 0;
     list-style: none;
@@ -47,10 +47,9 @@
       align-items: center;
       gap: 0.5rem;
       text-align: center;
-      counter-increment: step;
 
       &::before {
-        content: counter(step);
+        content: attr(data-step);
         display: grid;
         place-items: center;
         flex: none;

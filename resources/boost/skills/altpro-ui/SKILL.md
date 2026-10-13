@@ -96,7 +96,7 @@ Every `<a>` that is not already a component (a `.btn`, a `.nav` or `.tabs` item 
 | `join-item` | Nothing: every direct child of `.join` is a member |
 | `modal`, `modal-box`, `modal-action` | `<dialog class="dialog">` with a `<header>` and `<footer>`, opened by `command="show-modal"` |
 | `tab`, `tab-active` | Bare `<a>` children of `.tabs`, `aria-current="page"` on the active one |
-| `step`, `step-primary` | `<li>` children of `<ol class="steps">`, `aria-current="step"` on the current one |
+| `step`, `step-primary` | `<li data-step="1">` children of `<ol class="steps">`, `aria-current="step"` on the current one |
 | `stats`, `stat-title`, `stat-value` | The [stat](references/stat.md) pattern: a `.card` of `<p>`s |
 | `input-bordered`, `select`, `textarea`, `input-error` | `class="input"` on `<input>`, `<select>` and `<textarea>`; `aria-invalid="true"` |
 | `form-control`, `label-text`, `fieldset-legend` | `.field`, or `<x-ui::field>` / `Field.vue` |
