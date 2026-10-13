@@ -6,6 +6,7 @@
   "description": "HTML + CSS component layer for Tailwind v4, with Blade and Vue components",
   "exports": {
     ".": "./resources/css/ui.css",
+    "./js/dataTable": "./resources/js/dataTable.ts",
     "./js/*": "./resources/js/*",
     "./*": "./resources/css/*"
   },
