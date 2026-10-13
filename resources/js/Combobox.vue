@@ -162,8 +162,9 @@ watch([q, remote], () => open.value && (active.value = count.value ? 0 : -1));
 
 async function add() {
   const label = q.value.trim();
-  // a second Enter while the first request runs, or a full list, would create a record that is never selected
-  if (creating.value || full.value) return;
+  // a second Enter while the first request runs, or a full list, would create a record that is never selected;
+  // pick() reaches here for any index past the results, so check the Add option is really there
+  if (!canCreate.value || creating.value || full.value) return;
   creating.value = true;
   error.value = "";
   try {
@@ -187,7 +188,7 @@ function beforetoggle(e) {
   clearTimeout(timer);
   seq++;
   [q.value, loading.value, error.value] = ["", false, ""];
-  active.value = open.value ? Math.max(0, list.value.findIndex(has)) : -1;
+  active.value = open.value && list.value.length ? Math.max(0, list.value.findIndex(has)) : -1;
   if (open.value && props.src) find(0);
 }
 const toggle = (e) => e.newState === "open" && search.value && input.value.focus();
@@ -204,9 +205,11 @@ const typeahead = (ch) => {
 function keydown(e) {
   const char = e.key.length === 1 && e.key !== " " && !e.ctrlKey && !e.metaKey && !e.altKey;
   const last = count.value - 1;
-  const moves = { ArrowDown: Math.min(active.value + 1, last), ArrowUp: Math.max(active.value - 1, 0) };
+  // with no options, last is -1 and so is every move
+  const to = (i) => Math.min(Math.max(i, 0), last);
+  const moves = { ArrowDown: to(active.value + 1), ArrowUp: to(active.value - 1) };
   // Home and End move the caret in a search box, and through the options otherwise
-  if (selectOnly.value) Object.assign(moves, { Home: 0, End: last });
+  if (selectOnly.value) Object.assign(moves, { Home: to(0), End: last });
   if (e.target === trigger.value && !open.value) {
     if (!(e.key in moves) && !(selectOnly.value && char)) return;
     e.preventDefault();

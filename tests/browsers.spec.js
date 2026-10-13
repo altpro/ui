@@ -891,6 +891,21 @@ test("combobox: src and create talk to the server with the XSRF token, drop stal
   expect([...tokens]).toEqual(["tok="]);
 });
 
+test("combobox: with src and no create, arrows and Enter on no results create nothing", async ({ page }) => {
+  const posts = [];
+  page.on("request", (req) => req.method() === "POST" && posts.push(req.url()));
+  await page.goto("/combobox.html");
+  const box = combobox(page, "server"), search = box.getByRole("combobox", { name: "Search Customer" });
+  await box.getByRole("combobox", { name: "Customer", exact: true }).click();
+  await search.fill("zzzz");
+  await expect(box.getByRole("status")).toHaveText("No results");
+  for (const key of ["ArrowUp", "ArrowDown", "ArrowUp", "Enter"]) await page.keyboard.press(key);
+  await expect(search).not.toHaveAttribute("aria-activedescendant");
+  await page.waitForTimeout(300);
+  await expect(box.getByRole("status")).toHaveText("No results");
+  expect(posts).toEqual([]);
+});
+
 test("combobox: create sends one request for a double Enter, and none once multiple is at max", async ({ page }) => {
   let posts = 0;
   await page.route("**/api/suppliers**", async (route) => {
