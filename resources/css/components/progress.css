@@ -24,6 +24,59 @@
     color: var(--progress-fg);
     overflow: hidden;
 
+    /* one vendor pseudo per rule: a list mixing -webkit- and -moz- is dropped whole by both engines */
+    &.progress {
+      &::-webkit-progress-bar {
+        background: transparent;
+      }
+      &::-webkit-progress-value {
+        border-radius: inherit;
+        background: var(--progress-fg);
+        transition: width 0.3s;
+      }
+      &::-moz-progress-bar {
+        border-radius: inherit;
+        background: var(--progress-fg);
+        transition: width 0.3s;
+      }
+      /* no value: hide the UA bar and sweep a stripe along the track */
+      &:indeterminate {
+        background: linear-gradient(to right, var(--progress-fg), var(--progress-fg)) -70% 0 / 40% 100% no-repeat var(--progress-bg);
+        animation: progress-sweep 1.5s ease-in-out infinite;
+        &::-webkit-progress-value { background: transparent; }
+        &::-moz-progress-bar { background: transparent; }
+        @media (prefers-reduced-motion: reduce) {
+          animation: none;
+          background-position: 30% 0;
+        }
+      }
+    }
+
+    /* before the colour words, which share its specificity and must win its --progress-fg */
+    &.meter {
+      --progress-fg: var(--color-success);
+      --progress-warn: var(--color-warning-accent);
+      --progress-danger: var(--color-danger);
+
+      &::-webkit-meter-bar {
+        border: 0;
+        border-radius: inherit;
+        background: transparent;
+      }
+      &::-webkit-meter-optimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+      &::-webkit-meter-suboptimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+      &::-webkit-meter-even-less-good-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+      &::-moz-meter-bar { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+
+      /* bands: the colour follows the value unless a colour word is set */
+      &:not(.primary, .secondary, .info, .success, .warning, .danger, .error) {
+        &::-webkit-meter-suboptimum-value { background: var(--progress-warn); }
+        &::-webkit-meter-even-less-good-value { background: var(--progress-danger); }
+        &:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--progress-warn); }
+        &:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--progress-danger); }
+      }
+    }
+
     /* colour variants */
     &.primary { --progress-fg: var(--color-primary); }
     &.secondary { --progress-fg: var(--color-secondary-foreground); }
@@ -46,58 +99,6 @@
       --progress-fg: Highlight !important;
       --progress-warn: Highlight !important;
       --progress-danger: Highlight !important;
-    }
-  }
-
-  /* one vendor pseudo per rule: a list mixing -webkit- and -moz- is dropped whole by both engines */
-  .progress {
-    &::-webkit-progress-bar {
-      background: transparent;
-    }
-    &::-webkit-progress-value {
-      border-radius: inherit;
-      background: var(--progress-fg);
-      transition: width 0.3s;
-    }
-    &::-moz-progress-bar {
-      border-radius: inherit;
-      background: var(--progress-fg);
-      transition: width 0.3s;
-    }
-    /* no value: hide the UA bar and sweep a stripe along the track */
-    &:indeterminate {
-      background: linear-gradient(to right, var(--progress-fg), var(--progress-fg)) -70% 0 / 40% 100% no-repeat var(--progress-bg);
-      animation: progress-sweep 1.5s ease-in-out infinite;
-      &::-webkit-progress-value { background: transparent; }
-      &::-moz-progress-bar { background: transparent; }
-      @media (prefers-reduced-motion: reduce) {
-        animation: none;
-        background-position: 30% 0;
-      }
-    }
-  }
-
-  .meter {
-    --progress-fg: var(--color-success);
-    --progress-warn: var(--color-warning-accent);
-    --progress-danger: var(--color-danger);
-
-    &::-webkit-meter-bar {
-      border: 0;
-      border-radius: inherit;
-      background: transparent;
-    }
-    &::-webkit-meter-optimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
-    &::-webkit-meter-suboptimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
-    &::-webkit-meter-even-less-good-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
-    &::-moz-meter-bar { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
-
-    /* bands: the colour follows the value unless a colour word is set */
-    &:not(.primary, .secondary, .info, .success, .warning, .danger, .error) {
-      &::-webkit-meter-suboptimum-value { background: var(--progress-warn); }
-      &::-webkit-meter-even-less-good-value { background: var(--progress-danger); }
-      &:-moz-meter-sub-optimum::-moz-meter-bar { background: var(--progress-warn); }
-      &:-moz-meter-sub-sub-optimum::-moz-meter-bar { background: var(--progress-danger); }
     }
   }
 }
