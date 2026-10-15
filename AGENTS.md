@@ -1,6 +1,6 @@
 # altpro/ui
 
-CSS component layer for Tailwind v4, with Vue components for anything that needs JavaScript and a few Blade components that save markup. Private library: Laravel apps install it with Composer (`altpro/ui`), anything else with npm (`@altpro/ui`), both from this GitHub repo. Read `resources/boost/skills/altpro-ui/SKILL.md` first; it lists what exists and links each component's reference file.
+CSS component layer for Tailwind v4, with Vue components for anything that needs JavaScript and a few Blade components that save markup. Not on Packagist or the npm registry: Laravel apps install it with Composer (`altpro/ui`), anything else with npm (`@altpro/ui`), both from this GitHub repo. Read `resources/boost/skills/altpro-ui/SKILL.md` first; it lists what exists and links each component's reference file.
 
 ## Layout
 

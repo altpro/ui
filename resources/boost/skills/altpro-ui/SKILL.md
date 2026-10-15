@@ -16,7 +16,7 @@ Rule of thumb when writing markup:
 
 ## Setup (already done if the project uses altpro/ui)
 
-An app made from the altpro Vue starter kit has all of this. Laravel installs it with Composer from the private GitHub repository (`"repositories": [{ "type": "vcs", "url": "git@github.com:altpro/ui.git" }]` in `composer.json`), with Lucide for icons:
+An app made from the altpro Vue starter kit has all of this. Laravel installs it with Composer from the GitHub repository (`"repositories": [{ "type": "vcs", "url": "https://github.com/altpro/ui.git" }]` in `composer.json`), with Lucide for icons:
 
 ```
 composer require altpro/ui:^0.1

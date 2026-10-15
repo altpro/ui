@@ -19,7 +19,7 @@ New apps start from the altpro Vue starter kit, which already requires altpro/ui
 Add the repository to the app's `composer.json`, then require it, with Lucide for icons:
 
 ```json
-"repositories": [{ "type": "vcs", "url": "git@github.com:altpro/ui.git" }]
+"repositories": [{ "type": "vcs", "url": "https://github.com/altpro/ui.git" }]
 ```
 
 ```
@@ -28,7 +28,7 @@ composer require mallardduck/blade-lucide-icons   # icons in Blade: <x-lucide-pl
 npm install @lucide/vue                           # icons in Vue: <Plus />
 ```
 
-The repository is private, so Composer needs access to it: an SSH key GitHub accepts, or `composer config --global github-oauth.github.com <token>`. On 0.x a breaking change bumps the minor version, so `^0.1` never installs one; read [CHANGELOG.md](CHANGELOG.md) before raising the constraint.
+On 0.x a breaking change bumps the minor version, so `^0.1` never installs one; read [CHANGELOG.md](CHANGELOG.md) before raising the constraint.
 
 The service provider is discovered automatically, so `<x-ui::field>` works straight away. In `resources/css/app.css`:
 
