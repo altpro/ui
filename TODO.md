@@ -7,7 +7,7 @@ The components the first CMS, CRM and order-management apps need are built, and 
 - [x] **The kit as the real consumer** (13 October 2026): it builds and passes CI against this repo as a path repository. List and search, an invalid save, a successful save, an upload and a bulk archive all worked in an app made from the kit. The recipe PHP needed PHPDoc for Larastan (07f8d75). A path repository symlinks `vendor/altpro/ui`, so Vite bundled a second Inertia from `../ui/node_modules`; the kit dedupes `@inertiajs/vue3` until it installs from GitHub. The kit has no tables yet, so the `per-page` rename and default sort wait for its first one. Not tried: creating tags through the combobox.
 - [x] **Date the changelog** and **tag `v0.1.0`** (13 October 2026).
 - [x] **Switch the kit to the GitHub repository** at `^0.1` (kit 17c0a69), and drop its `dedupe` line.
-- [ ] **The kit's `ALTPRO_UI_TOKEN` secret**: a fine-grained token with read access to this repo's contents. The kit's CI fails at `composer setup` until it is set.
+- [ ] **The kit's deploy key**: its CI clones this repo over SSH with a read-only deploy key in the `ALTPRO_UI_DEPLOY_KEY` secret; the commands are at the top of the kit's `tests.yml`. The kit has no GitHub repo yet, so there is nowhere to put the secret, and its CI fails at `composer setup` until there is. Untested: that `composer install` falls back from the lock's API zipball to the SSH clone when it has no token.
 
 ## When an app asks
 
