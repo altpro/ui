@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.1` (npm `github:altpro/ui#v0.1.0`). On 0.x a breaking change bumps the minor version (0.1 to 0.2), which `^0.1` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.1` (npm `github:altpro/ui#v0.1.1`). On 0.x a breaking change bumps the minor version (0.1 to 0.2), which `^0.1` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.1.1 (16 October 2026)
 
 - Motion tokens: `--duration-fast` (150ms), `--duration-slow` (250ms) and `--ease-smooth` (also an `ease-smooth` utility). Every component transition reads them, so one override retimes the kit.
 - `.dropdown` grows from its trigger's corner on open and shrinks back on close.
