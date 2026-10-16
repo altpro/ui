@@ -88,3 +88,17 @@
 :root {
   --radius: 0.5rem;
 }
+
+/* Motion: two durations and one curve. Fast is hover, focus and anything
+   closing; slow is a surface opening or changing size (dropdown, dialog,
+   drawer, accordion, toast, a progress bar). Opening slower than closing
+   makes a panel feel responsive both ways. --ease-smooth sits in @theme so
+   apps also get an ease-smooth utility; Tailwind has no duration namespace,
+   so the durations are plain custom properties beside --radius. */
+@theme default {
+  --ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+}
+:root {
+  --duration-fast: 150ms;
+  --duration-slow: 250ms;
+}

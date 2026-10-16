@@ -83,7 +83,7 @@
 
     table[aria-busy="true"] tbody {
       opacity: 0.5;
-      transition: opacity 150ms ease-in;
+      transition: opacity var(--duration-fast) ease-in;
     }
 
     tbody > tr:only-child > td[colspan] {

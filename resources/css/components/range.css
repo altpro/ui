@@ -51,7 +51,7 @@
       border: 0;
       border-radius: 50%;
       background: var(--range-accent);
-      transition: outline-color 0.15s;
+      transition: outline-color var(--duration-fast);
     }
     &::-moz-range-thumb {
       width: var(--range-thumb);

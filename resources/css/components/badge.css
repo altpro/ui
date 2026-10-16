@@ -36,7 +36,7 @@
     &:is(a, button) {
       cursor: pointer;
       user-select: none;
-      transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+      transition: background-color var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
       &:hover {
         background: var(--badge-hover);
       }

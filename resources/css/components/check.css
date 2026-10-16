@@ -50,7 +50,7 @@
       background: var(--color-background);
       color: var(--check-fg);
       cursor: pointer;
-      transition: background-color 0.15s, border-color 0.15s;
+      transition: background-color var(--duration-fast), border-color var(--duration-fast);
 
       &::before {
         content: "";
@@ -58,7 +58,7 @@
         height: calc(var(--check-size) * 0.7);
         background: currentColor;
         scale: 0;
-        transition: scale 0.15s;
+        transition: scale var(--duration-fast);
       }
       &:is(:checked, :indeterminate) {
         border-color: var(--check-accent);
@@ -136,7 +136,7 @@
         height: calc(var(--check-size) - 6px);
         border-radius: 50%;
         scale: 1;
-        transition: translate 0.15s;
+        transition: translate var(--duration-fast);
       }
       &:checked::before {
         translate: calc(var(--check-size) * 0.75);

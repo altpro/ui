@@ -32,12 +32,12 @@
       &::-webkit-progress-value {
         border-radius: inherit;
         background: var(--progress-fg);
-        transition: width 0.3s;
+        transition: width var(--duration-slow) var(--ease-smooth);
       }
       &::-moz-progress-bar {
         border-radius: inherit;
         background: var(--progress-fg);
-        transition: width 0.3s;
+        transition: width var(--duration-slow) var(--ease-smooth);
       }
       /* no value: hide the UA bar and sweep a stripe along the track */
       &:indeterminate {
@@ -63,10 +63,10 @@
         border-radius: inherit;
         background: transparent;
       }
-      &::-webkit-meter-optimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
-      &::-webkit-meter-suboptimum-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
-      &::-webkit-meter-even-less-good-value { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
-      &::-moz-meter-bar { border-radius: inherit; background: var(--progress-fg); transition: width 0.3s; }
+      &::-webkit-meter-optimum-value { border-radius: inherit; background: var(--progress-fg); transition: width var(--duration-slow) var(--ease-smooth); }
+      &::-webkit-meter-suboptimum-value { border-radius: inherit; background: var(--progress-fg); transition: width var(--duration-slow) var(--ease-smooth); }
+      &::-webkit-meter-even-less-good-value { border-radius: inherit; background: var(--progress-fg); transition: width var(--duration-slow) var(--ease-smooth); }
+      &::-moz-meter-bar { border-radius: inherit; background: var(--progress-fg); transition: width var(--duration-slow) var(--ease-smooth); }
 
       /* bands: the colour follows the value unless a colour word is set */
       &:not(.primary, .secondary, .info, .success, .warning, .danger, .error) {

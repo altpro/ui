@@ -54,7 +54,7 @@
       min-height: 1.5rem;
       color: inherit;
       text-decoration: none;
-      transition: color 0.15s;
+      transition: color var(--duration-fast);
     }
     :is(&, & li) > button {
       padding: 0;

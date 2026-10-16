@@ -37,7 +37,7 @@
     cursor: pointer;
     user-select: none;
     text-decoration: none;
-    transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+    transition: background-color var(--duration-fast), border-color var(--duration-fast), color var(--duration-fast);
 
     &:hover {
       background: var(--btn-hover);

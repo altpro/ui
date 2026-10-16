@@ -21,7 +21,7 @@
     --accordion-border: var(--color-border);
     --accordion-py: 1rem;
     --accordion-text: var(--text-sm, 0.875rem);
-    --accordion-duration: 0.2s;
+    --accordion-duration: var(--duration-slow);
 
     font-size: var(--accordion-text);
     color: var(--accordion-fg);
@@ -61,7 +61,7 @@
         border: solid var(--color-muted-foreground);
         border-width: 0 1.5px 1.5px 0;
         rotate: 45deg;
-        transition: rotate var(--accordion-duration);
+        transition: rotate var(--accordion-duration) var(--ease-smooth);
       }
     }
     details[open] > summary::after {
@@ -77,8 +77,8 @@
       grid-template-rows: 0fr;
       padding-block-end: 0;
       transition:
-        grid-template-rows var(--accordion-duration),
-        padding var(--accordion-duration),
+        grid-template-rows var(--accordion-duration) var(--ease-smooth),
+        padding var(--accordion-duration) var(--ease-smooth),
         content-visibility var(--accordion-duration) allow-discrete;
     }
     details[open]::details-content {

@@ -8,6 +8,9 @@
    aligned. If that leaves the viewport it flips to right-aligned, then
    up, then both. If nothing fits it stays down and scrolls inside.
    `left right up down` pin one axis so only the other may flip.
+   Grows from the trigger's corner on open and shrinks back on close,
+   slow in and fast out (theme.css). An automatic flip does not move
+   that corner; at 97% scale it does not show.
    Layered so Tailwind utilities (w-64, p-4) win. */
 @layer components {
   .dropdown {
@@ -34,6 +37,18 @@
     background: var(--color-card);
     color: var(--color-card-foreground);
     box-shadow: var(--dropdown-shadow);
+    transform-origin: var(--dropdown-ox, left) var(--dropdown-oy, top);
+    transition: opacity, scale, display allow-discrete, overlay allow-discrete;
+    transition-duration: var(--duration-fast);
+    transition-timing-function: var(--ease-smooth);
+    &:not(:popover-open) { opacity: 0; scale: 0.97; }
+    &:popover-open { transition-duration: var(--duration-slow); }
+    @starting-style {
+      &:popover-open { opacity: 0; scale: 0.97; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      &, &:popover-open { transition-duration: 0s; }
+    }
 
     /* a menu is the only content: tighten the frame around the items */
     &:has(> .nav:only-child) {
@@ -41,8 +56,8 @@
     }
 
     /* pinned axes */
-    &.up { --dropdown-y: block-start; }
-    &.right { --dropdown-x: span-inline-start; }
+    &.up { --dropdown-y: block-start; --dropdown-oy: bottom; }
+    &.right { --dropdown-x: span-inline-start; --dropdown-ox: right; }
     &:is(.up, .down) { position-try-fallbacks: flip-inline, --dropdown-fit; }
     &:is(.left, .right) { position-try-fallbacks: flip-block, --dropdown-fit; }
     &:is(.up, .down):is(.left, .right) { position-try-fallbacks: --dropdown-fit; }

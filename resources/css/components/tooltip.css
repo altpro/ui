@@ -28,7 +28,7 @@
       /* a hidden box still counts as overflow, so a host at a dialog's edge would scroll it sideways:
          shrink it to nothing once the fade ends */
       scale: 0;
-      transition: opacity 0.15s, visibility 0.15s, scale 0s 0.15s;
+      transition: opacity var(--duration-fast), visibility var(--duration-fast), scale 0s var(--duration-fast);
     }
     &::after {
       content: attr(data-tooltip);

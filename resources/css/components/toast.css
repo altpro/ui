@@ -36,9 +36,9 @@
       box-shadow: var(--toaster-shadow);
       /* a tinted alert is translucent; over page content it needs a solid card behind it */
       background: linear-gradient(var(--alert-bg, transparent), var(--alert-bg, transparent)) var(--color-card);
-      animation: toast-in 0.2s ease-out, toast-life var(--toast-life) linear forwards;
+      animation: toast-in var(--duration-slow) var(--ease-smooth), toast-life var(--toast-life) linear forwards;
       &:is(:hover, :focus-within) { animation-play-state: paused; }
-      &.pinned { animation: toast-in 0.2s ease-out; }
+      &.pinned { animation: toast-in var(--duration-slow) var(--ease-smooth); }
     }
     @media (prefers-reduced-motion: reduce) {
       > * { animation-duration: 0s, var(--toast-life); }

@@ -33,8 +33,12 @@
     scrollbar-width: thin;
     box-shadow: var(--dialog-shadow);
     /* only Chromium transitions overlay; Firefox and WebKit close at once, without
-       the fade but without a jump either, so no @supports (browsers.spec.js checks) */
-    transition: opacity 0.15s, scale 0.15s, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
+       the fade but without a jump either, so no @supports (browsers.spec.js checks).
+       Closing uses this duration; the open state below sets the slower one. */
+    --dialog-duration: var(--duration-fast);
+    transition: opacity, scale, display allow-discrete, overlay allow-discrete;
+    transition-duration: var(--dialog-duration);
+    transition-timing-function: var(--ease-smooth);
 
     /* the cross sits on the heading's line and its padding overhangs into the card padding */
     > header > :is([command="close"], [command="hide-popover"]) {
@@ -42,8 +46,11 @@
       margin-inline-end: calc(-1 * var(--btn-px, 0.75rem));
     }
 
+    /* the backdrop inherits --dialog-duration from the dialog */
     &::backdrop {
-      transition: opacity 0.15s, display 0.15s allow-discrete, overlay 0.15s allow-discrete;
+      transition: opacity, display allow-discrete, overlay allow-discrete;
+      transition-duration: var(--dialog-duration);
+      transition-timing-function: var(--ease-smooth);
     }
 
     /* drawer: full height, pinned to one inline edge, slides instead of scaling */
@@ -57,7 +64,8 @@
       border-radius: 0;
       border-block: 0;
       border-inline-end: 0;
-      transition: opacity 0.2s, translate 0.2s, display 0.2s allow-discrete, overlay 0.2s allow-discrete;
+      /* translate takes scale's place, so the allow-discrete pair keeps its position in the list */
+      transition-property: opacity, translate, display, overlay;
       &.start {
         --drawer-from: -100%;
         margin-inline: 0 auto;
@@ -78,6 +86,7 @@
       &::backdrop { opacity: 0; }
     }
     &.drawer:not([open], :popover-open) { scale: none; translate: var(--drawer-from) 0; }
+    &:is([open], :popover-open) { --dialog-duration: var(--duration-slow); }
     @starting-style {
       &:is([open], :popover-open) { opacity: 0; scale: 0.96; }
       &.drawer:is([open], :popover-open) { scale: none; translate: var(--drawer-from) 0; }

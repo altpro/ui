@@ -27,7 +27,7 @@ The worked example is a tile: a radio or checkbox drawn as a selectable card, fo
     font-size: var(--text-sm, 0.875rem);
     line-height: 1.25;
     cursor: pointer;
-    transition: border-color 0.15s, box-shadow 0.15s;
+    transition: border-color var(--duration-fast), box-shadow var(--duration-fast);
 
     /* the input covers the tile: it is the click target and the focus stop */
     > input {

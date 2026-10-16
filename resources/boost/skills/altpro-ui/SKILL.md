@@ -202,6 +202,8 @@ Every token is `light-dark()`, so the same class is correct in both schemes. Do 
 
 Spacing: `--spacing-gap` is one responsive unit, 1rem, then 1.5rem from `md` and 2rem from `lg`. It gives `p-gap`, `m-gap`, `gap-gap`, `size-gap` and the rest, plus `2gap` and `3gap` multiples (`p-2gap`, `mt-3gap`). Use it for the padding of panels and the gutters between them so the whole page loosens together on wider screens.
 
+Motion: `--duration-fast` (150ms: hover, focus, anything closing) and `--duration-slow` (250ms: a panel opening or changing size), with `--ease-smooth` for anything that opens, closes or resizes (also an `ease-smooth` utility). Use them in an app's own transitions rather than literal times, open slow and close fast, and wrap each in a `prefers-reduced-motion: reduce` guard that sets the duration to 0s.
+
 Override in the app's stylesheet, after the altpro/ui import:
 
 ```css
@@ -210,6 +212,7 @@ Override in the app's stylesheet, after the altpro/ui import:
   --color-primary-foreground: light-dark(white, oklch(0.145 0 0));
 }
 :root { --radius: 9999px; }   /* one knob for corner radius: 0 = square, 9999px = pill */
+:root { --duration-fast: 100ms; --duration-slow: 200ms; }   /* quicker motion everywhere */
 ```
 
 ## Scheme regions

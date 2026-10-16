@@ -36,6 +36,8 @@ const shot = async (loc) => pixels(await loc.screenshot());
 const pages = readdirSync(new URL("../demo/", import.meta.url), { recursive: true }).filter((f) => f.endsWith(".html")).map((f) => f.replaceAll("\\", "/")).sort();
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
 const axe = (page) => new AxeBuilder({ page }).withTags(tags);
+// a popover fades and scales in: axe and boundingBox must see it at rest
+const settled = (loc) => loc.evaluate((el) => Promise.all(el.getAnimations().map((a) => a.finished)));
 const summary = (violations) =>
   violations.map(
     (v) => `${v.id}: ${v.nodes.map((n) => `${n.target.join(" ")} ${n.any[0]?.data?.contrastRatio ?? ""}`.trim()).join(", ")}`,
@@ -81,6 +83,7 @@ for (const colorScheme of ["light", "dark"]) {
         await t.click();
         const pop = page.locator("#" + (await t.getAttribute("popovertarget")));
         await expect(pop).toBeVisible();
+        await settled(pop);
         const box = await pop.boundingBox();
         const off = box.x < 0 || box.y < 0 || box.x + box.width > 800 || box.y + box.height > 500;
         const { violations } = await axe(page).include("#" + (await t.getAttribute("popovertarget"))).analyze();
@@ -96,6 +99,7 @@ for (const colorScheme of ["light", "dark"]) {
       const right = page.locator("[popovertarget=account-menu]");
       await right.evaluate((el) => el.scrollIntoView({ block: "start" }));
       await right.click();
+      await settled(page.locator("#account-menu"));
       const [t, p] = [await right.boundingBox(), await page.locator("#account-menu").boundingBox()];
       expect(Math.round(p.x + p.width)).toBe(Math.round(t.x + t.width));
       expect(p.y).toBeGreaterThan(t.y);
@@ -104,6 +108,7 @@ for (const colorScheme of ["light", "dark"]) {
       const bottom = page.locator("[popovertarget=options-menu]");
       await bottom.evaluate((el) => el.scrollIntoView({ block: "end" }));
       await bottom.click();
+      await settled(page.locator("#options-menu"));
       const [t2, p2] = [await bottom.boundingBox(), await page.locator("#options-menu").boundingBox()];
       expect(Math.round(p2.x)).toBe(Math.round(t2.x));
       expect(p2.y + p2.height).toBeLessThan(t2.y);
@@ -113,6 +118,7 @@ for (const colorScheme of ["light", "dark"]) {
       await page.setViewportSize({ width: 800, height: 150 });
       await bottom.evaluate((el) => el.scrollIntoView({ block: "start" }));
       await bottom.click();
+      await settled(page.locator("#options-menu"));
       const [t3, p3] = [await bottom.boundingBox(), await page.locator("#options-menu").boundingBox()];
       expect(p3.y).toBeGreaterThan(t3.y);
       expect(p3.y + p3.height).toBeLessThanOrEqual(150);
@@ -171,11 +177,15 @@ for (const colorScheme of ["light", "dark"]) {
       }
       expect(failures).toEqual([]);
       // the clock runs out and the app's listener removes the toast; hover pauses it.
-      // Hover inside the default 6s life, then shorten it, so a slow hover under load cannot miss the toast
+      // Hover inside the default 6s life, then shorten it and rewind it, so neither a slow hover under load
+      // nor hover() waiting out the entry can leave the clock already past the shorter life
       await page.locator("main [data-toast]").first().click();
       const t = page.locator("#toaster > .alert");
       await t.hover();
-      await t.evaluate((el) => el.style.setProperty("--toast-life", "0.3s"));
+      await t.evaluate((el) => {
+        el.style.setProperty("--toast-life", "0.3s");
+        el.getAnimations().find((a) => a.animationName === "toast-life").currentTime = 0;
+      });
       await page.waitForTimeout(600);
       await expect(t).toHaveCount(1);
       await page.mouse.move(0, 0);
@@ -436,6 +446,7 @@ for (const colorScheme of ["light", "dark"]) {
       for (const name of ["Columns", "Size"]) {
         const button = page.locator(".datatable .controls").getByRole(name === "Size" ? "combobox" : "button", { name, exact: true }).first();
         await button.click();
+        await settled(page.locator(`[id="${await button.getAttribute("popovertarget")}"]`));
         const { violations } = await axe(page).include(`[id="${await button.getAttribute("popovertarget")}"]`).analyze();
         expect(summary(violations)).toEqual([]);
         await page.keyboard.press("Escape");
