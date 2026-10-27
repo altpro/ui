@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.1` (npm `github:altpro/ui#v0.1.1`). On 0.x a breaking change bumps the minor version (0.1 to 0.2), which `^0.1` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.1` (npm `github:altpro/ui#v0.1.2`). On 0.x a breaking change bumps the minor version (0.1 to 0.2), which `^0.1` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.1.2 (27 October 2026)
 
 - `TableQuery` searches a JSON-path column (`'data->postcode'`) without regard to case on MySQL too; it matched case-sensitively there, because `json_unquote()` returns a binary-collated string. An app that lowered the term itself to work around it can drop that.
 
