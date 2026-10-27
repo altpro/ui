@@ -4,6 +4,7 @@ namespace Altpro\Ui;
 
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -191,7 +192,11 @@ final class TableQuery
 
         $query->where(static function (Builder $query) use ($searchable, $pattern): void {
             foreach ($searchable as $column) {
-                $query->orWhereLike($column, $pattern);
+                // MySQL's json_unquote() returns a binary-collated string, so a JSON path
+                // matches case-sensitively there; lowering both sides makes it agree with the rest
+                str_contains($column, '->')
+                    ? $query->orWhereLike(new Expression('lower('.$query->getGrammar()->wrap($column).')'), mb_strtolower($pattern))
+                    : $query->orWhereLike($column, $pattern);
             }
         });
     }

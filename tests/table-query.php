@@ -59,6 +59,11 @@ $check($names('/?search=y'), [], 'does not search columns it was not given');
 $app['config']->set('database.connections.pgsql', ['driver' => 'pgsql', 'database' => 'x', 'prefix' => '']);
 TableQuery::search($pg = Brand::on('pgsql'), ['name'], 'ANAD');
 $check($pg->toSql(), 'select * from "brands" where ("name"::text ilike ?)', 'searches without case on Postgres');
+// except a JSON path on MySQL, where json_unquote() is binary-collated, so both sides are lowered
+$app['config']->set('database.connections.mysql', ['driver' => 'mysql', 'database' => 'x', 'prefix' => '']);
+TableQuery::search($my = Brand::on('mysql'), ['name', 'data->postcode'], 'SW1A');
+$check($my->toSql(), 'select * from `brands` where (`name` like ? or lower(json_unquote(json_extract(`data`, \'$."postcode"\'))) like ?)', 'lowers a JSON path on MySQL');
+$check($my->getBindings(), ['%SW1A%', '%sw1a%'], 'lowers the term for a JSON path only');
 $check($names('/?brands_sort=name&brands_dir=desc', 'brands'), ['Calpol', 'Boots', 'Anadin'], 'reads parameters under the table name');
 $check($names('/?sort=name&dir=desc', 'brands'), ['Anadin', 'Boots', 'Calpol'], 'ignores another table\'s parameters');
 

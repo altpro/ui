@@ -112,4 +112,4 @@ return Inertia::render('brands/Index', [
 
 - After the sort, rows are ordered by the model's key in the same direction, so rows tied on a repeated name, status or date fall on the same side of a page break every time.
 - `per_page` is honoured only for `TableQuery::pageSizes()` (10, 25, 50, 100); `perPage:` defaults to 25. A page past the end shows the last page.
-- Search is `LIKE %term%` on each `searchable` column, so case follows the collation (MySQL and SQLite ignore it, Postgres does not) and a typed `%` or `_` is a wildcard. Client mode matches a case-insensitive substring.
+- Search is a case-insensitive `LIKE %term%` on each `searchable` column (`ilike` on Postgres), and a typed `%` or `_` is a wildcard. A JSON path such as `'data->postcode'` is searchable too; it is lowered on both sides, since MySQL compares JSON values case-sensitively. Client mode matches a case-insensitive substring.
