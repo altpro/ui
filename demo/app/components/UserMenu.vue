@@ -10,7 +10,7 @@ const initials = computed(() => user.value.name.split(" ").map((word) => word[0]
 
 <template>
   <div>
-    <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="User menu">
+    <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" :aria-label="`${initials}, user menu`">
       <span class="avatar sm" aria-hidden="true">{{ initials }}</span>
     </button>
     <div id="user-menu" popover class="dropdown right w-56">

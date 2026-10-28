@@ -12,7 +12,7 @@ A circle showing a photo or initials. Put the class on the `<img>` itself, or on
 <span class="avatar blue lg">LW</span>
 ```
 
-Hues are a tint in light and a deep shade in dark; text colour is derived from the fill, so any hue is readable in both. An `<a>` avatar gets a focus ring; give it an `aria-label`, initials are not a name.
+Hues are a tint in light and a deep shade in dark; text colour is derived from the fill, so any hue is readable in both. An `<a>` or `<button>` avatar gets a focus ring. Give it an `aria-label` that starts with the initials and then says who or what, `aria-label="GH, Grace Hall's profile"`: initials alone are not a name, and a label that leaves them out fails WCAG 2.5.3 (Label in Name), because a voice-control user says what they see.
 
 Groups: wrap avatars in `.join` and they overlap by a third with a 2px ring between them. A plain `<span class="avatar">+3</span>` at the end is the overflow count. On a non-page background set `--avatar-ring` on the group to the surface colour.
 

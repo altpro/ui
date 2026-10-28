@@ -13,7 +13,7 @@ The welcome and sign-in pages are Blade views in a [layout of their own](#sign-i
 
 - **Skip link** first in `body`: `sr-only` until focused, then a `btn primary` in the corner. It targets `<main id="main">`.
 - **Sidebar**: from `lg` an `<aside>`, sticky and full height, scrolling on its own. Below `lg` the aside is `hidden` and the same `.nav` is in the drawer. The nav is written once (a Blade partial, a Vue `v-for`) and rendered in both; only one is ever displayed, so there is one `Main` landmark at a time.
-- **User menu**: the signed-in user's initials in an [`.avatar`](avatar.md) at the end of the header (`ms-auto`), a round ghost button labelled "User menu". It opens a [`dropdown right`](dropdown.md), lined up with the avatar's right edge, with their name and email, Settings and Log out. The header is on every screen size, so the menu is rendered once, not in the drawer. Log out is a POST, as Laravel's `logout` route expects.
+- **User menu**: the signed-in user's initials in an [`.avatar`](avatar.md) at the end of the header (`ms-auto`), a round ghost button labelled with the initials and "user menu" ("SR, user menu"), so a voice-control user can say what they see. It opens a [`dropdown right`](dropdown.md), lined up with the avatar's right edge, with their name and email, Settings and Log out. The header is on every screen size, so the menu is rendered once, not in the drawer. Log out is a POST, as Laravel's `logout` route expects.
 - **Print**: the sidebar and header are `print:hidden`, so a printed page is just `main`; the toaster hides itself.
 - **Drawer**: the browser opens it, traps focus, closes it on Esc and returns focus to the menu button. `closedby="any"` closes it on a tap outside. Its top row is a `div`, not a `<header>`: the drawer sits at body level, where a `header` would be a second page banner.
 - **Current link**: `aria-current="page"` on the nav link for this page or the section it is in, and on the last breadcrumb item, which is a `<span>`.
@@ -112,9 +112,10 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. In t
 
 ```blade
 @php($user = auth()->user())
+@php($initials = Str::of($user->name)->explode(' ')->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->take(2)->implode(''))
 <div class="ms-auto">
-  <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="User menu">
-    <span class="avatar sm" aria-hidden="true">{{ Str::of($user->name)->explode(' ')->map(fn ($word) => mb_strtoupper(mb_substr($word, 0, 1)))->take(2)->implode('') }}</span>
+  <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="{{ $initials }}, user menu">
+    <span class="avatar sm" aria-hidden="true">{{ $initials }}</span>
   </button>
   <div id="user-menu" popover class="dropdown right w-56">
     <div class="nav">
@@ -283,7 +284,7 @@ const initials = computed(() => user.value.name.split(" ").map((word) => word[0]
 
 <template>
   <div>
-    <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="User menu">
+    <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" :aria-label="`${initials}, user menu`">
       <span class="avatar sm" aria-hidden="true">{{ initials }}</span>
     </button>
     <div id="user-menu" popover class="dropdown right w-56">
