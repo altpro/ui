@@ -27,5 +27,6 @@ defineProps({ order: { type: Object, required: true } }); // { number, tracking 
 | default slot | Replaces the copy icon, which turns to a tick once copied. Start `label` with the slot's visible words (`Copy` → `Copy reference`). |
 
 - Screen readers do not read the tooltip, so "Copied" or "Copy failed" also goes to a polite live region teleported to `<body>`.
+- Escape hides the tooltip until the pointer leaves the button and focus moves off it (WCAG 1.4.13). It uses up only that Escape, so a dialog round the button stays open; the next Escape closes the dialog.
 - Uses `navigator.clipboard.writeText`, which needs HTTPS (or localhost). Anywhere else, and when the browser refuses, the button says "Copy failed".
 - Every other attribute lands on the `<button>`, which is `type="button"`.

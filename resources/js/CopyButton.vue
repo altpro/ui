@@ -2,6 +2,7 @@
   <CopyButton value="ORD-1042" label="Copy order number" />
   A .btn that copies `value` to the clipboard. The tooltip shows `label`, then "Copied" (or "Copy failed") for two seconds,
   and a polite live region says the same, because screen readers do not read the tooltip.
+  Escape hides the tooltip until the pointer leaves and focus moves on, as WCAG 1.4.13 asks of content shown on hover or focus.
   Default look is `ghost sm`, a square copy icon that turns to a tick, with negative block margin and align-middle so it does not stretch a line of text. Any `class` replaces that look:
   `class="outlined"` beside an `.input` in a `.join`. The default slot replaces the icon; keep `label` starting with its text.
 -->
@@ -14,10 +15,11 @@ const props = defineProps({
   label: { type: String, default: "Copy" },
 });
 
-const said = ref(null), n = ref(0);
+const said = ref(null), n = ref(0), dismissed = ref(false), button = ref();
 let timer;
 const copy = async () => {
   clearTimeout(timer);
+  dismissed.value = false;
   try {
     await navigator.clipboard.writeText(props.value);
     said.value = "Copied";
@@ -27,14 +29,26 @@ const copy = async () => {
   n.value++; // a new node, so the same words are announced again on a second click
   timer = setTimeout(() => (said.value = null), 2000);
 };
-onBeforeUnmount(() => clearTimeout(timer));
+// On the document, as a hovered button need not have focus. The Escape is used up, so a dialog round the button stays open.
+const escape = (e) => {
+  if (e.key !== "Escape" || dismissed.value || !button.value?.matches(":hover, :focus-visible")) return;
+  e.preventDefault();
+  dismissed.value = true;
+};
+// back once neither the pointer nor focus is on the button; a frame later, so :hover has caught up with mouseleave
+const rest = () => requestAnimationFrame(() => button.value?.matches(":hover, :focus-visible") || (dismissed.value = false));
+onMounted(() => document.addEventListener("keydown", escape));
+onBeforeUnmount(() => {
+  clearTimeout(timer);
+  document.removeEventListener("keydown", escape);
+});
 // the live region goes to body after mount: a server render has no body to teleport to, and hydration would not match
 const mounted = ref(false);
 onMounted(() => (mounted.value = true));
 </script>
 
 <template>
-  <button v-bind="{ ...$attrs, class: undefined }" type="button" :class="['btn', $attrs.class ?? 'ghost sm -my-1.5 align-middle', !$slots.default && 'px-2']" :aria-label="label" :data-tooltip="said ?? label" @click="copy">
+  <button ref="button" v-bind="{ ...$attrs, class: undefined }" type="button" :class="['btn', $attrs.class ?? 'ghost sm -my-1.5 align-middle', !$slots.default && 'px-2']" :aria-label="label" :data-tooltip="dismissed ? null : said ?? label" @click="copy" @mouseleave="rest" @blur="rest">
     <slot>
       <svg v-if="said === 'Copied'" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
       <svg v-else class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>

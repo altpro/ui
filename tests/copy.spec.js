@@ -35,3 +35,49 @@ test("a refused write says Copy failed", async ({ page }) => {
   await expect.poll(() => bubble(button)).toBe('"Copy failed" visible');
   await expect(page.locator("body > [aria-live=polite]", { hasText: "Copy failed" })).toHaveCount(1);
 });
+
+// with no data-tooltip there is no bubble, and ::after reads content none
+const showing = async (b) => (await bubble(b)).endsWith("visible") && !(await bubble(b)).startsWith("none");
+
+// WCAG 1.4.13: content shown on hover or focus can be dismissed without moving either
+test("Escape hides the tooltip, uses up the key only then, and the tooltip comes back once pointer and focus have left", async ({ page }) => {
+  await page.goto("/copy.html");
+  // the last Escape's defaultPrevented, read where a dialog would see it
+  await page.evaluate(() => document.addEventListener("keydown", (e) => (window.escaped = e.key === "Escape" && e.defaultPrevented)));
+  const button = page.locator("#copy-inline").getByRole("button", { name: "Copy order number" });
+  const other = page.locator("#copy-join").getByRole("button", { name: "Copy tracking code" });
+
+  // keyboard: Escape on the focused button
+  await button.focus();
+  await expect.poll(() => bubble(button)).toBe('"Copy order number" visible');
+  await page.keyboard.press("Escape");
+  await expect.poll(() => showing(button)).toBe(false);
+  expect(await page.evaluate(() => window.escaped)).toBe(true);
+  await expect(button).toHaveAccessibleName("Copy order number");
+  // already hidden: the next Escape is the page's, to close a dialog
+  await page.keyboard.press("Escape");
+  expect(await page.evaluate(() => window.escaped)).toBe(false);
+  // a copy shows its result again
+  await page.keyboard.press("Enter");
+  await expect.poll(() => showing(button)).toBe(true);
+  await page.keyboard.press("Escape");
+  await other.focus();
+  await button.focus();
+  await expect.poll(() => showing(button)).toBe(true);
+
+  // pointer: Escape reaches the document while focus is elsewhere
+  await other.focus();
+  await button.hover();
+  await expect.poll(() => showing(button)).toBe(true);
+  await page.keyboard.press("Escape");
+  await expect.poll(() => showing(button)).toBe(false);
+  await page.mouse.move(0, 0);
+  await button.hover();
+  await expect.poll(() => showing(button)).toBe(true);
+
+  // nothing showing: Escape is left alone
+  await page.mouse.move(0, 0);
+  await page.evaluate(() => document.activeElement.blur());
+  await page.keyboard.press("Escape");
+  expect(await page.evaluate(() => window.escaped)).toBe(false);
+});
