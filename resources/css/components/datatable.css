@@ -66,6 +66,12 @@
 
       > p {
         font-weight: 600;
+        /* takes focus once "Select all matching" is gone (DataTable.vue) */
+        border-radius: 0.25rem;
+        &:focus-visible {
+          outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+          outline-offset: 2px;
+        }
       }
     }
 

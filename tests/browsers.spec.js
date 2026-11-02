@@ -510,6 +510,9 @@ test("datatable: an empty table carries its message in one spanning cell, and ev
 });
 
 test("datatable: the header box selects the page, and the rest of the matches is a separate offer", async ({ page }) => {
+  // a matching selection once emitted a new object on every parent render, and Vue gave up after 100 rounds
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
   await page.goto("/datatable.html");
   const dt = datatable(page, "Products under review"), output = page.locator("output");
   await dt.getByRole("checkbox", { name: "Select every Products under review row on this page" }).check();
@@ -539,6 +542,47 @@ test("datatable: the header box selects the page, and the rest of the matches is
   await expect(output).toHaveText("1 discontinued.");
   await expect(dt.locator("tbody input:checked")).toHaveCount(0);
   await expect(dt.locator(".bulk")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+// A button that disables or removes itself would drop focus to the body. Keys, not clicks: a click in Safari focuses no button.
+test("datatable: focus stays in the table when the button pressed goes away", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const press = async (locator) => {
+    await locator.focus();
+    await page.keyboard.press("Enter");
+  };
+
+  // Next on the last page but one disables itself: the current page takes focus, and Previous does the same back
+  const nav = datatable(page, "Team members").getByRole("navigation", { name: "Team members pagination" });
+  await press(nav.getByRole("button", { name: "Next page" }));
+  await expect(nav.getByRole("button", { name: "Next page" })).toBeDisabled();
+  await expect(nav.getByRole("button", { name: "2" })).toBeFocused();
+  await press(nav.getByRole("button", { name: "Previous page" }));
+  await expect(nav.getByRole("button", { name: "1" })).toBeFocused();
+
+  // Clear filters sits in the empty row it removes: the search box it emptied takes focus
+  const products = datatable(page, "Products");
+  await products.getByRole("searchbox").fill("zzzz");
+  await press(products.getByRole("button", { name: "Clear filters" }));
+  await expect(products.getByRole("searchbox")).toBeFocused();
+  await expect(products.getByRole("searchbox")).toHaveValue("");
+
+  // the offer goes once taken: the count takes focus; the bar goes with Clear: the header box does
+  const dt = datatable(page, "Products under review");
+  const header = dt.getByRole("checkbox", { name: "Select every Products under review row on this page" });
+  await header.check();
+  await press(dt.getByRole("button", { name: "Select all 12 matching" }));
+  await expect(dt.locator(".bulk p")).toBeFocused();
+  await expect(dt.locator(".bulk p")).toHaveText("12 selected");
+  await press(dt.locator(".bulk").getByRole("button", { name: "Clear", exact: true }));
+  await expect(dt.locator(".bulk")).toHaveCount(0);
+  await expect(header).toBeFocused();
+  // and when a bulk action has the parent clear the selection
+  await header.check();
+  await press(dt.getByRole("button", { name: "Discontinue" }));
+  await expect(dt.locator(".bulk")).toHaveCount(0);
+  await expect(header).toBeFocused();
 });
 
 test("datatable: hiding a column removes it from every row and survives a reload", async ({ page }) => {

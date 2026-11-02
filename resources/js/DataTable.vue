@@ -4,7 +4,7 @@
   State lives in the query string, so this needs an Inertia app. See references/datatable.md in the skill.
 -->
 <script setup lang="ts" generic="TRow extends object">
-import { computed, onMounted, ref, useId, watch } from "vue";
+import { computed, nextTick, onMounted, ref, useId, watch } from "vue";
 import Combobox from "./Combobox.vue";
 import {
   DEFAULT_PAGE_SIZE,
@@ -126,7 +126,39 @@ const view = computed(() =>
     preferredSize.value,
   ),
 );
-const goTo = (page: number) => state.apply({ page: Math.min(Math.max(page, 1), view.value.lastPage) });
+
+// A button that disables or removes itself drops focus to the body, and a keyboard or screen reader user loses their
+// place: once the table has redrawn without it, focus goes to `to`. Only if the focus went with it, so a click elsewhere
+// in the meantime keeps its own; and only from a focused button, which a mouse click in Safari never makes.
+type Target = () => HTMLElement | null | undefined;
+const handOff = (from: Element | null, to: Target) => {
+  if (!(from instanceof HTMLElement) || from === document.body) return;
+  const gone = !from.isConnected || (from as HTMLButtonElement).disabled;
+  if (gone && [document.body, from].includes(document.activeElement as HTMLElement)) to()?.focus();
+};
+// a page change or a cleared search redraws when the URL changes, which in server mode is after the response
+let pending: [Element | null, Target] | null = null;
+watch([() => view.value.page, () => view.value.empty], () => {
+  if (pending) handOff(...pending);
+  pending = null;
+}, { flush: "post" });
+
+const searchBox = ref<HTMLInputElement>();
+const pager = ref<HTMLElement>();
+const selectedCount = ref<HTMLElement>();
+const selectAllBox = ref<HTMLInputElement>();
+const bulkBar = ref<HTMLElement>();
+
+// Previous on page two and Next on the last page but one disable themselves: the current page's button takes focus
+const goTo = (page: number) => {
+  pending = [document.activeElement, () => pager.value?.querySelector<HTMLElement>("[aria-current]")];
+  state.apply({ page: Math.min(Math.max(page, 1), view.value.lastPage) });
+};
+// the button sits in the row it removes; the search box it emptied comes first
+const clearFilters = () => {
+  pending = [document.activeElement, () => searchBox.value];
+  state.clearAll();
+};
 
 // aria-sort on the th is the one place sort state lives; .table draws the arrow from it
 const ariaSort = (key: string) => (state.sort.value !== key ? undefined : state.direction.value === "asc" ? "ascending" : "descending");
@@ -163,11 +195,25 @@ const clearSelection = () => {
   selectedIds.value = [];
   allMatching.value = false;
 };
+// the offer goes once taken: focus reads the new count
+const selectAllMatching = () => {
+  const from = document.activeElement;
+  allMatching.value = true;
+  nextTick(() => handOff(from, () => selectedCount.value));
+};
+// the bulk bar goes with the selection, whether its Clear, a bulk action or the parent cleared it: the box that ticks every row takes focus.
+// pre-flush, so the bar and whatever in it had focus are still there
+watch(() => selection.value === null, (none) => {
+  const from = document.activeElement;
+  if (none && bulkBar.value?.contains(from)) nextTick(() => handOff(from, () => selectAllBox.value));
+});
 const toggleAllVisible = () => {
   allMatching.value = false;
   selectedIds.value = allVisibleSelected.value ? [] : [...visibleIds.value];
 };
-watch(selection, (value) => emit("update:selection", value));
+// by content: a matching selection reads the view, which every parent render rebuilds (an inline :searchable array is
+// new each time), so emitting each new object would re-render the parent and come straight back, without end
+watch(() => JSON.stringify(selection.value), () => emit("update:selection", selection.value));
 // and back: a parent that clears its copy after a bulk action clears the ticks. The emit above comes back here equal, and stops.
 watch(
   () => props.selection,
@@ -193,6 +239,7 @@ const rowLabel = (row: TRow, index: number) => {
   <div class="datatable">
     <div class="controls">
       <input
+        ref="searchBox"
         :value="state.searchInput.value"
         class="input search"
         type="search"
@@ -244,9 +291,9 @@ const rowLabel = (row: TRow, index: number) => {
       </template>
     </div>
 
-    <div v-if="selectable && selection" class="bulk">
-      <p>{{ selectionCount }} selected</p>
-      <button v-if="canSelectAllMatching" type="button" class="btn sm" @click="allMatching = true">Select all {{ view.total }} matching</button>
+    <div v-if="selectable && selection" ref="bulkBar" class="bulk">
+      <p ref="selectedCount" tabindex="-1">{{ selectionCount }} selected</p>
+      <button v-if="canSelectAllMatching" type="button" class="btn sm" @click="selectAllMatching">Select all {{ view.total }} matching</button>
       <slot name="bulk-actions" :selection="selection" :count="selectionCount" :clear="clearSelection" />
       <button type="button" class="btn sm ghost" @click="clearSelection">Clear</button>
     </div>
@@ -257,7 +304,7 @@ const rowLabel = (row: TRow, index: number) => {
         <thead>
           <tr>
             <th v-if="selectable" scope="col" class="select">
-              <label class="checkbox"><input type="checkbox" :checked="allVisibleSelected" :indeterminate="someVisibleSelected" :aria-label="`Select every ${caption} row on this page`" @change="toggleAllVisible" /></label>
+              <label class="checkbox"><input ref="selectAllBox" type="checkbox" :checked="allVisibleSelected" :indeterminate="someVisibleSelected" :aria-label="`Select every ${caption} row on this page`" @change="toggleAllVisible" /></label>
             </th>
             <th v-for="column in visibleColumns" :key="column.key" scope="col" :aria-sort="ariaSort(column.key)" :class="column.thClass">
               <button v-if="column.sortable" type="button" @click="toggleSort(column.key)">{{ column.label }}</button>
@@ -283,7 +330,7 @@ const rowLabel = (row: TRow, index: number) => {
               </template>
               <template v-else>
                 {{ noMatchesMessage ?? `No ${caption.toLowerCase()} match your search.` }}
-                <button type="button" class="btn sm" @click="state.clearAll()">Clear filters</button>
+                <button type="button" class="btn sm" @click="clearFilters">Clear filters</button>
               </template>
             </td>
           </tr>
@@ -299,7 +346,7 @@ const rowLabel = (row: TRow, index: number) => {
           <option v-for="size in PAGE_SIZES" :key="size" :value="size">{{ size }}</option>
         </select>
       </label>
-      <nav v-if="view.lastPage > 1" class="join" :aria-label="`${caption} pagination`">
+      <nav v-if="view.lastPage > 1" ref="pager" class="join" :aria-label="`${caption} pagination`">
         <button type="button" class="btn outlined sm" aria-label="Previous page" :disabled="view.page === 1" @click="goTo(view.page - 1)">
           <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 18-6-6 6-6" /></svg>
         </button>
