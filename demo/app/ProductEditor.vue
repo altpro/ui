@@ -11,12 +11,13 @@ const files = ref(null);
 const saving = ref(false);
 const imageError = computed(() => files.value?.size > 1024 * 1024 ? "Choose an image smaller than 1 MB." : "");
 const creating = ref(false);
-function open(product, create = false) {
+// focus: a selector for the field the caller asked to edit, such as the description
+function open(product, create = false, focus) {
   creating.value = create || !product;
   Object.keys(draft).forEach(key => delete draft[key]);
   Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: 149, cost: 60, stock: 0, status: 'Draft', finish: 'Slate', tags: [], variants: [] });
   files.value = null;
-  nextTick(() => dialog.value.showModal());
+  nextTick(() => { dialog.value.showModal(); if (focus) dialog.value.querySelector(focus)?.focus(); });
 }
 async function save() {
   if (imageError.value) return;

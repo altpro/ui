@@ -41,7 +41,7 @@ test('editing product, price, stock and status updates the collection and histor
   await page.getByLabel('Retail price', { exact: true }).fill('269.99');
   await page.getByRole('button', { name: 'Save pricing', exact: true }).click();
   await expect(page.locator('.demo-detail-side .demo-price').first()).toContainText('£269.99');
-  await page.getByRole('button', { name: 'Adjust stock', exact: true }).click();
+  await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
   await page.getByLabel('Slate available units', { exact: true }).fill('50');
   await page.getByRole('button', { name: 'Save inventory' }).click();
   await expect(page.locator('.demo-detail-side .demo-price').last()).toContainText('92');
@@ -66,7 +66,7 @@ test('new products, bulk archive and reset form a complete demo workflow', async
   await expect(page.locator('tbody tr')).toContainText('Test speaker');
   await page.getByLabel('Select Test speaker', { exact: true }).check();
   await page.getByRole('button', { name: 'Archive selected', exact: true }).click();
-  await page.getByRole('button', { name: 'Archive products', exact: true }).click();
+  await page.getByRole('button', { name: 'Archive product', exact: true }).click();
   await expect(page.locator('tbody tr')).toContainText('Archived');
   await page.goto('/app/activity.html');
   await page.getByRole('button', { name: 'Reset workspace', exact: true }).click();
@@ -146,7 +146,7 @@ for (const preset of ['default', 'sol']) {
       await page.addStyleTag({ content: '* { transition: none !important; }' });
       for (const radius of ['0', '9999px']) {
         await page.evaluate(r => document.documentElement.style.setProperty('--radius', r), radius);
-        for (const name of ['Edit product', 'Edit pricing', 'Adjust stock', 'Preview']) {
+        for (const name of ['Edit product', 'Edit pricing', 'Adjust inventory', 'Preview']) {
           await page.getByRole('button', { name, exact: true }).click();
           await scan(page);
           await page.keyboard.press('Escape');
@@ -160,6 +160,46 @@ for (const preset of ['default', 'sol']) {
     });
   }
 }
+
+test('an unknown product id shows a not-found state instead of another product', async ({ page }) => {
+  await page.goto('/app/product.html?id=no-such-product');
+  await expect(page.getByRole('heading', { level: 1 })).toHaveText('Product not found');
+  await expect(page.getByRole('button', { name: 'Edit product', exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Back to all products', exact: true }).click();
+  await expect(page).toHaveURL(/products\.html$/);
+});
+
+test('channel switches belong to their product and survive a reload', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  const online = page.getByRole('switch', { name: 'Online store availability', exact: true });
+  await online.uncheck({ force: true });
+  await expect(page.locator('.toaster')).toContainText('no longer available in the online store');
+  await expect(page.locator('#availability-heading ~ p')).toHaveText('Hidden online. Available at the London studio only.');
+  await page.reload();
+  await expect(online).not.toBeChecked();
+  await page.goto('/app/product.html?id=dot');
+  await expect(online).toBeChecked();
+});
+
+test('a duplicate opens as its own product', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'More product actions' }).click();
+  await page.getByRole('button', { name: 'Duplicate product', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add product', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Arc headphones (copy)');
+});
+
+test('at 320px the category select keeps its text and the table shows the next column', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  await page.goto('/app/products.html');
+  const select = page.getByLabel('Product category', { exact: true });
+  expect(await select.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
+  const { edge, status } = await page.locator('.demo-table-scroll').evaluate(el => ({
+    edge: el.getBoundingClientRect().right,
+    status: [...el.querySelectorAll('thead th')].find(th => th.textContent.trim() === 'Status').getBoundingClientRect().left,
+  }));
+  expect(edge - status).toBeGreaterThanOrEqual(16);
+});
 
 test('mobile sidebar and responsive screens work without horizontal page overflow', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });

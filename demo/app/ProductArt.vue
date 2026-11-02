@@ -4,7 +4,8 @@ defineProps({ kind: String, name: String, angle: { type: Number, default: 0 } })
 const uid = useId().replaceAll(':', '');
 </script>
 <template>
-  <svg viewBox="0 0 440 360" role="img" :aria-label="name" class="demo-product-art">
+  <!-- without a name the art is decorative: the product's name already sits beside it -->
+  <svg viewBox="0 0 440 360" :role="name ? 'img' : null" :aria-label="name || null" :aria-hidden="name ? null : 'true'" class="demo-product-art">
     <defs>
       <linearGradient :id="uid + '-body'" x1="0" y1="0" x2="1" y2="1"><stop stop-color="var(--demo-object-highlight, var(--color-secondary))"/><stop offset=".45" stop-color="var(--demo-object-edge, var(--color-primary))"/><stop offset="1" stop-color="var(--demo-object, var(--color-foreground))"/></linearGradient>
       <linearGradient :id="uid + '-edge'" x1="0" y1="0" x2="0" y2="1"><stop stop-color="var(--demo-object-edge, var(--color-primary))"/><stop offset="1" stop-color="var(--demo-object, var(--color-foreground))"/></linearGradient>

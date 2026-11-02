@@ -8,7 +8,7 @@ const live = page => page.locator('.repeater [aria-live]');
 
 test.beforeEach(async ({ page }) => {
   await page.goto('/app/product.html');
-  await button(page, 'Adjust stock').click();
+  await button(page, 'Adjust inventory').click();
 });
 
 test('adding a finish focuses its name and sets a sensible quantity', async ({ page }) => {
