@@ -8,3 +8,6 @@ vendor
 composer.lock
 .claude/worktrees
 .claude/settings.local.json
+.agents/skills
+.claude/skills
+skills-lock.json
