@@ -6,9 +6,9 @@ An HTML and CSS component layer for Tailwind v4. Tailwind does layout; altpro/ui
 
 | Using | Packages | Vite plugins | Supported |
 |-------|----------|--------------|-----------|
-| CSS only (any HTML, Blade) | `tailwindcss` | `@tailwindcss/vite` | Tailwind 4.1+, Vite 7+. Blade components: PHP 8.3+, Laravel 12 or 13 |
+| CSS only (any HTML, Blade) | `tailwindcss` | `@tailwindcss/vite` | Tailwind 4.1+, Vite 7+. Blade components: PHP 8.3+, Laravel 13 |
 | Vue components (Field, FileInput, Combobox, Repeater, CopyButton) | the above, plus `vue` | the above, plus `@vitejs/plugin-vue` | Vue 3.5+, plugin-vue 6+ |
-| DataTable | the above, plus `@inertiajs/vue3`; `TableQuery` on the server | the above | Inertia 3+ (client and `inertiajs/inertia-laravel`), Laravel 12 or 13. Written in TypeScript, which Vite compiles without extra setup |
+| DataTable | the above, plus `@inertiajs/vue3`; `TableQuery` on the server | the above | Inertia 3+ (client and `inertiajs/inertia-laravel`), Laravel 13. Written in TypeScript, which Vite compiles without extra setup |
 
 Current Chrome, Firefox and Safari. Some styling (the open `<select>` picker) is Chrome-only and falls back to the native control elsewhere.
 

@@ -8,7 +8,7 @@ Apps pin `altpro/ui:^0.2` (npm `github:altpro/ui#v0.2.0`). On 0.x a breaking cha
 
 ### Breaking
 
-- None.
+- Laravel 12 is no longer supported: `composer.json` requires Laravel 13 (`illuminate/*:^13.0`). An app on Laravel 12 stays on `^0.2`, or upgrades Laravel before raising the constraint.
 
 ## 0.2.0 (4 November 2026)
 
