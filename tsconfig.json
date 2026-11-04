@@ -11,5 +11,5 @@
     "skipLibCheck": true,
     "types": ["node"]
   },
-  "include": ["resources/js", "tests/table-view.ts"]
+  "include": ["resources/js", "tests/table-view.ts", "tests/component-types.vue"]
 }

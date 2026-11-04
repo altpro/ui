@@ -17,7 +17,8 @@ import { computed, nextTick, onBeforeUnmount, onMounted, ref, shallowRef, useAtt
 import { onFormReset } from "./domModel.js";
 
 defineOptions({ inheritAttrs: false });
-const model = defineModel({ default: null });
+// the type is for vue-tsc in apps: from `default: null` alone it infers that v-model only takes null
+const model = defineModel({ type: /** @type {import("vue").PropType<File | File[] | null>} */ ([Object, Array]), default: null });
 const props = defineProps({
   name: String,
   accept: String,
