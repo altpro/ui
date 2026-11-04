@@ -174,7 +174,7 @@ test('channel switches belong to their product and survive a reload', async ({ p
   const online = page.getByRole('switch', { name: 'Online store availability', exact: true });
   await online.uncheck({ force: true });
   await expect(page.locator('.toaster')).toContainText('no longer available in the online store');
-  await expect(page.locator('#availability-heading ~ p')).toHaveText('Hidden online. Available at the London studio only.');
+  await expect(page.locator('[aria-labelledby="availability-heading"] > p')).toHaveText('Hidden online. Available at the London studio only.');
   await page.reload();
   await expect(online).not.toBeChecked();
   await page.goto('/app/product.html?id=dot');
