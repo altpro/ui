@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.1` (npm `github:altpro/ui#v0.1.2`). On 0.x a breaking change bumps the minor version (0.1 to 0.2), which `^0.1` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.2` (npm `github:altpro/ui#v0.2.0`). On 0.x a breaking change bumps the minor version (0.2 to 0.3), which `^0.2` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.2.0 (4 November 2026)
 
 - A clickable avatar's `aria-label` starts with the initials it shows, then says who or what (`aria-label="GH, Grace Hall's profile"`). A label without them fails WCAG 2.5.3 (Label in Name), which axe 4.14 now checks: a voice-control user says what they see.
 
