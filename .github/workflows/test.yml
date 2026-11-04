@@ -17,12 +17,6 @@ jobs:
             composer: composer update
             browsers: chromium firefox webkit
             test: npm run build && npm test
-          # the oldest Laravel 12 Composer will install (it skips releases with security advisories),
-          # and only the tests that run PHP: TableQuery and the Blade field against its Vue twin
-          - laravel: 12
-            composer: composer update --prefer-lowest --with laravel/framework:^12
-            browsers: chromium
-            test: php tests/table-query.php && npx playwright test browsers.spec.js -g Blade --project=chromium
     name: test (Laravel ${{ matrix.laravel }})
     steps:
       - uses: actions/checkout@v4

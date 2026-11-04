@@ -61,8 +61,11 @@ test("Escape hides the tooltip, uses up the key only then, and the tooltip comes
   await page.keyboard.press("Enter");
   await expect.poll(() => showing(button)).toBe(true);
   await page.keyboard.press("Escape");
-  await other.focus();
-  await button.focus();
+  // focus leaving and coming straight back, in one frame, still counts as leaving
+  await page.evaluate(() => {
+    document.querySelector("#copy-join button").focus();
+    document.querySelector("#copy-inline button").focus();
+  });
   await expect.poll(() => showing(button)).toBe(true);
 
   // pointer: Escape reaches the document while focus is elsewhere

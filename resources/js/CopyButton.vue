@@ -35,8 +35,9 @@ const escape = (e) => {
   e.preventDefault();
   dismissed.value = true;
 };
-// back once neither the pointer nor focus is on the button; a frame later, so :hover has caught up with mouseleave
-const rest = () => requestAnimationFrame(() => button.value?.matches(":hover, :focus-visible") || (dismissed.value = false));
+// back once neither the pointer nor focus is on the button. Each leave checks only the other: during mouseleave
+// :hover can still match, and checking a frame later misses focus that leaves and comes straight back.
+const rest = (other) => button.value?.matches(other) || (dismissed.value = false);
 onMounted(() => document.addEventListener("keydown", escape));
 onBeforeUnmount(() => {
   clearTimeout(timer);
@@ -48,7 +49,7 @@ onMounted(() => (mounted.value = true));
 </script>
 
 <template>
-  <button ref="button" v-bind="{ ...$attrs, class: undefined }" type="button" :class="['btn', $attrs.class ?? 'ghost sm -my-1.5 align-middle', !$slots.default && 'px-2']" :aria-label="label" :data-tooltip="dismissed ? null : said ?? label" @click="copy" @mouseleave="rest" @blur="rest">
+  <button ref="button" v-bind="{ ...$attrs, class: undefined }" type="button" :class="['btn', $attrs.class ?? 'ghost sm -my-1.5 align-middle', !$slots.default && 'px-2']" :aria-label="label" :data-tooltip="dismissed ? null : said ?? label" @click="copy" @mouseleave="rest(':focus-visible')" @blur="rest(':hover')">
     <slot>
       <svg v-if="said === 'Copied'" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"/></svg>
       <svg v-else class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="14" height="14" x="8" y="8" rx="2" ry="2"/><path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2"/></svg>
