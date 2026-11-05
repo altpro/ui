@@ -4,6 +4,7 @@
    altpro/ui writes its own; nothing here belongs in resources/. */
 /* registered, so it resolves against the page's scheme even inside a stage that stays light */
 @property --demo-veil { syntax: "<color>"; inherits: true; initial-value: transparent; }
+@property --demo-veil-sm { syntax: "<color>"; inherits: true; initial-value: transparent; }
 /* the same for what marks a thumbnail, which sits on the card and has to read against it */
 @property --demo-edge { syntax: "<color>"; inherits: true; initial-value: transparent; }
 @property --demo-selected { syntax: "<color>"; inherits: true; initial-value: transparent; }
@@ -11,6 +12,8 @@
   :root {
     /* product pictures stay light in dark, under a veil so they aren't the brightest thing on the screen */
     --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 62%, transparent));
+    /* a thumbnail is small enough not to glare, and needs the contrast to stay recognisable */
+    --demo-veil-sm: light-dark(transparent, color-mix(in oklab, var(--color-card) 30%, transparent));
     --demo-stage: var(--color-muted);
     --demo-edge: var(--color-border);
     --demo-selected: var(--color-primary);
@@ -156,6 +159,7 @@
   }
   /* a product's picture is a photograph, not interface: it reads the same in both schemes */
   .demo-product-stage, .demo-gallery-stage, .demo-gallery-view, .demo-thumb { color-scheme: light; background-image: linear-gradient(var(--demo-veil), var(--demo-veil)); }
+  .demo-thumb, .demo-gallery-view { background-image: linear-gradient(var(--demo-veil-sm), var(--demo-veil-sm)); }
   .demo-thumb { display: block; width: 44px; height: 44px; border-radius: min(var(--radius), 10px); background-color: var(--demo-stage); flex: none; overflow: hidden; svg { width: 100%; height: 100%; } img { width: 100%; height: 100%; object-fit: cover; } }
   /* selection takes over the header row, so ticking a row moves nothing under the pointer */
   .demo-selection { position: absolute; inset: 0 0 auto 4rem; z-index: 2; display: flex; align-items: center; gap: 12px; height: calc(3.25rem - 1px); padding-inline-end: var(--card-p); background: var(--color-card); color: var(--color-foreground); font-size: .875rem; font-weight: 400; }

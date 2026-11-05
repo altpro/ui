@@ -234,6 +234,14 @@ test('history names what moved in each editor', async ({ page }) => {
   await page.locator('[name="inventory.1.sku"]').fill('ARC-BN');
   await page.getByRole('button', { name: 'Save inventory' }).click();
   await expect(latest).toContainText('Chalk renamed Bone. Bone SKU changed from ARC-CH to ARC-BN.');
+  await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add finish', exact: true }).click();
+  await expect(page.getByLabel('New finish price', { exact: true })).toHaveValue('');
+  await page.locator('[name="inventory.3.name"]').fill('Moss');
+  await page.locator('[name="inventory.3.sku"]').fill('ARC-MS');
+  await page.getByLabel('Moss price', { exact: true }).fill('269');
+  await page.getByRole('button', { name: 'Save inventory' }).click();
+  await expect(latest).toContainText('Moss added at £269 with 0 in stock.');
   await page.getByRole('button', { name: 'Edit description', exact: true }).click();
   await page.locator('textarea[name=description]').fill('Short and plain.');
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -323,6 +331,17 @@ test('focus lands somewhere deliberate when a menu, a dialog or an action goes a
   await page.getByRole('button', { name: 'Save inventory' }).click();
   await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Edit product');
   await expect(page.locator('.demo-record-actions .btn.primary')).toBeFocused();
+});
+
+test('a draft is archived in words that fit it, and a bad URL falls back', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc-pro');
+  await page.getByRole('button', { name: 'More product actions' }).click();
+  await page.getByRole('button', { name: 'Archive product', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('It moves to Archived.');
+  await page.getByRole('dialog').getByRole('button', { name: 'Archive product', exact: true }).click();
+  await expect(page.locator('.timeline > li').first()).not.toContainText('left the store');
+  await page.goto('/app/products.html?page=-1&category=Nope&sort=bad&status=Nope');
+  await expect(page.getByRole('status')).toHaveText('1–6 of 8 products');
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {

@@ -72,7 +72,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **A rate moves in points.** Conversion falls from 4.0% to 3.6%: "Down 0.4 pts", not "Down 9.0%". A change that rounds to nothing reads "No change" in `muted`, not "Up 0.0".
 - **Each fact once per screen.** A percentage on a stat card is not repeated in the chart footer. A count on a tab is not repeated in a summary strip.
 - **One word for one state across screens:** "Out of stock" everywhere, never "0 in stock" in one view. The same goes for a figure: "In stock" in the table and the dialog, not "Available units" in one of them; "Sales" on every card, not "Revenue" on some.
-- **A record's header holds what no card shows,** apart from the record's own name. Its facts line doesn't repeat details (an email, a frame number) that a card below holds.
+- **A record's header holds what no card shows,** apart from the record's own name and when it last changed, which the Priority section puts at the top. Its facts line doesn't repeat details (an email, a frame number) that a card below holds.
 - **Every value has a label** unless its form says what it is, as a date or a price does. A bare name in a facts line needs its role: "mechanic Marek Nowak".
 - **Counts name their base,** counted against what the filters allow: "4 of 14 open jobs", not "4 of 18 jobs" when 4 are collected and hidden. A filter means what the column it filters says: if drafts can read "Out of stock", a stock filter that leaves them out says so by moving to the Active tab. Show a list's count only when a filter narrows it; unfiltered, it repeats the stat above.
 - **A stat's label says its scope.** If "Due today" leaves out jobs that are ready for collection, it reads "Work due today".
@@ -125,7 +125,9 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Changes are never lost silently.** Cancel, the cross, Escape and leaving the page all ask first when the editor is dirty, with "Keep editing" and "Discard changes". An unchanged editor closes straight away.
 - **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button, and anything that takes a live record off sale asks too.
 - **Focus never falls to the page.** Close a menu before opening a dialog from it, so the dialog returns focus to the menu's button. When an action removes its own control, as a finished bulk action or a next action does, move focus to what takes its place.
-- **A form states nothing nobody entered.** No prefilled price or silent default cost: a figure on the record comes from a person.
+- **A form states nothing nobody entered.** No prefilled price or silent default cost, on every route that creates something: a figure on the record comes from a person.
+- **Say what happens to this record.** "It leaves your store" is false for a draft. Write a confirmation and its history entry from the record's actual state.
+- **Clear means one thing.** Every Clear and Reset on a list leaves it in the same state.
 - **An editor opens on its first field,** or on the field the caller asked for, not on its close button.
 - **Saving nothing records nothing.** An unchanged save closes without a toast or a history entry. An entry says what really moved, in every editor: "Slate price changed from £249 to £259", "Chalk 28 → 32", "Alex Morgan changed the description and tags". On a record's own page it doesn't repeat the record's name.
 - **Validate the same rule on every route.** Two forms that can set a SKU refuse the same values with the same words, and focus the field that failed.
