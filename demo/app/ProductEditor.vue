@@ -11,9 +11,12 @@ const files = ref(null);
 const saving = ref(false);
 const imageError = computed(() => files.value?.size > 1024 * 1024 ? "Choose an image smaller than 1 MB." : "");
 const creating = ref(false);
+// the product's name as it was when the editor opened, over the title; a new product has none yet
+const editingName = ref('');
 // focus: a selector for the field the caller asked to edit, such as the description
 function open(product, create = false, focus) {
   creating.value = create || !product;
+  editingName.value = product?.name ?? '';
   Object.keys(draft).forEach(key => delete draft[key]);
   Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: 149, cost: 60, stock: 0, status: 'Draft', finish: 'Slate', tags: [], variants: [] });
   files.value = null;
@@ -34,7 +37,7 @@ defineExpose({ open });
 </script>
 <template>
   <dialog ref="dialog" class="dialog drawer divided demo-editor" aria-labelledby="product-editor-title">
-    <header><hgroup><p>{{ creating ? 'Grow your collection' : 'Product information' }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="dialog.close()"><Icon name="x"/></button></header>
+    <header><hgroup><p>{{ creating ? 'New product' : editingName }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="dialog.close()"><Icon name="x"/></button></header>
     <form @submit.prevent="save" class="space-y-5">
       <Field v-model="draft.name" name="name" label="Product name" required maxlength="100" placeholder="e.g. Arc headphones"/>
       <Field v-model="draft.subtitle" name="subtitle" label="Short description" maxlength="140"/>

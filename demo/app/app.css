@@ -13,8 +13,9 @@
   /* one inset for every card on a screen, and one title line: a header holding a button, a badge or nothing keeps its title at the same height */
   .demo-page .card:not(.demo-gallery, .demo-product-card) { --card-p: 24px; }
   .demo-page .card > header { min-height: 2rem; }
+  .demo-section-heading > .btn { margin-top: -3px; }
   /* a card's own action is quieter than its title */
-  .demo-page .card > header > .btn.ghost { --btn-accent: var(--color-muted-foreground); @media (hover: hover) { &:hover { color: var(--color-foreground); } } }
+  .demo-page :is(.card > header, .demo-section-heading) > .btn.ghost { --btn-accent: var(--color-muted-foreground); @media (hover: hover) { &:hover { color: var(--color-foreground); } } }
   /* a ghost action at the end of a card header lines its text up with the card's edge, not its own padding */
   .demo-page .card > header > .btn.ghost:last-child, .demo-section-heading > .btn.ghost:last-child { margin-inline-end: calc(-1 * var(--btn-px)); }
   .demo-page-heading {
@@ -34,6 +35,11 @@
   /* figures in a card: the value sits at the card's far edge */
   .dl.demo-figures > div { justify-content: space-between; > dd { flex: none; margin-inline-start: auto; font-weight: 500; font-variant-numeric: tabular-nums; } }
   .demo-table-meta { display: none; }
+  /* a note in the feed reads like the other entries' detail line */
+  .demo-history .timeline blockquote { margin: 4px 0 0; padding: 0; border: 0; font-size: .875rem; font-style: italic; color: var(--color-muted-foreground); }
+  .demo-tags { display: flex; flex-wrap: wrap; gap: 8px; margin-top: auto; padding-top: 16px; border-top: 1px solid var(--color-border); }
+  /* the current view reads as chosen in both schemes */
+  .demo-view-toggle > .btn[aria-pressed="true"] { --btn-bg: var(--color-secondary); --btn-fg: var(--color-secondary-foreground); }
   /* SKUs in the body face: case-sensitive forms centre the hyphens on the capitals */
   .demo-sku { font-feature-settings: "case"; letter-spacing: .01em; }
   .demo-thumb.sm { width: 32px; height: 32px; border-radius: min(var(--radius), 8px); }
@@ -68,7 +74,7 @@
   .demo-chart-prior { fill: none; stroke: var(--color-muted-foreground); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
   .demo-chart-labels { display: flex; justify-content: space-between; margin-top: 15px; font-size: .75rem; color: var(--color-muted-foreground); }
   .demo-chart-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px; padding-top: 15px; border-top: 1px solid var(--color-border); font-size: .8125rem; }
-  .demo-section-heading { display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 12px; margin-top: 6px; h2 { font-size: 1.1rem; font-weight: 600; letter-spacing: -.025em; } p { margin-top: 3px; } }
+  .demo-section-heading { display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 12px; margin-top: 6px; h2 { font-size: 1.1rem; font-weight: 600; letter-spacing: -.025em; } p { margin-top: 3px; } }
   .demo-product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
   .demo-product-card {
     padding: 0;
@@ -117,7 +123,9 @@
   }
   .demo-thumb { width: 44px; height: 44px; border-radius: min(var(--radius), 10px); background: var(--demo-stage); flex: none; overflow: hidden; svg { width: 100%; height: 100%; } img { width: 100%; height: 100%; object-fit: cover; } }
   .demo-selection { display: flex; align-items: center; gap: 12px; background: var(--color-muted); padding: 10px; border-radius: min(var(--radius), 8px); font-size: .875rem; }
-  .demo-table-footer { justify-content: space-between; border-top: 1px solid var(--color-border); padding-top: 16px; }
+  /* the footer's rule runs edge to edge like the table's, and closes the last row */
+  .demo-table-footer { justify-content: space-between; margin-inline: calc(-1 * var(--card-p)); padding: 16px var(--card-p) 0; border-top: 1px solid var(--color-border); }
+  .demo-table-scroll + .demo-table-footer { margin-top: -18px; }
   .demo-catalogue-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .demo-empty { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 55px 20px; text-align: center; > .demo-icon > svg { width: 32px; height: 32px; color: var(--color-muted-foreground); } :is(h1, h2) { font-size: 1.1rem; font-weight: 600; } p { max-width: 24rem; } }
   .demo-detail-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(300px, 1fr); gap: 20px; }
@@ -151,7 +159,6 @@
   .demo-channel { display: flex; align-items: center; justify-content: space-between; gap: 10px; strong { display: block; font-size: .875rem; font-weight: 500; } div > span { display: block; font-size: .75rem; margin-top: 2px; } }
   .demo-price { font-size: 1.8rem; font-weight: 600; letter-spacing: -.04em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }
   .demo-small-note { border-radius: min(var(--radius), 6px); background: var(--color-muted); color: var(--color-muted-foreground); padding: 10px 12px; font-size: .75rem; }
-  .demo-description-facts { display: flex; gap: 22px; padding-top: 18px; border-top: 1px solid var(--color-border); margin-top: 5px; flex-wrap: wrap; font-size: .875rem; > div { flex: 1; } p { margin-top: 4px; font-weight: 500; white-space: nowrap; } }
   .demo-detail-tabs { --tabs-px: 1rem; > label:first-child { padding-inline-start: 0; } }
   .demo-editor { --dialog-w: 29rem; --card-p: 24px; }
   .demo-form-footer { display: flex; justify-content: flex-end; gap: 10px; margin: 24px calc(-1 * var(--card-p)) 0; padding: 20px var(--card-p) 0; border-top: 1px solid var(--color-border); }
@@ -167,7 +174,6 @@
   .demo-history { .timeline { margin-top: 8px; } .timeline time { font-size: .75rem; margin-top: 4px; font-variant-numeric: tabular-nums; } .timeline > li { padding-bottom: 28px; } .timeline > li:last-child { padding-bottom: 0; } }
   /* the two cards beside the timeline: a title, a line and one action */
   .demo-side-cards { display: flex; flex-direction: column; gap: 20px; > .card { gap: 12px; > .btn { margin-top: 4px; } } }
-  .demo-workspace-card { --card-bg: var(--demo-stage); }
   @media (width < 80rem) {
     .demo-product-grid { gap: 12px; }
     .demo-product-card-body { padding: 14px; > div { min-width: 0; } }
@@ -201,7 +207,6 @@
     .demo-revenue > header > .demo-period { flex-basis: 100%; }
     .demo-page-footer { flex-direction: column; gap: 4px; }
     .demo-product-card-body { flex-direction: column; align-items: flex-start; gap: 6px; }
-    .demo-description-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
     .demo-section-heading > .btn.ghost:last-child { margin-inline: calc(-1 * var(--btn-px)) 0; }
     .demo-list-tabs { --tabs-px: .5rem; }
     .demo-gallery-stage { min-height: 240px; .demo-product-art { height: 220px; } }
