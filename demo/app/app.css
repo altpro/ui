@@ -117,6 +117,7 @@
   .demo-row-links {
     tbody tr { position: relative; }
     tbody .demo-title-link::after { content: ""; position: absolute; inset: 0; }
+    tbody .demo-row-action::after { content: ""; position: absolute; inset: 0; }
     tbody .checkbox { position: relative; z-index: 1; }
   }
   .demo-row-product { display: flex; align-items: center; gap: 12px; }
@@ -219,7 +220,7 @@
     .demo-period-error { text-align: start; }
     /* stats stay a compact block near 120px tall, so the next card starts in the first screenful */
     .demo-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
-    .demo-page .demo-stat { --card-p: 12px; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; column-gap: 8px; row-gap: 0; > p:first-child { grid-column: 1 / -1; font-size: .8125rem; } > p:last-child { font-size: .75rem; white-space: nowrap; } }
+    .demo-page .card.demo-stat { --card-p: 12px; gap: 2px; > p:first-child, > p:last-child { font-size: .8125rem; } }
     .demo-stat-value { font-size: 1.25rem; }
     .demo-dashboard-main, .demo-dashboard-side { display: contents; }
     /* the phone leads with what needs doing: low stock, then the sales story */

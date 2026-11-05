@@ -46,6 +46,8 @@ const productId = new URLSearchParams(location.search).get('id') || 'arc';
 // an id that matches nothing shows a not-found state, never another product
 const product = computed(() => store.products.find(p => p.id === productId));
 const productLink = p => `product.html?id=${encodeURIComponent(p.id)}`;
+// the way back from a record finds the list as it was left, filtered queue and all
+const listUrl = ref(`products.html${sessionStorage.getItem('demo-list-search') ?? ''}`);
 const sorts = { name: (a, b) => a.name.localeCompare(b.name), 'price-high': (a, b) => b.price - a.price, 'price-low': (a, b) => a.price - b.price, 'stock-low': (a, b) => a.stock - b.stock };
 const filtered = computed(() => store.products.filter(p =>
   (status.value === 'All' || p.status === status.value) &&
@@ -153,7 +155,7 @@ const chart = computed(() => {
     line: line(now), prior: line(then), labels,
     axis: [3, 2, 1, 0].map(k => ({ text: k ? `£${step * k / 1000}k` : '£0', y: y(step * k) })),
     peak: `${longDate(salesDays.value[best], { weekday: 'long', day: 'numeric', month: 'long' })}, ${money(now[best])}`,
-    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: longDate(salesDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), now: money(v), then: money(then[i]) })),
+    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: longDate(salesDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), priorDate: longDate(previousDays.value[i], { day: 'numeric', month: 'short' }), now: money(v), then: money(then[i]) })),
   };
 });
 // the day under the pointer or the arrow keys; the tip names it and both totals
@@ -170,6 +172,14 @@ function stepPoint(by) {
 watch(salesDays, () => { pointed.value = -1; });
 const categoryIcon = { Headphones: 'headphones', Speakers: 'speaker', Turntables: 'disc' };
 const activityIcon = type => ({ Inventory: 'layers', Price: 'tag', Note: 'bubble' })[type] ?? 'package';
+// the lowest price, marked when the finishes differ
+const priceLabel = p => `${new Set(p.variants.map(v => Number(v.price))).size > 1 ? 'From ' : ''}${money(p.price)}`;
+const previewFinish = ref(0);
+const previewed = computed(() => product.value?.variants[previewFinish.value] ?? product.value?.variants[0]);
+const previewBlock = computed(() => {
+  const p = product.value;
+  return p.status !== 'Active' ? 'Not available' : !channel(p, 'online') ? 'Not sold online' : !previewed.value?.stock ? 'Out of stock' : '';
+});
 const stockLabel = p => p.stock ? `${p.stock} in stock` : 'Out of stock';
 // out of stock on a live product is the loudest stock state, then low; a draft or archived product needs neither
 const stockAlert = p => p.status !== 'Active' ? null : p.stock === 0 ? { class: 'soft danger', label: 'Out of stock' } : p.stock < 10 ? { class: 'soft warning', label: `${p.stock} left` } : null;
@@ -188,6 +198,7 @@ watch([query, category, status, stockFilter, sort, mode, pageNumber], () => {
   const entries = { q: query.value, category: category.value, stock: stockFilter.value, status: status.value === 'All' ? '' : status.value, sort: sort.value === 'name' ? '' : sort.value, view: mode.value === 'grid' ? 'grid' : '', page: pageNumber.value > 1 ? pageNumber.value : '' };
   const search = new URLSearchParams(Object.entries(entries).filter(([, v]) => v)).toString();
   history.replaceState(null, '', search ? `?${search}` : location.pathname);
+  sessionStorage.setItem('demo-list-search', search ? `?${search}` : '');
 });
 function shortcut(event) {
   if (event.key === '/' && props.screen === 'products' && !event.ctrlKey && !event.metaKey && !event.altKey && !event.target.closest('input, textarea, select, [contenteditable]')) {
@@ -196,13 +207,19 @@ function shortcut(event) {
 }
 onMounted(() => {
   document.addEventListener('keydown', shortcut);
-  // the shell's breadcrumb and the tab name the record, as the page does
-  if (props.screen === 'product' && product.value) {
-    document.querySelector('.breadcrumb [aria-current="page"]').textContent = product.value.name;
-    document.title = `${product.value.name} · Forma`;
-  }
+  window.addEventListener('beforeunload', warnUnsaved);
+  // the breadcrumb goes back to the list as the page's own link does
+  if (props.screen === 'product') document.querySelector('.breadcrumb a[href$="products.html"]')?.setAttribute('href', listUrl.value);
 });
-onUnmounted(() => { document.removeEventListener('keydown', shortcut); clearTimeout(toastTimer); });
+// the shell's breadcrumb and the tab name the record, as the page does, through a rename too
+watch(() => product.value?.name, name => {
+  if (props.screen !== 'product' || !name) return;
+  nextTick(() => {
+    document.querySelector('.breadcrumb [aria-current="page"]').textContent = name;
+    document.title = `${name} · Forma`;
+  });
+}, { immediate: true });
+onUnmounted(() => { document.removeEventListener('keydown', shortcut); window.removeEventListener('beforeunload', warnUnsaved); clearTimeout(toastTimer); });
 function notify(message) { toast.value = message; clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.value = '', 6000); }
 function clearFilters() { query.value = ''; category.value = ''; stockFilter.value = ''; status.value = 'All'; }
 const closeFilters = () => document.getElementById('product-filters')?.hidePopover();
@@ -216,20 +233,33 @@ function leave(dialog, clean) {
 }
 function discardChanges() { discardDialog.value.close(); discardTarget?.close(); discardTarget = null; }
 const finishFields = list => list.map(({ name, sku, stock, price }) => ({ name, sku, stock, price }));
-const closePricing = () => leave(pricing.value, comparable({ ...priceDraft }) === comparable({ price: product.value.price, cost: product.value.cost }));
-const closeInventory = () => leave(inventory.value, comparable(finishFields(inventoryDraft.value)) === comparable(finishFields(product.value.variants)));
-const closeVariant = () => leave(variantDialog.value, comparable(finishFields([variantDraft])) === comparable(finishFields([product.value.variants[variantIndex.value]])));
-const closeNote = () => leave(noteDialog.value, !note.value.trim());
+const pricingClean = () => comparable({ ...priceDraft }) === comparable({ price: product.value.price, cost: product.value.cost });
+const inventoryClean = () => comparable(finishFields(inventoryDraft.value)) === comparable(finishFields(product.value.variants));
+const variantClean = () => comparable(finishFields([variantDraft])) === comparable(finishFields([product.value.variants[variantIndex.value]]));
+const noteClean = () => !note.value.trim();
+const closePricing = () => leave(pricing.value, pricingClean());
+const closeInventory = () => leave(inventory.value, inventoryClean());
+const closeVariant = () => leave(variantDialog.value, variantClean());
+const closeNote = () => leave(noteDialog.value, noteClean());
+// leaving the page with an editor's changes unsaved: the browser asks, as a close does here
+function warnUnsaved(event) {
+  const open = [[pricing, pricingClean], [inventory, inventoryClean], [variantDialog, variantClean], [noteDialog, noteClean]];
+  if (open.some(([dialog, clean]) => dialog.value?.open && !clean()) || editor.value?.dialog?.open && !editor.value.clean()) event.preventDefault();
+}
 function edit(p, focus) { editing.value = p?.id || null; editor.value.open(p, false, focus); }
 // a product's stock is its finishes' total and its retail price the lowest of theirs
 function syncFinishes(p) {
   p.stock = p.variants.reduce((sum, v) => sum + Number(v.stock), 0);
   p.price = Math.min(...p.variants.map(v => Number(v.price)));
 }
+// a SKU is taken if any other product or finish uses it; a product's own finishes may share its SKU
 const sameSku = (a, b) => a.trim().toLowerCase() === b.trim().toLowerCase();
+const skuTaken = (sku, productId) => store.products.some(p => p.id !== productId && [p.sku, ...p.variants.map(v => v.sku)].some(other => sameSku(other, sku)));
+const skuError = 'Enter a SKU no other product or finish uses.';
+const checkProductSku = sku => skuTaken(sku, editing.value) ? skuError : '';
 function saveProduct(draft) {
   // a product keeps its drawing while it stays in a category that has it; a new or moved one takes the category's first
-  const kinds = { Headphones: ['headphones', 'studio', 'earbuds'], Speakers: ['speaker', 'stereo', 'mini'], Turntables: ['turntable'] }[draft.category];
+  const kinds = { Headphones: ['headphones', 'studio', 'earbuds'], Speakers: ['speaker', 'stereo', 'mini'], Turntables: ['turntable', 'deck'] }[draft.category];
   if (!kinds.includes(draft.kind)) draft.kind = kinds[0];
   if (editing.value) {
     const target = store.products.find(p => p.id === editing.value);
@@ -262,7 +292,7 @@ function saveInventory() {
   const skus = new Set();
   inventoryDraft.value.forEach((v, i) => {
     const sku = v.sku.trim().toLowerCase();
-    if (skus.has(sku)) errors[`inventory.${i}.sku`] = 'Enter a SKU no other finish uses.';
+    if (skus.has(sku) || skuTaken(sku, product.value.id)) errors[`inventory.${i}.sku`] = skuError;
     skus.add(sku);
   });
   inventoryErrors.value = errors;
@@ -280,8 +310,8 @@ function openVariant(index) {
 }
 function saveVariant() {
   const p = product.value, variant = { ...variantDraft, price: Number(variantDraft.price), stock: Number(variantDraft.stock) };
-  if (p.variants.some((v, i) => i !== variantIndex.value && sameSku(v.sku, variant.sku))) {
-    variantErrors.value = 'Enter a SKU no other finish uses.';
+  if (skuTaken(variant.sku, p.id) || p.variants.some((v, i) => i !== variantIndex.value && sameSku(v.sku, variant.sku))) {
+    variantErrors.value = skuError;
     return void nextTick(() => variantDialog.value.querySelector('[name=finishSku]')?.focus());
   }
   p.variants[variantIndex.value] = variant;
@@ -294,6 +324,7 @@ function setChannel(key, on) {
   p.channels = { online: channel(p, 'online'), studio: channel(p, 'studio'), [key]: on };
   record(`${p.name} ${on ? 'added to' : 'removed from'} ${place}`, `Alex Morgan turned ${on ? 'on' : 'off'} ${place} for this product.`, p.id);
   if (p.status !== 'Active') return notify(on ? `${p.name} will go live in ${place}.` : `${p.name} will stay out of ${place}.`);
+  if (on && !p.stock) return notify(`${p.name} is listed in ${place}, with no stock to sell.`);
   notify(on ? `${p.name} is available in ${place}.` : `${p.name} is no longer available in ${place}.`);
 }
 function changeStatus(next) {
@@ -317,8 +348,11 @@ function archiveProducts() {
   selected.value = []; confirmation.value.close(); notify(pending.value.length === 1 ? 'Product archived.' : 'Products archived.');
 }
 function duplicate() {
-  const p = JSON.parse(JSON.stringify(product.value)); p.name += ' (copy)'; p.sku += '-COPY'; p.status = 'Draft'; p.image = undefined;
-  p.variants.forEach(v => { v.sku += '-COPY'; });
+  const p = JSON.parse(JSON.stringify(product.value)); p.name += ' (copy)'; p.status = 'Draft'; p.image = undefined;
+  // the first free -COPY suffix, so duplicating twice still gives every code its own
+  let suffix = '-COPY', n = 1;
+  while ([p, ...p.variants].some(item => skuTaken(item.sku + suffix))) suffix = `-COPY-${++n}`;
+  p.sku += suffix; p.variants.forEach(v => { v.sku += suffix; });
   document.getElementById('product-more').hidePopover(); editing.value = null; editor.value.open(p, true);
 }
 function exportProducts() {
@@ -372,7 +406,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
                 <span class="demo-chart-guide" :style="{ left: `${tip.x}%` }"></span>
                 <span class="demo-chart-dot previous" :style="{ left: `${tip.x}%`, top: `${tip.priorY}%` }"></span>
                 <span class="demo-chart-dot" :style="{ left: `${tip.x}%`, top: `${tip.y}%` }"></span>
-                <div class="demo-chart-tip" role="status" :class="{ flip: tip.x > 60 }" :style="{ left: `${tip.x}%` }"><strong>{{ tip.date }}</strong><span><span class="muted">This period</span> {{ tip.now }}</span><span><span class="muted">Previous</span> {{ tip.then }}</span></div>
+                <div class="demo-chart-tip" role="status" :class="{ flip: tip.x > 60 }" :style="{ left: `${tip.x}%` }"><strong>{{ tip.date }}</strong><span><span class="muted">This period</span> {{ tip.now }}</span><span><span class="muted">{{ tip.priorDate }}</span> {{ tip.then }}</span></div>
               </template>
             </div>
             <div class="demo-chart-labels"><span v-for="label in chart.labels" :key="label.text" :style="{ left: `${label.x}%` }">{{ label.text }}</span></div>
@@ -446,7 +480,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         <div v-if="selected.length && mode === 'table'" class="demo-selection"><p class="font-medium whitespace-nowrap">{{ selected.length }} selected</p><button class="btn outlined sm" @click="requestArchive(selected)"><Icon name="archive"/> Archive selected</button><button class="btn ghost sm ml-auto -me-1" @click="selected = []"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div>
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
-            <colgroup><col class="w-16"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-24 max-md:w-20"></colgroup>
+            <colgroup><col class="w-16"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-28"></colgroup>
             <thead><tr><th><input class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product</th><th>Status</th><th>Inventory</th><th>Category</th><th class="text-right">Price</th></tr></thead>
             <tbody>
               <tr v-for="p in visible" :key="p.id">
@@ -455,12 +489,12 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
                 <td><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span></td>
                 <td class="whitespace-nowrap"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></td>
                 <td class="muted">{{ p.category }}</td>
-                <td class="text-right font-medium tabular-nums">{{ money(p.price) }}</td>
+                <td class="text-right font-medium tabular-nums whitespace-nowrap">{{ priceLabel(p) }}</td>
               </tr>
             </tbody>
           </table>
         </div>
-        <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h3>{{ p.name }}</h3><p class="muted text-xs">{{ p.category }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></p></div><strong>{{ money(p.price) }}</strong></div></a></div>
+        <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h3>{{ p.name }}</h3><p class="muted text-xs">{{ p.category }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></p></div><strong>{{ priceLabel(p) }}</strong></div></a></div>
         <div v-else class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">Try another name or SKU, or clear the filters.</p><button class="btn outlined" @click="clearFilters">Clear filters</button></div>
         <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ `${(pageNumber - 1) * 6 + 1}–${Math.min(pageNumber * 6, filtered.length)} of ${filtered.length} products` }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--; selected = []" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++; selected = []" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
@@ -472,7 +506,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
     </template>
 
     <template v-else-if="screen === 'product'">
-      <a href="products.html" class="btn ghost sm self-start -ms-3 md:hidden"><Icon name="arrow-left"/> All products</a>
+      <a :href="listUrl" class="btn ghost sm self-start -ms-3 md:hidden"><Icon name="arrow-left"/> All products</a>
       <div class="demo-page-heading">
         <div class="min-w-0">
           <div class="demo-record-title">
@@ -507,10 +541,10 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             <header><hgroup><h2 id="finishes-heading">Inventory</h2><p>London studio</p></hgroup><button v-if="nextAction?.label !== 'Adjust inventory'" class="btn ghost sm" @click="openInventory">Adjust inventory</button></header>
             <div class="demo-table-scroll">
               <table class="table hover table-fixed demo-row-links">
-                <colgroup><col><col class="w-36 max-md:hidden"><col class="w-28"><col class="w-24"></colgroup>
-                <thead><tr><th>Finish</th><th class="max-md:hidden">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th></tr></thead>
-                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><button class="demo-title-link font-medium" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)">{{ v.name }}</button><span class="block text-xs muted demo-sku md:hidden">{{ v.sku }}</span></td><td class="muted demo-sku max-md:hidden">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td></tr></tbody>
-                <tfoot class="tabular-nums"><tr><td>Total</td><td class="max-md:hidden"></td><td class="text-right">{{ product.stock }}</td><td></td></tr></tfoot>
+                <colgroup><col><col class="w-36 max-md:hidden"><col class="w-28"><col class="w-24"><col class="w-16"></colgroup>
+                <thead><tr><th>Finish</th><th class="max-md:hidden">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th><th><span class="sr-only">Edit</span></th></tr></thead>
+                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="block text-xs muted demo-sku md:hidden">{{ v.sku }}</span></td><td class="muted demo-sku max-md:hidden">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
+                <tfoot class="tabular-nums"><tr><td>Total</td><td class="max-md:hidden"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
               </table>
             </div>
           </section>
@@ -531,7 +565,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           </section>
           <section class="card demo-pricing" aria-labelledby="pricing-heading">
             <header><h2 id="pricing-heading">Pricing</h2><button class="btn ghost sm" @click="openPrice">Edit pricing</button></header>
-            <p class="demo-price">{{ money(product.price) }}</p>
+            <p class="demo-price">{{ priceLabel(product) }}</p>
             <dl class="dl horizontal demo-figures"><div><dt>Cost per item</dt><dd>{{ money(product.cost) }}</dd></div><div><dt>Margin after VAT</dt><dd>{{ margin(product) }}%</dd></div></dl>
             <p class="demo-card-footer">Retail price includes 20% VAT</p>
           </section>
@@ -550,13 +584,13 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
 
   </div>
 
-  <ProductEditor ref="editor" @save="saveProduct" @leave="clean => leave(editor.dialog, clean)"/>
+  <ProductEditor ref="editor" :check-sku="checkProductSku" @save="saveProduct" @leave="clean => leave(editor.dialog, clean)"/>
   <!-- the product's own editors; an unknown id has no product to edit -->
   <template v-if="product">
   <dialog ref="pricing" class="dialog divided" aria-labelledby="price-dialog-title" @cancel.prevent="closePricing"><header><hgroup><p>{{ product.name }}</p><h2 id="price-dialog-title">Edit pricing</h2></hgroup><button class="btn ghost sm" aria-label="Close pricing" @click="closePricing"><Icon name="x"/></button></header><form id="pricing-form" class="space-y-4" @submit.prevent="savePrice"><div class="grid grid-cols-2 gap-4"><Field v-model="priceDraft.price" name="retailPrice" label="Retail price" type="number" prepend="£" min="0" step="0.01" required/><Field v-model="priceDraft.cost" name="itemCost" label="Cost per item" type="number" prepend="£" min="0" step="0.01" required/></div><p class="text-sm muted">Prices include VAT. A new retail price moves every finish by the same amount.</p></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closePricing">Cancel</button><button form="pricing-form" class="btn primary">Save pricing</button></footer></dialog>
   <dialog ref="inventory" class="dialog drawer divided demo-editor" aria-labelledby="stock-dialog-title" @cancel.prevent="closeInventory"><header><hgroup><p>{{ product.name }}</p><h2 id="stock-dialog-title">Adjust inventory</h2></hgroup><button class="btn ghost sm" aria-label="Close inventory" @click="closeInventory"><Icon name="x"/></button></header><form id="inventory-form" class="space-y-5" @submit.prevent="saveInventory"><p class="text-sm muted">Stock at the London studio. Add, reorder or remove finishes here.</p><Repeater v-model="inventoryDraft" name="inventory" item="finish" :make="makeFinish" :errors="inventoryErrors" v-slot="{ row, index, errors }"><div class="grid grid-cols-2 gap-3"><Field v-model="row.name" :name="`inventory.${index}.name`" label="Finish name" required/><Field v-model="row.sku" :name="`inventory.${index}.sku`" label="Finish SKU" :errors="errors" required/></div><Field v-model="row.stock" :name="`inventory.${index}.stock`" :label="`${row.name || 'New finish'} available units`" type="number" min="0" step="1" required/></Repeater></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeInventory">Cancel</button><button form="inventory-form" class="btn primary">Save inventory</button></footer></dialog>
   <dialog ref="variantDialog" class="dialog divided" aria-labelledby="finish-dialog-title" @cancel.prevent="closeVariant"><header><hgroup><p>{{ product.name }}</p><h2 id="finish-dialog-title">Edit finish</h2></hgroup><button class="btn ghost sm" aria-label="Close finish editor" @click="closeVariant"><Icon name="x"/></button></header><form id="finish-form" class="space-y-4" @submit.prevent="saveVariant"><Field v-model="variantDraft.name" name="finishName" label="Finish name" required/><Field v-model="variantDraft.sku" name="finishSku" label="Finish SKU" :errors="variantErrors || undefined" required/><div class="grid grid-cols-2 gap-4"><Field v-model="variantDraft.price" name="finishPrice" label="Finish price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="variantDraft.stock" name="finishStock" label="Available units" type="number" min="0" step="1" required/></div></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeVariant">Cancel</button><button form="finish-form" class="btn primary">Save finish</button></footer></dialog>
-  <dialog ref="preview" class="dialog demo-preview" aria-labelledby="preview-title"><header><p class="muted text-sm">Store preview</p><button class="btn ghost sm ml-auto" aria-label="Close preview" @click="preview.close()"><Icon name="x"/></button></header><div class="demo-product-stage"><img v-if="product.image" :src="product.image" :alt="product.name"/><ProductArt v-else :kind="product.kind" :name="product.name" :angle="angle"/></div><div class="flex justify-between gap-4 items-start"><div><h2 id="preview-title" class="text-xl font-semibold">{{ product.name }}</h2><p class="muted mt-1">{{ product.subtitle }}</p></div><strong class="text-xl tabular-nums">{{ money(product.price) }}</strong></div><p class="text-sm muted leading-relaxed">{{ product.description }}</p><button class="btn primary" :disabled="product.status !== 'Active' || product.stock === 0" @click="preview.close(); notify('Added to your demo bag.')">{{ product.stock === 0 ? 'Out of stock' : product.status !== 'Active' ? 'Not available' : 'Add to bag' }}</button></dialog>
+  <dialog ref="preview" class="dialog demo-preview" aria-labelledby="preview-title"><header><p class="muted text-sm">Store preview</p><button class="btn ghost sm ml-auto" aria-label="Close preview" @click="preview.close()"><Icon name="x"/></button></header><div class="demo-product-stage"><img v-if="product.image" :src="product.image" :alt="product.name"/><ProductArt v-else :kind="product.kind" :name="product.name" :angle="angle"/></div><div class="flex justify-between gap-4 items-start"><div><h2 id="preview-title" class="text-xl font-semibold">{{ product.name }}</h2><p class="muted mt-1">{{ product.subtitle }}</p></div><strong class="text-xl tabular-nums">{{ money(previewed?.price ?? product.price) }}</strong></div><div v-if="product.variants.length > 1" class="field"><label for="preview-finish">Finish</label><select id="preview-finish" v-model.number="previewFinish" class="input"><option v-for="(v, i) in product.variants" :key="i" :value="i">{{ v.name }}{{ v.stock ? '' : ' (out of stock)' }}</option></select></div><p class="text-sm muted leading-relaxed">{{ product.description }}</p><button class="btn primary" :disabled="!!previewBlock" @click="preview.close(); notify('Added to your demo bag.')">{{ previewBlock || 'Add to bag' }}</button></dialog>
   </template>
   <dialog ref="confirmation" class="dialog divided" aria-labelledby="confirm-title"><header><h2 id="confirm-title">{{ pending === 'reset' ? 'Reset workspace?' : archiveName ? `Archive “${archiveName}”?` : `Archive ${archiveCount} products?` }}</h2></header><p class="text-sm muted">{{ pending === 'reset' ? 'Your changes in this tab will be cleared and the original catalogue restored.' : archiveName ? 'It leaves your store and your active list. You can make it active again from its product page.' : `They leave your store and your active list. You can make each one active again from its product page.` }}</p><footer class="justify-end"><button class="btn outlined" @click="confirmation.close()">Cancel</button><button class="btn" :class="pending === 'reset' ? 'primary' : 'danger'" @click="pending === 'reset' ? (resetWorkspace(), confirmation.close(), notify('Workspace reset.')) : archiveProducts()">{{ pending === 'reset' ? 'Reset workspace' : archiveName ? 'Archive product' : `Archive ${archiveCount} products` }}</button></footer></dialog>
   <dialog ref="noteDialog" class="dialog divided" aria-labelledby="note-title" @cancel.prevent="closeNote"><header><h2 id="note-title">Add a note</h2><button class="btn ghost sm" aria-label="Close note" @click="closeNote"><Icon name="x"/></button></header><form id="note-form" @submit.prevent="saveNote"><Field v-model="note" name="note" label="Your note" type="textarea" rows="5" required placeholder="What should your team know?"/></form><footer class="justify-end"><button class="btn outlined" type="button" @click="closeNote">Cancel</button><button form="note-form" class="btn primary">Add note</button></footer></dialog>

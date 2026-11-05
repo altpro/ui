@@ -25,6 +25,8 @@ Most of what held the screens back was not any single component. It was **drift*
 - **Show the result where the action was.** When finishing a task removes its button (the balance is paid, the order is shipped), the header says so: a badge in the row beside the title, for example `badge soft success` reading "Paid in full". It has no dot, because the dot marks the record's workflow status and this is a fact beside it, as Overdue is. Nobody should have to find a zero in a table to learn it.
 - **A list page has its primary action:** "New job", "Add product", a `btn primary` at the end of the title row. Creating a record is the most common thing done from a list.
 - **A record is named the way its users name it.** The `h1` is the customer, the item or both ("Niamh Gallagher's Ribble CGR AL"); a code such as J-1047 is the caption above it in an `hgroup`. A bare code tells nobody at the counter which job it is.
+- **The primary button follows what the record is waiting for.** A list page's primary action is fixed; a record's is not. Stock low: "Adjust inventory". A draft: "Publish". Archived: "Make active". Only a record waiting for nothing gets "Edit". The card that holds the same action drops its copy of the button while the header has it.
+- **A control sits above everything it changes.** A period that drives the stats goes in the title row, not inside the chart under them. Say the range and what it is compared with once, in the subtitle, instead of "vs. previous 7 days" on each stat.
 - **One control per choice.** Stat cards that filter the list and a sidebar of saved views that filter it the same way are two navigations for one decision. Keep one.
 
 ### Rhythm
@@ -41,6 +43,8 @@ Most of what held the screens back was not any single component. It was **drift*
   ```
 - **One rule style per card.** If the table's row rules run edge to edge, the footer's rule does too and closes the last row. Inset rules belong to controls, such as the tab underline.
 - **A footer straight after a table** pulls up by the card's gap (`-mt-(--card-p)`), so its rule sits where the next row's would. Otherwise the gap reads as an empty row.
+- **A screen measures itself.** A sidebar takes width a viewport query can't see, so a laptop can have less room than a tablet. Put `container: page / inline-size` on the page and compose the side-by-side rows, filters and table columns with `@container`, leaving `md:` for what really depends on the device.
+- **A long record's facts stay in view.** A main column of history can't end level with the fact stack on every record, because history length varies. Make the stack sticky (`sticky top-gap self-start`) rather than stretching a card, and rearrange cards only for the typical record.
 - **Lists hold still.** A table that filters, sorts or pages is `table-fixed` with a `<colgroup>` of widths, so its columns don't jump when the rows change.
 - **A form fills its card.** A form in a full-width card runs the card's width, with its button at the end of the field row. Otherwise put the card in a column as narrow as the form. A `max-w-2xl` form inside a wide card looks unfinished.
 - **Repeated items share one structure at every width.** Cards in a grid and rows in a list keep the same order, with the price or status in the same place, whether a name wraps or not.
@@ -64,6 +68,8 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Headings name what the card holds:** "Description", "Details", "Low stock", "Recent activity". Not "The details", "A little attention" or "Your space to try things".
 - **A page's `h1` matches its label** in the nav and the breadcrumb. A saved view or filter that is a nav item is a page: it sets both ("Jobs › Overdue").
 - **A subtitle says what the page covers** ("Sales, stock and changes across your store") or is left out. Leave out taglines, motivational lines, reassurance notes ("Your collection is looking good"), decorative punctuation on headings, and eyebrows that restate the heading.
+- **Every figure reconciles.** Stats, the chart, the category split and the top products come from one set of rows for one period, so their totals match and their percentages add to 100. Margin is on the price without VAT, since a cost has none. A stock total is the sum of its variants, and a price that varies reads "From £249".
+- **A rate moves in points.** Conversion falls from 4.0% to 3.6%: "Down 0.4 pts", not "Down 9.0%".
 - **Each fact once per screen.** A percentage on a stat card is not repeated in the chart footer. A count on a tab is not repeated in a summary strip.
 - **One word for one state across screens:** "Out of stock" everywhere, never "0 in stock" in one view.
 - **A record's header holds what no card shows,** apart from the record's own name. Its facts line doesn't repeat details (an email, a frame number) that a card below holds.
@@ -89,7 +95,9 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Ghost buttons line up by their label,** not their padding. At the end of a header row add `-me-3`; at the start of a column add `-ms-3` (`-me-4` and `-ms-4` at the default size). The label then meets the card's inset.
 - **`→` or a chevron-right means "go there in the app".** `↗` means an external site.
 - **Anything that looks like a link is one.** Coloured text with an arrow that does nothing is a lie: make it a link, or plain text.
-- **A row's title is its link.** Drop a repeated "Open" button on every row.
+- **A row's title is its link.** Drop a repeated "Open" button on every row. Stretch the link's hit area over the row (`::after` with `inset-0` on a `relative` row), with checkboxes above it. A row that opens an editor instead of a page shows a quiet pencil, because a plain value doesn't say it can be edited.
+- **A list's state lives in its URL.** Search, filters, sort, page and view survive a reload, and a record's way back (its link and its breadcrumb) returns to the list as it was left. A link that arrives to act on a queue sorts the worst first.
+- **Selection shows its state.** A header checkbox is mixed (`:indeterminate.prop`) when some rows are selected. A bulk action counts only the rows it will change.
 - **A stat that filters the list is a link.** The whole card is the link, with a chevron at every width. The current one takes `aria-current="true"` and the `secondary` fill.
 - **A toggle shows its value in both schemes.** A `.btn` with `aria-pressed="true"` takes the checked fill. In a `.join` of view switches, give the pressed one the `secondary` fill so it still reads in dark.
 - **Icons mean what they show.** A square check reads as a checkbox. A feed entry shows its type instead: a package for a product, a tag for a price, a speech bubble for a note.
@@ -102,12 +110,17 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Strokes keep their weight at any width** (`vector-effect: non-scaling-stroke`). A comparison series is muted, never faded with opacity.
 - **A chart footer adds a fact,** such as the previous period's total, never a repeat of a stat card.
 - **Period controls:** a preset `select`, with a "Custom range" option that reveals the two date inputs.
-- **A list of shares packs from the top** with a total above it. It is never spread to fill the card.
+- **A list of shares packs from the top** with a total above it, unless a stat on the screen already shows that total. It is never spread to fill the card.
+- **A chart reads out a day.** Point at it, or tab to it and use the arrow keys, and a tip names the day and both figures, with the comparison's own date.
 
 ### Dialogs and drawers
 
 - **`dialog divided`:** the header rule and the rule above the actions both run edge to edge. Put the actions in the dialog's own `<footer>` (the submit button takes `form="…"`). A footer inside the form bleeds the way the header does: `-mx-(--card-p) px-(--card-p) border-t border-border`.
 - **One primary action,** last in the footer, with Cancel `outlined` before it.
+- **A drawer's actions stay on screen.** Its `<footer>` is the last child of the dialog, not of the form, so it stays put while a long form scrolls.
+- **Changes are never lost silently.** Cancel, the cross, Escape and leaving the page all ask first when the editor is dirty, with "Keep editing" and "Discard changes". An unchanged editor closes straight away.
+- **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button.
+- **Validate the same rule on every route.** Two forms that can set a SKU refuse the same values with the same words, and focus the field that failed.
 
 ### Phone (390px)
 
@@ -133,4 +146,4 @@ Compose each screen for the phone. Don't let the desktop layout wrap.
 ### Imagery
 
 - **Every item has its own picture.** Two identical images side by side read as placeholder content.
-- **Product images sit on one stage colour,** drawn from the tokens so they follow the scheme.
+- **Product images sit on one stage colour,** drawn from the tokens, and don't invert in dark. A product is the same object in both schemes: a photograph doesn't change, so give an illustration's stage `color-scheme: light`.

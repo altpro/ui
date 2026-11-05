@@ -237,10 +237,14 @@ test('an editor with changes asks before it discards them', async ({ page }) => 
   await page.getByRole('dialog', { name: 'Edit pricing' }).getByRole('button', { name: 'Cancel', exact: true }).click();
   await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.locator('.demo-pricing .demo-price')).toHaveText('£249');
+  await expect(page.locator('.demo-pricing .demo-price')).toHaveText('From £249');
   await page.getByRole('button', { name: 'Edit product', exact: true }).click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('dialog')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Edit pricing', exact: true }).click();
+  await page.getByLabel('Retail price', { exact: true }).fill('300');
+  const warned = page.evaluate(() => { const event = new Event('beforeunload', { cancelable: true }); window.dispatchEvent(event); return event.defaultPrevented; });
+  expect(await warned).toBe(true);
 });
 
 test('finishes keep one SKU each and their totals on the product', async ({ page }) => {
@@ -254,7 +258,12 @@ test('finishes keep one SKU each and their totals on the product', async ({ page
   await page.getByLabel('Finish SKU', { exact: true }).fill('arc-sl');
   await page.getByRole('button', { name: 'Save finish', exact: true }).click();
   await expect(page.getByLabel('Finish SKU', { exact: true })).toBeFocused();
-  await expect(page.getByText('Enter a SKU no other finish uses.')).toBeVisible();
+  await expect(page.getByText('Enter a SKU no other product or finish uses.')).toBeVisible();
+  await page.goto('/app/product.html?id=dot');
+  await page.getByRole('button', { name: 'Edit product', exact: true }).click();
+  await page.getByLabel('SKU', { exact: true }).fill('frm-arc-01');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page.getByLabel('SKU', { exact: true })).toBeFocused();
 });
 
 test('the list keeps its state in the URL, and the stock link lands worst first', async ({ page }) => {
@@ -268,6 +277,35 @@ test('the list keeps its state in the URL, and the stock link lands worst first'
   await page.reload();
   await expect(page.getByRole('radio', { name: /^Draft/ })).toBeChecked();
   await expect(page.getByRole('button', { name: 'Grid view', exact: true })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('the way back from a product finds the filtered list', async ({ page }) => {
+  await page.goto('/app/products.html');
+  await page.getByRole('radio', { name: /^Active/ }).check();
+  await page.locator('tbody .demo-title-link').first().click();
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Products' }).click();
+  await expect(page).toHaveURL(/status=Active/);
+  await expect(page.getByRole('radio', { name: /^Active/ })).toBeChecked();
+});
+
+test('the store preview follows the finish and the channels', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Preview', exact: true }).click();
+  await page.getByLabel('Finish', { exact: true }).selectOption({ label: 'Clay' });
+  await expect(page.getByRole('dialog')).toContainText('£259');
+  await page.keyboard.press('Escape');
+  await page.getByRole('switch', { name: 'Online store availability', exact: true }).uncheck({ force: true });
+  await page.getByRole('button', { name: 'Preview', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Not sold online', exact: true })).toBeDisabled();
+});
+
+test('renaming a product renames its breadcrumb and tab', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Edit product', exact: true }).click();
+  await page.getByLabel('Product name', { exact: true }).fill('Arc mk2');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page.locator('.breadcrumb [aria-current="page"]')).toHaveText('Arc mk2');
+  await expect(page).toHaveTitle('Arc mk2 · Forma');
 });
 
 test('a custom range refuses an end before its start', async ({ page }) => {

@@ -4,7 +4,10 @@ import Field from '@ui/Field.vue';
 import FileInput from '@ui/FileInput.vue';
 import Icon from './Icon.vue';
 import { categories } from './store.js';
+// checkSku answers with what to enter when the code is taken, or nothing
+const props = defineProps({ checkSku: Function });
 const emit = defineEmits(['save', 'leave']);
+const skuError = ref('');
 const dialog = ref();
 const draft = reactive({});
 const files = ref(null);
@@ -24,11 +27,14 @@ function open(product, create = false, focus) {
   Object.keys(draft).forEach(key => delete draft[key]);
   Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: 149, cost: 60, stock: 0, status: 'Draft', finish: 'Slate', tags: [], variants: [] });
   files.value = null;
+  skuError.value = '';
   opened = comparable();
   nextTick(() => { dialog.value.showModal(); if (focus) dialog.value.querySelector(focus)?.focus(); });
 }
 async function save() {
   if (imageError.value) return;
+  skuError.value = props.checkSku?.(draft.sku) ?? '';
+  if (skuError.value) return void nextTick(() => dialog.value.querySelector('[name=sku]')?.focus());
   saving.value = true;
   const product = JSON.parse(JSON.stringify(draft));
   if (files.value) product.image = await new Promise(resolve => {
@@ -38,8 +44,9 @@ async function save() {
   });
   emit('save', product); saving.value = false; dialog.value.close();
 }
-const requestClose = () => emit('leave', comparable() === opened && !files.value);
-defineExpose({ open, dialog });
+const clean = () => comparable() === opened && !files.value;
+const requestClose = () => emit('leave', clean());
+defineExpose({ open, dialog, clean });
 </script>
 <template>
   <dialog ref="dialog" class="dialog drawer divided demo-editor" aria-labelledby="product-editor-title" @cancel.prevent="requestClose">
@@ -47,7 +54,7 @@ defineExpose({ open, dialog });
     <form id="product-form" @submit.prevent="save" class="space-y-5">
       <Field v-model="draft.name" name="name" label="Product name" required maxlength="100" placeholder="e.g. Arc headphones"/>
       <Field v-model="draft.subtitle" name="subtitle" label="Short description" maxlength="140"/>
-      <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" required/></div>
+      <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" :errors="skuError || undefined" required/></div>
       <Field v-model="draft.description" name="description" type="textarea" label="Description" rows="5"/>
       <Field v-model="draft.tags" name="tags" label="Tags" type="combobox" multiple :options="['Wireless', 'Analog', 'Bestseller', 'New arrival', 'Studio', 'Coming soon']" hint="Help your team organise the collection."/>
       <div class="field"><label for="product-photo">Product image</label><FileInput id="product-photo" v-model="files" name="photo" accept="image/*" :errors="imageError || undefined"><span>Any image up to 1 MB.</span></FileInput></div>

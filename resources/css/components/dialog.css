@@ -69,7 +69,8 @@
       /* however long the form, its actions stay on screen */
       > footer:last-child {
         position: sticky;
-        inset-block-end: 0;
+        /* the dialog's padding would otherwise leave a strip of the scrolled form under it */
+        inset-block-end: calc(-1 * var(--card-p));
         margin-block-start: auto;
         background: var(--card-bg);
       }
