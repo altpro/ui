@@ -242,6 +242,12 @@ test('search reaches a finish SKU and an empty tab says what belongs there', asy
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(page.locator('tbody tr')).toContainText('Chalk · ARC-CH');
   await expect(page.locator('tbody tr')).toContainText('28 in stock');
+  await page.getByLabel('Search products', { exact: true }).fill('Chalk');
+  await page.getByRole('combobox', { name: 'Sort products', exact: true }).selectOption('stock-low');
+  await expect(page.locator('tbody tr').first()).toContainText('Loop turntable');
+  await expect(page.locator('tbody tr').last()).toContainText('64 in stock');
+  await page.getByRole('combobox', { name: 'Sort products', exact: true }).selectOption('name');
+  await page.getByLabel('Search products', { exact: true }).fill('ARC-CH');
   await page.getByRole('button', { name: 'Grid view', exact: true }).click();
   await expect(page.locator('.demo-catalogue-grid > a')).toContainText('Chalk · ARC-CH');
   await page.getByRole('button', { name: 'Table view' }).click();
@@ -310,6 +316,9 @@ test('ticking a row moves nothing, and the list reads as one column of figures o
   const before = await row.boundingBox();
   await row.locator('.checkbox').check();
   await expect(page.getByRole('button', { name: 'Archive selected', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Clear selection', exact: true }).click();
+  await expect(page.getByLabel('Select all visible products')).toBeFocused();
+  await row.locator('.checkbox').check();
   expect((await row.boundingBox()).y).toBe(before.y);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/app/dashboard.html');

@@ -60,9 +60,9 @@ const sorts = { name: (a, b) => a.name.localeCompare(b.name), 'price-high': (a, 
 const filtered = computed(() => store.products.filter(p =>
   (status.value === 'All' || p.status === status.value) &&
   (!category.value || p.category === category.value) &&
-  (!stockFilter.value || (stockFilter.value === 'low' ? stockAlert(p) : p.status === 'Active' && p.stock === 0)) &&
+  (!stockFilter.value || (stockFilter.value === 'low' ? stockAlert(shown(p)) : p.status === 'Active' && shown(p).stock === 0)) &&
   `${p.name} ${p.sku} ${p.category} ${p.variants.map(v => `${v.name} ${v.sku}`).join(' ')}`.toLowerCase().includes(query.value.toLowerCase())
-).sort(sorts[sort.value]));
+).sort((a, b) => sorts[sort.value](shown(a), shown(b))));
 const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / 6)));
 const visible = computed(() => filtered.value.slice((pageNumber.value - 1) * 6, pageNumber.value * 6));
 const allSelected = computed(() => visible.value.length > 0 && visible.value.every(p => selected.value.includes(p.id)));
@@ -161,6 +161,7 @@ const sold = computed(() => {
   return Object.entries(totals).map(([id, t]) => ({ ...t, product: store.products.find(p => p.id === id) })).filter(s => s.product && s.units).sort((a, b) => b.revenue - a.revenue);
 });
 const topProducts = computed(() => sold.value.slice(0, 5));
+const dayName = d => d === today ? 'Today' : d === shift(today, -1) ? 'Yesterday' : longDate(d, { weekday: 'short' });
 const chart = computed(() => {
   const now = salesDays.value.map(d => daySales(d).revenue), then = previousDays.value.map(d => daySales(d).revenue);
   // one day's bars carry their figures above them, so its scale leaves room for those
@@ -173,7 +174,7 @@ const chart = computed(() => {
   const labels = [...new Set(Array.from({ length: count }, (_, i) => Math.round(i * (n - 1) / Math.max(count - 1, 1))))]
     .map(i => ({ text: longDate(salesDays.value[i], n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
   const best = now.indexOf(Math.max(...now));
-  if (n === 1) labels.splice(0, 1, { text: longDate(previousDays.value[0], { weekday: 'short' }), x: 39 }, { text: longDate(salesDays.value[0], { weekday: 'short' }), x: 61 });
+  if (n === 1) labels.splice(0, 1, { text: dayName(previousDays.value[0]), x: 42 }, { text: dayName(salesDays.value[0]), x: 58 });
   return {
     line: line(now), prior: line(then), labels,
     axis: [3, 2, 1, 0].map(k => ({ text: k ? `£${step * k / 1000}k` : '£0', y: y(step * k) })),
@@ -423,7 +424,7 @@ function requestArchive(ids) {
 }
 function archiveProducts() {
   pending.value.forEach(id => { const p = store.products.find(p => p.id === id); if (p) { p.status = 'Archived'; record(`${p.name} archived`, 'Alex Morgan archived the product, so it left the store and the London studio.', id); } });
-  selected.value = []; confirmation.value.close(); notify(pending.value.length === 1 ? 'Product archived.' : 'Products archived.');
+  confirmation.value.close(); clearSelection(); notify(pending.value.length === 1 ? 'Product archived.' : 'Products archived.');
 }
 function duplicate() {
   const p = JSON.parse(JSON.stringify(product.value)); p.name += ' (copy)'; p.status = 'Draft'; p.image = undefined;
@@ -434,12 +435,15 @@ function duplicate() {
   document.getElementById('product-more').hidePopover(); editing.value = null; editor.value.open(p, true);
 }
 function exportProducts() {
-  const csv = [['Product', 'SKU', 'Status', 'Price', 'Stock'], ...filtered.value.map(p => [p.name, p.sku, p.status, p.price, p.stock])].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(',')).join('\n');
+  const csv = [['Product', 'SKU', 'Status', 'Price', 'Stock'], ...filtered.value.map(shown).map(p => [p.name, p.sku, p.status, p.price, p.stock])].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(',')).join('\n');
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
   const a = Object.assign(document.createElement('a'), { href: url, download: 'forma-products.csv' }); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify('Product list exported.');
 }
 function saveNote() { record('Alex Morgan left a note', note.value, props.screen === 'product' ? product.value.id : null, 'Note'); note.value = ''; noteDialog.value.close(); notify('Note added.'); }
 function startNote() { note.value = ''; openEditor(noteDialog.value, '[name=note]'); }
+// the bar that held the focus goes with the selection, so focus moves to the checkbox beside it
+const selectAll = ref();
+function clearSelection() { selected.value = []; nextTick(() => selectAll.value?.focus()); }
 const partlySelected = computed(() => !allSelected.value && visible.value.some(p => selected.value.includes(p.id)));
 </script>
 
@@ -468,7 +472,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         <section class="card demo-revenue" aria-labelledby="revenue-heading">
           <header>
             <h2 id="revenue-heading">Sales over time</h2>
-            <div class="demo-chart-key" :class="{ bars: singleDay }"><span><i></i> This period</span><span><i class="previous"></i> Previous {{ periodName }}</span></div>
+            <div class="demo-chart-key" :class="{ bars: singleDay }"><span><i></i> {{ singleDay ? chart.labels[1].text : 'This period' }}</span><span><i class="previous"></i> {{ singleDay ? chart.labels[0].text : `Previous ${periodName}` }}</span></div>
           </header>
           <div class="demo-chart">
             <div class="demo-chart-axis"><span v-for="tick in chart.axis" :key="tick.text" :style="{ top: `${tick.y}%` }">{{ tick.text }}</span></div>
@@ -482,14 +486,14 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
                   <polyline :points="chart.line" class="demo-chart-line"/>
                 </template>
                 <template v-else>
-                  <rect class="demo-chart-bar previous" x="30" width="18" :y="chart.points[0].priorY" :height="100 - chart.points[0].priorY"/>
-                  <rect class="demo-chart-bar" x="52" width="18" :y="chart.points[0].y" :height="100 - chart.points[0].y"/>
+                  <rect class="demo-chart-bar previous" x="35" width="14" :y="chart.points[0].priorY" :height="100 - chart.points[0].priorY"/>
+                  <rect class="demo-chart-bar" x="51" width="14" :y="chart.points[0].y" :height="100 - chart.points[0].y"/>
                 </template>
               </svg>
               <span class="sr-only" aria-live="polite" aria-atomic="true">{{ tip ? `${tip.date}: ${tip.now}. ${tip.priorDate}: ${tip.then}.` : '' }}</span>
               <template v-if="singleDay">
-                <span class="demo-chart-bar-value muted" :style="{ left: '39%', top: `${chart.points[0].priorY}%` }">{{ chart.points[0].then }}</span>
-                <span class="demo-chart-bar-value" :style="{ left: '61%', top: `${chart.points[0].y}%` }">{{ chart.points[0].now }}</span>
+                <span class="demo-chart-bar-value muted" :style="{ left: '42%', top: `${chart.points[0].priorY}%` }">{{ chart.points[0].then }}</span>
+                <span class="demo-chart-bar-value" :style="{ left: '58%', top: `${chart.points[0].y}%` }">{{ chart.points[0].now }}</span>
               </template>
               <template v-else-if="tip">
                 <span class="demo-chart-guide" :style="{ left: `${tip.x}%` }"></span>
@@ -500,7 +504,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             </div>
             <div class="demo-chart-labels" :class="{ dense: chart.points.length > 7, bars: singleDay }"><span v-for="label in chart.labels" :key="label.text" :style="{ left: `${label.x}%` }">{{ label.text }}</span></div>
           </div>
-          <p class="demo-card-footer demo-card-footer-split"><span v-if="singleDay">Same day last week: {{ money(daySales(shift(salesDays[0], -7)).revenue) }}</span><span v-else>Best day: {{ chart.peak }}</span><span class="tabular-nums">Previous {{ periodName }}: {{ money(total(previousDays).revenue) }}</span></p>
+          <p class="demo-card-footer demo-card-footer-split"><span v-if="singleDay">Same day last week: {{ money(daySales(shift(salesDays[0], -7)).revenue) }}</span><span v-else>Best day: {{ chart.peak }}</span><span v-if="!singleDay" class="tabular-nums">Previous {{ periodName }}: {{ money(total(previousDays).revenue) }}</span></p>
         </section>
         <div class="demo-dashboard-side">
           <section class="card demo-low-stock" aria-labelledby="attention-heading">
@@ -571,7 +575,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
             <colgroup><col class="w-16 max-md:w-13"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
-            <thead><tr><th class="max-md:pe-0"><input class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product</th><th>Status</th><th>Inventory</th><th>Category</th><th class="text-right max-md:ps-0">Price</th></tr></thead>
+            <thead><tr><th class="max-md:pe-0"><input ref="selectAll" class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product</th><th>Status</th><th>Inventory</th><th>Category</th><th class="text-right max-md:ps-0">Price</th></tr></thead>
             <tbody>
               <tr v-for="p in visible" :key="p.id">
                 <td class="max-md:pe-0"><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
@@ -583,10 +587,10 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
               </tr>
             </tbody>
           </table>
-          <div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="selected = []"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div>
+          <div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="clearSelection"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div>
         </div>
         <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
-        <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ filterCount ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearFilters">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
+        <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearFilters">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
         <div v-else class="demo-empty" role="status"><Icon name="package" class="[&_svg]:size-8"/><h2>No {{ status === 'All' ? '' : status.toLowerCase() }} products</h2><p class="muted">{{ emptyHint[status] }}</p></div>
         <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
@@ -634,10 +638,10 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             <header><h2 id="finishes-heading">Inventory</h2><button v-if="nextAction?.label !== 'Adjust inventory'" class="btn ghost sm" @click="openInventory">Adjust inventory</button></header>
             <div class="demo-table-scroll">
               <table class="table hover table-fixed demo-row-links">
-                <colgroup><col><col class="demo-finish-sku w-36"><col class="w-28"><col class="w-24"><col class="w-14"></colgroup>
+                <colgroup><col><col class="demo-finish-sku w-36"><col class="w-32"><col class="w-24"><col class="w-14"></colgroup>
                 <thead><tr><th>Finish</th><th class="demo-finish-sku">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th><th><span class="sr-only">Edit</span></th></tr></thead>
-                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="demo-finish-sku-line text-xs muted demo-sku">{{ v.sku }}</span></td><td class="muted demo-sku demo-finish-sku">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right ps-0"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
-                <tfoot class="tabular-nums"><tr><td>Total<span class="demo-finish-place"> at the London studio</span></td><td class="demo-finish-sku"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
+                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="demo-finish-sku-line text-xs muted demo-sku">{{ v.sku }}</span></td><td class="muted demo-sku demo-finish-sku">{{ v.sku }}</td><td class="text-right tabular-nums"><span v-if="stockAlert({ status: product.status, stock: v.stock })" class="badge sm" :class="stockAlert({ status: product.status, stock: v.stock }).class">{{ stockAlert({ status: product.status, stock: v.stock }).label }}</span><template v-else>{{ v.stock }}</template></td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right ps-0"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
+                <tfoot v-if="product.variants.length > 1" class="tabular-nums"><tr><td>Total<span class="demo-finish-place"> at the London studio</span></td><td class="demo-finish-sku"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
               </table>
             </div>
           </section>
