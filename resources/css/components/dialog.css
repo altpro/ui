@@ -64,6 +64,15 @@
       border-radius: 0;
       border-block: 0;
       border-inline-end: 0;
+      /* the drawer scrolls as a whole rather than squashing its children */
+      > * { flex-shrink: 0; }
+      /* however long the form, its actions stay on screen */
+      > footer:last-child {
+        position: sticky;
+        inset-block-end: 0;
+        margin-block-start: auto;
+        background: var(--card-bg);
+      }
       /* translate takes scale's place, so the allow-discrete pair keeps its position in the list */
       transition-property: opacity, translate, display, overlay;
       &.start {

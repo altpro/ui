@@ -42,14 +42,14 @@ test('editing product, price, stock and status updates the collection and histor
   await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
   await page.getByLabel('Slate available units', { exact: true }).fill('50');
   await page.getByRole('button', { name: 'Save inventory' }).click();
-  await expect(page.locator('.demo-detail-side .demo-price').last()).toContainText('92');
+  await expect(page.locator('.demo-finishes tfoot')).toContainText('92');
   await page.getByRole('button', { name: 'Active', exact: false }).first().click();
   await page.locator('#status-popover').getByRole('button', { name: 'Draft', exact: true }).click();
   await page.goto('/app/products.html');
   await page.getByLabel('Search products', { exact: true }).fill('Arc wireless');
   for (const text of ['Arc wireless headphones', 'Draft', '92 in stock', '£269.99']) await expect(page.locator('tbody tr')).toContainText(text);
   await page.goto('/app/activity.html');
-  await expect(page.locator('.timeline > li').first()).toContainText('Arc wireless headphones draft');
+  await expect(page.locator('.timeline > li').first()).toContainText('Arc wireless headphones moved to draft');
 });
 
 test('new products, bulk archive and reset form a complete demo workflow', async ({ page }) => {
@@ -193,7 +193,7 @@ test('on a phone the filters move into a popover that holds every filter and the
   await page.goto('/app/products.html');
   await expect(page.getByRole('combobox', { name: 'Product category', exact: true })).toBeHidden();
   await page.getByRole('button', { name: 'Filters', exact: true }).click();
-  await page.getByLabel('Stock level', { exact: true }).locator('visible=true').selectOption('out');
+  await page.locator('#filter-stock').selectOption('low');
   await page.getByRole('button', { name: 'Done', exact: true }).click();
   await expect(page.getByRole('button', { name: /^Filters/ })).toContainText('1');
   await expect(page.locator('tbody tr')).toHaveCount(3);
@@ -211,6 +211,70 @@ test('a dashboard row opens its product and the chart reads out a day', async ({
   await expect(page.locator('.demo-chart-tip')).toHaveCount(0);
   await page.locator('.demo-top-products tbody tr').first().click({ position: { x: 400, y: 10 } });
   await expect(page).toHaveURL(/product\.html\?id=/);
+});
+
+test('a product leads with what it is waiting for, and archiving always asks', async ({ page }) => {
+  await page.goto('/app/product.html?id=loop');
+  await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Adjust inventory');
+  await page.goto('/app/product.html?id=arc-pro');
+  await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Publish');
+  await expect(page.getByRole('switch', { name: 'Online store availability' })).toBeEnabled();
+  await page.locator('[popovertarget="status-popover"]').click();
+  await page.locator('#status-popover').getByRole('button', { name: 'Archived', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: /^Archive/ })).toBeVisible();
+  await page.getByRole('dialog').getByRole('button', { name: 'Archive product', exact: true }).click();
+  await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Make active');
+  await expect(page.getByRole('switch', { name: 'Online store availability' })).toBeDisabled();
+});
+
+test('an editor with changes asks before it discards them', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Edit pricing', exact: true }).click();
+  await page.getByLabel('Retail price', { exact: true }).fill('300');
+  await page.getByRole('button', { name: 'Close pricing', exact: true }).click();
+  await page.getByRole('button', { name: 'Keep editing', exact: true }).click();
+  await expect(page.getByLabel('Retail price', { exact: true })).toHaveValue('300');
+  await page.getByRole('dialog', { name: 'Edit pricing' }).getByRole('button', { name: 'Cancel', exact: true }).click();
+  await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+  await expect(page.locator('.demo-pricing .demo-price')).toHaveText('£249');
+  await page.getByRole('button', { name: 'Edit product', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog')).toHaveCount(0);
+});
+
+test('finishes keep one SKU each and their totals on the product', async ({ page }) => {
+  await page.goto('/app/product.html?id=loop');
+  await page.getByRole('button', { name: 'Edit Chalk finish', exact: true }).click();
+  await page.getByLabel('Finish price', { exact: true }).fill('289');
+  await page.getByRole('button', { name: 'Save finish', exact: true }).click();
+  await expect(page.locator('.demo-pricing .demo-price')).toHaveText('£289');
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Edit Chalk finish', exact: true }).click();
+  await page.getByLabel('Finish SKU', { exact: true }).fill('arc-sl');
+  await page.getByRole('button', { name: 'Save finish', exact: true }).click();
+  await expect(page.getByLabel('Finish SKU', { exact: true })).toBeFocused();
+  await expect(page.getByText('Enter a SKU no other finish uses.')).toBeVisible();
+});
+
+test('the list keeps its state in the URL, and the stock link lands worst first', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  await page.getByRole('link', { name: 'Review stock' }).click();
+  await expect(page.locator('tbody tr').first()).toContainText('Orbit turntable');
+  await page.goto('/app/products.html');
+  await page.getByRole('radio', { name: /^Draft/ }).check();
+  await page.getByRole('button', { name: 'Grid view', exact: true }).click();
+  await expect(page).toHaveURL(/status=Draft/);
+  await page.reload();
+  await expect(page.getByRole('radio', { name: /^Draft/ })).toBeChecked();
+  await expect(page.getByRole('button', { name: 'Grid view', exact: true })).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('a custom range refuses an end before its start', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  await page.getByLabel('Sales to', { exact: true }).fill('2020-01-01');
+  await expect(page.getByRole('alert')).toHaveText('The end date must be on or after the start date.');
 });
 
 test('figures on the dashboard add up across the period', async ({ page }) => {

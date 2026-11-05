@@ -4,13 +4,17 @@ import Field from '@ui/Field.vue';
 import FileInput from '@ui/FileInput.vue';
 import Icon from './Icon.vue';
 import { categories } from './store.js';
-const emit = defineEmits(['save']);
+const emit = defineEmits(['save', 'leave']);
 const dialog = ref();
 const draft = reactive({});
 const files = ref(null);
 const saving = ref(false);
 const imageError = computed(() => files.value?.size > 1024 * 1024 ? "Choose an image smaller than 1 MB." : "");
 const creating = ref(false);
+// a product with finishes (a duplicate) takes its price and stock from them
+const hasFinishes = computed(() => draft.variants?.length > 0);
+const comparable = () => JSON.stringify(draft, (key, v) => typeof v === 'number' ? String(v) : v);
+let opened = '';
 // the product's name as it was when the editor opened, over the title; a new product has none yet
 const editingName = ref('');
 // focus: a selector for the field the caller asked to edit, such as the description
@@ -20,6 +24,7 @@ function open(product, create = false, focus) {
   Object.keys(draft).forEach(key => delete draft[key]);
   Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: 149, cost: 60, stock: 0, status: 'Draft', finish: 'Slate', tags: [], variants: [] });
   files.value = null;
+  opened = comparable();
   nextTick(() => { dialog.value.showModal(); if (focus) dialog.value.querySelector(focus)?.focus(); });
 }
 async function save() {
@@ -33,20 +38,21 @@ async function save() {
   });
   emit('save', product); saving.value = false; dialog.value.close();
 }
-defineExpose({ open });
+const requestClose = () => emit('leave', comparable() === opened && !files.value);
+defineExpose({ open, dialog });
 </script>
 <template>
-  <dialog ref="dialog" class="dialog drawer divided demo-editor" aria-labelledby="product-editor-title">
-    <header><hgroup><p>{{ creating ? 'New product' : editingName }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="dialog.close()"><Icon name="x"/></button></header>
-    <form @submit.prevent="save" class="space-y-5">
+  <dialog ref="dialog" class="dialog drawer divided demo-editor" aria-labelledby="product-editor-title" @cancel.prevent="requestClose">
+    <header><hgroup><p>{{ creating ? 'New product' : editingName }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="requestClose"><Icon name="x"/></button></header>
+    <form id="product-form" @submit.prevent="save" class="space-y-5">
       <Field v-model="draft.name" name="name" label="Product name" required maxlength="100" placeholder="e.g. Arc headphones"/>
       <Field v-model="draft.subtitle" name="subtitle" label="Short description" maxlength="140"/>
       <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" required/></div>
       <Field v-model="draft.description" name="description" type="textarea" label="Description" rows="5"/>
       <Field v-model="draft.tags" name="tags" label="Tags" type="combobox" multiple :options="['Wireless', 'Analog', 'Bestseller', 'New arrival', 'Studio', 'Coming soon']" hint="Help your team organise the collection."/>
       <div class="field"><label for="product-photo">Product image</label><FileInput id="product-photo" v-model="files" name="photo" accept="image/*" :errors="imageError || undefined"><span>Any image up to 1 MB.</span></FileInput></div>
-      <template v-if="creating"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.stock" name="stock" label="Stock" type="number" min="0" step="1" required/></div></template>
-      <div class="demo-form-footer"><button type="button" class="btn outlined" @click="dialog.close()">Cancel</button><button class="btn primary" :disabled="saving || !!imageError" :class="{ loading: saving }" :aria-busy="saving">{{ creating ? 'Add product' : 'Save changes' }}</button></div>
+      <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.stock" name="stock" label="Stock" type="number" min="0" step="1" required/></div></template>
     </form>
+    <footer class="justify-end"><button type="button" class="btn outlined" @click="requestClose">Cancel</button><button form="product-form" class="btn primary" :disabled="saving || !!imageError" :class="{ loading: saving }" :aria-busy="saving">{{ creating ? 'Add product' : 'Save changes' }}</button></footer>
   </dialog>
 </template>
