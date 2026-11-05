@@ -106,12 +106,13 @@ const menu = [
   ["Application", "monitor", [
     ["app/dashboard.html", "Overview", "gauge"],
     ["app/products.html", "Products", "blocks"],
-    ["app/product.html", "Product detail", "tag"],
     ["app/activity.html", "Activity", "timeline"],
-    ["app/recipe-products.html", "Recipe: list page", "sheet"],
-    ["app/recipe-product.html", "Recipe: edit page", "field"],
-    ["app/recipe-media.html", "Recipe: tags and uploads", "upload"],
-    ["app/recipe-settings.html", "Recipe: delete account", "x"],
+  ]],
+  ["Recipes", "path", [
+    ["app/recipe-products.html", "List page", "sheet"],
+    ["app/recipe-product.html", "Edit page", "field"],
+    ["app/recipe-media.html", "Tags and uploads", "upload"],
+    ["app/recipe-settings.html", "Delete account", "x"],
     ["app/shell.html", "App shell", "panel"],
   ]],
 ];
@@ -122,14 +123,16 @@ const here = (inApp ? "app/" : "") + (location.pathname.split("/").pop() || "ind
 const html = document.documentElement;
 
 const crumbs = ["altpro/ui"];
+// a product belongs to the list: Products stays current and the breadcrumb goes on to the product, whose name Workspace.vue fills in
+const record = here === "app/product.html";
 const link = ([href, label, ic, extra = ""], group) => {
-  const current = href === here;
-  if (current) crumbs.push(...(group ? [group] : []), label);
+  const current = href === (record ? "app/products.html" : here);
+  if (current) crumbs.push(...(group ? [group] : []), label, ...(record ? ["Product"] : []));
   return `<a href="${href.startsWith("#") ? href : root + href}"${current ? ' aria-current="page"' : ""}>${ic ? icon(ic) + " " : ""}${label}${extra}</a>`;
 };
 const item = (it) =>
   typeof it === "string" ? `<h2>${it}</h2>`
-  : Array.isArray(it[2]) ? `<details${it[0] === "Application" || !inApp ? " open" : ""}><summary>${icon(it[1])} ${it[0]}</summary>${it[2].map((c) => link(c, it[0])).join("")}</details>`
+  : Array.isArray(it[2]) ? `<details${it[0] === "Application" || !inApp || it[2].some((c) => c[0] === here) ? " open" : ""}><summary>${icon(it[1])} ${it[0]}</summary>${it[2].map((c) => link(c, it[0])).join("")}</details>`
   : link(it);
 const nav = menu.map(item).join("");
 
@@ -151,7 +154,7 @@ header.className = "demo-header";
 header.innerHTML = `
   <label class="btn ghost sm px-2"><input type="checkbox" id="menu" aria-label="Toggle sidebar">${icon("panel")}</label>
   <nav class="breadcrumb" aria-label="Breadcrumb">
-    ${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${root + (c === "Application" ? "app/dashboard.html" : "index.html")}">${c}</a>` : `<span aria-current="page">${c}</span>`)).join("")}
+    ${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${root + ({ Application: "app/dashboard.html", Products: "app/products.html" }[c] ?? "index.html")}">${c}</a>` : `<span aria-current="page">${c}</span>`)).join("")}
   </nav>
   <div class="ml-auto flex items-center gap-2 text-sm">
     ${extras}

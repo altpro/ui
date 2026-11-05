@@ -12,7 +12,7 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('adding a finish focuses its name and sets a sensible quantity', async ({ page }) => {
-  await button(page, 'Add finish').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add finish', exact: true }).click();
   await expect(rows(page)).toHaveCount(4);
   await expect(row(page, 4).getByLabel('Finish name')).toBeFocused();
   await expect(row(page, 4).getByLabel('New finish available units')).toHaveValue('0');
@@ -41,7 +41,7 @@ test('removing focuses the next finish, then the previous, then Add', async ({ p
   await expect(button(page, 'Remove finish 1')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(rows(page)).toHaveCount(0);
-  await expect(button(page, 'Add finish')).toBeFocused();
+  await expect(page.getByRole('dialog').getByRole('button', { name: 'Add finish', exact: true })).toBeFocused();
   await button(page, 'Save inventory').click();
   await expect(page.locator('.repeater > .error')).toHaveText('Add at least one finish.');
 });

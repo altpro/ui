@@ -93,21 +93,6 @@ test("tree: a page branch's link navigates and its 24px chevron toggles", async 
   await expect(toggle).toHaveAccessibleName("About us");
 });
 
-test("the sample app tabs expose valid complete panels", async ({ page }) => {
-  await page.goto("/app/product.html");
-  const tabs = page.locator("main .tabs > label");
-  const panels = page.locator("main .tabs > div");
-  await expect(tabs).toHaveCount(3);
-  await expect(panels).toHaveCount(3);
-  for (const tab of await tabs.all()) {
-    await tab.click();
-    const visiblePanels = await panels.evaluateAll((els) => els.filter((el) => getComputedStyle(el).display !== "none").length);
-    expect(visiblePanels).toBe(1);
-    const { violations } = await new AxeBuilder({ page }).withTags(tags).analyze();
-    expect(violations.map((v) => v.id)).toEqual([]);
-  }
-});
-
 for (const radius of ["0", "9999px"]) {
   test(`the sample app fits a mobile viewport at radius ${radius}`, async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -118,14 +103,10 @@ for (const radius of ["0", "9999px"]) {
   });
 }
 
-test('product panels and finish editor fit on mobile', async ({ page }) => {
+test('product page and finish editor fit on mobile', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/app/product.html');
-  for (const tab of await page.locator('main .tabs > label').all()) {
-    await tab.click();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
-  }
-  await page.getByRole('radio', { name: /Finishes/ }).check();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
   await page.getByRole('button', { name: 'Edit Slate finish', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Edit finish', exact: true });
   await expect(dialog).toHaveCSS('opacity', '1');

@@ -25,10 +25,8 @@ test('catalogue searches, filters, changes layout and paginates', async ({ page 
   await expect(page.getByRole('heading', { name: 'No products match' })).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
   await page.getByRole('button', { name: 'Table view' }).click();
-  await page.getByRole('button', { name: 'Filters', exact: true }).click();
-  await page.getByLabel('Inventory', { exact: true }).selectOption('low');
-  await page.keyboard.press('Escape');
-  await expect(page.locator('tbody tr')).toHaveCount(2);
+  await page.getByRole('combobox', { name: 'Stock level', exact: true }).selectOption('low');
+  await expect(page.locator('tbody tr')).toHaveCount(3);
 });
 
 test('editing product, price, stock and status updates the collection and history', async ({ page }) => {
@@ -77,7 +75,6 @@ test('new products, bulk archive and reset form a complete demo workflow', async
 
 test('finishes, preview and notes are interactive and Escape returns focus', async ({ page }) => {
   await page.goto('/app/product.html?id=arc');
-  await page.getByRole('radio', { name: /Finishes/ }).check();
   await page.getByRole('button', { name: 'Edit Slate finish', exact: true }).click();
   await page.getByLabel('Finish price', { exact: true }).fill('259');
   await page.getByRole('button', { name: 'Save finish', exact: true }).click();
@@ -85,7 +82,6 @@ test('finishes, preview and notes are interactive and Escape returns focus', asy
   await page.getByRole('button', { name: 'Preview', exact: true }).click();
   await page.keyboard.press('Escape');
   await expect(page.getByRole('button', { name: 'Preview', exact: true })).toBeFocused();
-  await page.getByRole('radio', { name: 'Activity', exact: true }).check();
   await page.getByRole('button', { name: 'Add note', exact: true }).click();
   await page.getByLabel('Your note', { exact: true }).fill('Ready for the autumn collection.');
   await page.getByRole('dialog').getByRole('button', { name: 'Add note', exact: true }).click();
@@ -121,7 +117,7 @@ test('the sales period takes a preset or two dates and the figures follow it', a
   await expect(preset).toHaveValue('Last 7 days');
   await expect(page.locator('.demo-chart-labels > span')).toHaveCount(7);
   await preset.selectOption('Last 30 days');
-  await expect(page.getByText('vs. previous 30 days')).toHaveCount(4);
+  await expect(page.getByRole('heading', { level: 1 }).locator('xpath=following-sibling::p')).toContainText('compared with the previous 30 days');
   // the dates show once Custom range is picked
   await expect(page.getByLabel('Sales from', { exact: true })).toBeHidden();
   await preset.selectOption('');
@@ -192,16 +188,39 @@ test('a duplicate opens as its own product', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Arc headphones (copy)');
 });
 
-test('at 320px the category select keeps its text and the table shows the next column', async ({ page }) => {
+test('on a phone the filters move into a popover that holds every filter and the sort', async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 800 });
   await page.goto('/app/products.html');
-  const select = page.getByLabel('Product category', { exact: true });
-  expect(await select.evaluate(el => el.scrollWidth <= el.clientWidth)).toBe(true);
-  const { edge, status } = await page.locator('.demo-table-scroll').evaluate(el => ({
-    edge: el.getBoundingClientRect().right,
-    status: [...el.querySelectorAll('thead th')].find(th => th.textContent.trim() === 'Status').getBoundingClientRect().left,
-  }));
-  expect(edge - status).toBeGreaterThanOrEqual(16);
+  await expect(page.getByRole('combobox', { name: 'Product category', exact: true })).toBeHidden();
+  await page.getByRole('button', { name: 'Filters', exact: true }).click();
+  await page.getByLabel('Stock level', { exact: true }).locator('visible=true').selectOption('out');
+  await page.getByRole('button', { name: 'Done', exact: true }).click();
+  await expect(page.getByRole('button', { name: /^Filters/ })).toContainText('1');
+  await expect(page.locator('tbody tr')).toHaveCount(3);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
+test('a dashboard row opens its product and the chart reads out a day', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  await expect(page.locator('.demo-low-stock li')).toHaveCount(3);
+  const plot = page.locator('.demo-chart-plot');
+  await plot.focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.demo-chart-tip')).toContainText('This period');
+  await page.keyboard.press('Escape');
+  await expect(page.locator('.demo-chart-tip')).toHaveCount(0);
+  await page.locator('.demo-top-products tbody tr').first().click({ position: { x: 400, y: 10 } });
+  await expect(page).toHaveURL(/product\.html\?id=/);
+});
+
+test('figures on the dashboard add up across the period', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  const pounds = text => Number(text.replace(/[^0-9.]/g, ''));
+  const revenue = pounds(await page.locator('.demo-stat-value').first().textContent());
+  const categories = await page.locator('.demo-categories label .muted.tabular-nums, .demo-categories label .tabular-nums > .muted').allTextContents();
+  expect(categories.reduce((sum, c) => sum + pounds(c), 0)).toBe(revenue);
+  const shares = await page.locator('.demo-share').allTextContents();
+  expect(shares.reduce((sum, c) => sum + pounds(c), 0)).toBe(100);
 });
 
 test('mobile sidebar and responsive screens work without horizontal page overflow', async ({ page }) => {
