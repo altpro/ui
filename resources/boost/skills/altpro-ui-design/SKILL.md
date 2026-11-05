@@ -74,7 +74,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **One word for one state across screens:** "Out of stock" everywhere, never "0 in stock" in one view.
 - **A record's header holds what no card shows,** apart from the record's own name. Its facts line doesn't repeat details (an email, a frame number) that a card below holds.
 - **Every value has a label** unless its form says what it is, as a date or a price does. A bare name in a facts line needs its role: "mechanic Marek Nowak".
-- **Counts name their base,** counted against what the filters allow: "4 of 14 open jobs", not "4 of 18 jobs" when 4 are collected and hidden. Show a list's count only when a filter narrows it; unfiltered, it repeats the stat above.
+- **Counts name their base,** counted against what the filters allow: "4 of 14 open jobs", not "4 of 18 jobs" when 4 are collected and hidden. A filter means what the column it filters says: if drafts can read "Out of stock", a stock filter that leaves them out says so by moving to the Active tab. Show a list's count only when a filter narrows it; unfiltered, it repeats the stat above.
 - **A stat's label says its scope.** If "Due today" leaves out jobs that are ready for collection, it reads "Work due today".
 - **Dates take one form across screens:** "Today", "Yesterday", then "4 Nov", with the weekday everywhere or nowhere.
 - **Errors say what to enter** ("Enter £245.16 or less") and don't repeat the hint above them.
@@ -120,13 +120,15 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **A drawer's actions stay on screen.** Its `<footer>` is the last child of the dialog, not of the form, so it stays put while a long form scrolls.
 - **Changes are never lost silently.** Cancel, the cross, Escape and leaving the page all ask first when the editor is dirty, with "Keep editing" and "Discard changes". An unchanged editor closes straight away.
 - **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button.
+- **An editor opens on its first field,** or on the field the caller asked for, not on its close button.
+- **Saving nothing records nothing.** An unchanged save closes without a toast or a history entry, and an entry says what really moved.
 - **Validate the same rule on every route.** Two forms that can set a SKU refuse the same values with the same words, and focus the field that failed.
 
 ### Phone (390px)
 
 Compose each screen for the phone. Don't let the desktop layout wrap.
 
-- **Stat strips** become a compact grid of equal columns. Each stat keeps its label above the number, as on the desktop, and the strip stays near 120px tall, so the list starts in the top half of the screen.
+- **Stat strips** become a compact grid of equal columns. Each stat keeps its label above the number, as on the desktop, and the next card starts in the top half of the screen.
 - **Tabs stay on one line,** with tighter padding (`[--tabs-px:0.5rem]`).
 - **Tables fold.** Status, inventory and category columns hide (`max-md:hidden`). A line under the name (`md:hidden`) carries the value of every hidden column, so the phone loses nothing: the status badge, the stock and any warning, and who a job is assigned to. A folded row runs to three lines at most: join short facts on one line with ` · ` ("Due yesterday · mechanic Lucy Hart"), each phrase `whitespace-nowrap`.
 - **Number columns stay narrow on the phone** (`w-12 md:w-20` for a quantity), so item names get the width. The price column stays. The thumbnail sits beside the name and code, and that line runs across the row beneath them.

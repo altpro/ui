@@ -29,10 +29,12 @@ function open(product, create = false, focus) {
   files.value = null;
   skuError.value = '';
   opened = comparable();
-  nextTick(() => { dialog.value.showModal(); if (focus) dialog.value.querySelector(focus)?.focus(); });
+  nextTick(() => { dialog.value.showModal(); dialog.value.querySelector(focus || '[name=name]')?.focus(); });
 }
 async function save() {
   if (imageError.value) return;
+  // nothing to save, so nothing goes in the history
+  if (!creating.value && clean()) return dialog.value.close();
   skuError.value = props.checkSku?.(draft.sku) ?? '';
   if (skuError.value) return void nextTick(() => dialog.value.querySelector('[name=sku]')?.focus());
   saving.value = true;

@@ -7,7 +7,7 @@
 @layer components {
   :root {
     /* product pictures stay light in dark, under a veil so they aren't the brightest thing on the screen */
-    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 22%, transparent));
+    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 32%, transparent));
     --demo-stage: var(--color-muted);
     --demo-object: var(--color-foreground);
     --demo-object-edge: var(--color-muted-foreground);
@@ -126,7 +126,7 @@
   }
   .demo-row-product { display: flex; align-items: center; gap: 12px; }
   .demo-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 2px; font-size: .75rem; }
-  .demo-top-products .table { font-size: .875rem; }
+  .demo-top-products .table { --table-py: 11px; font-size: .875rem; }
   .demo-catalogue { gap: 16px; }
   .demo-list-tabs { margin-top: -8px; --tabs-px: 1rem; --tabs-text: .8125rem; > label:first-child { padding-inline-start: 0; } }
   .demo-table-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; > select { width: auto; } .btn { white-space: nowrap; } }
@@ -167,6 +167,7 @@
     > img { width: 100%; max-height: 240px; object-fit: contain; }
   }
   .demo-gallery-views { display: flex; align-items: center; gap: 8px; padding: 12px; }
+  .dropdown .nav > button { color: var(--color-foreground); }
   .demo-gallery-view {
     width: 52px;
     height: 44px;
@@ -246,7 +247,7 @@
     .demo-list-tabs { flex-wrap: nowrap; --tabs-px: .375rem; }
     .demo-table-toolbar .demo-search { min-width: 0; max-width: none; flex-basis: 100%; }
     /* a phone keeps product, status, stock and price in view: the status and inventory columns fold into a line under the name */
-    .demo-products-table { :is(th, td):nth-child(3), :is(th, td):nth-child(4) { display: none; } colgroup > col:first-child { width: 3.25rem; } }
+    .demo-products-table { :is(th, td):nth-child(3), :is(th, td):nth-child(4) { display: none; } }
     .demo-table-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; font-size: .75rem; }
     .demo-table-product { display: grid; grid-template-columns: 40px minmax(0, 1fr); gap: 6px 12px; align-items: center;
       > .demo-thumb { width: 40px; height: 40px; }

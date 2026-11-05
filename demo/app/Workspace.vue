@@ -20,7 +20,7 @@ const listParams = new URLSearchParams(location.search);
 const query = ref(listParams.get('q') ?? '');
 const category = ref(listParams.get('category') ?? '');
 const stockFilter = ref(['low', 'out'].includes(listParams.get('stock')) ? listParams.get('stock') : '');
-const status = ref(listParams.get('status') ?? 'All');
+const status = ref(listParams.get('status') ?? (stockFilter.value ? 'Active' : 'All'));
 // arriving to restock, the worst product comes first
 const sort = ref(listParams.get('sort') ?? (stockFilter.value === 'low' ? 'stock-low' : 'name'));
 const mode = ref(listParams.get('view') === 'grid' ? 'grid' : 'table');
@@ -193,6 +193,8 @@ const categorySales = computed(() => {
   return shares;
 });
 watch([query, category, status, stockFilter, sort], () => { pageNumber.value = 1; selected.value = []; });
+// only active products have a stock state to act on, so a stock filter opens the Active tab
+watch(stockFilter, value => { if (value) status.value = 'Active'; });
 watch(pageCount, n => { pageNumber.value = Math.min(pageNumber.value, n); }, { immediate: true });
 watch([query, category, status, stockFilter, sort, mode, pageNumber], () => {
   if (props.screen !== 'products') return;
@@ -225,6 +227,14 @@ watch(() => product.value?.name, name => {
 onUnmounted(() => { document.removeEventListener('keydown', shortcut); window.removeEventListener('beforeunload', warnUnsaved); clearTimeout(toastTimer); });
 function notify(message) { toast.value = message; clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.value = '', 6000); }
 function clearFilters() { query.value = ''; category.value = ''; stockFilter.value = ''; status.value = 'All'; }
+const clearNarrowing = () => { query.value = ''; category.value = ''; stockFilter.value = ''; };
+// the count names its base: the tab it is counted against, once anything narrows the list
+const tabCount = computed(() => status.value === 'All' ? store.products.length : store.products.filter(p => p.status === status.value).length);
+const countLabel = computed(() => {
+  const n = filtered.value.length, base = status.value === 'All' ? '' : ` ${status.value.toLowerCase()}`;
+  if (pageCount.value > 1) return `${(pageNumber.value - 1) * 6 + 1}–${Math.min(pageNumber.value * 6, n)} of ${n}${base} products`;
+  return n < tabCount.value ? `${n} of ${tabCount.value}${base} products` : `${n}${base} ${n === 1 ? 'product' : 'products'}`;
+});
 const closeFilters = () => document.getElementById('product-filters')?.hidePopover();
 function toggleAll(checked) { selected.value = checked ? [...new Set([...selected.value, ...visible.value.map(p => p.id)])] : selected.value.filter(id => !visible.value.some(p => p.id === id)); }
 // an editor closes straight away when nothing changed; otherwise it asks first
@@ -280,16 +290,21 @@ function saveProduct(draft) {
   if (!editing.value && props.screen === 'product') return void nextTick(() => location.assign(productLink(draft)));
   notify(editing.value ? 'Product updated.' : 'Product added.');
 }
-function openPrice() { Object.assign(priceDraft, { price: product.value.price, cost: product.value.cost }); pricing.value.showModal(); }
+// an editor opens on its first field, not its close button
+function openEditor(dialog, field) { dialog.showModal(); dialog.querySelector(field)?.focus(); }
+function openPrice() { Object.assign(priceDraft, { price: product.value.price, cost: product.value.cost }); openEditor(pricing.value, '[name=retailPrice]'); }
 function savePrice() {
-  const p = product.value, old = p.price, difference = Number(priceDraft.price) - old;
+  if (pricingClean()) return pricing.value.close();
+  const p = product.value, oldPrice = p.price, oldCost = p.cost, difference = Number(priceDraft.price) - oldPrice;
   p.price = Number(priceDraft.price); p.cost = Number(priceDraft.cost);
   p.variants.forEach(v => v.price = Math.max(0, Math.round((v.price + difference) * 100) / 100));
-  record(`${p.name} price updated`, `Retail price changed from ${money(old)} to ${money(p.price)}.`, p.id, 'Price');
+  const changes = [p.price !== oldPrice && `Retail price changed from ${money(oldPrice)} to ${money(p.price)}.`, p.cost !== oldCost && `Cost per item changed from ${money(oldCost)} to ${money(p.cost)}.`].filter(Boolean);
+  record(`${p.name} ${p.price !== oldPrice ? 'price' : 'cost'} updated`, changes.join(' '), p.id, 'Price');
   pricing.value.close(); notify('Pricing updated.');
 }
-function openInventory() { inventoryErrors.value = {}; inventoryDraft.value = product.value.variants.map(v => ({ ...v })); inventory.value.showModal(); }
+function openInventory() { inventoryErrors.value = {}; inventoryDraft.value = product.value.variants.map(v => ({ ...v })); nextTick(() => openEditor(inventory.value, '[name="inventory.0.stock"]')); }
 function saveInventory() {
+  if (inventoryClean()) return inventory.value.close();
   const errors = {};
   if (!inventoryDraft.value.length) errors.inventory = 'Add at least one finish.';
   const skus = new Set();
@@ -309,9 +324,10 @@ function saveInventory() {
 function openVariant(index) {
   variantIndex.value = index; variantErrors.value = '';
   Object.assign(variantDraft, product.value.variants[index]);
-  variantDialog.value.showModal();
+  openEditor(variantDialog.value, '[name=finishName]');
 }
 function saveVariant() {
+  if (variantClean()) return variantDialog.value.close();
   const p = product.value, variant = { ...variantDraft, price: Number(variantDraft.price), stock: Number(variantDraft.stock) };
   if (skuTaken(variant.sku, p.id) || p.variants.some((v, i) => i !== variantIndex.value && sameSku(v.sku, variant.sku))) {
     variantErrors.value = skuError;
@@ -364,7 +380,7 @@ function exportProducts() {
   const a = Object.assign(document.createElement('a'), { href: url, download: 'forma-products.csv' }); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify('Product list exported.');
 }
 function saveNote() { record('Alex Morgan left a note', note.value, props.screen === 'product' ? product.value.id : null, 'Note'); note.value = ''; noteDialog.value.close(); notify('Note added.'); }
-function startNote() { note.value = ''; noteDialog.value.showModal(); }
+function startNote() { note.value = ''; openEditor(noteDialog.value, '[name=note]'); }
 const partlySelected = computed(() => !allSelected.value && visible.value.some(p => selected.value.includes(p.id)));
 </script>
 
@@ -418,7 +434,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         </section>
         <div class="demo-dashboard-side">
           <section class="card demo-low-stock" aria-labelledby="attention-heading">
-            <header><h2 id="attention-heading">Low stock</h2><a href="products.html?stock=low" class="btn ghost sm">Review stock <span aria-hidden="true">→</span></a></header>
+            <header><h2 id="attention-heading">Low stock</h2><a href="products.html?status=Active&stock=low" class="btn ghost sm">Review stock <span aria-hidden="true">→</span></a></header>
             <p v-if="!lowStock.length" class="text-sm muted">Every active product has 10 or more units.</p>
             <ul v-else class="demo-activity-list demo-row-links"><li v-for="p in lowStock" :key="p.id"><span class="demo-thumb sm"><ProductArt :kind="p.kind"/></span><div><a class="demo-title-link font-medium text-sm" :href="productLink(p)">{{ p.name }}</a></div><span class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span></li></ul>
           </section>
@@ -471,6 +487,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <select v-model="category" class="input demo-inline-filter" aria-label="Product category"><option value="">All categories</option><option v-for="c in categories" :key="c">{{ c }}</option></select>
           <select v-model="stockFilter" class="input demo-inline-filter" aria-label="Stock level"><option value="">All stock levels</option><option value="low">Low or out of stock</option><option value="out">Out of stock</option></select>
           <button class="btn outlined demo-filter-button" popovertarget="product-filters"><Icon name="sliders"/> Filters <span v-if="filterCount" class="badge primary sm">{{ filterCount }}</span></button>
+          <button v-if="(filterCount || query) && filtered.length" class="btn ghost sm demo-inline-filter text-muted-foreground hover:text-foreground" @click="clearNarrowing">Clear</button>
           <select v-model="sort" class="input ml-auto demo-inline-filter" aria-label="Sort products"><option value="name">Name: A to Z</option><option value="price-high">Price: high to low</option><option value="price-low">Price: low to high</option><option value="stock-low">Stock: low to high</option></select>
           <div class="join demo-view-toggle" role="group" aria-label="Product layout"><button class="btn outlined" :aria-pressed="mode === 'table'" aria-label="Table view" @click="mode = 'table'"><Icon name="list"/></button><button class="btn outlined" :aria-pressed="mode === 'grid'" aria-label="Grid view" @click="mode = 'grid'"><Icon name="grid"/></button></div>
         </div>
@@ -482,16 +499,16 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         </div>
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
-            <colgroup><col class="w-16"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
-            <thead><tr><th><input class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product</th><th>Status</th><th>Inventory</th><th>Category</th><th class="text-right">Price</th></tr></thead>
+            <colgroup><col class="w-16 max-md:w-13"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
+            <thead><tr><th class="max-md:pe-0"><input class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product</th><th>Status</th><th>Inventory</th><th>Category</th><th class="text-right max-md:ps-0">Price</th></tr></thead>
             <tbody>
               <tr v-for="p in visible" :key="p.id">
-                <td><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
+                <td class="max-md:pe-0"><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
                 <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku">{{ p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span><span class="muted demo-row-category">{{ p.category }}</span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></span></span></td>
                 <td><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span></td>
                 <td class="whitespace-nowrap"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></td>
                 <td class="muted">{{ p.category }}</td>
-                <td class="text-right font-medium tabular-nums whitespace-nowrap">{{ priceLabel(p) }}</td>
+                <td class="text-right font-medium tabular-nums whitespace-nowrap max-md:ps-0">{{ priceLabel(p) }}</td>
               </tr>
             </tbody>
           </table>
@@ -499,7 +516,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         </div>
         <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h3>{{ p.name }}</h3><p class="muted text-xs">{{ p.category }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></p></div><strong>{{ priceLabel(p) }}</strong></div></a></div>
         <div v-else class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">Try another name or SKU, or clear the filters.</p><button class="btn outlined" @click="clearFilters">Clear filters</button></div>
-        <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ `${(pageNumber - 1) * 6 + 1}–${Math.min(pageNumber * 6, filtered.length)} of ${filtered.length} products` }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
+        <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
     </template>
 
@@ -546,7 +563,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
               <table class="table hover table-fixed demo-row-links">
                 <colgroup><col><col class="demo-finish-sku w-36"><col class="w-28"><col class="w-24"><col class="w-14"></colgroup>
                 <thead><tr><th>Finish</th><th class="demo-finish-sku">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th><th><span class="sr-only">Edit</span></th></tr></thead>
-                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="demo-finish-sku-line text-xs muted demo-sku">{{ v.sku }}</span></td><td class="muted demo-sku demo-finish-sku">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
+                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="demo-finish-sku-line text-xs muted demo-sku">{{ v.sku }}</span></td><td class="muted demo-sku demo-finish-sku">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right ps-0"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
                 <tfoot class="tabular-nums"><tr><td>Total<span class="demo-finish-place"> at the London studio</span></td><td class="demo-finish-sku"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
               </table>
             </div>

@@ -200,6 +200,29 @@ test('on a phone the filters move into a popover that holds every filter and the
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('saving nothing records nothing, and a real change says what moved', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  const entries = await page.locator('.timeline > li').count();
+  await page.getByRole('button', { name: 'Edit pricing', exact: true }).click();
+  await expect(page.getByLabel('Retail price', { exact: true })).toBeFocused();
+  await page.getByRole('button', { name: 'Save pricing', exact: true }).click();
+  await expect(page.locator('.timeline > li')).toHaveCount(entries);
+  await expect(page.locator('.toaster .alert')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Edit pricing', exact: true }).click();
+  await page.getByLabel('Cost per item', { exact: true }).fill('120');
+  await page.getByRole('button', { name: 'Save pricing', exact: true }).click();
+  await expect(page.locator('.timeline > li').first()).toContainText('Cost per item changed from £112 to £120.');
+});
+
+test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
+  await page.goto('/app/products.html');
+  await page.getByRole('combobox', { name: 'Stock level', exact: true }).selectOption('low');
+  await expect(page.getByRole('radio', { name: /^Active/ })).toBeChecked();
+  await expect(page.getByRole('status')).toHaveText('3 of 6 active products');
+  await page.getByRole('button', { name: 'Clear', exact: true }).click();
+  await expect(page.locator('tbody tr')).toHaveCount(6);
+});
+
 test('ticking a row moves nothing, and the list reads as one column of figures on a phone', async ({ page }) => {
   await page.goto('/app/products.html');
   const row = page.locator('tbody tr').nth(2);
