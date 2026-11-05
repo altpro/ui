@@ -18,6 +18,7 @@
     {"id":6,"type":"Inventory","title":"Arc headphones stock received","detail":"42 units of the Slate finish arrived at the London studio.","time":"3 Nov, 11:20","product":"arc"},
     {"id":7,"type":"Note","title":"Alex Morgan left a note","detail":"Hold the Clay finish back from the autumn email until the second delivery lands.","time":"3 Nov, 09:45","product":"arc"},
     {"id":8,"type":"Price","title":"Arc headphones price updated","detail":"Alex Morgan changed the Clay finish from £249 to £259.","time":"28 Oct, 15:12","product":"arc"},
-    {"id":5,"type":"Note","title":"Autumn collection review","detail":"Check the Loop and Duo stock levels before the weekend newsletter.","time":"2 Oct, 11:20","product":"loop"}
+    {"id":5,"type":"Note","title":"Autumn collection review","detail":"Check the Loop and Duo stock levels before the weekend newsletter.","time":"2 Oct, 11:20","product":"loop"},
+    {"id":10,"type":"Product","title":"Mono mini archived","detail":"Alex Morgan removed the product from the online store.","time":"12 Sep, 10:15","product":"mini"}
   ]
 }

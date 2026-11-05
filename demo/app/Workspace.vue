@@ -65,7 +65,7 @@ const filterCount = computed(() => [category.value, stockFilter.value].filter(Bo
 const timeline = computed(() => store.activity.filter(a => activityType.value === 'All' || a.type === activityType.value));
 const productActivity = computed(() => store.activity.filter(a => a.product === product.value?.id));
 // the time of the latest change as it reads inside a sentence
-const lastChange = computed(() => productActivity.value[0]?.time.replace(/^(Today|Yesterday|Just now)/, t => t.toLowerCase()));
+const lastChange = computed(() => productActivity.value.find(a => a.type !== 'Note')?.time.replace(/^(Today|Yesterday|Just now)/, t => t.toLowerCase()));
 // a product saved before channels existed is on in both
 const channel = (p, key) => p.channels?.[key] ?? true;
 const availability = computed(() => {
@@ -154,7 +154,7 @@ const chart = computed(() => {
   return {
     line: line(now), prior: line(then), labels,
     axis: [3, 2, 1, 0].map(k => ({ text: k ? `£${step * k / 1000}k` : '£0', y: y(step * k) })),
-    peak: `${longDate(salesDays.value[best], { weekday: 'long', day: 'numeric', month: 'long' })}, ${money(now[best])}`,
+    peak: `${longDate(salesDays.value[best], { weekday: 'short', day: 'numeric', month: 'short' })}, ${money(now[best])}`,
     points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: longDate(salesDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), priorDate: longDate(previousDays.value[i], { day: 'numeric', month: 'short' }), now: money(v), then: money(then[i]) })),
   };
 });
@@ -173,7 +173,8 @@ watch(salesDays, () => { pointed.value = -1; });
 const categoryIcon = { Headphones: 'headphones', Speakers: 'speaker', Turntables: 'disc' };
 const activityIcon = type => ({ Inventory: 'layers', Price: 'tag', Note: 'bubble' })[type] ?? 'package';
 // the lowest price, marked when the finishes differ
-const priceLabel = p => `${new Set(p.variants.map(v => Number(v.price))).size > 1 ? 'From ' : ''}${money(p.price)}`;
+const priceVaries = p => new Set(p.variants.map(v => Number(v.price))).size > 1;
+const priceLabel = p => `${priceVaries(p) ? 'From ' : ''}${money(p.price)}`;
 const previewFinish = ref(0);
 const previewed = computed(() => product.value?.variants[previewFinish.value] ?? product.value?.variants[0]);
 const previewBlock = computed(() => {
@@ -195,7 +196,7 @@ watch([query, category, status, stockFilter, sort], () => { pageNumber.value = 1
 watch(pageCount, n => { pageNumber.value = Math.min(pageNumber.value, n); }, { immediate: true });
 watch([query, category, status, stockFilter, sort, mode, pageNumber], () => {
   if (props.screen !== 'products') return;
-  const entries = { q: query.value, category: category.value, stock: stockFilter.value, status: status.value === 'All' ? '' : status.value, sort: sort.value === 'name' ? '' : sort.value, view: mode.value === 'grid' ? 'grid' : '', page: pageNumber.value > 1 ? pageNumber.value : '' };
+  const entries = { q: query.value, category: category.value, stock: stockFilter.value, status: status.value === 'All' ? '' : status.value, sort: sort.value === (stockFilter.value === 'low' ? 'stock-low' : 'name') ? '' : sort.value, view: mode.value === 'grid' ? 'grid' : '', page: pageNumber.value > 1 ? pageNumber.value : '' };
   const search = new URLSearchParams(Object.entries(entries).filter(([, v]) => v)).toString();
   history.replaceState(null, '', search ? `?${search}` : location.pathname);
   sessionStorage.setItem('demo-list-search', search ? `?${search}` : '');
@@ -335,7 +336,7 @@ function changeStatus(next) {
   if (next === 'Archived') return requestArchive([p.id]);
   p.status = next;
   record(`${p.name} ${next === 'Active' ? 'published' : 'moved to draft'}`, `Alex Morgan changed the product status to ${next.toLowerCase()}.`, p.id);
-  notify(`${p.name} is now ${next.toLowerCase()}.`);
+  notify(`${p.name} is now ${next.toLowerCase()}${next === 'Active' && !p.stock ? ', with no stock to sell' : ''}.`);
 }
 // a product already archived stays out of the count and gets no second history entry
 function requestArchive(ids) {
@@ -383,7 +384,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         <div v-for="stat in stats" :key="stat.label" class="card demo-stat">
           <p class="text-sm muted">{{ stat.label }}</p>
           <p class="demo-stat-value">{{ stat.value }}</p>
-          <p class="text-sm font-medium" :class="stat.change < 0 ? 'text-danger' : 'text-success'">{{ change(stat) }}</p>
+          <p class="text-sm max-md:text-xs font-medium" :class="stat.change < 0 ? 'text-danger' : 'text-success'">{{ change(stat) }}</p>
         </div>
       </div>
       <div class="demo-dashboard-main">
@@ -417,7 +418,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <section class="card demo-low-stock" aria-labelledby="attention-heading">
             <header><h2 id="attention-heading">Low stock</h2><a href="products.html?stock=low" class="btn ghost sm">Review stock <span aria-hidden="true">→</span></a></header>
             <p v-if="!lowStock.length" class="text-sm muted">Every active product has 10 or more units.</p>
-            <ul v-else class="demo-activity-list"><li v-for="p in lowStock" :key="p.id"><span class="demo-thumb sm"><ProductArt :kind="p.kind"/></span><div><a class="demo-title-link font-medium text-sm" :href="productLink(p)">{{ p.name }}</a></div><span class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span></li></ul>
+            <ul v-else class="demo-activity-list demo-row-links"><li v-for="p in lowStock" :key="p.id"><span class="demo-thumb sm"><ProductArt :kind="p.kind"/></span><div><a class="demo-title-link font-medium text-sm" :href="productLink(p)">{{ p.name }}</a></div><span class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span></li></ul>
           </section>
           <section class="card demo-categories" aria-labelledby="category-heading">
             <header><h2 id="category-heading">Sales by category</h2></header>
@@ -451,7 +452,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         </section>
         <section class="card" aria-labelledby="recent-heading">
           <header><h2 id="recent-heading">Recent activity</h2><a href="activity.html" class="btn ghost sm">View all <span aria-hidden="true">→</span></a></header>
-          <ol class="demo-activity-list"><li v-for="a in store.activity.slice(0, 5)" :key="a.id"><span class="avatar sm secondary"><Icon :name="activityIcon(a.type)"/></span><div><a v-if="a.product" class="demo-title-link font-medium text-sm" :href="`product.html?id=${a.product}`">{{ a.title }}</a><p v-else class="font-medium text-sm">{{ a.title }}</p><p class="muted text-xs">{{ a.time }}</p></div></li></ol>
+          <ol class="demo-activity-list demo-row-links"><li v-for="a in store.activity.slice(0, 5)" :key="a.id"><span class="avatar sm secondary"><Icon :name="activityIcon(a.type)"/></span><div><a v-if="a.product" class="demo-title-link font-medium text-sm" :href="`product.html?id=${a.product}`">{{ a.title }}</a><p v-else class="font-medium text-sm">{{ a.title }}</p><p class="muted text-xs">{{ a.time }}</p></div></li></ol>
         </section>
       </div>
     </template>
@@ -477,15 +478,14 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <div class="field"><label for="filter-sort">Sort by</label><select id="filter-sort" v-model="sort" class="input"><option value="name">Name: A to Z</option><option value="price-high">Price: high to low</option><option value="price-low">Price: low to high</option><option value="stock-low">Stock: low to high</option></select></div>
           <div class="flex justify-between gap-2"><button class="btn ghost sm -ms-3" @click="category = ''; stockFilter = ''; sort = 'name'">Reset</button><button class="btn outlined sm" @click="closeFilters">Done</button></div>
         </div>
-        <div v-if="selected.length && mode === 'table'" class="demo-selection"><p class="font-medium whitespace-nowrap">{{ selected.length }} selected</p><button class="btn outlined sm" @click="requestArchive(selected)"><Icon name="archive"/> Archive selected</button><button class="btn ghost sm ml-auto -me-1" @click="selected = []"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div>
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
-            <colgroup><col class="w-16"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-28"></colgroup>
+            <colgroup><col class="w-16"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
             <thead><tr><th><input class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product</th><th>Status</th><th>Inventory</th><th>Category</th><th class="text-right">Price</th></tr></thead>
             <tbody>
               <tr v-for="p in visible" :key="p.id">
                 <td><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
-                <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku">{{ p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></span></span></td>
+                <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku">{{ p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span><span class="muted demo-row-category">{{ p.category }}</span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></span></span></td>
                 <td><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span></td>
                 <td class="whitespace-nowrap"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></td>
                 <td class="muted">{{ p.category }}</td>
@@ -493,10 +493,11 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
               </tr>
             </tbody>
           </table>
+          <div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="selected = []"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div>
         </div>
         <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h3>{{ p.name }}</h3><p class="muted text-xs">{{ p.category }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></p></div><strong>{{ priceLabel(p) }}</strong></div></a></div>
         <div v-else class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">Try another name or SKU, or clear the filters.</p><button class="btn outlined" @click="clearFilters">Clear filters</button></div>
-        <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ `${(pageNumber - 1) * 6 + 1}–${Math.min(pageNumber * 6, filtered.length)} of ${filtered.length} products` }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--; selected = []" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++; selected = []" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
+        <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ `${(pageNumber - 1) * 6 + 1}–${Math.min(pageNumber * 6, filtered.length)} of ${filtered.length} products` }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
     </template>
 
@@ -538,13 +539,13 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             </section>
           </div>
           <section class="card demo-finishes" aria-labelledby="finishes-heading">
-            <header><hgroup><h2 id="finishes-heading">Inventory</h2><p>London studio</p></hgroup><button v-if="nextAction?.label !== 'Adjust inventory'" class="btn ghost sm" @click="openInventory">Adjust inventory</button></header>
+            <header><h2 id="finishes-heading">Inventory</h2><button v-if="nextAction?.label !== 'Adjust inventory'" class="btn ghost sm" @click="openInventory">Adjust inventory</button></header>
             <div class="demo-table-scroll">
               <table class="table hover table-fixed demo-row-links">
                 <colgroup><col><col class="w-36 max-md:hidden"><col class="w-28"><col class="w-24"><col class="w-16"></colgroup>
                 <thead><tr><th>Finish</th><th class="max-md:hidden">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th><th><span class="sr-only">Edit</span></th></tr></thead>
                 <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="block text-xs muted demo-sku md:hidden">{{ v.sku }}</span></td><td class="muted demo-sku max-md:hidden">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
-                <tfoot class="tabular-nums"><tr><td>Total</td><td class="max-md:hidden"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
+                <tfoot class="tabular-nums"><tr><td>Total<span class="max-md:sr-only"> at the London studio</span></td><td class="max-md:hidden"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
               </table>
             </div>
           </section>
@@ -566,7 +567,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <section class="card demo-pricing" aria-labelledby="pricing-heading">
             <header><h2 id="pricing-heading">Pricing</h2><button class="btn ghost sm" @click="openPrice">Edit pricing</button></header>
             <p class="demo-price">{{ priceLabel(product) }}</p>
-            <dl class="dl horizontal demo-figures"><div><dt>Cost per item</dt><dd>{{ money(product.cost) }}</dd></div><div><dt>Margin after VAT</dt><dd>{{ margin(product) }}%</dd></div></dl>
+            <dl class="dl horizontal demo-figures"><div><dt>Cost per item</dt><dd>{{ money(product.cost) }}</dd></div><div><dt>{{ priceVaries(product) ? 'Lowest margin after VAT' : 'Margin after VAT' }}</dt><dd>{{ margin(product) }}%</dd></div></dl>
             <p class="demo-card-footer">Retail price includes 20% VAT</p>
           </section>
           <section class="card demo-details" aria-labelledby="organisation-heading">
@@ -593,7 +594,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
   <dialog ref="preview" class="dialog demo-preview" aria-labelledby="preview-title"><header><p class="muted text-sm">Store preview</p><button class="btn ghost sm ml-auto" aria-label="Close preview" @click="preview.close()"><Icon name="x"/></button></header><div class="demo-product-stage"><img v-if="product.image" :src="product.image" :alt="product.name"/><ProductArt v-else :kind="product.kind" :name="product.name" :angle="angle"/></div><div class="flex justify-between gap-4 items-start"><div><h2 id="preview-title" class="text-xl font-semibold">{{ product.name }}</h2><p class="muted mt-1">{{ product.subtitle }}</p></div><strong class="text-xl tabular-nums">{{ money(previewed?.price ?? product.price) }}</strong></div><div v-if="product.variants.length > 1" class="field"><label for="preview-finish">Finish</label><select id="preview-finish" v-model.number="previewFinish" class="input"><option v-for="(v, i) in product.variants" :key="i" :value="i">{{ v.name }}{{ v.stock ? '' : ' (out of stock)' }}</option></select></div><p class="text-sm muted leading-relaxed">{{ product.description }}</p><button class="btn primary" :disabled="!!previewBlock" @click="preview.close(); notify('Added to your demo bag.')">{{ previewBlock || 'Add to bag' }}</button></dialog>
   </template>
   <dialog ref="confirmation" class="dialog divided" aria-labelledby="confirm-title"><header><h2 id="confirm-title">{{ pending === 'reset' ? 'Reset workspace?' : archiveName ? `Archive “${archiveName}”?` : `Archive ${archiveCount} products?` }}</h2></header><p class="text-sm muted">{{ pending === 'reset' ? 'Your changes in this tab will be cleared and the original catalogue restored.' : archiveName ? 'It leaves your store and your active list. You can make it active again from its product page.' : `They leave your store and your active list. You can make each one active again from its product page.` }}</p><footer class="justify-end"><button class="btn outlined" @click="confirmation.close()">Cancel</button><button class="btn" :class="pending === 'reset' ? 'primary' : 'danger'" @click="pending === 'reset' ? (resetWorkspace(), confirmation.close(), notify('Workspace reset.')) : archiveProducts()">{{ pending === 'reset' ? 'Reset workspace' : archiveName ? 'Archive product' : `Archive ${archiveCount} products` }}</button></footer></dialog>
-  <dialog ref="noteDialog" class="dialog divided" aria-labelledby="note-title" @cancel.prevent="closeNote"><header><h2 id="note-title">Add a note</h2><button class="btn ghost sm" aria-label="Close note" @click="closeNote"><Icon name="x"/></button></header><form id="note-form" @submit.prevent="saveNote"><Field v-model="note" name="note" label="Your note" type="textarea" rows="5" required placeholder="What should your team know?"/></form><footer class="justify-end"><button class="btn outlined" type="button" @click="closeNote">Cancel</button><button form="note-form" class="btn primary">Add note</button></footer></dialog>
+  <dialog ref="noteDialog" class="dialog divided" aria-labelledby="note-title" @cancel.prevent="closeNote"><header><hgroup v-if="product && screen === 'product'"><p>{{ product.name }}</p><h2 id="note-title">Add a note</h2></hgroup><h2 v-else id="note-title">Add a note</h2><button class="btn ghost sm" aria-label="Close note" @click="closeNote"><Icon name="x"/></button></header><form id="note-form" @submit.prevent="saveNote"><Field v-model="note" name="note" label="Your note" type="textarea" rows="5" required placeholder="What should your team know?"/></form><footer class="justify-end"><button class="btn outlined" type="button" @click="closeNote">Cancel</button><button form="note-form" class="btn primary">Add note</button></footer></dialog>
   <dialog ref="discardDialog" class="dialog divided" aria-labelledby="discard-title"><header><h2 id="discard-title">Discard your changes?</h2></header><p class="text-sm muted">What you changed here has not been saved.</p><footer class="justify-end"><button class="btn outlined" @click="discardDialog.close()">Keep editing</button><button class="btn danger" @click="discardChanges">Discard changes</button></footer></dialog>
-  <div class="toaster" role="region" aria-label="Workspace notifications" aria-live="polite"><div v-if="toast" class="alert success"><Icon name="circle-check"/><p>{{ toast }}</p><button class="btn ghost sm" aria-label="Dismiss notification" @click="toast = ''"><Icon name="x"/></button></div></div>
+  <div class="toaster" role="region" aria-label="Workspace notifications" aria-live="polite"><div v-if="toast" class="alert success"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><p>{{ toast }}</p><button class="btn ghost sm" aria-label="Dismiss notification" @click="toast = ''"><Icon name="x"/></button></div></div>
 </template>

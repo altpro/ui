@@ -2,8 +2,12 @@
    prefixed demo-, the library tokens and components supply every control, surface
    and colour, and these rules only compose the screens. An application built on
    altpro/ui writes its own; nothing here belongs in resources/. */
+/* registered, so it resolves against the page's scheme even inside a stage that stays light */
+@property --demo-veil { syntax: "<color>"; inherits: true; initial-value: transparent; }
 @layer components {
   :root {
+    /* product pictures stay light in dark, under a veil so they aren't the brightest thing on the screen */
+    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 22%, transparent));
     --demo-stage: var(--color-muted);
     --demo-object: var(--color-foreground);
     --demo-object-edge: var(--color-muted-foreground);
@@ -31,7 +35,7 @@
     h1 { font-size: var(--text-2xl, 1.5rem); line-height: 1.25; letter-spacing: -.025em; font-weight: 600; overflow-wrap: anywhere; }
     p.muted { margin-top: 2px; font-size: .875rem; }
   }
-  .demo-page-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+  .demo-page-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
   /* the record's name, then its status and any blocker beside it */
   .demo-record-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
   .demo-stock { display: inline-flex; align-items: center; gap: 6px; }
@@ -47,7 +51,7 @@
   /* SKUs in the body face: case-sensitive forms centre the hyphens on the capitals */
   .demo-sku { font-feature-settings: "case"; letter-spacing: .01em; white-space: nowrap; }
   /* the category joins the code when the screen has no room for its column */
-  .demo-sku-category { display: none; }
+  .demo-sku-category, .demo-row-category { display: none; }
   .demo-thumb.sm { width: 32px; height: 32px; border-radius: min(var(--radius), 8px); }
   .demo-icon { display: inline-flex; flex: none; align-items: center; vertical-align: middle; }
   .demo-summary-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-gap); }
@@ -98,7 +102,7 @@
   }
   .demo-product-stage {
     position: relative;
-    background: var(--demo-stage);
+    background-color: var(--demo-stage);
     min-width: 0;
     /* a solid or outlined badge on the grey stage sits on a card-coloured chip so it shows; a soft one already does */
     > .badge { position: absolute; top: 12px; left: 12px; z-index: 1; &:not(.soft) { background: var(--color-card); border-color: var(--color-border); } }
@@ -115,10 +119,10 @@
   }
   /* the whole row opens its record: the title link's hit area stretches over the row, and a checkbox stays above it */
   .demo-row-links {
-    tbody tr { position: relative; }
-    tbody .demo-title-link::after { content: ""; position: absolute; inset: 0; }
-    tbody .demo-row-action::after { content: ""; position: absolute; inset: 0; }
-    tbody .checkbox { position: relative; z-index: 1; }
+    tbody tr, > li { position: relative; }
+    :is(.demo-title-link, .demo-row-action)::after { content: ""; position: absolute; inset: 0; }
+    /* a click just off a checkbox selects nothing rather than opening the record */
+    td:has(> .checkbox) { position: relative; z-index: 1; }
   }
   .demo-row-product { display: flex; align-items: center; gap: 12px; }
   .demo-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 2px; font-size: .75rem; }
@@ -129,7 +133,7 @@
   .demo-filter-button { display: none; }
   .demo-search { min-width: 15rem; flex: 1; max-width: 360px; kbd { font-size: .75rem; padding: 1px 5px; border: 1px solid var(--color-border); border-radius: 4px; } }
   .demo-table-scroll { position: relative; overflow-x: auto; min-width: 0; &:focus-visible { outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent); outline-offset: -3px; } }
-  .demo-products-table { --table-py: 12px; font-size: .875rem; th { white-space: nowrap; } }
+  .demo-products-table { --table-py: 12px; font-size: .875rem; th { white-space: nowrap; } thead th { height: 3.25rem; padding-block: 0; } }
   .demo-table-product {
     display: flex;
     align-items: center;
@@ -138,9 +142,10 @@
     .demo-sku { display: block; font-size: .75rem; margin-top: 2px; }
   }
   /* a product's picture is a photograph, not interface: it reads the same in both schemes */
-  .demo-product-stage, .demo-gallery-stage, .demo-gallery-view, .demo-thumb { color-scheme: light; }
-  .demo-thumb { display: block; width: 44px; height: 44px; border-radius: min(var(--radius), 10px); background: var(--demo-stage); flex: none; overflow: hidden; svg { width: 100%; height: 100%; } img { width: 100%; height: 100%; object-fit: cover; } }
-  .demo-selection { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; background: var(--color-muted); padding: 8px 12px; border-radius: min(var(--radius), 8px); font-size: .875rem; }
+  .demo-product-stage, .demo-gallery-stage, .demo-gallery-view, .demo-thumb { color-scheme: light; background-image: linear-gradient(var(--demo-veil), var(--demo-veil)); }
+  .demo-thumb { display: block; width: 44px; height: 44px; border-radius: min(var(--radius), 10px); background-color: var(--demo-stage); flex: none; overflow: hidden; svg { width: 100%; height: 100%; } img { width: 100%; height: 100%; object-fit: cover; } }
+  /* selection takes over the header row, so ticking a row moves nothing under the pointer */
+  .demo-selection { position: absolute; inset: 0 0 auto 4rem; z-index: 2; display: flex; align-items: center; gap: 12px; height: calc(3.25rem - 1px); padding-inline-end: var(--card-p); background: var(--color-card); font-size: .875rem; }
   /* the footer's rule runs edge to edge like the table's, and closes the last row */
   .demo-table-footer { justify-content: space-between; margin-inline: calc(-1 * var(--card-p)); padding: 16px var(--card-p) 0; border-top: 1px solid var(--color-border); }
   .demo-table-scroll + .demo-table-footer { margin-top: -16px; }
@@ -157,7 +162,7 @@
     align-items: center;
     justify-content: center;
     min-height: 220px;
-    background: var(--demo-stage);
+    background-color: var(--demo-stage);
     .demo-product-art { height: 210px; }
     > img { width: 100%; max-height: 240px; object-fit: contain; }
   }
@@ -165,7 +170,7 @@
   .demo-gallery-view {
     width: 52px;
     height: 44px;
-    background: var(--demo-stage);
+    background-color: var(--demo-stage);
     border: 1px solid var(--color-border);
     border-radius: min(var(--radius), 8px);
     cursor: pointer;
@@ -182,7 +187,7 @@
   .demo-price { font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }
   .demo-editor { --dialog-w: 29rem; }
   /* the app's headings: a card title reads a step above body text, a dialog title a step above that, and a dialog's lead line is a small caption over it */
-  .demo-page .card > header :is(h2, h3) { font-size: 1rem; letter-spacing: -.01em; }
+  .demo-page .card > header :is(h2, h3) { font-size: 1rem; }
   .dialog > header {
     :is(h2, h3) { font-size: 1.125rem; letter-spacing: -.015em; }
     hgroup > p:first-child { font-size: .75rem; font-weight: 500; }
@@ -239,7 +244,10 @@
       > .demo-thumb { width: 40px; height: 40px; }
       > .demo-table-meta { grid-column: 1 / -1; }
     }
-    .demo-selection { flex-wrap: nowrap; }
+    /* three lines at most: the name, its category in place of the code, then status and stock */
+    .demo-table-product .demo-sku { display: none; }
+    .demo-row-category { display: block; font-size: .75rem; margin-top: 2px; }
+    .demo-selection { left: 3.25rem; }
     .demo-product-card-body { flex-direction: column; align-items: flex-start; gap: 6px; }
     /* the page flattens so each card can take its place: state and facts first, then the working content; a product that needs restocking leads with its stock */
     .demo-detail-grid { display: flex; flex-direction: column; align-items: stretch; }

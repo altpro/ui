@@ -200,6 +200,40 @@ test('on a phone the filters move into a popover that holds every filter and the
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
 
+test('ticking a row moves nothing, and the list reads as one column of figures on a phone', async ({ page }) => {
+  await page.goto('/app/products.html');
+  const row = page.locator('tbody tr').nth(2);
+  const before = await row.boundingBox();
+  await row.locator('.checkbox').check();
+  await expect(page.getByRole('button', { name: 'Archive selected', exact: true })).toBeVisible();
+  expect((await row.boundingBox()).y).toBe(before.y);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/app/dashboard.html');
+  // the page-level overflow test can't see parts of a card running into each other
+  const stacks = await page.locator('.demo-stat').evaluateAll(cards => cards.map(card => {
+    const [label, value, change] = [...card.children].map(el => el.getBoundingClientRect());
+    return label.bottom <= value.top + 1 && value.bottom <= change.top + 1;
+  }));
+  expect(stacks).toEqual([true, true, true, true]);
+});
+
+test('a toast keeps its message on one row with its icon', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Add note', exact: true }).click();
+  await page.getByLabel('Your note', { exact: true }).fill('Check.');
+  await page.getByRole('dialog').getByRole('button', { name: 'Add note', exact: true }).click();
+  expect((await page.locator('.toaster .alert').boundingBox()).height).toBeLessThan(64);
+});
+
+test('a drawer keeps its actions at the very bottom of the screen', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
+  const drawer = page.getByRole('dialog');
+  await expect(drawer).toHaveCSS('opacity', '1');
+  const edges = await drawer.evaluate(el => ({ footer: el.querySelector(':scope > footer').getBoundingClientRect().bottom, box: el.getBoundingClientRect().bottom }));
+  expect(Math.abs(edges.footer - edges.box)).toBeLessThan(2);
+});
+
 test('a dashboard row opens its product and the chart reads out a day', async ({ page }) => {
   await page.goto('/app/dashboard.html');
   await expect(page.locator('.demo-low-stock li')).toHaveCount(3);

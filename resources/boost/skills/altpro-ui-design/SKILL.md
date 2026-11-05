@@ -97,7 +97,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Anything that looks like a link is one.** Coloured text with an arrow that does nothing is a lie: make it a link, or plain text.
 - **A row's title is its link.** Drop a repeated "Open" button on every row. Stretch the link's hit area over the row (`::after` with `inset-0` on a `relative` row), with checkboxes above it. A row that opens an editor instead of a page shows a quiet pencil, because a plain value doesn't say it can be edited.
 - **A list's state lives in its URL.** Search, filters, sort, page and view survive a reload, and a record's way back (its link and its breadcrumb) returns to the list as it was left. A link that arrives to act on a queue sorts the worst first.
-- **Selection shows its state.** A header checkbox is mixed (`:indeterminate.prop`) when some rows are selected. A bulk action counts only the rows it will change.
+- **Selection shows its state and moves nothing.** A header checkbox is mixed (`:indeterminate.prop`) when some rows are selected. The bulk bar lies over the header row, so ticking a row can't move the next one under the pointer. A bulk action counts only the rows it will change.
 - **A stat that filters the list is a link.** The whole card is the link, with a chevron at every width. The current one takes `aria-current="true"` and the `secondary` fill.
 - **A toggle shows its value in both schemes.** A `.btn` with `aria-pressed="true"` takes the checked fill. In a `.join` of view switches, give the pressed one the `secondary` fill so it still reads in dark.
 - **Icons mean what they show.** A square check reads as a checkbox. A feed entry shows its type instead: a package for a product, a tag for a price, a speech bubble for a note.
