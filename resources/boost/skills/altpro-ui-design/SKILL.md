@@ -68,10 +68,10 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Headings name what the card holds:** "Description", "Details", "Low stock", "Recent activity". Not "The details", "A little attention" or "Your space to try things".
 - **A page's `h1` matches its label** in the nav and the breadcrumb. A saved view or filter that is a nav item is a page: it sets both ("Jobs › Overdue").
 - **A subtitle says what the page covers** ("Sales, stock and changes across your store") or is left out. Leave out taglines, motivational lines, reassurance notes ("Your collection is looking good"), decorative punctuation on headings, and eyebrows that restate the heading.
-- **Every figure reconciles.** Stats, the chart, the category split and the top products come from one set of rows for one period, so their totals match and their percentages add to 100. Margin is on the price without VAT, since a cost has none. A stock total is the sum of its variants, and a price that varies reads "From £249".
+- **Every figure reconciles, history included.** A count of 7 last week can't stand beside 8 sold since and 7 left today. Stats, the chart, the category split and the top products come from one set of rows for one period, so their totals match and their percentages add to 100. Margin is on the price without VAT, since a cost has none. A stock total is the sum of its variants, and a price that varies reads "From £249".
 - **A rate moves in points.** Conversion falls from 4.0% to 3.6%: "Down 0.4 pts", not "Down 9.0%".
 - **Each fact once per screen.** A percentage on a stat card is not repeated in the chart footer. A count on a tab is not repeated in a summary strip.
-- **One word for one state across screens:** "Out of stock" everywhere, never "0 in stock" in one view.
+- **One word for one state across screens:** "Out of stock" everywhere, never "0 in stock" in one view. The same goes for a figure: "In stock" in the table and the dialog, not "Available units" in one of them; "Sales" on every card, not "Revenue" on some.
 - **A record's header holds what no card shows,** apart from the record's own name. Its facts line doesn't repeat details (an email, a frame number) that a card below holds.
 - **Every value has a label** unless its form says what it is, as a date or a price does. A bare name in a facts line needs its role: "mechanic Marek Nowak".
 - **Counts name their base,** counted against what the filters allow: "4 of 14 open jobs", not "4 of 18 jobs" when 4 are collected and hidden. A filter means what the column it filters says: if drafts can read "Out of stock", a stock filter that leaves them out says so by moving to the Active tab. Show a list's count only when a filter narrows it; unfiltered, it repeats the stat above.
@@ -121,7 +121,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Changes are never lost silently.** Cancel, the cross, Escape and leaving the page all ask first when the editor is dirty, with "Keep editing" and "Discard changes". An unchanged editor closes straight away.
 - **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button.
 - **An editor opens on its first field,** or on the field the caller asked for, not on its close button.
-- **Saving nothing records nothing.** An unchanged save closes without a toast or a history entry, and an entry says what really moved.
+- **Saving nothing records nothing.** An unchanged save closes without a toast or a history entry. An entry says what really moved, in every editor: "Slate price changed from £249 to £259", "Chalk 28 → 32", "Alex Morgan changed the description and tags". On a record's own page it doesn't repeat the record's name.
 - **Validate the same rule on every route.** Two forms that can set a SKU refuse the same values with the same words, and focus the field that failed.
 
 ### Phone (390px)

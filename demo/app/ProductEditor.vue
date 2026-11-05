@@ -58,9 +58,9 @@ defineExpose({ open, dialog, clean });
       <Field v-model="draft.subtitle" name="subtitle" label="Short description" maxlength="140"/>
       <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" :errors="skuError || undefined" required/></div>
       <Field v-model="draft.description" name="description" type="textarea" label="Description" rows="5"/>
-      <Field v-model="draft.tags" name="tags" label="Tags" type="combobox" multiple :options="['Wireless', 'Analog', 'Bestseller', 'New arrival', 'Studio', 'Coming soon']" hint="Help your team organise the collection."/>
+      <Field v-model="draft.tags" name="tags" label="Tags" type="combobox" multiple :options="['Wireless', 'Analog', 'Bestseller', 'New arrival', 'Studio', 'Coming soon']"/>
       <div class="field"><label for="product-photo">Product image</label><FileInput id="product-photo" v-model="files" name="photo" accept="image/*" :errors="imageError || undefined"><span>Any image up to 1 MB.</span></FileInput></div>
-      <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.stock" name="stock" label="Stock" type="number" min="0" step="1" required/></div></template>
+      <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.stock" name="stock" label="In stock" type="number" min="0" step="1" required/></div></template>
     </form>
     <footer class="justify-end"><button type="button" class="btn outlined" @click="requestClose">Cancel</button><button form="product-form" class="btn primary" :disabled="saving || !!imageError" :class="{ loading: saving }" :aria-busy="saving">{{ creating ? 'Add product' : 'Save changes' }}</button></footer>
   </dialog>

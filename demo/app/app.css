@@ -38,14 +38,14 @@
   .demo-page-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
   /* the record's name, then its status and any blocker beside it */
   .demo-record-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
-  .demo-stock { display: inline-flex; align-items: center; gap: 6px; }
+  .demo-stock { display: inline-flex; align-items: center; gap: 6px; min-height: 20px; }
   .demo-title-link { color: inherit; text-decoration: none; @media (hover: hover) { &:hover { text-decoration: underline; text-underline-offset: 3px; } } &:focus-visible { outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent); border-radius: 4px; } }
   /* figures in a card: the value sits at the card's far edge */
   .dl.demo-figures > div { flex-wrap: nowrap; justify-content: space-between; gap: 16px; > dt { flex: none; max-width: none; } > dd { flex: 0 1 auto; margin-inline-start: auto; text-align: right; font-weight: 500; font-variant-numeric: tabular-nums; &.demo-sku { font-variant-numeric: normal; } } }
   .demo-table-meta { display: none; }
   /* a note in the feed reads like the other entries' detail line */
-  .demo-history .timeline blockquote { margin: 4px 0 0; padding: 0; border: 0; font-size: .875rem; font-style: italic; color: var(--color-muted-foreground); }
-  .demo-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+  .demo-history .timeline blockquote { margin: 0; padding: 0; line-height: 1.43; border: 0; font-size: .875rem; font-style: italic; color: var(--color-muted-foreground); }
+  .demo-tags { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; > :first-child { margin-inline-end: 6px; } }
   /* the current view reads as chosen in both schemes */
   .demo-view-toggle > .btn[aria-pressed="true"] { --btn-bg: var(--color-secondary); --btn-fg: var(--color-secondary-foreground); }
   /* SKUs in the body face: case-sensitive forms centre the hyphens on the capitals */
@@ -98,7 +98,7 @@
     transition: border-color .15s;
     @media (hover: hover) { &:hover { border-color: var(--color-primary); } }
     &:focus-visible { outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent); outline-offset: 0; border-color: var(--color-ring); }
-    h3 { font-weight: 600; font-size: .875rem; line-height: 1.3; }
+    h2 { font-weight: 600; font-size: .875rem; line-height: 1.3; }
   }
   .demo-product-stage {
     position: relative;
@@ -166,7 +166,7 @@
     .demo-product-art { height: 210px; }
     > img { width: 100%; max-height: 240px; object-fit: contain; }
   }
-  .demo-gallery-views { display: flex; align-items: center; gap: 8px; padding: 12px; }
+  .demo-gallery-views { display: flex; align-items: center; gap: 8px; padding: 16px 24px; }
   .dropdown .nav > button { color: var(--color-foreground); }
   .demo-gallery-view {
     width: 52px;
@@ -210,6 +210,8 @@
     .demo-product-grid { gap: 12px; }
     .demo-product-card-body { padding: 14px; > div { min-width: 0; } }
     .demo-detail-top { grid-template-columns: minmax(0, 1fr); }
+    /* a product waiting for stock leads its column with its stock */
+    .demo-restock .demo-finishes { order: -1; }
   }
   /* a tablet, or a laptop beside the sidebar: the side column would be too thin, so it lies across the top of the screen */
   @container page (width < 56rem) {
@@ -230,7 +232,7 @@
     .demo-page-heading { align-items: flex-start; }
     .demo-page-actions { flex-basis: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .demo-record-actions { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
-    .demo-period { flex-basis: 100%; > select { flex: 1; } > .join { flex-basis: 100%; > input { min-width: 0; flex: 1; } } }
+    .demo-period { flex-basis: 100%; > select { flex: 1; } > .join { flex-basis: 100%; > .input { min-width: 0; flex: 1; } } }
     .demo-period-error { text-align: start; }
     /* stats stay a compact block near 120px tall, so the next card starts in the first screenful */
     .demo-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
@@ -254,7 +256,7 @@
       > .demo-table-meta { grid-column: 1 / -1; }
     }
     /* three lines at most: the name, its category in place of the code, then status and stock */
-    .demo-table-product .demo-sku { display: none; }
+    .demo-table-product .demo-sku:not(.demo-sku-match) { display: none; }
     .demo-row-category { display: block; font-size: .75rem; margin-top: 2px; }
     .demo-selection { left: 3.25rem; }
     .demo-product-card-body { flex-direction: column; align-items: flex-start; gap: 6px; }
@@ -271,7 +273,7 @@
     .demo-description { order: 6; }
     .demo-details { order: 7; }
     .demo-gallery-stage { min-height: 170px; .demo-product-art { height: 160px; } }
-    .demo-gallery-views { padding: 8px; }
+    .demo-gallery-views { padding: 12px 20px; }
     .demo-product-history .timeline > li { grid-template-columns: var(--timeline-marker) minmax(0, 1fr); > :is(p, blockquote, time) { grid-column: 2; } > time { grid-row: auto; } }
     .demo-table-footer { gap: 14px; }
   }

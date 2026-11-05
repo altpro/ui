@@ -15,7 +15,7 @@ test('adding a finish focuses its name and sets a sensible quantity', async ({ p
   await page.getByRole('dialog').getByRole('button', { name: 'Add finish', exact: true }).click();
   await expect(rows(page)).toHaveCount(4);
   await expect(row(page, 4).getByLabel('Finish name')).toBeFocused();
-  await expect(row(page, 4).getByLabel('New finish available units')).toHaveValue('0');
+  await expect(row(page, 4).getByLabel('New finish in stock')).toHaveValue('0');
   await expect(live(page)).toHaveText('Finish 4 added.');
 });
 

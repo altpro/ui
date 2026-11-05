@@ -40,7 +40,7 @@ test('editing product, price, stock and status updates the collection and histor
   await page.getByRole('button', { name: 'Save pricing', exact: true }).click();
   await expect(page.locator('.demo-detail-side .demo-price').first()).toContainText('£269.99');
   await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
-  await page.getByLabel('Slate available units', { exact: true }).fill('50');
+  await page.getByLabel('Slate in stock', { exact: true }).fill('50');
   await page.getByRole('button', { name: 'Save inventory' }).click();
   await expect(page.locator('.demo-finishes tfoot')).toContainText('92');
   await page.getByRole('button', { name: 'Active', exact: false }).first().click();
@@ -125,7 +125,7 @@ test('the sales period takes a preset or two dates and the figures follow it', a
   await page.getByLabel('Sales to', { exact: true }).fill('2026-09-03');
   await expect(preset).toHaveValue('');
   await expect(page.locator('.demo-chart-labels > span')).toHaveText(['Tue', 'Wed', 'Thu']);
-  await expect(page.getByRole('img', { name: /^Revenue for 1\D+3 September 2026: £/ })).toBeVisible();
+  await expect(page.getByRole('img', { name: /^Sales for 1\D+3 September 2026: £/ })).toBeVisible();
   await expect(page.locator('.demo-categories progress')).toHaveCount(3);
 });
 
@@ -212,6 +212,23 @@ test('saving nothing records nothing, and a real change says what moved', async 
   await page.getByLabel('Cost per item', { exact: true }).fill('120');
   await page.getByRole('button', { name: 'Save pricing', exact: true }).click();
   await expect(page.locator('.timeline > li').first()).toContainText('Cost per item changed from £112 to £120.');
+});
+
+test('history names what moved in each editor', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  const latest = page.locator('.timeline > li').first();
+  await page.getByRole('button', { name: 'Edit Slate finish', exact: true }).click();
+  await page.getByLabel('Finish price', { exact: true }).fill('259');
+  await page.getByRole('button', { name: 'Save finish', exact: true }).click();
+  await expect(latest).toContainText('Slate price changed from £249 to £259.');
+  await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
+  await page.getByLabel('Chalk in stock', { exact: true }).fill('32');
+  await page.getByRole('button', { name: 'Save inventory' }).click();
+  await expect(latest).toContainText('Chalk 28 → 32.');
+  await page.getByRole('button', { name: 'Edit description', exact: true }).click();
+  await page.locator('textarea[name=description]').fill('Short and plain.');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(latest).toContainText('Alex Morgan changed the description.');
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
