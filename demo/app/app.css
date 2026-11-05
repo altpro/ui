@@ -7,7 +7,7 @@
 @layer components {
   :root {
     /* product pictures stay light in dark, under a veil so they aren't the brightest thing on the screen */
-    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 32%, transparent));
+    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 45%, transparent));
     --demo-stage: var(--color-muted);
     --demo-object: var(--color-foreground);
     --demo-object-edge: var(--color-muted-foreground);
@@ -35,6 +35,7 @@
     h1 { font-size: var(--text-2xl, 1.5rem); line-height: 1.25; letter-spacing: -.025em; font-weight: 600; overflow-wrap: anywhere; }
     p.muted { margin-top: 2px; font-size: .875rem; }
   }
+  .demo-preview-item { display: none; }
   .demo-page-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
   /* the record's name, then its status and any blocker beside it */
   .demo-record-title { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; }
@@ -85,11 +86,12 @@
   .demo-chart-plot { position: relative; min-width: 0; touch-action: pan-y; border-radius: 2px; > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; } &:focus-visible { outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent); outline-offset: 4px; } }
   .demo-chart-grid { fill: none; stroke: var(--color-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
   .demo-chart-line { fill: none; stroke: var(--color-primary); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+  .demo-chart-bar { fill: var(--color-primary); &.previous { fill: var(--color-muted-foreground); } }
   .demo-chart-prior { fill: none; stroke: var(--color-muted-foreground); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
-  .demo-chart-labels { grid-column: 2; position: relative; height: 1.25rem; font-size: .75rem; color: var(--color-muted-foreground); > span { position: absolute; translate: -50% 0; white-space: nowrap; } > span:first-child { translate: 0 0; } > span:last-child:not(:first-child) { translate: -100% 0; } }
+  .demo-chart-labels { grid-column: 2; position: relative; height: 1.25rem; font-size: .75rem; color: var(--color-muted-foreground); > span { position: absolute; translate: -50% 0; white-space: nowrap; } > span:first-child { translate: 0 0; } > span:last-child:not(:first-child) { translate: -100% 0; } > span:only-child { translate: -50% 0; } }
   .demo-chart-guide { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-border); pointer-events: none; }
   .demo-chart-dot { position: absolute; width: 10px; height: 10px; translate: -50% -50%; border: 2px solid var(--color-card); border-radius: 50%; background: var(--color-primary); pointer-events: none; &.previous { width: 8px; height: 8px; background: var(--color-muted-foreground); } }
-  .demo-chart-tip { position: absolute; top: 8px; translate: 12px 0; z-index: 1; display: grid; gap: 2px; min-width: 9rem; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: min(var(--radius), 8px); background: var(--color-card); box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; > span { display: flex; justify-content: space-between; gap: 12px; } &.flip { translate: calc(-100% - 12px) 0; } }
+  .demo-chart-tip { position: absolute; top: 8px; translate: 12px 0; z-index: 1; display: grid; gap: 2px; min-width: 10.5rem; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: min(var(--radius), 8px); background: var(--color-card); box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; > * { display: flex; justify-content: space-between; gap: 12px; } &.flip { translate: calc(-100% - 12px) 0; } }
   .demo-product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-gap); }
   .demo-product-card {
     padding: 0;
@@ -193,7 +195,7 @@
   }
   .demo-channels { display: flex; flex-direction: column; gap: 12px; }
   .demo-channel { display: flex; align-items: center; justify-content: space-between; gap: 10px; strong { display: block; font-size: .875rem; font-weight: 500; } div > span { display: block; font-size: .75rem; margin-top: 2px; } }
-  .demo-price { font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }
+  .demo-price { font-size: 1.5rem; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }
   .demo-editor { --dialog-w: 29rem; }
   /* the app's headings: a card title reads a step above body text, a dialog title a step above that, and a dialog's lead line is a small caption over it */
   .demo-page .card > header :is(h2, h3) { font-size: 1rem; }
@@ -219,6 +221,9 @@
     .demo-dashboard-side { order: -1; flex-direction: row; > * { flex: 1; min-width: 0; } }
     .demo-detail-grid { grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 1fr); }
     /* filters go into their popover, and the category folds in beside the code */
+    /* three actions fit beside a title where four don't; Preview moves into the menu */
+    .demo-preview-button { display: none; }
+    .demo-preview-item { display: flex; }
     .demo-inline-filter { display: none; }
     .demo-filter-button { display: inline-flex; }
     .demo-view-toggle { margin-inline-start: auto; }
@@ -244,6 +249,8 @@
     .demo-summary-grid { order: -2; }
     .demo-low-stock { order: -1; }
     .demo-chart { grid-template-rows: 180px auto; }
+    /* a month's dates don't fit a phone: every other one goes, and the ends stay */
+    .demo-chart-labels.dense > span:nth-child(even) { display: none; }
     .demo-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .demo-product-art { height: 160px; }
     .demo-list-tabs { flex-wrap: nowrap; --tabs-px: .375rem; }
@@ -258,6 +265,7 @@
     /* three lines at most: the name, its category in place of the code, then status and stock */
     .demo-table-product .demo-sku:not(.demo-sku-match) { display: none; }
     .demo-row-category { display: block; font-size: .75rem; margin-top: 2px; }
+    .demo-sku-match + .demo-row-category, .demo-sku-match .demo-sku-category { display: none; }
     .demo-selection { left: 3.25rem; }
     .demo-product-card-body { flex-direction: column; align-items: flex-start; gap: 6px; }
     /* the page flattens so each card can take its place: state and facts first, then the working content; a product that needs restocking leads with its stock */

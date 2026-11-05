@@ -6,7 +6,7 @@ import ProductArt from './ProductArt.vue';
 import ProductEditor from './ProductEditor.vue';
 import Icon from './Icon.vue';
 import { datePresets } from '@ui/dataTable';
-import { store, money, categories, statusClass, record, resetWorkspace, daySales, day, shift } from './store.js';
+import { store, money, categories, statusClass, record, resetWorkspace, daySales, day, shift, seededName } from './store.js';
 const props = defineProps({ screen: String });
 const editor = ref();
 const pricing = ref();
@@ -48,12 +48,15 @@ const product = computed(() => store.products.find(p => p.id === productId));
 const productLink = p => `product.html?id=${encodeURIComponent(p.id)}`;
 // the way back from a record finds the list as it was left, filtered queue and all
 const listUrl = ref(`products.html${sessionStorage.getItem('demo-list-search') ?? ''}`);
+// the finish a search found by its SKU, which the row then names
+const matchedFinish = p => query.value && !p.sku.toLowerCase().includes(query.value.toLowerCase()) ? p.variants.find(v => v.sku.toLowerCase().includes(query.value.toLowerCase())) : null;
+const skuMatched = p => query.value && (p.sku.toLowerCase().includes(query.value.toLowerCase()) || matchedFinish(p));
 const sorts = { name: (a, b) => a.name.localeCompare(b.name), 'price-high': (a, b) => b.price - a.price, 'price-low': (a, b) => a.price - b.price, 'stock-low': (a, b) => a.stock - b.stock };
 const filtered = computed(() => store.products.filter(p =>
   (status.value === 'All' || p.status === status.value) &&
   (!category.value || p.category === category.value) &&
   (!stockFilter.value || (stockFilter.value === 'low' ? stockAlert(p) : p.status === 'Active' && p.stock === 0)) &&
-  `${p.name} ${p.sku} ${p.category}`.toLowerCase().includes(query.value.toLowerCase())
+  `${p.name} ${p.sku} ${p.category} ${p.variants.map(v => v.sku).join(' ')}`.toLowerCase().includes(query.value.toLowerCase())
 ).sort(sorts[sort.value]));
 const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / 6)));
 const visible = computed(() => filtered.value.slice((pageNumber.value - 1) * 6, pageNumber.value * 6));
@@ -66,7 +69,12 @@ const timeline = computed(() => store.activity.filter(a => activityType.value ==
 const productActivity = computed(() => store.activity.filter(a => a.product === product.value?.id));
 // the time of the latest change as it reads inside a sentence
 // on its own page an entry doesn't repeat the product's name
-const historyTitle = a => { const name = product.value?.name ?? ''; if (!a.title.startsWith(`${name} `)) return a.title; const rest = a.title.slice(name.length + 1); return rest[0].toUpperCase() + rest.slice(1); };
+const historyTitle = a => {
+  const name = [a.subject, seededName(a.product), product.value?.name].find(n => n && a.title.startsWith(`${n} `));
+  if (!name) return a.title;
+  const rest = a.title.slice(name.length + 1);
+  return rest[0].toUpperCase() + rest.slice(1);
+};
 const lastChange = computed(() => productActivity.value.find(a => a.type !== 'Note')?.time.replace(/^(Today|Yesterday|Just now)/, t => t.toLowerCase()));
 // a product saved before channels existed is on in both
 const channel = (p, key) => p.channels?.[key] ?? true;
@@ -105,6 +113,8 @@ const custom = ref(false);
 function pickPeriod(label) {
   custom.value = !label;
   dateError.value = '';
+  // a preset can run past today, as This month does; the dates shown never do
+  if (!label) range.value = range.value.map(d => d > today ? today : d);
   if (label) range.value = [...presets.find(p => p.label === label).range];
 }
 function setDay(i, event) {
@@ -133,7 +143,9 @@ const stats = computed(() => {
     // a rate moves in points; the other figures move by a percentage of themselves
     .map(([label, value], i) => ({ label, value, unit: i === 3 ? ' pts' : '%', change: i === 3 ? now[3] - then[3] : (now[i] / then[i] - 1) * 100 }));
 });
-const change = stat => `${stat.change < 0 ? 'Down' : 'Up'} ${Math.abs(stat.change).toFixed(1)}${stat.unit}`;
+// a change too small to show at one decimal is no change, in words and in colour
+const flat = stat => Math.abs(stat.change) < .05;
+const change = stat => flat(stat) ? 'No change' : `${stat.change < 0 ? 'Down' : 'Up'} ${Math.abs(stat.change).toFixed(1)}${stat.unit}`;
 // what each product sold in the period, best first
 const sold = computed(() => {
   const totals = {};
@@ -159,12 +171,13 @@ const chart = computed(() => {
     line: line(now), prior: line(then), labels,
     axis: [3, 2, 1, 0].map(k => ({ text: k ? `£${step * k / 1000}k` : '£0', y: y(step * k) })),
     peak: `${longDate(salesDays.value[best], { weekday: 'short', day: 'numeric', month: 'short' })}, ${money(now[best])}`,
-    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: longDate(salesDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), priorDate: longDate(previousDays.value[i], { day: 'numeric', month: 'short' }), now: money(v), then: money(then[i]) })),
+    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: longDate(salesDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), priorDate: longDate(previousDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), now: money(v), then: money(then[i]) })),
   };
 });
 // the day under the pointer or the arrow keys; the tip names it and both totals
 const pointed = ref(-1);
-const tip = computed(() => chart.value.points[pointed.value]);
+// one day has no line to read, so its tip stays up
+const tip = computed(() => chart.value.points[pointed.value] ?? (chart.value.points.length === 1 ? chart.value.points[0] : undefined));
 function pointAt(event) {
   const box = event.currentTarget.getBoundingClientRect(), last = chart.value.points.length - 1;
   pointed.value = Math.round(Math.min(Math.max((event.clientX - box.left) / box.width, 0), 1) * last);
@@ -199,6 +212,8 @@ const categorySales = computed(() => {
 watch([query, category, status, stockFilter, sort], () => { pageNumber.value = 1; selected.value = []; });
 // only active products have a stock state to act on, so a stock filter opens the Active tab
 watch(stockFilter, value => { if (value) status.value = 'Active'; });
+// grid view has no checkboxes, so a selection can't be carried into it unseen
+watch(mode, () => { selected.value = []; });
 watch(pageCount, n => { pageNumber.value = Math.min(pageNumber.value, n); }, { immediate: true });
 watch([query, category, status, stockFilter, sort, mode, pageNumber], () => {
   if (props.screen !== 'products') return;
@@ -231,6 +246,8 @@ watch(() => product.value?.name, name => {
 onUnmounted(() => { document.removeEventListener('keydown', shortcut); window.removeEventListener('beforeunload', warnUnsaved); clearTimeout(toastTimer); });
 function notify(message) { toast.value = message; clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.value = '', 6000); }
 function clearFilters() { query.value = ''; category.value = ''; stockFilter.value = ''; status.value = 'All'; }
+const narrowed = computed(() => query.value || filterCount.value > 0);
+const emptyHint = { All: 'Add a product to start your catalogue.', Active: 'Publish a draft and it appears here.', Draft: 'New and duplicated products start here.', Archived: 'Products you archive appear here.' };
 const clearNarrowing = () => { query.value = ''; category.value = ''; stockFilter.value = ''; };
 // the count names its base: the tab it is counted against, once anything narrows the list
 const tabCount = computed(() => status.value === 'All' ? store.products.length : store.products.filter(p => p.status === status.value).length);
@@ -281,9 +298,12 @@ function saveProduct(draft) {
   if (editing.value) {
     const target = store.products.find(p => p.id === editing.value);
     const fields = { name: 'name', subtitle: 'short description', description: 'description', category: 'category', sku: 'SKU', tags: 'tags', image: 'image' };
-    const changed = Object.keys(fields).filter(key => JSON.stringify(target[key]) !== JSON.stringify(draft[key])).map(key => fields[key]);
+    const changed = Object.keys(fields).filter(key => JSON.stringify(target[key]) !== JSON.stringify(draft[key]));
+    const exact = changed.filter(key => ['name', 'sku'].includes(key)).map(key => `${fields[key] === 'name' ? 'Name' : fields[key]} changed from ${target[key]} to ${draft[key]}.`);
+    const others = changed.filter(key => !['name', 'sku'].includes(key)).map(key => fields[key]);
+    if (others.length) exact.push(`Alex Morgan changed the ${new Intl.ListFormat('en-GB').format(others)}.`);
     Object.assign(target, draft);
-    record(`${draft.name} details updated`, `Alex Morgan changed the ${new Intl.ListFormat('en-GB').format(changed)}.`, target.id);
+    record(`${draft.name} details updated`, exact.join(' '), target.id);
   } else {
     draft.id = `${draft.name.toLowerCase().replace(/[^a-z0-9]+/g, '-')}-${Date.now()}`;
     draft.sales = 0;
@@ -324,7 +344,7 @@ function saveInventory() {
   const p = product.value, before = p.variants;
   p.variants = inventoryDraft.value.map(v => ({ ...v, stock: Number(v.stock), price: Number(v.price) }));
   syncFinishes(p);
-  record(`${p.name} inventory updated`, inventoryChanges(before, p.variants), p.id, 'Inventory');
+  record(`${p.name} stock updated`, inventoryChanges(before, p.variants), p.id, 'Inventory');
   inventory.value.close(); notify('Inventory updated.');
 }
 // what an inventory save moved: each finish's stock, then anything added, removed, renamed or reordered
@@ -332,7 +352,7 @@ function inventoryChanges(before, after) {
   const was = v => before.find(old => sameSku(old.sku, v.sku)) ?? before.find(old => old.name === v.name);
   const kept = after.filter(was);
   const changes = kept.flatMap(v => [
-    was(v).stock !== v.stock && `${v.name} ${was(v).stock} → ${v.stock}`,
+    was(v).stock !== v.stock && `${v.name} stock changed from ${was(v).stock} to ${v.stock}`,
     was(v).name !== v.name && `${was(v).name} renamed ${v.name}`,
     was(v).sku !== v.sku && was(v).name === v.name && `${v.name} SKU changed`,
   ]).filter(Boolean);
@@ -431,7 +451,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         <div v-for="stat in stats" :key="stat.label" class="card demo-stat">
           <p class="text-sm muted">{{ stat.label }}</p>
           <p class="demo-stat-value">{{ stat.value }}</p>
-          <p class="text-sm max-md:text-xs font-medium" :class="stat.change < 0 ? 'text-danger' : 'text-success'">{{ change(stat) }}</p>
+          <p class="text-sm max-md:text-xs font-medium" :class="flat(stat) ? 'muted' : stat.change < 0 ? 'text-danger' : 'text-success'">{{ change(stat) }}</p>
         </div>
       </div>
       <div class="demo-dashboard-main">
@@ -446,20 +466,29 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" :aria-label="`Sales for ${rangeLabel}: ${stats[0].value}, ${stats[0].change < 0 ? 'down' : 'up'} ${Math.abs(stats[0].change).toFixed(1)} percent on the previous ${periodName}.`">
                 <defs><linearGradient id="sales-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="var(--color-primary)" stop-opacity=".14"/><stop offset="1" stop-color="var(--color-primary)" stop-opacity="0"/></linearGradient></defs>
                 <path class="demo-chart-grid" d="M0 0H100M0 33.33H100M0 66.67H100M0 100H100"/>
-                <polygon :points="`0,100 ${chart.line} 100,100`" fill="url(#sales-fill)"/>
-                <polyline :points="chart.prior" class="demo-chart-prior"/>
-                <polyline :points="chart.line" class="demo-chart-line"/>
+                <template v-if="chart.points.length > 1">
+                  <polygon :points="`0,100 ${chart.line} 100,100`" fill="url(#sales-fill)"/>
+                  <polyline :points="chart.prior" class="demo-chart-prior"/>
+                  <polyline :points="chart.line" class="demo-chart-line"/>
+                </template>
+                <template v-else>
+                  <rect class="demo-chart-bar previous" x="41" width="8" :y="tip.priorY" :height="100 - tip.priorY"/>
+                  <rect class="demo-chart-bar" x="51" width="8" :y="tip.y" :height="100 - tip.y"/>
+                </template>
               </svg>
               <template v-if="tip">
-                <span class="demo-chart-guide" :style="{ left: `${tip.x}%` }"></span>
-                <span class="demo-chart-dot previous" :style="{ left: `${tip.x}%`, top: `${tip.priorY}%` }"></span>
-                <span class="demo-chart-dot" :style="{ left: `${tip.x}%`, top: `${tip.y}%` }"></span>
-                <div class="demo-chart-tip" role="status" :class="{ flip: tip.x > 50 }" :style="{ left: `${tip.x}%` }"><strong>{{ tip.date }}</strong><span><span class="muted">This period</span> {{ tip.now }}</span><span><span class="muted">{{ tip.priorDate }}</span> {{ tip.then }}</span></div>
+                <span class="sr-only" aria-live="polite">{{ tip.date }}: {{ tip.now }}. {{ tip.priorDate }}: {{ tip.then }}.</span>
+                <template v-if="chart.points.length > 1">
+                  <span class="demo-chart-guide" :style="{ left: `${tip.x}%` }"></span>
+                  <span class="demo-chart-dot previous" :style="{ left: `${tip.x}%`, top: `${tip.priorY}%` }"></span>
+                  <span class="demo-chart-dot" :style="{ left: `${tip.x}%`, top: `${tip.y}%` }"></span>
+                </template>
+                <div class="demo-chart-tip" :class="{ flip: tip.x > 50 }" :style="{ left: chart.points.length > 1 ? `${tip.x}%` : '59%' }"><strong><span>{{ tip.date }}</span> {{ tip.now }}</strong><span class="muted"><span>{{ tip.priorDate }}</span> {{ tip.then }}</span></div>
               </template>
             </div>
-            <div class="demo-chart-labels"><span v-for="label in chart.labels" :key="label.text" :style="{ left: `${label.x}%` }">{{ label.text }}</span></div>
+            <div class="demo-chart-labels" :class="{ dense: chart.points.length > 7 }"><span v-for="label in chart.labels" :key="label.text" :style="{ left: `${label.x}%` }">{{ label.text }}</span></div>
           </div>
-          <p class="demo-card-footer demo-card-footer-split"><span>Best day: {{ chart.peak }}</span><span class="tabular-nums">Previous {{ periodName }}: {{ money(total(previousDays).revenue) }}</span></p>
+          <p class="demo-card-footer demo-card-footer-split"><span v-if="chart.points.length > 1">Best day: {{ chart.peak }}</span><span class="tabular-nums">Previous {{ periodName }}: {{ money(total(previousDays).revenue) }}</span></p>
         </section>
         <div class="demo-dashboard-side">
           <section class="card demo-low-stock" aria-labelledby="attention-heading">
@@ -484,7 +513,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
       </div>
       <div class="demo-bottom-grid">
         <section class="card demo-top-products" aria-labelledby="top-heading">
-          <header><h2 id="top-heading">Top products</h2><a class="btn ghost sm" href="products.html">View all <span aria-hidden="true">→</span></a></header>
+          <header><h2 id="top-heading">Top products</h2><a class="btn ghost sm" href="products.html">All products <span aria-hidden="true">→</span></a></header>
           <table class="table hover table-fixed demo-row-links">
             <colgroup><col><col class="w-20 max-md:hidden"><col class="w-36 max-md:hidden"><col class="w-28"></colgroup>
             <thead><tr><th>Product</th><th class="text-right max-md:hidden">Sold</th><th class="text-right max-md:hidden">In stock</th><th class="text-right">Sales</th></tr></thead>
@@ -534,7 +563,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             <tbody>
               <tr v-for="p in visible" :key="p.id">
                 <td class="max-md:pe-0"><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
-                <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku" :class="{ 'demo-sku-match': query && p.sku.toLowerCase().includes(query.toLowerCase()) }">{{ p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span><span class="muted demo-row-category">{{ p.category }}</span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></span></span></td>
+                <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku" :class="{ 'demo-sku-match': skuMatched(p) }">{{ matchedFinish(p) ? `${matchedFinish(p).name} · ${matchedFinish(p).sku}` : p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span><span class="muted demo-row-category">{{ p.category }}</span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></span></span></td>
                 <td><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span></td>
                 <td class="whitespace-nowrap"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></td>
                 <td class="muted">{{ p.category }}</td>
@@ -545,7 +574,8 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="selected = []"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div>
         </div>
         <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(p)" class="badge sm" :class="stockAlert(p).class">{{ stockAlert(p).label }}</span><span v-else class="muted">{{ stockLabel(p) }}</span></p></div><strong>{{ priceLabel(p) }}</strong></div></a></div>
-        <div v-else class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">Try another name or SKU, or clear the filters.</p><button class="btn outlined" @click="clearFilters">Clear filters</button></div>
+        <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">Try another name or SKU, or clear the filters.</p><button class="btn outlined" @click="clearFilters">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
+        <div v-else class="demo-empty" role="status"><Icon name="package" class="[&_svg]:size-8"/><h2>No {{ status === 'All' ? '' : status.toLowerCase() }} products</h2><p class="muted">{{ emptyHint[status] }}</p></div>
         <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
     </template>
@@ -567,14 +597,14 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <p v-if="lastChange" class="muted">Last updated {{ lastChange }}</p>
         </div>
         <div class="demo-page-actions demo-record-actions">
-          <button class="btn outlined" :class="{ 'max-md:hidden': nextAction }" @click="preview.showModal()">Preview</button>
+          <button class="btn outlined" :class="{ 'demo-preview-button': nextAction }" @click="preview.showModal()">Preview</button>
           <button class="btn" :class="nextAction ? 'outlined' : 'primary'" @click="edit(product)"><Icon name="field"/> Edit product</button>
           <button v-if="nextAction" class="btn primary" @click="nextAction.run">{{ nextAction.label }}</button>
           <button class="btn outlined" popovertarget="product-more" aria-label="More product actions"><Icon name="ellipsis"/></button>
         </div>
       </div>
       <div id="status-popover" popover class="dropdown"><div class="nav"><button v-for="s in ['Active', 'Draft', 'Archived']" :key="s" :aria-current="product.status === s || null" @click="changeStatus(s)"><span class="badge sm" :class="statusClass(s)">{{ s }}</span><span v-if="product.status === s" aria-hidden="true">✓</span></button></div></div>
-      <div id="product-more" popover class="dropdown right"><div class="nav"><button v-if="nextAction" class="md:hidden" @click="preview.showModal(); $event.target.closest('[popover]').hidePopover()"><Icon name="expand"/> Preview</button><button @click="duplicate"><Icon name="copy"/> Duplicate product</button><button v-if="product.status !== 'Archived'" @click="requestArchive([product.id]); $event.target.closest('[popover]').hidePopover()"><Icon name="archive"/> Archive product</button></div></div>
+      <div id="product-more" popover class="dropdown right"><div class="nav"><button v-if="nextAction" class="demo-preview-item" @click="preview.showModal(); $event.target.closest('[popover]').hidePopover()"><Icon name="expand"/> Preview</button><button @click="duplicate"><Icon name="copy"/> Duplicate product</button><button v-if="product.status !== 'Archived'" @click="requestArchive([product.id]); $event.target.closest('[popover]').hidePopover()"><Icon name="archive"/> Archive product</button></div></div>
       <div class="demo-detail-grid" :class="{ 'demo-restock': stockAlert(product) }">
         <div class="demo-detail-main">
           <div class="demo-detail-top">
@@ -641,7 +671,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
   <dialog ref="pricing" class="dialog divided" aria-labelledby="price-dialog-title" @cancel.prevent="closePricing"><header><hgroup><p>{{ product.name }}</p><h2 id="price-dialog-title">Edit pricing</h2></hgroup><button class="btn ghost sm" aria-label="Close pricing" @click="closePricing"><Icon name="x"/></button></header><form id="pricing-form" class="space-y-4" @submit.prevent="savePrice"><div class="grid grid-cols-2 gap-4"><Field v-model="priceDraft.price" name="retailPrice" label="Retail price" type="number" prepend="£" min="0" step="0.01" required/><Field v-model="priceDraft.cost" name="itemCost" label="Cost per item" type="number" prepend="£" min="0" step="0.01" required/></div><p class="text-sm muted">Prices include VAT. A new retail price moves every finish by the same amount.</p></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closePricing">Cancel</button><button form="pricing-form" class="btn primary">Save pricing</button></footer></dialog>
   <dialog ref="inventory" class="dialog drawer divided demo-editor" aria-labelledby="stock-dialog-title" @cancel.prevent="closeInventory"><header><hgroup><p>{{ product.name }}</p><h2 id="stock-dialog-title">Adjust inventory</h2></hgroup><button class="btn ghost sm" aria-label="Close inventory" @click="closeInventory"><Icon name="x"/></button></header><form id="inventory-form" class="space-y-5" @submit.prevent="saveInventory"><p class="text-sm muted">Stock at the London studio. Add, reorder or remove finishes here.</p><Repeater v-model="inventoryDraft" name="inventory" item="finish" :make="makeFinish" :errors="inventoryErrors" v-slot="{ row, index, errors }"><div class="grid grid-cols-2 gap-3"><Field v-model="row.name" :name="`inventory.${index}.name`" label="Finish name" required/><Field v-model="row.sku" :name="`inventory.${index}.sku`" label="Finish SKU" :errors="errors" required/></div><Field v-model="row.stock" :name="`inventory.${index}.stock`" :label="`${row.name || 'New finish'} in stock`" type="number" min="0" step="1" required/></Repeater></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeInventory">Cancel</button><button form="inventory-form" class="btn primary">Save inventory</button></footer></dialog>
   <dialog ref="variantDialog" class="dialog divided" aria-labelledby="finish-dialog-title" @cancel.prevent="closeVariant"><header><hgroup><p>{{ product.name }}</p><h2 id="finish-dialog-title">Edit finish</h2></hgroup><button class="btn ghost sm" aria-label="Close finish editor" @click="closeVariant"><Icon name="x"/></button></header><form id="finish-form" class="space-y-4" @submit.prevent="saveVariant"><Field v-model="variantDraft.name" name="finishName" label="Finish name" required/><Field v-model="variantDraft.sku" name="finishSku" label="Finish SKU" :errors="variantErrors || undefined" required/><div class="grid grid-cols-2 gap-4"><Field v-model="variantDraft.price" name="finishPrice" label="Finish price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="variantDraft.stock" name="finishStock" label="In stock" type="number" min="0" step="1" required/></div></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeVariant">Cancel</button><button form="finish-form" class="btn primary">Save finish</button></footer></dialog>
-  <dialog ref="preview" class="dialog demo-preview" aria-labelledby="preview-title"><header><p class="muted text-sm">Store preview</p><button class="btn ghost sm ml-auto" aria-label="Close preview" @click="preview.close()"><Icon name="x"/></button></header><div class="demo-product-stage"><img v-if="product.image" :src="product.image" :alt="product.name"/><ProductArt v-else :kind="product.kind" :name="product.name" :angle="angle"/></div><div class="flex justify-between gap-4 items-start"><div><h2 id="preview-title" class="text-xl font-semibold">{{ product.name }}</h2><p class="muted mt-1">{{ product.subtitle }}</p></div><strong class="text-xl tabular-nums">{{ money(previewed?.price ?? product.price) }}</strong></div><div v-if="product.variants.length > 1" class="field"><label for="preview-finish">Finish</label><select id="preview-finish" v-model.number="previewFinish" class="input"><option v-for="(v, i) in product.variants" :key="i" :value="i">{{ v.name }}{{ v.stock ? '' : ' (out of stock)' }}</option></select></div><p class="text-sm muted leading-relaxed">{{ product.description }}</p><button class="btn primary" :disabled="!!previewBlock" @click="preview.close(); notify('Added to your demo bag.')">{{ previewBlock || 'Add to bag' }}</button></dialog>
+  <dialog ref="preview" class="dialog demo-preview" aria-labelledby="preview-title"><header><p class="muted text-sm">Store preview</p><button class="btn ghost sm ml-auto" aria-label="Close preview" @click="preview.close()"><Icon name="x"/></button></header><div class="demo-product-stage"><img v-if="product.image" :src="product.image" :alt="product.name"/><ProductArt v-else :kind="product.kind" :name="product.name" :angle="angle"/></div><div class="flex justify-between gap-4 items-start"><div><h2 id="preview-title" class="text-xl font-semibold">{{ product.name }}</h2><p class="muted mt-1">{{ product.subtitle }}</p></div><strong class="text-xl tabular-nums">{{ money(previewed?.price ?? product.price) }}</strong></div><div v-if="product.variants.length > 1" class="field"><label for="preview-finish">Finish</label><select id="preview-finish" v-model.number="previewFinish" class="input"><option v-for="(v, i) in product.variants" :key="i" :value="i">{{ v.name }}{{ v.stock ? '' : ' (out of stock)' }}</option></select></div><p class="text-sm muted leading-relaxed">{{ product.description }}</p><button class="btn primary" :disabled="!!previewBlock" @click="preview.close(); notify('Preview only, so nothing was added.')">{{ previewBlock || 'Add to bag' }}</button></dialog>
   </template>
   <dialog ref="confirmation" class="dialog divided" aria-labelledby="confirm-title"><header><h2 id="confirm-title">{{ pending === 'reset' ? 'Reset workspace?' : archiveName ? `Archive “${archiveName}”?` : `Archive ${archiveCount} products?` }}</h2></header><p class="text-sm muted">{{ pending === 'reset' ? 'Your changes in this tab will be cleared and the original catalogue restored.' : archiveName ? 'It leaves your store and your active list. You can make it active again from its product page.' : `${archiveNames} leave your store and your active list. You can make each one active again from its product page.` }}</p><footer class="justify-end"><button class="btn outlined" @click="confirmation.close()">Cancel</button><button class="btn" :class="pending === 'reset' ? 'primary' : 'danger'" @click="pending === 'reset' ? (resetWorkspace(), confirmation.close(), notify('Workspace reset.')) : archiveProducts()">{{ pending === 'reset' ? 'Reset workspace' : archiveName ? 'Archive product' : `Archive ${archiveCount} products` }}</button></footer></dialog>
   <dialog ref="noteDialog" class="dialog divided" aria-labelledby="note-title" @cancel.prevent="closeNote"><header><hgroup v-if="product && screen === 'product'"><p>{{ product.name }}</p><h2 id="note-title">Add note</h2></hgroup><h2 v-else id="note-title">Add note</h2><button class="btn ghost sm" aria-label="Close note" @click="closeNote"><Icon name="x"/></button></header><form id="note-form" @submit.prevent="saveNote"><Field v-model="note" name="note" label="Your note" type="textarea" rows="5" required placeholder="What should your team know?"/></form><footer class="justify-end"><button class="btn outlined" type="button" @click="closeNote">Cancel</button><button form="note-form" class="btn primary">Add note</button></footer></dialog>

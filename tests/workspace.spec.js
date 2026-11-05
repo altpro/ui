@@ -224,11 +224,51 @@ test('history names what moved in each editor', async ({ page }) => {
   await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
   await page.getByLabel('Chalk in stock', { exact: true }).fill('32');
   await page.getByRole('button', { name: 'Save inventory' }).click();
-  await expect(latest).toContainText('Chalk 28 → 32.');
+  await expect(latest).toContainText('Chalk stock changed from 28 to 32.');
   await page.getByRole('button', { name: 'Edit description', exact: true }).click();
   await page.locator('textarea[name=description]').fill('Short and plain.');
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
   await expect(latest).toContainText('Alex Morgan changed the description.');
+});
+
+test('search reaches a finish SKU and an empty tab says what belongs there', async ({ page }) => {
+  await page.goto('/app/products.html');
+  await page.getByLabel('Search products', { exact: true }).fill('ARC-CH');
+  await expect(page.locator('tbody tr')).toHaveCount(1);
+  await expect(page.locator('tbody tr')).toContainText('Chalk · ARC-CH');
+  await page.getByLabel('Search products', { exact: true }).fill('');
+  await page.getByRole('radio', { name: /^Draft/ }).check();
+  await page.locator('tbody .demo-title-link').first().click();
+  await page.getByRole('button', { name: 'Publish', exact: true }).click();
+  await page.goto('/app/products.html?status=Draft');
+  await expect(page.getByRole('heading', { name: 'No draft products' })).toBeVisible();
+  await expect(page.getByRole('button', { name: /^Clear/ })).toHaveCount(0);
+});
+
+test('one day has no line, a month thins its phone labels, and a custom range never passes today', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  const preset = page.getByLabel('Sales period preset', { exact: true });
+  await preset.selectOption('Today');
+  await expect(page.locator('.demo-chart-line')).toHaveCount(0);
+  await expect(page.locator('.demo-chart-tip')).toBeVisible();
+  await expect(page.locator('.demo-revenue .demo-card-footer')).not.toContainText('Best day');
+  await preset.selectOption('This month');
+  await preset.selectOption('');
+  const max = await page.getByLabel('Sales to', { exact: true }).getAttribute('max');
+  expect(await page.getByLabel('Sales to', { exact: true }).inputValue()).toBe(max);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await preset.selectOption('Last 30 days');
+  const boxes = await page.locator('.demo-chart-labels > span:visible').evaluateAll(spans => spans.map(el => el.getBoundingClientRect()).map(({ left, right }) => ({ left, right })));
+  boxes.slice(1).forEach((box, i) => expect(box.left).toBeGreaterThan(boxes[i].right));
+});
+
+test('a rename leaves older history readable', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Edit product', exact: true }).click();
+  await page.getByLabel('Product name', { exact: true }).fill('Arc mk2');
+  await page.getByRole('button', { name: 'Save changes', exact: true }).click();
+  await expect(page.locator('.timeline > li').first()).toContainText('Name changed from Arc headphones to Arc mk2.');
+  await expect(page.locator('.timeline > li').nth(1)).toContainText('Description updated');
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
@@ -280,7 +320,7 @@ test('a dashboard row opens its product and the chart reads out a day', async ({
   const plot = page.locator('.demo-chart-plot');
   await plot.focus();
   await page.keyboard.press('ArrowLeft');
-  await expect(page.locator('.demo-chart-tip')).toContainText('This period');
+  await expect(page.locator('.demo-chart-tip')).toContainText('£');
   await page.keyboard.press('Escape');
   await expect(page.locator('.demo-chart-tip')).toHaveCount(0);
   await page.locator('.demo-top-products tbody tr').first().click({ position: { x: 400, y: 10 } });

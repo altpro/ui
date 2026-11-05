@@ -9,8 +9,11 @@ export const money = value => new Intl.NumberFormat('en-GB', { style: 'currency'
 export const categories = ['Headphones', 'Speakers', 'Turntables'];
 // a status badge: soft with a dot, success when it is on sale, neutral while a draft, outlined once archived
 export const statusClass = status => ({ Active: 'soft success dot', Draft: 'soft dot', Archived: 'outlined dot' })[status];
+export const seededName = id => catalogue.products.find(p => p.id === id)?.name;
 export function record(title, detail, product, type = 'Product') {
-  store.activity.unshift({ id: Math.max(Date.now(), ...store.activity.map(a => a.id + 1)), title, detail, product, type, time: 'Just now' });
+  // subject: the product's name when this happened, which a later rename mustn't turn into part of the title
+  const subject = store.products.find(p => p.id === product)?.name;
+  store.activity.unshift({ id: Math.max(Date.now(), ...store.activity.map(a => a.id + 1)), title, detail, product, type, subject, time: 'Just now' });
 }
 // a day as a date input writes it, and n days on from one
 export const day = date => date.toLocaleDateString('en-CA');
