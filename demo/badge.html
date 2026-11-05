@@ -15,52 +15,79 @@
 <main>
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Badge</h1>
-    <p class="muted"><code>.badge</code> plus any of: a colour, <code>outlined</code> or <code>ghost</code>, and a size. Same modifier words as the button.</p>
+    <p class="muted"><code>.badge</code> plus any of: a colour, <code>outlined</code>, <code>ghost</code> or <code>soft</code>, <code>dot</code>, and a size. Same modifier words as the button.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Colours × styles</h2>
-    <div class="grid grid-cols-[auto_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 text-sm">
-      <span></span><span class="muted">solid</span><span class="muted">outlined</span><span class="muted">ghost</span>
+    <div class="grid grid-cols-[auto_1fr_1fr_1fr_1fr] items-center gap-x-6 gap-y-3 text-sm">
+      <span></span><span class="muted">solid</span><span class="muted">outlined</span><span class="muted">ghost</span><span class="muted">soft</span>
 
       <code>(none)</code>
       <div><button class="badge">Badge</button></div>
       <div><button class="badge outlined">Badge</button></div>
       <div><button class="badge ghost">Badge</button></div>
+      <div><button class="badge softNone">Badge</button></div>
 
       <code>primary</code>
       <div><button class="badge primary">Badge</button></div>
       <div><button class="badge outlined primary">Badge</button></div>
       <div><button class="badge ghost primary">Badge</button></div>
+      <div><button class="badge soft primary">Badge</button></div>
 
       <code>secondary</code>
       <div><button class="badge secondary">Badge</button></div>
       <div><button class="badge outlined secondary">Badge</button></div>
       <div><button class="badge ghost secondary">Badge</button></div>
+      <div><button class="badge soft secondary">Badge</button></div>
 
       <code>info</code>
       <div><button class="badge info">Badge</button></div>
       <div><button class="badge outlined info">Badge</button></div>
       <div><button class="badge ghost info">Badge</button></div>
+      <div><button class="badge soft info">Badge</button></div>
 
       <code>success</code>
       <div><button class="badge success">Badge</button></div>
       <div><button class="badge outlined success">Badge</button></div>
       <div><button class="badge ghost success">Badge</button></div>
+      <div><button class="badge soft success">Badge</button></div>
 
       <code>warning</code>
       <div><button class="badge warning">Badge</button></div>
       <div><button class="badge outlined warning">Badge</button></div>
       <div><button class="badge ghost warning">Badge</button></div>
+      <div><button class="badge soft warning">Badge</button></div>
 
       <code>danger</code>
       <div><button class="badge danger">Badge</button></div>
       <div><button class="badge outlined danger">Badge</button></div>
       <div><button class="badge ghost danger">Badge</button></div>
+      <div><button class="badge soft danger">Badge</button></div>
     </div>
     <p class="text-sm muted"><code>error</code> is an alias for <code>danger</code>. These are <code>&lt;button&gt;</code>s so you can see hover and focus; a <code>&lt;span&gt;</code> badge is static.</p>
 <pre>&lt;span class="badge success"&gt;Active&lt;/span&gt;
 &lt;span class="badge outlined danger"&gt;Overdue&lt;/span&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Status</h2>
+    <p class="text-sm muted">A record's status is <code>soft</code> with a <code>dot</code>: quiet enough that a column of them in a table does not shout, the same on a record page, a card and a phone. Keep one colour per state across the app, and leave a draft or archived state neutral.</p>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="badge soft success dot">Active</span>
+      <span class="badge soft info dot">Processing</span>
+      <span class="badge soft warning dot">Awaiting payment</span>
+      <span class="badge soft danger dot">Overdue</span>
+      <span class="badge soft dot">Draft</span>
+      <span class="badge outlined dot">Archived</span>
+    </div>
+    <div class="flex flex-wrap items-center gap-2">
+      <span class="badge soft success dot sm">Active</span>
+      <span class="badge soft warning sm">Low</span>
+      <span class="badge soft danger sm">Out</span>
+    </div>
+<pre>&lt;span class="badge soft success dot"&gt;Active&lt;/span&gt;
+&lt;span class="badge soft warning sm"&gt;Low&lt;/span&gt;</pre>
   </section>
 
   <section class="space-y-3">

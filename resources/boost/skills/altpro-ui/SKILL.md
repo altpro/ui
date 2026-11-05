@@ -14,6 +14,8 @@ Rule of thumb when writing markup:
 3. Never rebuild an altpro/ui component out of utilities.
 4. For a component altpro/ui does not have, write a CSS component in the app the way the library writes its own: [app-component.md](references/app-component.md).
 
+Building or reworking a whole screen (a page, dashboard, list, record page or dialog), or reviewing how one looks: load the `altpro-ui-design` skill as well. It has the rules that take a screen from working to polished, and the screenshot review that checks them.
+
 ## Setup (already done if the project uses altpro/ui)
 
 An app made from the altpro Vue starter kit has all of this. Laravel installs it with Composer from the GitHub repository (`"repositories": [{ "type": "vcs", "url": "https://github.com/altpro/ui.git" }]` in `composer.json`), with Lucide for icons:

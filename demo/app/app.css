@@ -28,8 +28,6 @@
     h1 { font-size: clamp(1.9rem, 2.5vw, 2.65rem); line-height: 1.2; letter-spacing: -.045em; font-weight: 650; margin-block: 7px 8px; }
     > div > p.muted { font-size: .85rem; }
   }
-  /* a status badge leads with a dot in its own colour */
-  .demo-status::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
   .demo-stock { display: inline-flex; align-items: center; gap: 6px; }
   .demo-title-link { color: inherit; text-decoration: none; @media (hover: hover) { &:hover { text-decoration: underline; text-underline-offset: 3px; } } &:focus-visible { outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent); border-radius: 4px; } }
   /* figures in a card: the value sits at the card's far edge */
@@ -89,8 +87,8 @@
     position: relative;
     background: var(--demo-stage);
     min-width: 0;
-    /* a neutral badge keeps a card-coloured chip so it shows on the grey stage */
-    > .badge { position: absolute; top: 13px; left: 13px; z-index: 1; &:not(.green, .amber) { background: var(--color-card); border-color: var(--color-border); } }
+    /* a solid or outlined badge on the grey stage sits on a card-coloured chip so it shows; a soft one already does */
+    > .badge { position: absolute; top: 13px; left: 13px; z-index: 1; &:not(.soft) { background: var(--color-card); border-color: var(--color-border); } }
     > img { height: 210px; width: 100%; object-fit: contain; }
   }
   .demo-product-art { display: block; width: 100%; height: 195px; }

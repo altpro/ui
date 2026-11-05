@@ -189,7 +189,7 @@ const discard = () => {
   form.reset();
   form.clearErrors();
 };
-const statusClass = { Active: "success", Draft: "", Archived: "outlined" };
+const statusClass = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
 const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.documentElement.lang, { day: "numeric", month: "short", year: "numeric" });
 </script>
 
@@ -351,7 +351,7 @@ const columns: DataTableColumn<Product>[] = [
   { key: "updated_at", label: "Updated", sortable: true, format: "date" },
   { key: "actions", label: "Actions", virtual: true, thClass: "w-px" },
 ];
-const statusClass: Record<Product["status"], string> = { Active: "success", Draft: "", Archived: "outlined" };
+const statusClass: Record<Product["status"], string> = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
 
 // the selection is ids, or the search and filters behind "Select all N matching": the server runs either
 const archive = (selection: DataTableSelection, clear: () => void) =>

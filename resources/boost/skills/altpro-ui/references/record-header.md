@@ -7,7 +7,7 @@ No class. The top of a record page (an order, a customer, a CMS page): the recor
   <div class="min-w-0">
     <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
       <h1 class="text-2xl font-semibold tracking-tight break-words">Order ORD-10482</h1>
-      <span class="badge info">Processing</span>
+      <span class="badge soft info dot">Processing</span>
     </div>
     <p class="mt-1 text-sm muted">Placed <time datetime="2026-10-03">3 Oct</time> by Ann Okafor · Next-day delivery</p>
   </div>
@@ -19,7 +19,7 @@ No class. The top of a record page (an order, a customer, a CMS page): the recor
 ```
 
 - The badge sits beside the `h1`, not inside it, so the heading's name is just the record's name.
-- A semantic badge colour for status (`success` active or paid, `warning` waiting on someone, `danger` overdue or failed, plain for draft or archived). A hue badge is a tag, not a status.
+- The status is a `soft` badge with a `dot` in a semantic colour (`success` active or paid, `info` in progress, `warning` waiting on someone, `danger` overdue or failed, no colour for draft, `outlined dot` for archived), the same classes the list uses for that status. A hue badge is a tag, not a status.
 - Two or three actions at most, `outlined`, with a destructive one `outlined danger`. The rest go behind a "More" button opening a `.dropdown`. `primary` is for the page's one main action; on an edit screen that is Save, in the save bar, so the header has none.
 - A `.breadcrumb` back to the list goes above, outside the flex row.
 - The facts line is a sentence, not a list of labels. Label/value details go in a `.dl` further down.
