@@ -52,8 +52,10 @@
       color: var(--table-head-fg);
       border-block-end: 1px solid var(--table-border);
     }
+    /* totals: a rule closes the items and another sits over the total; the
+       rows between (subtotal, delivery, VAT) have none */
     tbody tr:not(:first-child) > :is(th, td),
-    tfoot > tr > :is(th, td) {
+    tfoot > tr:is(:first-child, :last-child) > :is(th, td) {
       border-block-start: 1px solid var(--table-border);
     }
     tfoot {

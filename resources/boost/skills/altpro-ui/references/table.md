@@ -43,10 +43,10 @@ A data table on a native `<table>`. Children are styled by element, so no cell c
 
 ## Line items and totals (pattern)
 
-The read-only order or invoice; editing the lines is `Repeater.vue`. `tabular-nums` on the table lines up the digits, `text-right` on the `tfoot` aligns labels and amounts, and each label is a `th scope="row"` spanning the columns before the amount.
+The read-only order or invoice; editing the lines is `Repeater.vue`. `tabular-nums` on the number cells and the `tfoot` lines up the digits; not on the whole table, where it spaces the hyphens in an item's name. `text-right` on the `tfoot` aligns labels and amounts, and each label is a `th scope="row"` spanning the columns before the amount. A rule closes the items and another sits over the total; the rows between have none, and `muted` on them leaves the total to stand out.
 
 ```html
-<table class="table tabular-nums">
+<table class="table">
   <thead>
     <tr>
       <th>Item</th><th class="text-right">Qty</th>
@@ -55,14 +55,14 @@ The read-only order or invoice; editing the lines is `Repeater.vue`. `tabular-nu
   </thead>
   <tbody>
     <tr>
-      <td>Task chair</td><td class="text-right">2</td>
-      <td class="text-right">£135.00</td><td class="text-right">£270.00</td>
+      <td>Task chair</td><td class="text-right tabular-nums">2</td>
+      <td class="text-right tabular-nums">£135.00</td><td class="text-right tabular-nums">£270.00</td>
     </tr>
   </tbody>
-  <tfoot class="text-right">
-    <tr><th scope="row" colspan="3">Subtotal</th><td>£270.00</td></tr>
-    <tr><th scope="row" colspan="3">Delivery</th><td>£25.00</td></tr>
-    <tr><th scope="row" colspan="3">VAT at 20%</th><td>£59.00</td></tr>
+  <tfoot class="text-right tabular-nums">
+    <tr class="muted"><th scope="row" colspan="3">Subtotal</th><td>£270.00</td></tr>
+    <tr class="muted"><th scope="row" colspan="3">Delivery</th><td>£25.00</td></tr>
+    <tr class="muted"><th scope="row" colspan="3">VAT at 20%</th><td>£59.00</td></tr>
     <tr><th scope="row" colspan="3">Total</th><td>£354.00</td></tr>
   </tfoot>
 </table>

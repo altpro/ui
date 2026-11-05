@@ -50,6 +50,14 @@
       > p {
         flex-basis: 100%;
       }
+      /* a label and a control with no title (a stat's label and icon) share
+         the line, the control at the far side */
+      > p:first-child:has(+ :not(h1, h2, h3, h4, h5, h6, hgroup, p)) {
+        flex-basis: auto;
+        & + * {
+          margin-inline-start: auto;
+        }
+      }
       hgroup {
         /* grows to fill so a long description wraps instead of pushing the control to a new line */
         flex: 1 1 0;

@@ -13,7 +13,7 @@ Most of what held the screens back was not any single component. It was **drift*
 
 1. **Build to the rules.** Write the screen with every rule in [Screen rules](#screen-rules) in force, and the component references from `altpro-ui` open. Done when the screen works with real data, including its empty and phone states.
 2. **Screenshot the set.** Every screen you touched at 1440 wide in light and dark, at 390 wide, and once with each dialog and drawer open. [review.md](references/review.md) has the script and the tall-viewport trick. Done when every PNG exists and you have opened each one.
-3. **Review against the rules.** Take every screenshot through every rule section below, starting with [Priority](#priority), and score it out of 10. Score as a stranger would: when an agent built two screens from this skill, its own scores ran 1 to 1.5 points above two independent reviewers' on the same shots. A blocking issue is a broken rule, or anything a product designer would send back. Done when each screenshot has a score and a list of its blocking issues, each with the rule it breaks and the fix.
+3. **Review against the rules.** Take every screenshot through every rule section below, starting with [Priority](#priority), and score it out of 10. Before scoring a screen, write down the user's next action and the fact they need for it, and find both in the 390 shot: if either is below the first screenful, that is a blocking issue. Score as a stranger would: when an agent built two screens from this skill, its own scores ran 1 to 1.5 points above two independent reviewers' on the same shots. A blocking issue is a broken rule, or anything a product designer would send back. Done when each screenshot has a score and a list of its blocking issues, each with the rule it breaks and the fix.
 4. **Fix and go again** from step 2. Done when every screenshot scores 9 and no rule is broken.
 5. **Get an independent read** for a new screen, a redesign or a release. Don't skip it because your own scores reached 9. Send a fresh reviewer the screenshots and the brief in [review.md](references/review.md), with no access to your reasoning, because you will grade your own work kindly. Fix what it blocks on, repeat, and stop when it scores the set 9 with no blocking issues. Record the items you decline, with the reason for each.
 
@@ -22,7 +22,9 @@ Most of what held the screens back was not any single component. It was **drift*
 ### Priority
 
 - **Order by the task.** What the user acts on next goes at the top. On a record that is its state, the latest update or blocker, and the next action. On a list it is what needs attention today. Ledgers, contact details and the full history go lower, and lower still on the phone.
-- **Show the result where the action was.** When finishing a task removes its button (the balance is paid, the order is shipped), the header says so in its place, for example a `badge soft success dot` reading "Paid in full". Nobody should have to find a zero in a table to learn it.
+- **Show the result where the action was.** When finishing a task removes its button (the balance is paid, the order is shipped), the header says so: a badge in the row beside the title, for example `badge soft success` reading "Paid in full". It has no dot, because the dot marks the record's workflow status and this is a fact beside it, as Overdue is. Nobody should have to find a zero in a table to learn it.
+- **A list page has its primary action:** "New job", "Add product", a `btn primary` at the end of the title row. Creating a record is the most common thing done from a list.
+- **A record is named the way its users name it.** The `h1` is the customer, the item or both ("Niamh Gallagher's Ribble CGR AL"); a code such as J-1047 is the caption above it in an `hgroup`. A bare code tells nobody at the counter which job it is.
 - **One control per choice.** Stat cards that filter the list and a sidebar of saved views that filter it the same way are two navigations for one decision. Keep one.
 
 ### Rhythm
@@ -31,7 +33,7 @@ Most of what held the screens back was not any single component. It was **drift*
 - **One card inset.** Use the default `--card-p`, or one value set once in the app's stylesheet. Never pad cards differently on the same screen.
 - **Shared splits.** Rows of cards share their column split, so the gutters line up down the page. For example, two rows that are both `lg:grid-cols-3` with the wide card `lg:col-span-2`.
 - **Cards end level.** Two cards side by side should end level because their content balances. Move a list, a group of facts or the tags to the shorter card. Don't spread a short list to fill the height (`justify-between`, `space-evenly`), and don't leave a hole with `self-start`.
-- **Record pages** are a main column (`lg:col-span-2`) beside a stack of fact cards. When the two don't end level, move a card between them; don't stretch the shorter one.
+- **Record pages** are a main column (`lg:col-span-2`) beside a stack of fact cards. The main column holds the record's working content: its items and, under them, its history and note form. Never run the history full width below both columns, where its lines grow too long and it falls below the fold. When the two columns don't end level, move a card between them; don't stretch the shorter one. On the phone, reorder with `max-lg:order-*` so a blocker, the latest update and the facts that identify the record come before the ledger.
 - **Footers.** When a card still has spare height, give it a footer line with a fact in it, built the same way on every card of the screen:
 
   ```html
@@ -49,7 +51,7 @@ Most of what held the screens back was not any single component. It was **drift*
 - **Headings follow the scale in `altpro-ui`.** A heading inside a `.card` or `.dialog` header takes no classes. When an `hgroup` puts a caption above a dialog's title, the caption names the record ("Arc headphones" over "Edit pricing", "New product" when creating), never a paraphrase of the title.
 - **Big numbers.** Use `tabular-nums`, with `tracking-tight` on the figure only. A unit after it (`84 <span class="text-sm muted tracking-normal">available</span>`) resets the tracking. Say the unit once: `£249`, not `£249 GBP`.
 - **Tabular figures go on number cells:** the price, quantity and total columns and the totals rows, never a whole table. They space the hyphen in "6-speed" as they do in a code.
-- **Totals.** Only the total gets a rule above it. Subtotal and VAT are muted and the total is bold. Paid and balance due describe the payments, so they go with the payments, not under the work.
+- **Totals.** A rule closes the items and another sits over the total, and `.table` draws just those two in a `tfoot`. Subtotal, delivery and VAT are `muted` and the total is bold. Paid and balance due describe the payments, so they go with the payments, not under the work.
 - **Codes.** SKUs, order numbers and references use the body font with case forms (`[font-feature-settings:'case']`), which centre the hyphens on the capitals. Tabular figures leave gaps around the hyphens, and a system monospace falls back to Courier on Linux.
 - **`text-pretty` on paragraphs,** so no line ends on one word.
 - **One label style.** Sentence-case muted labels, as `.dl` draws them. An uppercase tracked eyebrow appears only where it carries information, such as a record's category above its name.
@@ -64,9 +66,11 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **A subtitle says what the page covers** ("Sales, stock and changes across your store") or is left out. Leave out taglines, motivational lines, reassurance notes ("Your collection is looking good"), decorative punctuation on headings, and eyebrows that restate the heading.
 - **Each fact once per screen.** A percentage on a stat card is not repeated in the chart footer. A count on a tab is not repeated in a summary strip.
 - **One word for one state across screens:** "Out of stock" everywhere, never "0 in stock" in one view.
-- **A record's header holds what no card shows.** Its facts line doesn't repeat the customer or the item that a card below names.
+- **A record's header holds what no card shows,** apart from the record's own name. Its facts line doesn't repeat details (an email, a frame number) that a card below holds.
 - **Every value has a label** unless its form says what it is, as a date or a price does. A bare name in a facts line needs its role: "mechanic Marek Nowak".
-- **Counts name their base,** counted against what the filters allow: "4 of 14 open jobs", not "4 of 18 jobs" when 4 are collected and hidden.
+- **Counts name their base,** counted against what the filters allow: "4 of 14 open jobs", not "4 of 18 jobs" when 4 are collected and hidden. Show a list's count only when a filter narrows it; unfiltered, it repeats the stat above.
+- **A stat's label says its scope.** If "Due today" leaves out jobs that are ready for collection, it reads "Work due today".
+- **Dates take one form across screens:** "Today", "Yesterday", then "4 Nov", with the weekday everywhere or nowhere.
 - **Errors say what to enter** ("Enter £245.16 or less") and don't repeat the hint above them.
 
 ### Status and severity
@@ -111,11 +115,12 @@ Compose each screen for the phone. Don't let the desktop layout wrap.
 
 - **Stat strips** become a compact grid of equal columns. Each stat keeps its label above the number, as on the desktop, and the strip stays near 120px tall, so the list starts in the top half of the screen.
 - **Tabs stay on one line,** with tighter padding (`[--tabs-px:0.5rem]`).
-- **Tables fold.** Status, inventory and category columns hide (`max-md:hidden`). A line under the name (`md:hidden`) carries the value of every hidden column, so the phone loses nothing: the status badge, the stock and any warning, and who a job is assigned to. The price column stays. The thumbnail sits beside the name and code, and that line runs across the row beneath them.
+- **Tables fold.** Status, inventory and category columns hide (`max-md:hidden`). A line under the name (`md:hidden`) carries the value of every hidden column, so the phone loses nothing: the status badge, the stock and any warning, and who a job is assigned to. A folded row runs to three lines at most: join short facts on one line with ` · ` ("Due yesterday · mechanic Lucy Hart"), each phrase `whitespace-nowrap`.
+- **Number columns stay narrow on the phone** (`w-12 md:w-20` for a quantity), so item names get the width. The price column stays. The thumbnail sits beside the name and code, and that line runs across the row beneath them.
 - **Wrap names; never truncate them.** A model, a customer or a product name that tells two rows apart wraps. Move a short fact such as the date to its own line instead of cutting the name with an ellipsis.
 - **Keep phrases together** in text that wraps. Put `whitespace-nowrap` on a status, a date or an amount inside a sentence, such as `<del>` and `<ins>` in a feed, so "In progress" never splits across lines.
 - **Toolbars:** search goes full width, then one row of controls. Secondary labels become icon-only (`max-md:sr-only` on the label text).
-- **Header controls drop under the title** (`max-md:basis-full`) instead of squeezing it onto two lines.
+- **Header controls drop under the title** (`max-md:basis-full`) instead of squeezing it onto two lines, and fill that row: two buttons in `max-md:grid max-md:grid-cols-2`.
 - **Grid cards stack** name, category and price in one column, so every card reads the same.
 - **Galleries shrink** so the record's facts come up the page. Hide a decorative caption that would cover the image.
 - **Page footers stack.** Nothing is clipped or runs off the edge.
