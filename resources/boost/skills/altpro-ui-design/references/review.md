@@ -75,7 +75,7 @@ For each blocking issue, write down the shot, where on the screen, the rule it b
 
 ## An independent read
 
-Your own review drifts towards approving what you built. For a new screen, a redesign or a release, hand the screenshots to a fresh reviewer: a subagent, or two on different models if the harness has them. Give the reviewer the brief below, the paths, and nothing of your reasoning. When it comes back, check each finding against the screenshot before acting on it. Fix what you agree with, and note what you decline and why. Then send a new reviewer the new set with the round's changes and the declined items. Stop when the reviewer scores the set 9 or more with no blocking issues.
+Your own review drifts towards approving what you built. For a new screen, a redesign or a release, hand the screenshots to a fresh reviewer: a subagent, or two on different models if the harness has them. Give the reviewer the brief below, the paths, and nothing of your reasoning. When it comes back, check each finding against the screenshot before acting on it. A "no rule" finding is a convention the screen rules lack: once you agree with it, record it where the next screen's builder will read it, such as the app's AGENTS.md. Fix what you agree with, and note what you decline and why. Then send a new reviewer the new set with the round's changes and the declined items. Stop when the reviewer scores the set 9 or more with no blocking issues.
 
 The brief, with the placeholders filled in:
 
@@ -99,7 +99,7 @@ Work read-only: change no files, and make no commits or comments. Judge strictly
 Reply with:
 1. Overall score: N/10.
 2. A score per screenshot.
-3. Blocking issues that keep it below 9, most important first: screenshot, where on it, what is wrong, and the concrete fix (a value, a class, a markup change; file:line when you can).
+3. Blocking issues that keep it below 9, most important first: screenshot, where on it, what is wrong, and the concrete fix (a value, a class, a markup change; file:line when you can). Name the screen rule each one breaks, or write "no rule".
 4. Nitpicks that would not block a 9.
 5. One line: what would make it a 10.
 ```

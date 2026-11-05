@@ -2,6 +2,13 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.1`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+- `Field.vue`: an empty string (or an empty item in an array) passed as `errors` is no error. `:errors="''"` marked the field invalid in red with no message.
+- Avatar initials never drop below `text-xs`. An `xs` avatar, the size the timeline marker uses, drew them at 9.6px; they are now 12px.
+- Dialog Cancel buttons are `btn outlined` in `dialog.md`, `destructive-action.md` and the demos, as the design skill says. They were `ghost` there.
+- `altpro-ui-design` adds the rules two independent reviewers blocked on when an agent built a new app's screens from the skills alone. A new Priority section covers task order, showing a finished action's result, and one control per choice. There are rules for record pages, footers under tables, tables that hold their columns, forms that fill their card, tabular figures on number cells only, totals, labelled values, counts, error wording, one colour per meaning, mapping a workflow to badges, stat cards that filter, and wrapping on the phone. The phone stat rule now keeps the label above the number, as `stat.md` and the demo do. The review brief asks the reviewer to name the rule each issue breaks. `segmented.md` and `timeline.md` say how a neutral group reads in dark and how a feed shows each entry's type.
+
 ## 0.3.1 (5 November 2026)
 
 - Badges take two new modifiers. `soft` is a tint of the colour under a deeper shade of it, mixed into the card colour so it reads the same on any surface. `dot` puts a status light before the label. A record's status is now written `badge soft success dot` (`soft dot` for draft, `outlined dot` for archived) in `badge.md`, `record-header.md` and the recipes, so a column of statuses in a table stays quiet. Solid status badges still work; change them to match when you next touch a screen.

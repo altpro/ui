@@ -13,7 +13,7 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
   </header>
   <p>Members lose access as soon as you press delete.</p>
   <footer class="justify-end">
-    <button class="btn ghost" command="close" commandfor="confirm">Cancel</button>
+    <button class="btn outlined" command="close" commandfor="confirm">Cancel</button>
     <button class="btn danger" command="close" commandfor="confirm">Delete</button>
   </footer>
 </dialog>
@@ -32,7 +32,7 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
 
 - The close cross is a `btn ghost sm` with `aria-label="Close"`, placed straight after the heading or `hgroup` so the header pushes it to the far side. The dialog pulls it onto the heading line.
 - Put `aria-labelledby` on the dialog pointing at its heading. Without it the dialog has no name.
-- Form: the `<header>` and `<footer>` stay direct children of the dialog. Wrap only the fields in `<form id="f" method="dialog" class="contents">` and give the footer's submit button `form="f"`. `method="dialog"` closes on submit. Cancel is a `command="close"` button.
+- Form: the `<header>` and `<footer>` stay direct children of the dialog. Wrap only the fields in `<form id="f" method="dialog" class="contents">` and give the footer's submit button `form="f"`. `method="dialog"` closes on submit. Cancel is a `btn outlined` `command="close"` button, before the one primary action.
 - Focus goes to the first focusable thing, which is the close cross. Put `autofocus` on the first field of a form instead.
 - Place the dialog where a `div` card would go: inside `main`, `section` or another sectioned element, so its `header` is not announced as the page banner. Not as a direct child of a `space-y-*` or `space-x-*` container: those set margins on every child, and the dialog centres with `margin: auto`.
 

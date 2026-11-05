@@ -10,7 +10,7 @@ No class. A `.join` of `label.btn`, each wrapping a radio with the same `name`. 
 </div>
 ```
 
-- Members are `outlined` or `ghost`, in any colour and size, so the checked one has somewhere to go. `outlined primary` fills primary when checked; plain `outlined` fills muted.
+- Members are `outlined` or `ghost`, in any colour and size, so the checked one has somewhere to go. `outlined primary` fills primary when checked; plain `outlined` fills muted, which barely reads on a card in dark, so a neutral group that sits on a card is `outlined secondary`.
 - The group is `role="radiogroup"` with an `aria-label`, or the `.join` sits in a `<fieldset class="field">` with a `<legend>`.
 - Checkboxes instead of radios make a multi-select group (bold, italic, underline). Then it is `role="group"`.
 - An icon-only member puts `aria-label` on the input, not the label.

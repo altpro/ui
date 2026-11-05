@@ -5,7 +5,7 @@ A circle showing a photo or initials. Put the class on the `<img>` itself, or on
 | Kind | Classes |
 |------|---------|
 | Hue | Any Tailwind hue name: `red` `orange` `amber` `yellow` `lime` `green` `emerald` `teal` `cyan` `sky` `blue` `indigo` `violet` `purple` `fuchsia` `pink` `rose`. No hue = neutral grey. |
-| Size | `xs` `sm` `lg` `xl`. No size = 2.5rem. |
+| Size | `xs` `sm` `lg` `xl`. No size = 2.5rem. Initials are 0.4 of the size and never below `text-xs`. |
 
 ```html
 <img class="avatar" src="/u/ada.jpg" alt="Ada Okafor">

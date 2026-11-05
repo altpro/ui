@@ -94,7 +94,7 @@ const messages = computed(() => {
   const e = props.errors ?? [];
   const list = typeof e === "string" || Array.isArray(e) ? [e]
     : Object.entries(e).filter(([k]) => k === key.value || k.startsWith(`${key.value}.`)).map(([, m]) => m);
-  return [...new Set(list.flat(Infinity))];
+  return [...new Set(list.flat(Infinity))].filter(Boolean);
 });
 const hasHint = computed(() => !!(props.hint || slots.hint));
 const describedby = computed(() => [hasHint.value && `${id.value}-hint`, messages.value.length && `${id.value}-error`].filter(Boolean).join(" ") || null);

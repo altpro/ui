@@ -48,7 +48,7 @@ const forget = () => {
           <Field v-model="form.password" name="password" type="password" autocomplete="current-password" :errors="form.errors" required autofocus />
         </form>
         <footer class="justify-end">
-          <button type="button" class="btn ghost" command="close" commandfor="delete-account">Cancel</button>
+          <button type="button" class="btn outlined" command="close" commandfor="delete-account">Cancel</button>
           <button form="delete-account-form" class="btn danger" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Delete account</button>
         </footer>
       </dialog>

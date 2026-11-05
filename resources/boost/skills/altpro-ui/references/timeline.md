@@ -20,7 +20,7 @@ An `<ol>` of events, a dot each joined by a line. For an audit history or activi
 |------|---------|
 | Dot colour, on the `<li>` | `primary` `secondary` `info` `success` `warning` `danger` |
 
-- An `.avatar` as the first child of an item replaces the dot and is sized to the marker.
+- An `.avatar` as the first child of an item replaces the dot and is sized to the marker. For a feed of mixed events, an avatar holding a `size-3.5` icon instead of initials shows each entry's type (a speech bubble for a note, a tag for a price).
 - A `<time>` is drawn muted on its own line. Anything else inside the item is ordinary content.
 - Width is the container's: `max-w-md` or a card.
 
