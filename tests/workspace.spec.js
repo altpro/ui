@@ -225,6 +225,11 @@ test('history names what moved in each editor', async ({ page }) => {
   await page.getByLabel('Chalk in stock', { exact: true }).fill('32');
   await page.getByRole('button', { name: 'Save inventory' }).click();
   await expect(latest).toContainText('Chalk stock changed from 28 to 32.');
+  await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
+  await page.locator('[name="inventory.1.name"]').fill('Bone');
+  await page.locator('[name="inventory.1.sku"]').fill('ARC-BN');
+  await page.getByRole('button', { name: 'Save inventory' }).click();
+  await expect(latest).toContainText('Chalk renamed Bone. Bone SKU changed from ARC-CH to ARC-BN.');
   await page.getByRole('button', { name: 'Edit description', exact: true }).click();
   await page.locator('textarea[name=description]').fill('Short and plain.');
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
@@ -236,6 +241,10 @@ test('search reaches a finish SKU and an empty tab says what belongs there', asy
   await page.getByLabel('Search products', { exact: true }).fill('ARC-CH');
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(page.locator('tbody tr')).toContainText('Chalk · ARC-CH');
+  await expect(page.locator('tbody tr')).toContainText('28 in stock');
+  await page.getByRole('button', { name: 'Grid view', exact: true }).click();
+  await expect(page.locator('.demo-catalogue-grid > a')).toContainText('Chalk · ARC-CH');
+  await page.getByRole('button', { name: 'Table view' }).click();
   await page.getByLabel('Search products', { exact: true }).fill('');
   await page.getByRole('radio', { name: /^Draft/ }).check();
   await page.locator('tbody .demo-title-link').first().click();
@@ -250,8 +259,9 @@ test('one day has no line, a month thins its phone labels, and a custom range ne
   const preset = page.getByLabel('Sales period preset', { exact: true });
   await preset.selectOption('Today');
   await expect(page.locator('.demo-chart-line')).toHaveCount(0);
-  await expect(page.locator('.demo-chart-tip')).toBeVisible();
-  await expect(page.locator('.demo-revenue .demo-card-footer')).not.toContainText('Best day');
+  await expect(page.locator('.demo-chart-bar-value')).toHaveCount(2);
+  await expect(page.locator('.demo-chart-tip')).toHaveCount(0);
+  await expect(page.locator('.demo-revenue .demo-card-footer')).toContainText('Same day last week');
   await preset.selectOption('This month');
   await preset.selectOption('');
   const max = await page.getByLabel('Sales to', { exact: true }).getAttribute('max');
@@ -260,6 +270,20 @@ test('one day has no line, a month thins its phone labels, and a custom range ne
   await preset.selectOption('Last 30 days');
   const boxes = await page.locator('.demo-chart-labels > span:visible').evaluateAll(spans => spans.map(el => el.getBoundingClientRect()).map(({ left, right }) => ({ left, right })));
   boxes.slice(1).forEach((box, i) => expect(box.left).toBeGreaterThan(boxes[i].right));
+});
+
+test('the chart tip stays inside the plot on a phone, and a live region is there before the first key', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/app/dashboard.html');
+  const plot = page.locator('.demo-chart-plot');
+  await expect(plot.locator('[aria-live]')).toHaveCount(1);
+  await plot.focus();
+  for (let i = 0; i < 7; i++) {
+    await page.keyboard.press('ArrowLeft');
+    const [box, tip] = await Promise.all([plot.boundingBox(), page.locator('.demo-chart-tip').boundingBox()]);
+    expect(tip.x).toBeGreaterThanOrEqual(box.x - 1);
+    expect(tip.x + tip.width).toBeLessThanOrEqual(box.x + box.width + 1);
+  }
 });
 
 test('a rename leaves older history readable', async ({ page }) => {
@@ -405,7 +429,9 @@ test('the way back from a product finds the filtered list', async ({ page }) => 
 test('a filtered list reached by a link is still the way back, and the inventory table folds in a narrow column', async ({ page }) => {
   await page.goto('/app/dashboard.html');
   await page.getByRole('link', { name: 'Review stock' }).click();
+  await expect(page).toHaveURL(/products\.html/);
   await page.locator('tbody .demo-title-link').first().click();
+  await expect(page).toHaveURL(/product\.html/);
   await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Products' }).click();
   await expect(page).toHaveURL(/stock=low/);
   await page.setViewportSize({ width: 820, height: 900 });

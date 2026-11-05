@@ -96,7 +96,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **`→` or a chevron-right means "go there in the app".** `↗` means an external site.
 - **Anything that looks like a link is one.** Coloured text with an arrow that does nothing is a lie: make it a link, or plain text.
 - **A row's title is its link.** Drop a repeated "Open" button on every row. Stretch the link's hit area over the row (`::after` with `inset-0` on a `relative` row), with checkboxes above it. A row that opens an editor instead of a page shows a quiet pencil, because a plain value doesn't say it can be edited.
-- **Search finds what the placeholder promises.** "Search products or SKU" reaches every variant's SKU, and the row then names the variant it found.
+- **Search finds what the placeholder promises.** "Search products or SKU" reaches every variant's SKU, and the row then names the variant it found and shows that variant's stock and price, not the product's total.
 - **An empty list isn't always a failed filter.** With nothing filtered, say what belongs there ("No draft products. New and duplicated products start here.") and offer no Clear button.
 - **A list's state lives in its URL.** Search, filters, sort, page and view survive a reload, and a record's way back (its link and its breadcrumb) returns to the list as it was left. A link that arrives to act on a queue sorts the worst first.
 - **Selection shows its state and moves nothing.** A header checkbox is mixed (`:indeterminate.prop`) when some rows are selected. The bulk bar lies over the header row, so ticking a row can't move the next one under the pointer. A bulk action counts only the rows it will change.
@@ -113,7 +113,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **A chart footer adds a fact,** such as the previous period's total, never a repeat of a stat card.
 - **Period controls:** a preset `select`, with a "Custom range" option that reveals the two date inputs.
 - **A list of shares packs from the top** with a total above it, unless a stat on the screen already shows that total. It is never spread to fill the card.
-- **A range that shrinks to one day stops being a line.** Two flat lines over a filled block read as sales holding constant all day. Draw the day and its comparison as two bars, and drop "Best day" from the footer.
+- **A range that shrinks to one day stops being a line.** Two flat lines over a filled block read as sales holding constant all day. Draw the day and its comparison as two labelled bars, with each figure over its bar, a key of swatches, a label under each bar, and a footer fact that isn't on the bars: the same day last week.
 - **Axis labels thin out on the phone.** Keep the ends, drop every other label in between, so a month's dates never touch.
 - **A chart reads out a day.** Point at it, or tab to it and use the arrow keys, and a tip names the day and both figures, with the comparison's own date.
 

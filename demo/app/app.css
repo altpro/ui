@@ -7,7 +7,7 @@
 @layer components {
   :root {
     /* product pictures stay light in dark, under a veil so they aren't the brightest thing on the screen */
-    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 45%, transparent));
+    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 55%, transparent));
     --demo-stage: var(--color-muted);
     --demo-object: var(--color-foreground);
     --demo-object-edge: var(--color-muted-foreground);
@@ -79,6 +79,8 @@
     /* samples of the two lines as the plot draws them */
     i { width: 16px; height: 0; border-top: 2px solid var(--color-primary); border-radius: 2px; }
     .previous { border-top: 1.5px dashed var(--color-muted-foreground); }
+    &.bars i { width: 10px; height: 10px; border: 0; border-radius: 2px; background: var(--color-primary); }
+    &.bars .previous { background: color-mix(in oklab, var(--color-muted-foreground) 70%, var(--color-card)); }
   }
   /* axis beside the plot, day labels under it; the plot takes the height the card has, so the chart ends level with the cards beside it */
   .demo-chart { flex: 1; display: grid; grid-template: minmax(220px, 1fr) auto / auto minmax(0, 1fr); gap: 8px 12px; min-width: 0; }
@@ -86,12 +88,15 @@
   .demo-chart-plot { position: relative; min-width: 0; touch-action: pan-y; border-radius: 2px; > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; } &:focus-visible { outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent); outline-offset: 4px; } }
   .demo-chart-grid { fill: none; stroke: var(--color-border); stroke-width: 1; vector-effect: non-scaling-stroke; }
   .demo-chart-line { fill: none; stroke: var(--color-primary); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
-  .demo-chart-bar { fill: var(--color-primary); &.previous { fill: var(--color-muted-foreground); } }
+  /* one day: two bars with their figures over them, and a key and labels that match */
+  .demo-chart-bar { fill: var(--color-primary); &.previous { fill: color-mix(in oklab, var(--color-muted-foreground) 70%, var(--color-card)); } }
+  .demo-chart-bar-value { position: absolute; translate: -50% calc(-100% - 6px); font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .demo-chart-prior { fill: none; stroke: var(--color-muted-foreground); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
-  .demo-chart-labels { grid-column: 2; position: relative; height: 1.25rem; font-size: .75rem; color: var(--color-muted-foreground); > span { position: absolute; translate: -50% 0; white-space: nowrap; } > span:first-child { translate: 0 0; } > span:last-child:not(:first-child) { translate: -100% 0; } > span:only-child { translate: -50% 0; } }
+  .demo-chart-labels { grid-column: 2; position: relative; height: 1.25rem; font-size: .75rem; color: var(--color-muted-foreground); > span { position: absolute; translate: -50% 0; white-space: nowrap; } > span:first-child { translate: 0 0; } > span:last-child:not(:first-child) { translate: -100% 0; } &.bars > span { translate: -50% 0; } }
   .demo-chart-guide { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-border); pointer-events: none; }
   .demo-chart-dot { position: absolute; width: 10px; height: 10px; translate: -50% -50%; border: 2px solid var(--color-card); border-radius: 50%; background: var(--color-primary); pointer-events: none; &.previous { width: 8px; height: 8px; background: var(--color-muted-foreground); } }
-  .demo-chart-tip { position: absolute; top: 8px; translate: 12px 0; z-index: 1; display: grid; gap: 2px; min-width: 10.5rem; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: min(var(--radius), 8px); background: var(--color-card); box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; > * { display: flex; justify-content: space-between; gap: 12px; } &.flip { translate: calc(-100% - 12px) 0; } }
+  /* the tip sits beside the guide and is held inside the plot at any width */
+  .demo-chart-tip { position: absolute; top: 8px; left: min(var(--x), calc(100% - 10.5rem - 12px)); translate: 12px 0; z-index: 1; display: grid; gap: 2px; width: 10.5rem; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: min(var(--radius), 8px); background: var(--color-card); box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; > * { display: flex; justify-content: space-between; gap: 12px; } &.flip { left: max(var(--x), calc(10.5rem + 12px)); translate: calc(-100% - 12px) 0; } }
   .demo-product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-gap); }
   .demo-product-card {
     padding: 0;
@@ -111,7 +116,7 @@
     > img { height: 210px; width: 100%; object-fit: contain; }
   }
   .demo-product-art { display: block; width: 100%; height: 195px; }
-  .demo-product-card-body { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px; p { margin-top: 4px; } > strong { font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; } }
+  .demo-product-card-body { display: flex; align-items: flex-start; justify-content: space-between; gap: 8px; padding: 16px; p { margin-top: 4px; } > strong { font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; } }
   .demo-activity-list {
     li { display: flex; align-items: center; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--color-border); }
     li:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -195,7 +200,7 @@
   }
   .demo-channels { display: flex; flex-direction: column; gap: 12px; }
   .demo-channel { display: flex; align-items: center; justify-content: space-between; gap: 10px; strong { display: block; font-size: .875rem; font-weight: 500; } div > span { display: block; font-size: .75rem; margin-top: 2px; } }
-  .demo-price { font-size: 1.5rem; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }
+  .demo-price { font-size: 1.25rem; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }
   .demo-editor { --dialog-w: 29rem; }
   /* the app's headings: a card title reads a step above body text, a dialog title a step above that, and a dialog's lead line is a small caption over it */
   .demo-page .card > header :is(h2, h3) { font-size: 1rem; }
