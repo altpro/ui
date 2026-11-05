@@ -35,6 +35,35 @@ const uid = useId().replaceAll(':', '');
         <ellipse cx="225" cy="79" rx="17" ry="7" fill="var(--demo-object-highlight, var(--color-secondary))"/>
         <circle cx="214" cy="282" r="3" fill="var(--demo-object-highlight, var(--color-card))"/>
       </g>
+      <g v-else-if="kind === 'studio'" transform="rotate(-8 220 180)">
+        <path d="M122 214V148a98 98 0 0 1 196 0v66" fill="none" stroke="var(--demo-object, var(--color-foreground))" stroke-width="22"/>
+        <path d="M150 112a86 70 0 0 1 140 0" fill="none" :stroke="`url(#${uid}-body)`" stroke-width="26" stroke-linecap="round"/>
+        <path d="M126 176v40M314 176v40" stroke="var(--demo-object-highlight, var(--color-secondary))" stroke-width="6"/>
+        <circle cx="128" cy="248" r="54" :fill="`url(#${uid}-edge)`"/>
+        <circle cx="136" cy="248" r="46" :fill="`url(#${uid}-body)`"/>
+        <circle cx="136" cy="248" r="24" fill="var(--demo-object, var(--color-foreground))" opacity=".85"/>
+        <circle cx="312" cy="248" r="54" :fill="`url(#${uid}-body)`"/>
+        <circle cx="304" cy="248" r="40" fill="var(--demo-object, var(--color-foreground))" opacity=".8"/>
+        <circle cx="304" cy="248" r="5" fill="var(--demo-object-highlight, var(--color-card))"/>
+      </g>
+      <g v-else-if="kind === 'stereo'">
+        <g v-for="x in [-4, 136]" :key="x" :transform="`translate(${x} 88) scale(.7)`">
+          <rect x="140" y="79" width="171" height="231" rx="38" :fill="`url(#${uid}-body)`"/>
+          <rect x="129" y="83" width="160" height="220" rx="36" fill="var(--demo-object, var(--color-foreground))"/>
+          <rect x="139" y="93" width="140" height="200" rx="28" :fill="`url(#${uid}-mesh)`"/>
+          <circle cx="214" cy="153" r="39" fill="var(--demo-object-edge, var(--color-muted))" opacity=".4"/>
+          <circle cx="214" cy="231" r="27" fill="var(--demo-object-edge, var(--color-muted))" opacity=".4"/>
+          <circle cx="214" cy="282" r="3" fill="var(--demo-object-highlight, var(--color-card))"/>
+        </g>
+      </g>
+      <g v-else-if="kind === 'mini'">
+        <path d="M158 182c0-62 124-62 124 0" fill="none" :stroke="`url(#${uid}-edge)`" stroke-width="12" stroke-linecap="round"/>
+        <rect x="118" y="176" width="212" height="128" rx="64" :fill="`url(#${uid}-body)`"/>
+        <rect x="110" y="172" width="204" height="124" rx="62" fill="var(--demo-object, var(--color-foreground))"/>
+        <rect x="124" y="184" width="176" height="100" rx="50" :fill="`url(#${uid}-mesh)`"/>
+        <circle cx="212" cy="234" r="30" fill="var(--demo-object-edge, var(--color-muted))" opacity=".4"/>
+        <rect x="196" y="164" width="32" height="7" rx="3.5" fill="var(--demo-object-highlight, var(--color-secondary))"/>
+      </g>
       <g v-else-if="kind === 'turntable'" transform="translate(0 55)">
         <path d="m71 77 277-20 37 164-286 18Z" fill="var(--demo-object, var(--color-foreground))"/>
         <path d="m71 66 277-20 37 164-286 18Z" :fill="`url(#${uid}-body)`"/>

@@ -3,7 +3,8 @@
    <label class="btn outlined"><input type="radio" name="view"> List</label>
    A label holding a radio or checkbox is a toggle: the input is hidden over
    the label and the label takes the solid look while it is checked. A .join
-   of them is a segmented control.
+   of them is a segmented control. A <button aria-pressed="true"> takes the
+   same look.
    Colour variants set --btn-* vars only. `.outlined` and `.ghost` set real
    properties from those vars, so class order never matters. Sizes set
    the height/padding/text vars. Layered so Tailwind utilities win. */
@@ -124,8 +125,8 @@
         cursor: pointer;
       }
     }
-    /* checked wins the transparent fill of .outlined and .ghost, so it sits after them */
-    &:has(:checked) {
+    /* checked or pressed wins the transparent fill of .outlined and .ghost, so it sits after them */
+    &:is(:has(:checked), [aria-pressed="true"]) {
       background: var(--btn-bg);
       color: var(--btn-fg);
       &:hover {
@@ -133,7 +134,7 @@
       }
     }
     /* forced colours drop the fill that marks a checked toggle or the current page */
-    &:is(:has(:checked), [aria-current]:not([aria-current="false"])) {
+    &:is(:has(:checked), [aria-pressed="true"], [aria-current]:not([aria-current="false"])) {
       @media (forced-colors: active) {
         forced-color-adjust: none;
         border-color: Highlight;

@@ -62,7 +62,6 @@ export const presets = {
       '--font-sans': '"Segoe UI", "Helvetica Neue", Arial, sans-serif',
       '--demo-heading-font': '"Avenir Next", "Segoe UI", sans-serif',
       '--demo-stage': pair('#e7eafa', '#303c62'),
-      '--demo-stage-alt': pair('#e2edea', '#2a4446'),
       '--demo-object': pair('#303c65', '#b9c8ed'),
       '--demo-object-edge': pair('#62739a', '#8298c4'),
       '--demo-object-highlight': pair('#a2b1d2', '#e4ecff'),

@@ -2,6 +2,13 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.0`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+- Card and dialog headers centre a control on the title's line (`align-items: center`); it sat on the title's top edge, so a `btn sm` beside a one-line title hung below it. Markup is unchanged.
+- A `.btn` with `aria-pressed="true"` takes the solid fill a checked toggle has, so a script-driven toggle (a list/grid switch, the password reveal) shows its state. Before, only `:has(:checked)` filled.
+- A table in a wrapper inside a card (`.card > .scroll > .table`) takes the card's inset as its cell padding, as a direct `.table` child already did; its first and last columns sat 1rem in, off the card's padding.
+- `Combobox.vue`: the clear button sits inside the end of the trigger, after the chevron, instead of beside it, so a combobox in a `.field` is as wide as the fields around it. Markup is unchanged.
+
 ## 0.3.0 (5 November 2026)
 
 - `CopyButton.vue`: after Escape, focus that leaves the button and comes straight back shows the tooltip again. It stayed hidden when both happened within one frame.

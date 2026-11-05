@@ -7,7 +7,8 @@ export const store = reactive(saved?.products?.length && Array.isArray(saved.act
 watch(store, () => sessionStorage.setItem('demo-workspace', JSON.stringify(store)), { deep: true });
 export const money = value => new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: Number.isInteger(Number(value)) ? 0 : 2, maximumFractionDigits: 2 }).format(value);
 export const categories = ['Headphones', 'Speakers', 'Turntables'];
-export const statusClass = status => ({ Active: 'success', Draft: '', Archived: 'outlined' })[status];
+// a tinted badge with a dot: green when it is on sale, grey while a draft, outlined once archived
+export const statusClass = status => ['demo-status', ({ Active: 'green', Draft: '', Archived: 'outlined' })[status]];
 export function record(title, detail, product, type = 'Product') {
   store.activity.unshift({ id: Math.max(Date.now(), ...store.activity.map(a => a.id + 1)), title, detail, product, type, time: 'Just now' });
 }

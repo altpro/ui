@@ -38,7 +38,8 @@
     > header {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-start;
+      /* a control beside the title sits on its centre line, not its top edge */
+      align-items: center;
       gap: 0.25rem 1rem;
 
       /* the first thing after the title goes to the far side */
@@ -99,6 +100,10 @@
     > :is(.table, :has(> .table)) {
       width: calc(100% + 2 * var(--card-p));
       margin-inline: calc(-1 * var(--card-p));
+      --table-px: var(--card-p);
+    }
+    /* .table sets its own --table-px, so a table inside a wrapper takes the inset on itself */
+    > :has(> .table) > .table {
       --table-px: var(--card-p);
     }
     > :is(.table, :has(> .table)):first-child {
