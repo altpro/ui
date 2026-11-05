@@ -10,7 +10,7 @@
 @layer components {
   :root {
     /* product pictures stay light in dark, under a veil so they aren't the brightest thing on the screen */
-    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 55%, transparent));
+    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 62%, transparent));
     --demo-stage: var(--color-muted);
     --demo-edge: var(--color-border);
     --demo-selected: var(--color-primary);
@@ -84,6 +84,8 @@
     /* samples of the two lines as the plot draws them */
     i { width: 16px; height: 0; border-top: 2px solid var(--color-primary); border-radius: 2px; }
     .previous { border-top: 1.5px dashed var(--color-muted-foreground); }
+    /* the key runs in the order of the bars */
+    &.bars { flex-direction: row-reverse; }
     &.bars i { width: 10px; height: 10px; border: 0; border-radius: 2px; background: var(--color-primary); }
     &.bars .previous { background: color-mix(in oklab, var(--color-muted-foreground) 70%, var(--color-card)); }
   }
@@ -95,7 +97,7 @@
   .demo-chart-line { fill: none; stroke: var(--color-primary); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; vector-effect: non-scaling-stroke; }
   /* one day: two bars with their figures over them, and a key and labels that match */
   .demo-chart-bar { fill: var(--color-primary); &.previous { fill: color-mix(in oklab, var(--color-muted-foreground) 70%, var(--color-card)); } }
-  .demo-chart-bar-value { position: absolute; translate: -50% calc(-100% - 6px); font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .demo-chart-bar-value { position: absolute; translate: -50% calc(-100% - 6px); padding-inline: 4px; border-radius: 2px; background: var(--color-card); font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .demo-chart-prior { fill: none; stroke: var(--color-muted-foreground); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
   .demo-chart-labels { grid-column: 2; position: relative; height: 1.25rem; font-size: .75rem; color: var(--color-muted-foreground); > span { position: absolute; translate: -50% 0; white-space: nowrap; } > span:first-child { translate: 0 0; } > span:last-child:not(:first-child) { translate: -100% 0; } &.bars > span, &.bars > span:last-child:not(:first-child) { translate: -50% 0; } }
   .demo-chart-guide { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-border); pointer-events: none; }
@@ -137,11 +139,12 @@
     td:has(> .checkbox) { position: relative; z-index: 1; }
   }
   .demo-row-product { display: flex; align-items: center; gap: 12px; }
-  .demo-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 8px; margin-top: 2px; font-size: .75rem; }
+  .demo-row-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 4px; margin-top: 2px; font-size: .75rem; > .muted + .muted::before { content: "· "; } }
   .demo-top-products .table { --table-py: 11px; font-size: .875rem; }
   .demo-catalogue { gap: 16px; }
   .demo-list-tabs { margin-top: -8px; --tabs-px: 1rem; --tabs-text: .8125rem; > label:first-child { padding-inline-start: 0; } }
   .demo-table-toolbar { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; > select { width: auto; } .btn { white-space: nowrap; } }
+  .demo-search input::-webkit-search-cancel-button { filter: grayscale(1); }
   .demo-filter-button { display: none; }
   .demo-search { min-width: 15rem; flex: 1; max-width: 360px; kbd { font-size: .75rem; padding: 1px 5px; border: 1px solid var(--color-border); border-radius: 4px; } }
   .demo-table-scroll { position: relative; overflow-x: auto; min-width: 0; &:focus-visible { outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent); outline-offset: -3px; } }
@@ -157,7 +160,7 @@
   .demo-product-stage, .demo-gallery-stage, .demo-gallery-view, .demo-thumb { color-scheme: light; background-image: linear-gradient(var(--demo-veil), var(--demo-veil)); }
   .demo-thumb { display: block; width: 44px; height: 44px; border-radius: min(var(--radius), 10px); background-color: var(--demo-stage); flex: none; overflow: hidden; svg { width: 100%; height: 100%; } img { width: 100%; height: 100%; object-fit: cover; } }
   /* selection takes over the header row, so ticking a row moves nothing under the pointer */
-  .demo-selection { position: absolute; inset: 0 0 auto 4rem; z-index: 2; display: flex; align-items: center; gap: 12px; height: calc(3.25rem - 1px); padding-inline-end: var(--card-p); background: var(--color-card); font-size: .875rem; }
+  .demo-selection { position: absolute; inset: 0 0 auto 4rem; z-index: 2; display: flex; align-items: center; gap: 12px; height: calc(3.25rem - 1px); padding-inline-end: var(--card-p); background: var(--color-card); color: var(--color-foreground); font-size: .875rem; font-weight: 400; }
   /* the footer's rule runs edge to edge like the table's, and closes the last row */
   .demo-table-footer { justify-content: space-between; margin-inline: calc(-1 * var(--card-p)); padding: 16px var(--card-p) 0; border-top: 1px solid var(--color-border); }
   .demo-table-scroll + .demo-table-footer { margin-top: -16px; }
@@ -260,6 +263,7 @@
     .demo-page:has(.demo-low-stock) > .demo-page-heading { order: -3; }
     .demo-summary-grid { order: -2; }
     .demo-low-stock { order: -1; }
+    .demo-revenue > header > .demo-chart-key { flex-basis: 100%; margin-inline-start: 0; }
     .demo-chart { grid-template-rows: 180px auto; }
     /* a month's dates don't fit a phone: every other one goes, and the ends stay */
     .demo-chart-labels.dense > span:nth-child(even) { display: none; }

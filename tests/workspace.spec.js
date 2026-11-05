@@ -266,6 +266,12 @@ test('one day has no line, a month thins its phone labels, and a custom range ne
   await preset.selectOption('Today');
   await expect(page.locator('.demo-chart-line')).toHaveCount(0);
   await expect(page.locator('.demo-chart-bar-value')).toHaveCount(2);
+  await page.setViewportSize({ width: 390, height: 844 });
+  for (const selector of ['.demo-chart-bar-value', '.demo-chart-labels > span']) {
+    const [left, right] = await page.locator(selector).evaluateAll(els => els.map(el => el.getBoundingClientRect()).map(({ left, right }) => ({ left, right })));
+    expect(right.left).toBeGreaterThan(left.right + 8);
+  }
+  await page.setViewportSize({ width: 1280, height: 720 });
   await expect(page.locator('.demo-chart-tip')).toHaveCount(0);
   await expect(page.locator('.demo-revenue .demo-card-footer')).toContainText('Same day last week');
   await preset.selectOption('This month');
