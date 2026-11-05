@@ -138,6 +138,13 @@
         border-color: CanvasText;
       }
     }
+    /* a neutral status (soft, or with a dot) takes muted text for its accent,
+       not the foreground, so draft or archived is the quietest in a column, not
+       the darkest. A neutral tag (outlined, no dot) keeps the foreground. */
+    &:is(.soft, .dot):not(.primary, .secondary, .info, .success, .warning, .danger, .error, .red, .orange, .amber, .yellow, .lime, .green, .emerald, .teal, .cyan, .sky, .blue, .indigo, .violet, .purple, .fuchsia, .pink, .rose) {
+      --badge-accent: var(--color-muted-foreground);
+      --badge-outline: var(--color-border);
+    }
     /* dot: a status light before the label, in the text colour */
     &.dot::before {
       content: "";
