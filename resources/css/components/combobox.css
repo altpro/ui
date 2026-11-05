@@ -13,13 +13,20 @@
    </div>
    A fixed width, as a select has (a .field stretches it): the value runs to an ellipsis, and with
    more than one picked a count sits before the chevron. The clear button
-   sits beside the trigger. The panel is at least as wide as the trigger,
+   sits inside the trigger's end, after the chevron, so the control keeps the
+   width of the fields around it. The panel is at least as wide as the trigger,
    stops at 20rem and scrolls its options under the search box.
    Layered so Tailwind utilities win. */
 @layer components {
   .combobox {
+    --combobox-clear: 1.75rem;
+    position: relative;
     display: inline-flex;
     width: 12rem;
+    /* room at the end of the trigger for the clear button laid over it */
+    &:has(> .btn) > .input {
+      padding-inline-end: calc(var(--combobox-clear) + 0.5rem);
+    }
 
     > [popover] {
       min-width: max(10rem, anchor-size(width));
@@ -137,9 +144,13 @@
       }
     }
 
-    /* clear: square, beside the trigger */
+    /* clear: square, over the end of the trigger */
     > .btn {
-      flex: none;
+      --btn-h: var(--combobox-clear);
+      position: absolute;
+      inset-block: 0;
+      inset-inline-end: 0.25rem;
+      margin-block: auto;
       width: var(--btn-h);
       padding: 0;
       > svg {
