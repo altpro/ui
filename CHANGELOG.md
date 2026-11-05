@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.0`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.1`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.3.1 (5 November 2026)
 
 - Badges take two new modifiers. `soft` is a tint of the colour under a deeper shade of it, mixed into the card colour so it reads the same on any surface. `dot` puts a status light before the label. A record's status is now written `badge soft success dot` (`soft dot` for draft, `outlined dot` for archived) in `badge.md`, `record-header.md` and the recipes, so a column of statuses in a table stays quiet. Solid status badges still work; change them to match when you next touch a screen.
 - A second Boost skill, `altpro-ui-design`: the rules that take a screen built from altpro/ui to a shippable standard (rhythm, type, copy, status and severity, actions, charts, dialogs, phone and dark layouts), learned from five rounds of design review on the demo app, and a screenshot review loop with a brief for an independent reviewer. The guideline and the `altpro-ui` skill point agents to it when they build or review a screen. Run `php artisan boost:update` to install it.
