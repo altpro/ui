@@ -182,6 +182,14 @@
   .demo-detail-side { position: sticky; top: var(--spacing-gap); display: flex; flex-direction: column; gap: var(--spacing-gap); min-width: 0; }
   /* a record's history: each entry's time at the end of its title line */
   .demo-product-history .timeline > li { grid-template-columns: var(--timeline-marker) minmax(0, 1fr) auto; padding-bottom: 20px; &:last-child { padding-bottom: 0; } > :is(p, blockquote) { grid-column: 2 / -1; } > p:first-of-type { grid-column: 2; } > time { grid-column: 3; grid-row: 1; margin: 0; } }
+  /* the inventory table measures its own card, which a narrow column squeezes well before the phone: the SKU folds under the finish */
+  .demo-finishes { container: inventory / inline-size; }
+  .demo-finish-sku-line { display: none; }
+  @container inventory (width < 36rem) {
+    .demo-finish-sku { display: none; }
+    .demo-finish-sku-line { display: block; }
+    .demo-finish-place { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  }
   .demo-channels { display: flex; flex-direction: column; gap: 12px; }
   .demo-channel { display: flex; align-items: center; justify-content: space-between; gap: 10px; strong { display: block; font-size: .875rem; font-weight: 500; } div > span { display: block; font-size: .75rem; margin-top: 2px; } }
   .demo-price { font-size: 1.75rem; font-weight: 600; letter-spacing: -.03em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }

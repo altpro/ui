@@ -207,6 +207,8 @@ function shortcut(event) {
   }
 }
 onMounted(() => {
+  // arriving on a filtered list counts as leaving it that way, even if no control is touched
+  if (props.screen === 'products') sessionStorage.setItem('demo-list-search', location.search);
   document.addEventListener('keydown', shortcut);
   window.addEventListener('beforeunload', warnUnsaved);
   // the breadcrumb goes back to the list as the page's own link does
@@ -507,7 +509,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
     </template>
 
     <template v-else-if="screen === 'product'">
-      <a :href="listUrl" class="btn ghost sm self-start -ms-3 md:hidden"><Icon name="arrow-left"/> All products</a>
+      <a :href="listUrl" class="btn ghost sm self-start -ms-3 md:hidden"><Icon name="arrow-left"/> Back to products</a>
       <div class="demo-page-heading">
         <div class="min-w-0">
           <div class="demo-record-title">
@@ -542,10 +544,10 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             <header><h2 id="finishes-heading">Inventory</h2><button v-if="nextAction?.label !== 'Adjust inventory'" class="btn ghost sm" @click="openInventory">Adjust inventory</button></header>
             <div class="demo-table-scroll">
               <table class="table hover table-fixed demo-row-links">
-                <colgroup><col><col class="w-36 max-md:hidden"><col class="w-28"><col class="w-24"><col class="w-16"></colgroup>
-                <thead><tr><th>Finish</th><th class="max-md:hidden">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th><th><span class="sr-only">Edit</span></th></tr></thead>
-                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="block text-xs muted demo-sku md:hidden">{{ v.sku }}</span></td><td class="muted demo-sku max-md:hidden">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
-                <tfoot class="tabular-nums"><tr><td>Total<span class="max-md:sr-only"> at the London studio</span></td><td class="max-md:hidden"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
+                <colgroup><col><col class="demo-finish-sku w-36"><col class="w-28"><col class="w-24"><col class="w-14"></colgroup>
+                <thead><tr><th>Finish</th><th class="demo-finish-sku">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th><th><span class="sr-only">Edit</span></th></tr></thead>
+                <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="demo-finish-sku-line text-xs muted demo-sku">{{ v.sku }}</span></td><td class="muted demo-sku demo-finish-sku">{{ v.sku }}</td><td class="text-right tabular-nums">{{ v.stock }}</td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
+                <tfoot class="tabular-nums"><tr><td>Total<span class="demo-finish-place"> at the London studio</span></td><td class="demo-finish-sku"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
               </table>
             </div>
           </section>

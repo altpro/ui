@@ -322,6 +322,19 @@ test('the way back from a product finds the filtered list', async ({ page }) => 
   await expect(page.getByRole('radio', { name: /^Active/ })).toBeChecked();
 });
 
+test('a filtered list reached by a link is still the way back, and the inventory table folds in a narrow column', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  await page.getByRole('link', { name: 'Review stock' }).click();
+  await page.locator('tbody .demo-title-link').first().click();
+  await page.getByRole('navigation', { name: 'Breadcrumb' }).getByRole('link', { name: 'Products' }).click();
+  await expect(page).toHaveURL(/stock=low/);
+  await page.setViewportSize({ width: 820, height: 900 });
+  await page.goto('/app/product.html?id=arc');
+  await expect(page.locator('th.demo-finish-sku')).toBeHidden();
+  const name = await page.locator('.demo-finishes tbody tr').first().locator('td').first().boundingBox();
+  expect(name.width).toBeGreaterThan(100);
+});
+
 test('the store preview follows the finish and the channels', async ({ page }) => {
   await page.goto('/app/product.html?id=arc');
   await page.getByRole('button', { name: 'Preview', exact: true }).click();
