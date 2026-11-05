@@ -38,7 +38,8 @@
     > header {
       display: flex;
       flex-wrap: wrap;
-      align-items: flex-start;
+      /* a control beside the title sits on its centre line, not its top edge */
+      align-items: center;
       gap: 0.25rem 1rem;
 
       /* the first thing after the title goes to the far side */
