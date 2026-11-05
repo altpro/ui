@@ -34,7 +34,7 @@ const discard = () => {
   form.reset();
   form.clearErrors();
 };
-const statusClass = { Active: "success", Draft: "", Archived: "outlined" };
+const statusClass = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
 const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.documentElement.lang, { day: "numeric", month: "short", year: "numeric" });
 </script>
 

@@ -4,6 +4,8 @@ Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.0`). On 0.x a breaking cha
 
 ## Unreleased
 
+- Badges take two new modifiers. `soft` is a tint of the colour under a deeper shade of it, mixed into the card colour so it reads the same on any surface. `dot` puts a status light before the label. A record's status is now written `badge soft success dot` (`soft dot` for draft, `outlined dot` for archived) in `badge.md`, `record-header.md` and the recipes, so a column of statuses in a table stays quiet. Solid status badges still work; change them to match when you next touch a screen.
+- A second Boost skill, `altpro-ui-design`: the rules that take a screen built from altpro/ui to a shippable standard (rhythm, type, copy, status and severity, actions, charts, dialogs, phone and dark layouts), learned from five rounds of design review on the demo app, and a screenshot review loop with a brief for an independent reviewer. The guideline and the `altpro-ui` skill point agents to it when they build or review a screen. Run `php artisan boost:update` to install it.
 - Card and dialog headers centre a control on the title's line (`align-items: center`); it sat on the title's top edge, so a `btn sm` beside a one-line title hung below it. Markup is unchanged.
 - A `.btn` with `aria-pressed="true"` takes the solid fill a checked toggle has, so a script-driven toggle (a list/grid switch, the password reveal) shows its state. Before, only `:has(:checked)` filled.
 - A table in a wrapper inside a card (`.card > .scroll > .table`) takes the card's inset as its cell padding, as a direct `.table` child already did; its first and last columns sat 1rem in, off the card's padding.

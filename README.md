@@ -67,7 +67,7 @@ A TypeScript app maps the alias in `tsconfig.json` too. Most of the Vue componen
 
 ### Laravel Boost
 
-The package ships a Boost skill, `altpro-ui` (SKILL.md and its `references/`), and a short guideline that tells agents to load the skill before writing markup. `boost:list-skills` finds them, but Boost installs a third-party package's files only once the app opts in: `boost:install -n` and `boost:update -n` skip altpro/ui until the app's `boost.json` lists it. The kit's `boost.json` already does. Elsewhere, add it and update:
+The package ships two Boost skills and a short guideline that tells agents when to load them. `altpro-ui` (SKILL.md and its `references/`) is how to write each component; agents load it before writing markup. `altpro-ui-design` is how to compose a whole screen to a polished standard, and the screenshot review that checks it; agents load it when building or reviewing a screen. `boost:list-skills` finds them, but Boost installs a third-party package's files only once the app opts in: `boost:install -n` and `boost:update -n` skip altpro/ui until the app's `boost.json` lists it. The kit's `boost.json` already does. Elsewhere, add it and update:
 
 ```json
 "packages": ["altpro/ui"]
@@ -77,7 +77,7 @@ The package ships a Boost skill, `altpro-ui` (SKILL.md and its `references/`), a
 php artisan boost:update
 ```
 
-The skill lands in the agents' skills directory (`.claude/skills/altpro-ui/` for Claude Code) and the guideline in each agent's guideline file (`CLAUDE.md`, `AGENTS.md`) under `=== altpro/ui/core rules ===`. Ticking altpro/ui at the interactive `php artisan boost:install` prompt writes the same `packages` entry.
+The skills land in the agents' skills directory (`.claude/skills/altpro-ui/` and `.claude/skills/altpro-ui-design/` for Claude Code) and the guideline in each agent's guideline file (`CLAUDE.md`, `AGENTS.md`) under `=== altpro/ui/core rules ===`. Ticking altpro/ui at the interactive `php artisan boost:install` prompt writes the same `packages` entry.
 
 ## Install anywhere else
 
@@ -101,7 +101,7 @@ Vue components are at `@altpro/ui/js/Combobox.vue` and alongside; alias `"@ui": 
 "include": ["resources/js/**/*.ts", "resources/js/**/*.vue", "node_modules/@altpro/ui/resources/js"]
 ```
 
-Keep the app's own `include` entries and add the last one. Copy the `resources/boost/skills/altpro-ui/` directory into the project's `.claude/skills/altpro-ui/` for Claude.
+Keep the app's own `include` entries and add the last one. Copy the `resources/boost/skills/altpro-ui/` and `resources/boost/skills/altpro-ui-design/` directories into the project's `.claude/skills/` for Claude.
 
 ## Develop
 
