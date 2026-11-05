@@ -27,7 +27,7 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
 | Non-modal | Add `popover="manual"` to the dialog and open it with `command="show-popover"`, close with `command="hide-popover"`. Same box, centred, no backdrop, the page stays usable. There is no non-modal dialog command. |
 | Dismiss | Esc by default. `closedby="any"` on the dialog adds click on the backdrop. `closedby="none"` removes Esc, for a dialog that must end with a button. Safari is the last to support `closedby`, and a Safari without it ignores the attribute: `any` falls back to Esc only, and `none` still closes on Esc, so `none` must never be what keeps unsaved work on screen. |
 | Width | 32rem, capped at the viewport minus a `gap` each side. Set another with `[--dialog-w:24rem]` or `[--dialog-w:48rem]`; the cap still applies. Not `max-w-*` or `w-*`: `max-w-sm` replaces the cap, so the dialog runs off a phone screen. |
-| Height | Capped at the viewport minus a `gap` each side; taller content scrolls inside. The header and footer scroll with it. |
+| Height | Capped at the viewport minus a `gap` each side; taller content scrolls inside. The header and footer scroll with it, except a drawer's footer, which stays on screen. |
 | Drawer | `drawer`: a full-height panel, 24rem wide, that slides in from the end edge. `drawer start` slides from the start edge. Everything else is unchanged. `mt-auto` on the footer pins it to the bottom. |
 
 - The close cross is a `btn ghost sm` with `aria-label="Close"`, placed straight after the heading or `hgroup` so the header pushes it to the far side. The dialog pulls it onto the heading line.
