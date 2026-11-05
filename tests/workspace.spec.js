@@ -122,6 +122,9 @@ test('the sales period takes a preset or two dates and the figures follow it', a
   await expect(page.locator('.demo-chart-labels > span')).toHaveCount(7);
   await preset.selectOption('Last 30 days');
   await expect(page.getByText('vs. previous 30 days')).toHaveCount(4);
+  // the dates show once Custom range is picked
+  await expect(page.getByLabel('Sales from', { exact: true })).toBeHidden();
+  await preset.selectOption('');
   await page.getByLabel('Sales from', { exact: true }).fill('2026-09-01');
   await page.getByLabel('Sales to', { exact: true }).fill('2026-09-03');
   await expect(preset).toHaveValue('');

@@ -75,7 +75,7 @@ header .btn[aria-pressed="true"] {
     flex: 1;
     padding: 0 14px 20px;
     overflow-y: auto;
-    details > summary { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; margin-block: 18px 8px; }
+    details > summary { font-size: .7rem; text-transform: uppercase; letter-spacing: .07em; margin-block: 14px 4px; }
     details > a { margin-inline-start: 0; padding-inline-start: 14px; border-inline-start: 0; }
     a[aria-current] { font-weight: 650; }
     .badge { --badge-accent: var(--demo-chrome-fg, var(--color-foreground)); }
