@@ -45,6 +45,7 @@ test('editing product, price, stock and status updates the collection and histor
   await expect(page.locator('.demo-finishes tfoot')).toContainText('92');
   await page.getByRole('button', { name: 'Active', exact: false }).first().click();
   await page.locator('#status-popover').getByRole('button', { name: 'Draft', exact: true }).click();
+  await page.getByRole('button', { name: 'Move to draft', exact: true }).click();
   await page.goto('/app/products.html');
   await page.getByLabel('Search products', { exact: true }).fill('Arc wireless');
   for (const text of ['Arc wireless headphones', 'Draft', '92 in stock', '£269.99']) await expect(page.locator('tbody tr')).toContainText(text);
@@ -59,6 +60,9 @@ test('new products, bulk archive and reset form a complete demo workflow', async
   await drawer.getByLabel('Product name', { exact: true }).fill('Test speaker');
   await drawer.getByLabel('SKU', { exact: true }).fill('FRM-TEST');
   await drawer.getByLabel('Category', { exact: true }).selectOption('Speakers');
+  await drawer.getByLabel('Retail price', { exact: true }).fill('149');
+  await drawer.getByLabel('Cost per item', { exact: true }).fill('60');
+  await drawer.getByLabel('Finish name', { exact: true }).fill('Slate');
   await drawer.getByRole('button', { name: 'Add product', exact: true }).click();
   await page.getByLabel('Search products', { exact: true }).fill('Test speaker');
   await expect(page.locator('tbody tr')).toContainText('Test speaker');
@@ -305,6 +309,20 @@ test('a rename leaves older history readable', async ({ page }) => {
   await page.getByRole('button', { name: 'Save changes', exact: true }).click();
   await expect(page.locator('.timeline > li').first()).toContainText('Name changed from Arc headphones to Arc mk2.');
   await expect(page.locator('.timeline > li').nth(1)).toContainText('Description updated');
+});
+
+test('focus lands somewhere deliberate when a menu, a dialog or an action goes away', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'More product actions' }).click();
+  await page.getByRole('button', { name: 'Archive product', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(page.getByRole('button', { name: 'More product actions' })).toBeFocused();
+  await page.goto('/app/product.html?id=loop');
+  await page.locator('.demo-record-actions').getByRole('button', { name: 'Adjust inventory', exact: true }).click();
+  await page.getByLabel('Chalk in stock', { exact: true }).fill('20');
+  await page.getByRole('button', { name: 'Save inventory' }).click();
+  await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Edit product');
+  await expect(page.locator('.demo-record-actions .btn.primary')).toBeFocused();
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {

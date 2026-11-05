@@ -25,7 +25,7 @@ function open(product, create = false, focus) {
   creating.value = create || !product;
   editingName.value = product?.name ?? '';
   Object.keys(draft).forEach(key => delete draft[key]);
-  Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: 149, cost: 60, stock: 0, status: 'Draft', finish: 'Slate', tags: [], variants: [] });
+  Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: '', cost: '', stock: 0, status: 'Draft', finish: '', tags: [], variants: [] });
   files.value = null;
   skuError.value = '';
   opened = comparable();
@@ -60,7 +60,7 @@ defineExpose({ open, dialog, clean });
       <Field v-model="draft.description" name="description" type="textarea" label="Description" rows="5"/>
       <Field v-model="draft.tags" name="tags" label="Tags" type="combobox" multiple :options="['Wireless', 'Analog', 'Bestseller', 'New arrival', 'Studio', 'Coming soon']"/>
       <div class="field"><label for="product-photo">Product image</label><FileInput id="product-photo" v-model="files" name="photo" accept="image/*" :errors="imageError || undefined"><span>Any image up to 1 MB.</span></FileInput></div>
-      <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.stock" name="stock" label="In stock" type="number" min="0" step="1" required/></div></template>
+      <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.cost" name="cost" label="Cost per item" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.finish" name="finish" label="Finish name" required/><Field v-model="draft.stock" name="stock" label="In stock" type="number" min="0" step="1" required/></div></template>
     </form>
     <footer class="justify-end"><button type="button" class="btn outlined" @click="requestClose">Cancel</button><button form="product-form" class="btn primary" :disabled="saving || !!imageError" :class="{ loading: saving }" :aria-busy="saving">{{ creating ? 'Add product' : 'Save changes' }}</button></footer>
   </dialog>

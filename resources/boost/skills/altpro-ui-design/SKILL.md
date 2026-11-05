@@ -76,7 +76,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **Every value has a label** unless its form says what it is, as a date or a price does. A bare name in a facts line needs its role: "mechanic Marek Nowak".
 - **Counts name their base,** counted against what the filters allow: "4 of 14 open jobs", not "4 of 18 jobs" when 4 are collected and hidden. A filter means what the column it filters says: if drafts can read "Out of stock", a stock filter that leaves them out says so by moving to the Active tab. Show a list's count only when a filter narrows it; unfiltered, it repeats the stat above.
 - **A stat's label says its scope.** If "Due today" leaves out jobs that are ready for collection, it reads "Work due today".
-- **Dates take one form across screens:** "Today", "Yesterday", then "4 Nov", with the weekday everywhere or nowhere.
+- **Dates take one form across screens:** "Today", "Yesterday", then "4 Nov", with the weekday everywhere or nowhere. A chart is the exception: "Sat 31 Oct" explains the shape of the sales.
 - **Errors say what to enter** ("Enter £245.16 or less") and don't repeat the hint above them.
 
 ### Status and severity
@@ -123,7 +123,9 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **One primary action,** last in the footer, with Cancel `outlined` before it.
 - **A drawer's actions stay on screen.** Its `<footer>` is the last child of the dialog, not of the form, so it stays put while a long form scrolls.
 - **Changes are never lost silently.** Cancel, the cross, Escape and leaving the page all ask first when the editor is dirty, with "Keep editing" and "Discard changes". An unchanged editor closes straight away.
-- **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button.
+- **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button, and anything that takes a live record off sale asks too.
+- **Focus never falls to the page.** Close a menu before opening a dialog from it, so the dialog returns focus to the menu's button. When an action removes its own control, as a finished bulk action or a next action does, move focus to what takes its place.
+- **A form states nothing nobody entered.** No prefilled price or silent default cost: a figure on the record comes from a person.
 - **An editor opens on its first field,** or on the field the caller asked for, not on its close button.
 - **Saving nothing records nothing.** An unchanged save closes without a toast or a history entry. An entry says what really moved, in every editor: "Slate price changed from £249 to £259", "Chalk 28 → 32", "Alex Morgan changed the description and tags". On a record's own page it doesn't repeat the record's name.
 - **Validate the same rule on every route.** Two forms that can set a SKU refuse the same values with the same words, and focus the field that failed.
