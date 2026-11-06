@@ -55,7 +55,7 @@ defineExpose({ open, dialog, clean });
 </script>
 <template>
   <dialog ref="dialog" class="dialog drawer divided demo-editor" aria-labelledby="product-editor-title" @cancel.prevent="requestClose">
-    <header><hgroup><p>{{ creating ? 'New product' : editingName }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="requestClose"><Icon name="x"/></button></header>
+    <header><hgroup><p v-if="!creating">{{ editingName }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="requestClose"><Icon name="x"/></button></header>
     <form id="product-form" novalidate class="space-y-5" @submit.prevent="save" @input="errors = withoutField(errors, $event)">
       <Field v-model="draft.name" name="name" label="Product name" :errors="errors" required maxlength="100" placeholder="e.g. Arc headphones"/>
       <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" :errors="errors" required/></div>

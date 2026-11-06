@@ -34,6 +34,8 @@ const activityType = ref('All');
 const note = ref('');
 const noteError = ref('');
 const pricingErrors = ref({});
+// Choose channels marks the card it moved to, until focus leaves it
+const channelsLanded = ref(false);
 const finishErrors = ref({});
 watch(note, () => { noteError.value = ''; });
 const toast = ref('');
@@ -112,7 +114,7 @@ const nextAction = computed(() => {
   if (!p) return null;
   if (p.status === 'Draft') return { label: 'Publish', run: () => changeStatus('Active') };
   if (p.status === 'Archived') return { label: 'Make active', run: () => changeStatus('Active') };
-  if (offSale(p)) return { label: 'Choose channels', run: () => document.querySelector('.demo-availability input:not(:checked)')?.focus() };
+  if (offSale(p)) return { label: 'Choose channels', run: () => { channelsLanded.value = true; document.querySelector('.demo-availability input:not(:checked)')?.focus(); } };
   return stockAlert(p) ? { label: 'Adjust inventory', run: openInventory } : null;
 });
 // retail prices include VAT at 20%; costs do not, so margin is on the net price
@@ -593,7 +595,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
           <header><h2 id="top-heading">Top products</h2><a class="btn ghost sm" href="products.html">All products <span aria-hidden="true">→</span></a></header>
           <table class="table hover table-fixed demo-row-links">
             <colgroup><col><col class="w-24 max-md:hidden"><col class="w-36 max-md:hidden"><col class="w-28"></colgroup>
-            <thead><tr><th>Product</th><th class="text-right max-md:hidden">Units</th><th class="text-right max-md:hidden">In stock</th><th class="text-right">Sales</th></tr></thead>
+            <thead><tr><th>Product</th><th class="text-right max-md:hidden">Sold</th><th class="text-right max-md:hidden">In stock</th><th class="text-right">Sales</th></tr></thead>
             <tbody>
               <tr v-for="s in topProducts" :key="s.product.id">
                 <td><span class="demo-row-product"><span class="demo-thumb sm"><ProductArt :kind="s.product.kind"/></span><span class="min-w-0"><a class="demo-title-link font-medium" :href="productLink(s.product)">{{ s.product.name }}</a><span class="demo-row-meta md:hidden"><span class="muted">{{ s.units }} sold</span><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="muted">{{ stockLabel(s.product) }}</span></span></span></span></td>
@@ -713,7 +715,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
           </section>
         </div>
         <div class="demo-detail-side">
-          <section class="card demo-availability" aria-labelledby="availability-heading">
+          <section class="card demo-availability" :class="{ 'demo-landed': channelsLanded }" aria-labelledby="availability-heading" @focusout="channelsLanded = false">
             <header><h2 id="availability-heading">Availability</h2></header>
             <p class="text-sm muted">{{ availability }}</p>
             <div class="demo-channels">

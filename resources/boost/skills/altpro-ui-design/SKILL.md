@@ -53,7 +53,7 @@ Most of what held the screens back was not any single component. It was **drift*
 ### Type and numbers
 
 - **Nothing below `text-xs` (12px).** That includes chart axes, legends, captions and badges.
-- **Headings follow the scale in `altpro-ui`.** A heading inside a `.card` or `.dialog` header takes no classes. When an `hgroup` puts a caption above a dialog's title, the caption names the record ("Arc headphones" over "Edit pricing", "New product" when creating), never a paraphrase of the title.
+- **Headings follow the scale in `altpro-ui`.** A heading inside a `.card` or `.dialog` header takes no classes. When an `hgroup` puts a caption above a dialog's title, the caption names the record ("Arc headphones" over "Edit pricing"), never a paraphrase of the title. Creating something has no record to name yet, so it has no caption.
 - **Big numbers.** Use `tabular-nums`, with `tracking-tight` on the figure only. A unit after it (`84 <span class="text-sm muted tracking-normal">available</span>`) resets the tracking. Say the unit once: `£249`, not `£249 GBP`.
 - **Tabular figures go on number cells:** the price, quantity and total columns and the totals rows, never a whole table. They space the hyphen in "6-speed" as they do in a code.
 - **Totals.** A rule closes the items and another sits over the total, and `.table` draws just those two in a `tfoot`. Subtotal, delivery and VAT are `muted` and the total is bold. Paid and balance due describe the payments, so they go with the payments, not under the work.

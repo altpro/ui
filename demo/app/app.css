@@ -164,7 +164,7 @@
   .demo-thumb, .demo-gallery-view { background-image: linear-gradient(var(--demo-veil-sm), var(--demo-veil-sm)); }
   .demo-thumb { display: block; width: 44px; height: 44px; border-radius: min(var(--radius), 10px); background-color: var(--demo-stage); flex: none; overflow: hidden; svg { width: 100%; height: 100%; } img { width: 100%; height: 100%; object-fit: cover; } }
   /* selection takes over the header row, so ticking a row moves nothing under the pointer */
-  .demo-selection { position: absolute; inset: 0 0 auto 4rem; z-index: 2; display: flex; align-items: center; gap: 12px; height: calc(3.25rem - 1px); padding-inline-end: var(--card-p); background: var(--color-card); color: var(--color-foreground); font-size: .875rem; font-weight: 400; }
+  .demo-selection { position: absolute; inset: 0 0 auto 4rem; z-index: 2; display: flex; align-items: center; gap: 12px; height: calc(3.25rem - 1px); padding-inline: var(--card-p); background: var(--color-card); color: var(--color-foreground); font-size: .875rem; font-weight: 400; }
   /* the footer's rule runs edge to edge like the table's, and closes the last row */
   .demo-table-footer { justify-content: space-between; margin-inline: calc(-1 * var(--card-p)); padding: 16px var(--card-p) 0; border-top: 1px solid var(--color-border); }
   .demo-table-scroll + .demo-table-footer { margin-top: -16px; }
@@ -211,7 +211,7 @@
     .demo-finish-place { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   }
   /* Choose channels lands here: the card shows it for a pointer, which gets no focus ring on a switch */
-  .demo-offsale .demo-availability:has(input:focus) { border-color: var(--color-ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 50%, transparent); }
+  .demo-availability.demo-landed { border-color: var(--color-ring); box-shadow: 0 0 0 3px color-mix(in oklab, var(--color-ring) 50%, transparent); }
   .demo-channels { display: flex; flex-direction: column; gap: 12px; }
   .demo-channel { display: flex; align-items: center; justify-content: space-between; gap: 10px; strong { display: block; font-size: .875rem; font-weight: 500; } div > span { display: block; font-size: .75rem; margin-top: 2px; } }
   .demo-price { font-size: 1.25rem; font-weight: 600; letter-spacing: -.025em; line-height: 1.2; font-variant-numeric: tabular-nums; > span { letter-spacing: 0; margin-inline-start: 2px; } }
@@ -314,7 +314,7 @@
     .demo-table-footer { gap: 14px; }
   }
   /* the narrowest phones drop the tab counts so the four tabs stay on one line */
-  @media (width < 24rem) { .demo-list-tabs .badge, .demo-export-scope { display: none; } .demo-selection { gap: 8px; } }
+  @media (width < 24rem) { .demo-list-tabs .badge, .demo-export-scope { display: none; } .demo-selection { gap: 8px; padding-inline-start: 4px; } }
   @media (prefers-reduced-motion: reduce) {
     .demo-product-card { transition: none; }
   }
