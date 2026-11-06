@@ -504,7 +504,8 @@ function startNote() { note.value = ''; nextTick(() => { noteError.value = ''; }
 // the bar that held the focus goes with the selection, so focus moves to the checkbox beside it
 const selectAll = ref();
 function clearSelection() { selected.value = []; nextTick(() => (selectAll.value ?? document.querySelector('.demo-page-actions .btn.primary'))?.focus()); }
-const partlySelected = computed(() => !allSelected.value && visible.value.some(p => selected.value.includes(p.id)));
+// mixed too when the ticked rows are on another page, so the box agrees with the bar beside it
+const partlySelected = computed(() => !allSelected.value && selected.value.length > 0);
 </script>
 
 <template>
@@ -618,7 +619,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
       <section class="card demo-catalogue" tabindex="-1" aria-label="Product catalogue">
         <div class="tabs demo-list-tabs" role="radiogroup" aria-label="Product status"><label v-for="s in ['All', 'Active', 'Draft', 'Archived']" :key="s"><input v-model="status" type="radio" name="listing-status" :value="s"/>{{ s }} <span class="badge sm">{{ s === 'All' ? store.products.length : store.products.filter(p => p.status === s).length }}</span></label></div>
         <div class="demo-table-toolbar">
-          <label class="input demo-search"><Icon name="search"/><input v-model="query" type="search" placeholder="Search products or SKU…" aria-label="Search products"/><kbd v-if="!query" class="hidden xl:inline">/</kbd></label>
+          <label class="input demo-search"><Icon name="search"/><input v-model="query" type="search" placeholder="Search name or SKU…" aria-label="Search products"/><kbd v-if="!query && !filterCount" class="hidden xl:inline">/</kbd></label>
           <select v-model="category" class="input demo-inline-filter" aria-label="Product category"><option value="">All categories</option><option v-for="c in categories" :key="c">{{ c }}</option></select>
           <select v-model="stockFilter" class="input demo-inline-filter" aria-label="Stock level"><option value="">All stock levels</option><option value="low">Low or out of stock</option><option value="out">Out of stock</option></select>
           <button class="btn outlined demo-filter-button" popovertarget="product-filters"><Icon name="sliders"/> Filters <span v-if="filterCount" class="badge primary sm">{{ filterCount }}</span></button>
@@ -701,7 +702,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
                 <colgroup><col><col class="demo-finish-sku w-36"><col class="w-32 max-md:w-28"><col class="w-24 max-md:w-20"><col class="w-14 max-md:w-12"></colgroup>
                 <thead><tr><th>Finish</th><th class="demo-finish-sku">SKU</th><th class="text-right">In stock</th><th class="text-right">Price</th><th><span class="sr-only">Edit</span></th></tr></thead>
                 <tbody><tr v-for="(v, i) in product.variants" :key="i"><td><span class="font-medium">{{ v.name }}</span><span class="demo-finish-sku-line text-xs muted demo-sku">{{ v.sku }}</span></td><td class="muted demo-sku demo-finish-sku">{{ v.sku }}</td><td class="text-right tabular-nums ps-0"><span v-if="stockAlert({ status: product.status, stock: v.stock })" class="badge sm" :class="stockAlert({ status: product.status, stock: v.stock }).class">{{ stockAlert({ status: product.status, stock: v.stock }).label }}</span><span v-else-if="!v.stock" class="muted">Out of stock</span><template v-else>{{ v.stock }}</template></td><td class="text-right font-medium tabular-nums">{{ money(v.price) }}</td><td class="text-right ps-0"><button class="btn ghost sm demo-row-action px-2 -me-2 text-muted-foreground hover:text-foreground" :aria-label="`Edit ${v.name} finish`" @click="openVariant(i)"><Icon name="field"/></button></td></tr></tbody>
-                <tfoot v-if="product.variants.length > 1" class="tabular-nums"><tr><td>Total<span class="demo-finish-place"> at the London studio</span></td><td class="demo-finish-sku"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
+                <tfoot v-if="product.variants.length > 1" class="tabular-nums"><tr><td class="whitespace-nowrap">Total<span class="demo-finish-place"> at the London studio</span></td><td class="demo-finish-sku"></td><td class="text-right">{{ product.stock }}</td><td colspan="2"></td></tr></tfoot>
               </table>
             </div>
           </section>

@@ -234,18 +234,21 @@
     /* a product waiting for stock leads its column with its stock */
     .demo-restock .demo-finishes { order: -1; }
   }
+  /* the filters need a little more room than the columns do, so they go into their popover first */
+  @container page (width < 60rem) {
+    .demo-inline-filter { display: none; }
+    .demo-filter-button { display: inline-flex; }
+    .demo-view-toggle { margin-inline-start: auto; }
+  }
   /* a tablet, or a laptop beside the sidebar: the side column would be too thin, so it lies across the top of the screen */
   @container page (width < 56rem) {
     .demo-dashboard-main, .demo-bottom-grid { grid-template-columns: minmax(0, 1fr); }
     .demo-dashboard-side { order: -1; flex-direction: row; > * { flex: 1; min-width: 0; } }
     .demo-detail-grid { grid-template-columns: minmax(0, 1.35fr) minmax(16rem, 1fr); }
-    /* filters go into their popover, and the category folds in beside the code */
     /* three actions fit beside a title where four don't; Preview moves into the menu */
     .demo-preview-button { display: none; }
     .demo-preview-item { display: flex; }
-    .demo-inline-filter { display: none; }
-    .demo-filter-button { display: inline-flex; }
-    .demo-view-toggle { margin-inline-start: auto; }
+    /* the category folds in beside the code */
     .demo-sku-category { display: inline; }
     .demo-products-table { :is(th, td):nth-child(5), col:nth-child(5) { display: none; } }
   }

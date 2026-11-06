@@ -467,14 +467,31 @@ for (const width of [768, 820, 1024, 1100]) {
   });
 }
 
-test('the restock queue keeps its toolbar on one row at a laptop width, and a new sort keeps the ticks', async ({ page }) => {
-  await page.setViewportSize({ width: 1280, height: 800 });
-  await page.goto('/app/products.html?status=Active&stock=low');
-  const heights = await page.locator('.demo-table-toolbar > :visible').evaluateAll(els => new Set(els.map(el => Math.round(el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2))).size);
-  expect(heights).toBe(1);
+for (const width of [1100, 1208, 1280, 1366]) {
+  test(`at ${width}px the restock queue keeps one toolbar row, a whole placeholder and its stock total`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto('/app/products.html?status=Active&stock=low');
+    const rows = await page.locator('.demo-table-toolbar > :visible').evaluateAll(els => new Set(els.map(el => { const box = el.getBoundingClientRect(); return Math.round(box.top + box.height / 2); })).size);
+    expect(rows).toBe(1);
+    const fits = await page.getByLabel('Search products', { exact: true }).evaluate(input => {
+      const context = document.createElement('canvas').getContext('2d');
+      context.font = getComputedStyle(input).font;
+      return context.measureText(input.placeholder).width <= input.clientWidth;
+    });
+    expect(fits).toBe(true);
+    await page.goto('/app/product.html?id=arc');
+    const total = page.locator('.demo-finishes tfoot td').first();
+    expect((await total.boundingBox()).height).toBeLessThan(48);
+  });
+}
+
+test('a new sort keeps the ticks, and the header box agrees when they are on another page', async ({ page }) => {
+  await page.goto('/app/products.html');
   await page.locator('tbody .checkbox').first().check();
-  await page.getByRole('combobox', { name: 'Sort products', exact: true }).selectOption('name');
+  await page.getByRole('combobox', { name: 'Sort products', exact: true }).selectOption('price-high');
   await expect(page.getByRole('button', { name: 'Export 1 selected', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Next product page' }).click();
+  expect(await page.getByLabel('Select all visible products').evaluate(box => box.indeterminate)).toBe(true);
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
