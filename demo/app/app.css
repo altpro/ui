@@ -75,8 +75,9 @@
   .demo-dashboard-main, .demo-bottom-grid { display: grid; grid-template-columns: minmax(0, 2fr) minmax(0, 1fr); gap: var(--spacing-gap); }
   .demo-dashboard-side { display: flex; flex-direction: column; gap: var(--spacing-gap); > .demo-categories { flex: 1; } }
   .demo-revenue { gap: 16px; }
-  .demo-period { display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; > select { width: auto; } }
-  .demo-period-error { flex-basis: 100%; text-align: end; order: 1; }
+  .demo-period { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; > select { width: auto; } }
+  /* a refusal moves nothing: the message sits in the gap under the controls */
+  .demo-period-error { position: absolute; top: 100%; right: 0; white-space: nowrap; }
   .demo-category-list { display: flex; flex-direction: column; gap: 14px; .field { gap: 6px; } }
   .demo-share { display: inline-block; min-width: 2.75em; text-align: right; font-weight: 500; }
   .demo-chart-key {
@@ -106,7 +107,7 @@
   .demo-chart-guide { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-border); pointer-events: none; }
   .demo-chart-dot { position: absolute; width: 10px; height: 10px; translate: -50% -50%; border: 2px solid var(--color-card); border-radius: 50%; background: var(--color-primary); pointer-events: none; &.previous { width: 8px; height: 8px; background: var(--color-muted-foreground); } }
   /* the tip sits beside the guide and is held inside the plot at any width */
-  .demo-chart-tip { position: absolute; top: 8px; left: min(var(--x), calc(100% - 10.5rem - 12px)); translate: 12px 0; z-index: 1; display: grid; gap: 2px; width: 10.5rem; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: min(var(--radius), 8px); background: var(--color-card); box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; > * { display: flex; justify-content: space-between; gap: 12px; } &.flip { left: max(var(--x), calc(10.5rem + 12px)); translate: calc(-100% - 12px) 0; } }
+  .demo-chart-tip { position: absolute; top: 8px; left: min(var(--x), calc(100% - 12.5rem - 12px)); translate: 12px 0; z-index: 1; display: grid; gap: 2px; width: 12.5rem; padding: 8px 10px; border: 1px solid var(--color-border); border-radius: min(var(--radius), 8px); background: var(--color-card); box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent); font-size: .75rem; font-variant-numeric: tabular-nums; pointer-events: none; > * { display: flex; justify-content: space-between; gap: 12px; } &.flip { left: max(var(--x), calc(12.5rem + 12px)); translate: calc(-100% - 12px) 0; } }
   .demo-product-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--spacing-gap); }
   .demo-product-card {
     padding: 0;
@@ -250,6 +251,8 @@
     .demo-preview-item { display: flex; }
     /* the category folds in beside the code */
     .demo-sku-category { display: inline; }
+    /* seven-figure sales stay inside a tablet's stat card, and the row keeps one size */
+    .demo-summary-grid:has(.demo-stat-long) .demo-stat-value { font-size: 1.3rem; }
     .demo-products-table { :is(th, td):nth-child(5), col:nth-child(5) { display: none; } }
   }
   @media (width < 48rem) {
@@ -262,7 +265,7 @@
     .demo-page-actions { flex-basis: 100%; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .demo-record-actions { grid-template-columns: repeat(2, minmax(0, 1fr)) auto; }
     .demo-period { flex-basis: 100%; > select { flex: 1; } > .join { flex-basis: 100%; > .input { min-width: 0; flex: 1; } } }
-    .demo-period-error { text-align: start; }
+    .demo-period-error { position: static; flex-basis: 100%; order: 1; white-space: normal; }
     /* stats stay a compact block near 120px tall, so the next card starts in the first screenful */
     .demo-summary-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
     .demo-page .card.demo-stat { --card-p: 12px; gap: 2px; > p:first-child, > p:last-child { font-size: .8125rem; } }

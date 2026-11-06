@@ -152,12 +152,13 @@ function setDay(i, event) {
 }
 // typing can pass through a valid date on the way to a refused one, so a refusal goes back to what the field held on focus
 let heldRange = null;
-function holdRange() { heldRange = [...range.value]; dateError.value = ''; }
+function holdRange() { heldRange = [...range.value]; }
 function restoreDay(i, event) {
   const value = event.target.value;
   if (value === range.value[i]) return;
   dateError.value = unfinished(value) ? '' : dayError(value, range.value.with(i, value));
-  if (dateError.value && heldRange) range.value = heldRange;
+  // refused or abandoned, the field goes back to what it held
+  if (heldRange) range.value = heldRange;
   event.target.value = range.value[i];
 }
 // the days with sales: none after today, and a reversed range reads forwards
@@ -169,7 +170,8 @@ const salesDays = computed(() => {
 });
 const previousDays = computed(() => salesDays.value.map(d => shift(d, -salesDays.value.length)));
 const periodName = computed(() => salesDays.value.length === 1 ? 'day' : `${salesDays.value.length.toLocaleString('en-GB')} days`);
-const longDate = (d, options) => new Date(`${d}T12:00`).toLocaleDateString('en-GB', options);
+// en-GB shortens September to four letters, beside three for every other month
+const longDate = (d, options) => new Date(`${d}T12:00`).toLocaleDateString('en-GB', options).replace('Sept', 'Sep');
 const rangeLabel = computed(() => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
   .formatRange(new Date(`${salesDays.value[0]}T12:00`), new Date(`${salesDays.value.at(-1)}T12:00`)));
 const total = days => days.map(daySales).reduce((t, s) => ({ revenue: t.revenue + s.revenue, orders: t.orders + s.orders, visits: t.visits + s.visits }), { revenue: 0, orders: 0, visits: 0 });
@@ -195,28 +197,36 @@ const sold = computed(() => {
 const topProducts = computed(() => sold.value.slice(0, 5));
 const dayName = d => d === today ? 'Today' : d === shift(today, -1) ? 'Yesterday' : longDate(d, { day: 'numeric', month: 'short' });
 const chart = computed(() => {
-  const now = salesDays.value.map(d => daySales(d).revenue), then = previousDays.value.map(d => daySales(d).revenue);
+  const days = salesDays.value, n = days.length;
+  // a long range is a wall of noise by the day: past three months it's the daily average for each week, past a year for each month
+  const size = n > 365 ? 30 : n > 92 ? 7 : 1, unit = { 1: 'day', 7: 'week', 30: 'month' }[size];
+  const buckets = list => Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, (i + 1) * size));
+  const average = list => buckets(list.map(d => daySales(d).revenue)).map(b => Math.round(b.reduce((sum, v) => sum + v, 0) / b.length));
+  const now = average(days), then = average(previousDays.value), m = now.length;
+  const dates = buckets(days).map(b => b[0]), priorDates = buckets(previousDays.value).map(b => b[0]);
   // one day's bars carry their figures above them, so its scale leaves room for those
-  const n = now.length, step = Math.ceil(Math.max(...now, ...then) / (n === 1 ? 2.6 : 3) / 500) * 500, top = step * 3;
+  const step = Math.ceil(Math.max(...now, ...then) / (n === 1 ? 2.6 : 3) / 500) * 500, top = step * 3;
   const y = v => 100 - v / top * 100;
-  const x = i => n > 1 ? i / (n - 1) * 100 : 50;
+  const x = i => m > 1 ? i / (m - 1) * 100 : 50;
   // one day is drawn as a flat line across the plot
   const line = values => (values.length > 1 ? values : [values[0], values[0]]).map((v, i, all) => `${(i / (all.length - 1) * 100).toFixed(2)},${y(v).toFixed(2)}`).join(' ');
-  // both ends, with even steps from the first day; a step that lands right beside the last is dropped
-  const tickStep = Math.max(1, Math.ceil((n - 1) / 6));
-  const ticks = Array.from({ length: Math.ceil((n - 1) / tickStep) }, (_, k) => k * tickStep);
-  if (ticks.length > 1 && n - 1 - ticks.at(-1) < tickStep / 2) ticks.pop();
-  const labels = [...ticks, n - 1]
-    .map(i => ({ text: longDate(salesDays.value[i], n > 365 ? { month: 'short', year: 'numeric' } : n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
+  // both ends, with even steps from the first; a step that lands right beside the last is dropped
+  const tickStep = Math.max(1, Math.ceil((m - 1) / 6));
+  const ticks = Array.from({ length: Math.ceil((m - 1) / tickStep) }, (_, k) => k * tickStep);
+  if (ticks.length > 1 && m - 1 - ticks.at(-1) < tickStep / 2) ticks.pop();
+  const labels = [...ticks, m - 1]
+    .map(i => ({ text: longDate(dates[i], n > 365 ? { month: 'short', year: 'numeric' } : n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
   const best = now.indexOf(Math.max(...now));
-  // a range over a year names the year, or a day could be in any of them
-  const dayLabel = d => longDate(d, n > 365 ? { day: 'numeric', month: 'short', year: 'numeric' } : { weekday: 'short', day: 'numeric', month: 'short' });
-  if (n === 1) labels.splice(0, 1, { text: dayName(previousDays.value[0]), x: 33 }, { text: dayName(salesDays.value[0]), x: 67 });
+  // a range over a year names the year, or a day could be in any of them; a bucket says it's an average
+  const dayLabel = d => longDate(d, n > 365 ? { month: 'short', year: 'numeric' } : size > 1 ? { day: 'numeric', month: 'short' } : { weekday: 'short', day: 'numeric', month: 'short' });
+  const bucketLabel = d => size === 7 ? `Week of ${dayLabel(d)}` : dayLabel(d);
+  const perDay = size > 1 ? ' a day' : '';
+  if (n === 1) labels.splice(0, 1, { text: dayName(previousDays.value[0]), x: 33 }, { text: dayName(days[0]), x: 67 });
   return {
-    line: line(now), prior: line(then), labels,
+    line: line(now), prior: line(then), labels, unit,
     axis: [3, 2, 1, 0].map(k => ({ text: k ? `£${step * k / 1000}k` : '£0', y: y(step * k) })),
-    peak: `${dayLabel(salesDays.value[best])}, ${money(now[best])}`,
-    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: dayLabel(salesDays.value[i]), priorDate: dayLabel(previousDays.value[i]), now: money(v), then: money(then[i]) })),
+    peak: `${bucketLabel(dates[best])}, ${money(now[best])}${perDay}`,
+    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: bucketLabel(dates[i]), priorDate: bucketLabel(priorDates[i]), now: `${money(v)}${perDay}`, then: `${money(then[i])}${perDay}` })),
   };
 });
 // the day under the pointer or the arrow keys; the tip names it and both totals
@@ -537,7 +547,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
         <div><h1>Overview</h1><p class="muted">{{ rangeLabel }}, compared with the previous {{ periodName }}</p></div>
         <div class="demo-period" role="group" aria-label="Sales period">
           <p v-if="dateError" class="demo-period-error text-sm text-danger" role="alert">{{ dateError }}</p>
-          <div v-if="custom || !preset" class="join"><label class="input"><span class="muted">From</span><input type="date" aria-label="Sales from" :value="range[0]" :min="earliest" :max="range[1]" @focus="holdRange" @change="setDay(0, $event)" @blur="restoreDay(0, $event)"></label><label class="input"><span class="muted">To</span><input type="date" aria-label="Sales to" :value="range[1]" :min="range[0]" :max="today" @focus="holdRange" @change="setDay(1, $event)" @blur="restoreDay(1, $event)"></label></div>
+          <div v-if="custom || !preset" class="join"><label class="input"><span class="muted">From</span><input type="date" aria-label="Sales from" :value="range[0]" :min="earliest" :max="range[1]" @focus="holdRange" @input="dateError = ''" @change="setDay(0, $event)" @blur="restoreDay(0, $event)"></label><label class="input"><span class="muted">To</span><input type="date" aria-label="Sales to" :value="range[1]" :min="range[0]" :max="today" @focus="holdRange" @input="dateError = ''" @change="setDay(1, $event)" @blur="restoreDay(1, $event)"></label></div>
           <select class="input" aria-label="Sales period preset" :value="custom ? '' : preset" @change="pickPeriod($event.target.value)">
             <option value="">Custom range</option>
             <option v-for="p in presets" :key="p.label">{{ p.label }}</option>
@@ -545,7 +555,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
         </div>
       </div>
       <div class="demo-summary-grid">
-        <div v-for="stat in stats" :key="stat.label" class="card demo-stat">
+        <div v-for="stat in stats" :key="stat.label" class="card demo-stat" :class="{ 'demo-stat-long': stat.value.length > 7 }">
           <p class="text-sm muted">{{ stat.label }}</p>
           <p class="demo-stat-value">{{ stat.value }}</p>
           <p class="text-sm max-md:text-xs font-medium" :class="flat(stat) ? 'muted' : stat.change < 0 ? 'text-danger' : 'text-success'">{{ change(stat) }}</p>
@@ -585,9 +595,9 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
                 <div class="demo-chart-tip" :class="{ flip: tip.x > 50 }" :style="{ '--x': `${tip.x}%` }"><strong><span>{{ tip.date }}</span> {{ tip.now }}</strong><span class="muted"><span>{{ tip.priorDate }}</span> {{ tip.then }}</span></div>
               </template>
             </div>
-            <div class="demo-chart-labels" :class="{ dense: chart.points.length > 7, bars: singleDay }"><span v-for="label in chart.labels" :key="label.text" :style="{ left: `${label.x}%` }">{{ label.text }}</span></div>
+            <div class="demo-chart-labels" :class="{ dense: chart.labels.length > 4, bars: singleDay }"><span v-for="label in chart.labels" :key="label.text" :style="{ left: `${label.x}%` }">{{ label.text }}</span></div>
           </div>
-          <p class="demo-card-footer demo-card-footer-split"><span v-if="singleDay">Same day last week: {{ money(daySales(shift(salesDays[0], -7)).revenue) }}</span><span v-else>Best day: {{ chart.peak }}</span><span v-if="!singleDay" class="tabular-nums">Previous {{ periodName }}: {{ money(total(previousDays).revenue) }}</span></p>
+          <p class="demo-card-footer demo-card-footer-split"><span v-if="singleDay">Same day last week: {{ money(daySales(shift(salesDays[0], -7)).revenue) }}</span><span v-else>Best {{ chart.unit }}: {{ chart.peak }}</span><span v-if="!singleDay" class="tabular-nums">Previous {{ periodName }}: {{ money(total(previousDays).revenue) }}</span></p>
         </section>
         <div class="demo-dashboard-side">
           <section class="card demo-low-stock" aria-labelledby="attention-heading">

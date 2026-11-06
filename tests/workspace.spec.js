@@ -709,6 +709,41 @@ test('a refused date goes back to what the field held, not a date passed through
   await expect(page.getByRole('heading', { level: 1 }).locator('xpath=following-sibling::p')).toContainText('31 October 2026');
 });
 
+test('a refusal moves nothing, and tabbing on keeps its message', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'Chromium commits each digit, which is the case that broke');
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  const select = page.getByLabel('Sales period preset', { exact: true });
+  const stat = page.locator('.demo-stat').first();
+  const [selectBefore, statBefore] = [await select.boundingBox(), await stat.boundingBox()];
+  const from = page.getByLabel('Sales from', { exact: true });
+  await from.focus();
+  await page.keyboard.type('01012030');
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Tab');
+  await expect(page.getByRole('alert')).toHaveText('Choose a date up to today.');
+  expect(await select.boundingBox()).toEqual(selectBefore);
+  expect(await stat.boundingBox()).toEqual(statBefore);
+  await page.keyboard.type('1');
+  await expect(page.getByRole('alert')).toHaveCount(0);
+});
+
+for (const width of [768, 820, 1024]) {
+  test(`at ${width}px the widest range keeps its figures inside their cards`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/app/dashboard.html');
+    await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+    await page.getByLabel('Sales from', { exact: true }).fill('2020-01-01');
+    await page.getByLabel('Sales from', { exact: true }).blur();
+    const fits = await page.locator('.demo-stat-value').evaluateAll(values => values.map(value => {
+      const range = document.createRange();
+      range.selectNodeContents(value);
+      return range.getBoundingClientRect().right <= value.getBoundingClientRect().right + 1;
+    }));
+    expect(fits).toEqual([true, true, true, true]);
+  });
+}
+
 test('a phone chart never overprints its labels at any range, and a long range keeps its tip to one line', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/app/dashboard.html');
@@ -725,6 +760,23 @@ test('a phone chart never overprints its labels at any range, and a long range k
   await page.locator('.demo-chart-plot').focus();
   await page.keyboard.press('ArrowLeft');
   expect((await page.locator('.demo-chart-tip strong').boundingBox()).height).toBeLessThan(24);
+  // past a year it plots a month at a time, and says so
+  await expect(page.locator('.demo-revenue .demo-card-footer')).toContainText('Best month');
+  await expect(page.locator('.demo-chart-tip')).toContainText('a day');
+});
+
+test('a long range plots weeks, and says so', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  const to = await page.getByLabel('Sales to', { exact: true }).inputValue();
+  const from = new Date(`${to}T12:00`);
+  from.setDate(from.getDate() - 139);
+  await page.getByLabel('Sales from', { exact: true }).fill(from.toLocaleDateString('en-CA'));
+  await page.getByLabel('Sales from', { exact: true }).blur();
+  await expect(page.locator('.demo-revenue .demo-card-footer')).toContainText('Best week: Week of');
+  await page.locator('.demo-chart-plot').focus();
+  await page.keyboard.press('ArrowLeft');
+  await expect(page.locator('.demo-chart-tip')).toContainText('Week of');
 });
 
 test('Clear in the filter popover hands focus to Done', async ({ page }) => {
