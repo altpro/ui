@@ -676,14 +676,23 @@ test('renaming a product renames its breadcrumb and tab', async ({ page }) => {
 });
 
 test.describe('typing a custom date', () => {
-  test.use({ locale: 'en-GB' });
-  for (const [label, keys, heading] of [['Sales from', '03092026', '3 September'], ['Sales from', '01122025', '1 December 2025'], ['Sales from', '15122025', '15 December 2025'], ['Sales to', '31102026', '31 October 2026']]) {
-    test(`${label} ${keys} lands on the date typed`, async ({ page, browserName }) => {
+  // a date field's order comes from the machine, not the page, so learn it and type in that order
+  const keysFor = async (page, day, month, year) => {
+    const from = page.getByLabel('Sales from', { exact: true });
+    await from.focus();
+    await page.keyboard.type('02012026');
+    const dayFirst = await from.inputValue() === '2026-01-02';
+    await page.reload();
+    await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+    return dayFirst ? `${day}${month}${year}` : `${month}${day}${year}`;
+  };
+  for (const [label, day, month, year, heading] of [['Sales from', '03', '09', '2026', '3 September'], ['Sales from', '01', '12', '2025', '1 December 2025'], ['Sales from', '15', '12', '2025', '15 December 2025'], ['Sales to', '31', '10', '2026', '31 October 2026']]) {
+    test(`${label} ${day}/${month}/${year} lands on the date typed`, async ({ page, browserName }) => {
       test.skip(browserName === 'webkit', "Linux WebKit's date control isn't Safari's");
       await page.goto('/app/dashboard.html');
       await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
-      const field = page.getByLabel(label, { exact: true });
-      await field.focus();
+      const keys = await keysFor(page, day, month, year);
+      await page.getByLabel(label, { exact: true }).focus();
       await page.keyboard.type(keys);
       await page.getByLabel('Sales period preset', { exact: true }).focus();
       await expect(page.getByRole('heading', { level: 1 }).locator('xpath=following-sibling::p')).toContainText(heading);
