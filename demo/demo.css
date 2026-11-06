@@ -92,10 +92,10 @@ header .btn[aria-pressed="true"] {
     .breadcrumb { font-size: .75rem; }
   }
   .demo-menu-scrim { display: none; }
-  .demo-main { width: 100%; max-width: 1520px; margin-inline: auto; padding: 36px 32px 16px; }
+  .demo-main { width: 100%; max-width: 1520px; margin-inline: auto; padding: 36px 32px; }
   .demo-docs { margin-inline: auto; ul > li > a.link { display: inline-flex; align-items: center; min-height: 24px; } }
   @media (width < 80rem) {
-    .demo-main { padding: 28px 24px 16px; }
+    .demo-main { padding: 28px 24px; }
   }
   @media (width < 64rem) {
     .demo-sidebar { position: fixed; inset: 0 auto 0 0; box-shadow: 20px 0 50px color-mix(in oklab, var(--color-foreground) 10%, transparent); }
@@ -104,7 +104,7 @@ header .btn[aria-pressed="true"] {
   }
   @media (width < 48rem) {
     .demo-header { min-height: 66px; padding: 10px 16px; gap: 6px; .breadcrumb { display: none; } > div { gap: 8px; } }
-    .demo-main { padding: 24px 16px 12px; }
+    .demo-main { padding: 24px 16px; }
     body:has(#menu:checked) .demo-menu-scrim { inset-block-start: 66px; }
   }
   @media print {

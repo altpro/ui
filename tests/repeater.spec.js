@@ -12,10 +12,10 @@ test.beforeEach(async ({ page }) => {
 });
 
 test('adding a finish focuses its name and sets a sensible quantity', async ({ page }) => {
-  await button(page, 'Add finish').click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add finish', exact: true }).click();
   await expect(rows(page)).toHaveCount(4);
   await expect(row(page, 4).getByLabel('Finish name')).toBeFocused();
-  await expect(row(page, 4).getByLabel('New finish available units')).toHaveValue('0');
+  await expect(row(page, 4).getByLabel('New finish in stock')).toHaveValue('0');
   await expect(live(page)).toHaveText('Finish 4 added.');
 });
 
@@ -41,7 +41,7 @@ test('removing focuses the next finish, then the previous, then Add', async ({ p
   await expect(button(page, 'Remove finish 1')).toBeFocused();
   await page.keyboard.press('Enter');
   await expect(rows(page)).toHaveCount(0);
-  await expect(button(page, 'Add finish')).toBeFocused();
+  await expect(page.getByRole('dialog').getByRole('button', { name: 'Add finish', exact: true })).toBeFocused();
   await button(page, 'Save inventory').click();
   await expect(page.locator('.repeater > .error')).toHaveText('Add at least one finish.');
 });
@@ -49,14 +49,14 @@ test('removing focuses the next finish, then the previous, then Add', async ({ p
 test('SKU errors follow their finish through reordering and disappear on removal', async ({ page }) => {
   await row(page, 2).getByLabel('Finish SKU').fill('ARC-SL');
   await button(page, 'Save inventory').click();
-  await expect(row(page, 2).getByText('Each finish needs a unique SKU.')).toBeVisible();
+  await expect(row(page, 2).getByText('Enter a SKU no other product or finish uses.')).toBeVisible();
   await expect(row(page, 2).getByLabel('Finish SKU')).toHaveAttribute('aria-invalid', 'true');
   await button(page, 'Move finish 2 up').click();
-  await expect(row(page, 1).getByText('Each finish needs a unique SKU.')).toBeVisible();
+  await expect(row(page, 1).getByText('Enter a SKU no other product or finish uses.')).toBeVisible();
   await expect(row(page, 2).getByLabel('Finish SKU')).not.toHaveAttribute('aria-invalid');
   await button(page, 'Remove finish 1').click();
-  await expect(page.getByText('Each finish needs a unique SKU.')).toHaveCount(0);
+  await expect(page.getByText('Enter a SKU no other product or finish uses.')).toHaveCount(0);
   await button(page, 'Save inventory').click();
   await expect(page.getByRole('dialog')).toHaveCount(0);
-  await expect(page.locator('.demo-detail-side .demo-price').last()).toContainText('56');
+  await expect(page.locator('.demo-finishes tfoot')).toContainText('56');
 });

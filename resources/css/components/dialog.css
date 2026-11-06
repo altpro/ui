@@ -64,6 +64,18 @@
       border-radius: 0;
       border-block: 0;
       border-inline-end: 0;
+      /* the drawer scrolls as a whole rather than squashing its children */
+      > * { flex-shrink: 0; }
+      /* however long the form, its actions stay on screen. The footer takes over the
+         dialog's bottom padding, or a strip of the scrolled form would show under it */
+      &:has(> footer:last-child) { padding-block-end: 0; }
+      > footer:last-child {
+        position: sticky;
+        inset-block-end: 0;
+        margin-block: auto 0;
+        padding-block-end: var(--card-p);
+        background: var(--card-bg);
+      }
       /* translate takes scale's place, so the allow-discrete pair keeps its position in the list */
       transition-property: opacity, translate, display, overlay;
       &.start {

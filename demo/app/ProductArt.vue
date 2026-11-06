@@ -64,6 +64,18 @@ const uid = useId().replaceAll(':', '');
         <circle cx="212" cy="234" r="30" fill="var(--demo-object-edge, var(--color-muted))" opacity=".4"/>
         <rect x="196" y="164" width="32" height="7" rx="3.5" fill="var(--demo-object-highlight, var(--color-secondary))"/>
       </g>
+      <g v-else-if="kind === 'deck'" transform="translate(0 16)">
+        <rect x="78" y="86" width="284" height="218" rx="20" fill="var(--demo-object, var(--color-foreground))"/>
+        <rect x="78" y="74" width="284" height="214" rx="20" :fill="`url(#${uid}-body)`"/>
+        <circle cx="192" cy="181" r="88" fill="var(--demo-object, var(--color-foreground))"/>
+        <circle cx="192" cy="181" r="74" fill="none" stroke="var(--demo-object-edge, var(--color-primary))" stroke-width="2"/>
+        <circle cx="192" cy="181" r="58" fill="none" stroke="var(--demo-object-edge, var(--color-primary))" stroke-width="2"/>
+        <circle cx="192" cy="181" r="28" fill="var(--demo-object-highlight, var(--color-secondary))"/>
+        <circle cx="192" cy="181" r="4" fill="var(--demo-object, var(--color-foreground))"/>
+        <circle cx="322" cy="108" r="13" fill="var(--demo-object, var(--color-foreground))"/>
+        <path d="M322 108v92l-42 32" fill="none" stroke="var(--demo-object-highlight, var(--color-secondary))" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+        <rect x="104" y="272" width="30" height="7" rx="3.5" fill="var(--demo-object-highlight, var(--color-secondary))"/>
+      </g>
       <g v-else-if="kind === 'turntable'" transform="translate(0 55)">
         <path d="m71 77 277-20 37 164-286 18Z" fill="var(--demo-object, var(--color-foreground))"/>
         <path d="m71 66 277-20 37 164-286 18Z" :fill="`url(#${uid}-body)`"/>

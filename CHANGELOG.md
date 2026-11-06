@@ -4,6 +4,11 @@ Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.1`). On 0.x a breaking cha
 
 ## Unreleased
 
+- An `.alert` with no icon keeps its message and dismiss cross on one row. The message took the whole row and the cross dropped below it. Markup is unchanged.
+- A selected table row keeps its tint under the pointer. `.table.hover` left out rows with `aria-selected`, but not rows selected by a checked checkbox in their first cell, so hovering one looked like deselecting it. Markup is unchanged.
+- A `.dialog.drawer` no longer squashes its children when the form is taller than the screen, and a `<footer>` as its last child stays on screen while the rest scrolls, so Save never drops below the fold. Put the actions in the drawer's own footer (the submit button takes `form="…"`) to get this.
+- The sample app's Overview, Products and product screens are reworked over 29 rounds of review, with no change to the library's classes: every Overview figure follows one period control in the title row and adds up, a product's primary button follows what it is waiting for, and the screens measure themselves rather than the viewport, so a laptop beside the sidebar composes as a tablet does.
+- `altpro-ui-design` adds what those reviews blocked on: one control for a page's period, a record's next action, figures that reconcile, unsaved changes, list state, screens that measure themselves, mixed selection, and product pictures that stay the same in both schemes.
 - `Field.vue`: an empty string (or an empty item in an array) passed as `errors` is no error. `:errors="''"` marked the field invalid in red with no message.
 - Avatar initials never drop below `text-xs`. An `xs` avatar, the size the timeline marker uses, drew them at 9.6px; they are now 12px.
 - A neutral status badge (`soft`, or any style with `dot`, and no colour word) draws its text, dot and tint from `muted-foreground` instead of the foreground, so draft and archived are the quietest statuses in a column instead of the darkest. A neutral tag (`outlined`, no dot) is unchanged. Markup is unchanged.

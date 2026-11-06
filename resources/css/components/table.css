@@ -81,7 +81,7 @@
     &.striped tbody tr:nth-child(even):not([aria-selected="true"]) > :is(th, td) {
       background: var(--table-stripe);
     }
-    &.hover tbody tr:hover:not([aria-selected="true"]) > :is(th, td) {
+    &.hover tbody tr:hover:not([aria-selected="true"], :has(> :first-child input:checked)) > :is(th, td) {
       background: var(--table-hover);
     }
 
