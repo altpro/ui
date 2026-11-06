@@ -77,7 +77,7 @@
   .demo-revenue { gap: 16px; }
   .demo-period { position: relative; display: flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 8px; > select { width: auto; } }
   /* a refusal moves nothing: the message sits in the gap under the controls */
-  .demo-period-error { position: absolute; top: 100%; right: 0; white-space: nowrap; }
+  .demo-period-error { position: absolute; top: 100%; left: 0; white-space: nowrap; }
   .demo-category-list { display: flex; flex-direction: column; gap: 14px; .field { gap: 6px; } }
   .demo-share { display: inline-block; min-width: 2.75em; text-align: right; font-weight: 500; }
   .demo-chart-key {

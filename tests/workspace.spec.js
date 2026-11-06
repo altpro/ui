@@ -765,6 +765,27 @@ test('a phone chart never overprints its labels at any range, and a long range k
   await expect(page.locator('.demo-chart-tip')).toContainText('a day');
 });
 
+test('a range over a year plots calendar months, each once, up to the last one', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  const to = await page.getByLabel('Sales to', { exact: true }).inputValue();
+  await page.getByLabel('Sales from', { exact: true }).fill('2020-01-01');
+  await page.getByLabel('Sales from', { exact: true }).blur();
+  const plot = page.locator('.demo-chart-plot');
+  await plot.focus();
+  const seen = [];
+  await page.keyboard.press('ArrowLeft');
+  for (let i = 0; i < 90; i++) {
+    seen.push((await page.locator('.demo-chart-tip strong span').textContent()).trim());
+    await page.keyboard.press('ArrowLeft');
+  }
+  const months = seen.slice(0, seen.indexOf('Jan 2020') + 1);
+  expect(months.length).toBeGreaterThan(70);
+  expect(new Set(months).size).toBe(months.length);
+  const last = new Date(`${to}T12:00`).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' }).replace('Sept', 'Sep');
+  await expect(page.locator('.demo-chart-labels > span').last()).toHaveText(last);
+});
+
 test('a long range plots weeks, and says so', async ({ page }) => {
   await page.goto('/app/dashboard.html');
   await page.getByLabel('Sales period preset', { exact: true }).selectOption('');

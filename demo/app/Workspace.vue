@@ -198,12 +198,17 @@ const topProducts = computed(() => sold.value.slice(0, 5));
 const dayName = d => d === today ? 'Today' : d === shift(today, -1) ? 'Yesterday' : longDate(d, { day: 'numeric', month: 'short' });
 const chart = computed(() => {
   const days = salesDays.value, n = days.length;
-  // a long range is a wall of noise by the day: past three months it's the daily average for each week, past a year for each month
+  // a long range is a wall of noise by the day: past three months it's the daily average for each week, past a year for each calendar month
   const size = n > 365 ? 30 : n > 92 ? 7 : 1, unit = { 1: 'day', 7: 'week', 30: 'month' }[size];
-  const buckets = list => Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, (i + 1) * size));
-  const average = list => buckets(list.map(d => daySales(d).revenue)).map(b => Math.round(b.reduce((sum, v) => sum + v, 0) / b.length));
-  const now = average(days), then = average(previousDays.value), m = now.length;
-  const dates = buckets(days).map(b => b[0]), priorDates = buckets(previousDays.value).map(b => b[0]);
+  const groups = size === 30
+    ? Object.values(Object.groupBy(days, d => d.slice(0, 7)))
+    : Array.from({ length: Math.ceil(n / size) }, (_, i) => days.slice(i * size, (i + 1) * size));
+  // the comparison splits into groups of the same lengths, so the two lines stay paired
+  let at = 0;
+  const priorGroups = groups.map(b => previousDays.value.slice(at, at += b.length));
+  const average = list => list.map(b => Math.round(b.reduce((sum, d) => sum + daySales(d).revenue, 0) / b.length));
+  const now = average(groups), then = average(priorGroups), m = now.length;
+  const dates = groups.map(b => b[0]), priorDates = priorGroups.map(b => b[0]);
   // one day's bars carry their figures above them, so its scale leaves room for those
   const step = Math.ceil(Math.max(...now, ...then) / (n === 1 ? 2.6 : 3) / 500) * 500, top = step * 3;
   const y = v => 100 - v / top * 100;
@@ -569,7 +574,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
           </header>
           <div class="demo-chart">
             <div class="demo-chart-axis"><span v-for="tick in chart.axis" :key="tick.text" :style="{ top: `${tick.y}%` }">{{ tick.text }}</span></div>
-            <div class="demo-chart-plot" :tabindex="singleDay ? null : 0" role="group" :aria-label="singleDay ? 'Sales for the day and the day before' : 'Sales by day. Use the left and right arrow keys to read each day.'" @pointerdown="pointAt" @pointermove="pointAt" @pointerleave="$event.pointerType === 'mouse' && (pointed = -1)" @pointercancel="pointed = -1" @blur="pointed = -1" @keydown.left.prevent="stepPoint(-1)" @keydown.right.prevent="stepPoint(1)" @keydown.esc="pointed = -1">
+            <div class="demo-chart-plot" :tabindex="singleDay ? null : 0" role="group" :aria-label="singleDay ? 'Sales for the day and the day before' : `Sales by ${chart.unit}. Use the left and right arrow keys to read each ${chart.unit}.`" @pointerdown="pointAt" @pointermove="pointAt" @pointerleave="$event.pointerType === 'mouse' && (pointed = -1)" @pointercancel="pointed = -1" @blur="pointed = -1" @keydown.left.prevent="stepPoint(-1)" @keydown.right.prevent="stepPoint(1)" @keydown.esc="pointed = -1">
               <svg viewBox="0 0 100 100" preserveAspectRatio="none" role="img" :aria-label="`Sales for ${rangeLabel}: ${stats[0].value}, ${change(stats[0]).toLowerCase()} on the previous ${periodName}.`">
                 <defs><linearGradient id="sales-fill" x1="0" y1="0" x2="0" y2="1"><stop stop-color="var(--color-primary)" stop-opacity=".14"/><stop offset="1" stop-color="var(--color-primary)" stop-opacity="0"/></linearGradient></defs>
                 <path class="demo-chart-grid" d="M0 0H100M0 33.33H100M0 66.67H100M0 100H100"/>
@@ -628,8 +633,8 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
             <thead><tr><th>Product</th><th class="text-right max-md:hidden">Sold</th><th class="text-right max-md:hidden">In stock</th><th class="text-right">Sales</th></tr></thead>
             <tbody>
               <tr v-for="s in topProducts" :key="s.product.id">
-                <td><span class="demo-row-product"><span class="demo-thumb sm"><ProductArt :kind="s.product.kind"/></span><span class="min-w-0"><a class="demo-title-link font-medium" :href="productLink(s.product)">{{ s.product.name }}</a><span class="demo-row-meta md:hidden"><span class="muted">{{ s.units }} sold</span><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="muted">{{ stockLabel(s.product) }}</span></span></span></span></td>
-                <td class="text-right tabular-nums max-md:hidden">{{ s.units }}</td>
+                <td><span class="demo-row-product"><span class="demo-thumb sm"><ProductArt :kind="s.product.kind"/></span><span class="min-w-0"><a class="demo-title-link font-medium" :href="productLink(s.product)">{{ s.product.name }}</a><span class="demo-row-meta md:hidden"><span class="muted">{{ s.units.toLocaleString('en-GB') }} sold</span><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="muted">{{ stockLabel(s.product) }}</span></span></span></span></td>
+                <td class="text-right tabular-nums max-md:hidden">{{ s.units.toLocaleString('en-GB') }}</td>
                 <td class="text-right max-md:hidden"><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="tabular-nums">{{ s.product.stock || 'Out of stock' }}</span></td>
                 <td class="text-right font-medium tabular-nums">{{ money(s.revenue) }}</td>
               </tr>
