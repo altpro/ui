@@ -30,7 +30,7 @@ const save = () => form.put(`/products/${props.product.id}`, {
       </ul>
     </div>
     <Field v-model="form.name" name="name" :errors="form.errors" required />
-    <Field v-model="form.price" name="price" type="number" prepend="£" step="0.01" min="0" :errors="form.errors" required />
+    <Field v-model="form.price" name="price" inputmode="decimal" prepend="£" :errors="form.errors" required />
     <div>
       <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>
     </div>

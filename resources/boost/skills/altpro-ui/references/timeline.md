@@ -27,7 +27,7 @@ An `<ol>` of events, a dot each joined by a line. For an audit history or activi
 Activity feed on a record: a `<blockquote>` in an item is a note (indented behind a rule), `<del>`/`<ins>` show a field change (old muted and struck through, new bold), and an attachment is a link with its size in `.muted`.
 
 ```html
-<li><p><b>Steve Rayner</b> changed Status <del>Pending</del> → <ins>Paid</ins></p><time>Today, 09:30</time></li>
+<li><p><b>Steve Rayner</b> changed status <del>Pending</del> → <ins>Paid</ins></p><time>Today, 09:30</time></li>
 <li><p><b>Ann Okafor</b> left a note</p><blockquote>Courier left it with a neighbour.</blockquote><time>Yesterday</time></li>
 <li><p><b>Steve Rayner</b> attached <a class="link" href="…">invoice-1042.pdf</a> <span class="muted">84 KB</span></p><time>12 Sep</time></li>
 ```

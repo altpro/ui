@@ -28,7 +28,7 @@ Writes the whole `.field` from a name and a type: the label, generated ids tying
 ```blade
 <x-ui::field name="email" type="email" required autocomplete="email" hint="We never share it." />
 <x-ui::field name="category_id" type="select" :options="$categories" :value="$post->category" placeholder="Choose one" />
-<x-ui::field name="price" type="number" prepend="£" step="0.01" :value="$product->price" />
+<x-ui::field name="price" inputmode="decimal" prepend="£" :value="$product->price" />
 <x-ui::field name="published" type="switch" :value="$post->published" />
 ```
 

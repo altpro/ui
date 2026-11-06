@@ -121,7 +121,7 @@ function validateProduct(data, product) {
   rule("sku", db.products.some((p) => p.id !== product.id && lower(p.sku) === lower(String(data.sku))), "The sku has already been taken.");
   rule("category", !categories.includes(data.category), "The selected category is invalid.");
   rule("price", blank(data.price), "The price field is required.");
-  rule("price", Number.isNaN(Number(data.price)), "The price field must be a number.");
+  rule("price", !/^[+-]?\d*\.?\d{0,2}$/.test(data.price), "The price field must have 0-2 decimal places.");
   rule("price", Number(data.price) < 0, "The price field must be at least 0.");
   rule("stock", blank(data.stock), "The stock field is required.");
   rule("stock", !Number.isInteger(Number(data.stock)), "The stock field must be an integer.");

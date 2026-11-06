@@ -2,7 +2,7 @@
 
 - This app styles its UI with altpro/ui, a component layer over Tailwind v4. Tailwind does layout; altpro/ui classes, Blade (`<x-ui::…>`) and Vue components do the components.
 - IMPORTANT: Activate the `altpro-ui` skill before writing or changing any markup, even where `tailwindcss-development` also fits. Read the component's reference file before using it.
-- Activate the `altpro-ui-design` skill too when building or reworking a whole screen, or reviewing how one looks.
+- Activate the `altpro-ui-design` skill too when building or reworking a whole screen or a user-facing feature.
 - Use an altpro/ui class or component where one exists. Never rebuild buttons, inputs, badges, cards, tables, dialogs and the like out of utilities.
 - Classes are a base class plus bare modifier words: `btn primary sm`, never `btn-primary` or `btn btn-primary`.
 - The colour names are `primary`, `secondary`, `info`, `success`, `warning` and `danger`: write `danger`, not `destructive` or `error`.

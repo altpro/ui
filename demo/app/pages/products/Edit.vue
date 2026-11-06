@@ -66,7 +66,7 @@ const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.d
         <Field v-model="form.name" name="name" :errors="form.errors" required class="sm:col-span-2" />
         <Field v-model="form.sku" name="sku" label="SKU" :errors="form.errors" required />
         <Field v-model="form.category" name="category" type="select" :options="categories" :errors="form.errors" required />
-        <Field v-model="form.price" name="price" type="number" prepend="£" step="0.01" min="0" :errors="form.errors" required />
+        <Field v-model="form.price" name="price" inputmode="decimal" prepend="£" :errors="form.errors" required />
         <Field v-model="form.stock" name="stock" type="number" step="1" min="0" hint="Units on the shelf." :errors="form.errors" required />
         <Field v-model="form.status" name="status" type="select" :options="statuses" :errors="form.errors" />
         <Field v-model="form.description" name="description" type="textarea" rows="4" :errors="form.errors" class="sm:col-span-2" />
