@@ -692,6 +692,41 @@ test.describe('typing a custom date', () => {
   }
 });
 
+test('a refused date goes back to what the field held, not a date passed through on the way', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'Chromium commits each digit, which is the case that broke');
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  const to = page.getByLabel('Sales to', { exact: true });
+  await to.fill('2026-10-31');
+  await to.blur();
+  await to.focus();
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.press('ArrowLeft');
+  await page.keyboard.type('01012030');
+  await page.getByLabel('Sales period preset', { exact: true }).focus();
+  await expect(page.getByRole('alert')).toHaveText('Choose a date up to today.');
+  await expect(to).toHaveValue('2026-10-31');
+  await expect(page.getByRole('heading', { level: 1 }).locator('xpath=following-sibling::p')).toContainText('31 October 2026');
+});
+
+test('a phone chart never overprints its labels at any range, and a long range keeps its tip to one line', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  const to = await page.getByLabel('Sales to', { exact: true }).inputValue();
+  for (const days of [9, 10, 15, 20, 30, 45, 90, 400]) {
+    const from = new Date(`${to}T12:00`);
+    from.setDate(from.getDate() - days + 1);
+    await page.getByLabel('Sales from', { exact: true }).fill(from.toLocaleDateString('en-CA'));
+    await page.getByLabel('Sales from', { exact: true }).blur();
+    const boxes = await page.locator('.demo-chart-labels > span:visible').evaluateAll(spans => spans.map(el => el.getBoundingClientRect()).map(({ left, right }) => ({ left, right })));
+    boxes.slice(1).forEach((box, i) => expect(box.left, `${days} days`).toBeGreaterThan(boxes[i].right));
+  }
+  await page.locator('.demo-chart-plot').focus();
+  await page.keyboard.press('ArrowLeft');
+  expect((await page.locator('.demo-chart-tip strong').boundingBox()).height).toBeLessThan(24);
+});
+
 test('Clear in the filter popover hands focus to Done', async ({ page }) => {
   await page.setViewportSize({ width: 1024, height: 800 });
   await page.goto('/app/products.html');

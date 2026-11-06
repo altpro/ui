@@ -150,10 +150,14 @@ function setDay(i, event) {
   dateError.value = '';
   range.value = next;
 }
+// typing can pass through a valid date on the way to a refused one, so a refusal goes back to what the field held on focus
+let heldRange = null;
+function holdRange() { heldRange = [...range.value]; dateError.value = ''; }
 function restoreDay(i, event) {
   const value = event.target.value;
   if (value === range.value[i]) return;
   dateError.value = unfinished(value) ? '' : dayError(value, range.value.with(i, value));
+  if (dateError.value && heldRange) range.value = heldRange;
   event.target.value = range.value[i];
 }
 // the days with sales: none after today, and a reversed range reads forwards
@@ -206,7 +210,7 @@ const chart = computed(() => {
     .map(i => ({ text: longDate(salesDays.value[i], n > 365 ? { month: 'short', year: 'numeric' } : n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
   const best = now.indexOf(Math.max(...now));
   // a range over a year names the year, or a day could be in any of them
-  const dayLabel = d => longDate(d, { weekday: 'short', day: 'numeric', month: 'short', ...(n > 365 && { year: 'numeric' }) });
+  const dayLabel = d => longDate(d, n > 365 ? { day: 'numeric', month: 'short', year: 'numeric' } : { weekday: 'short', day: 'numeric', month: 'short' });
   if (n === 1) labels.splice(0, 1, { text: dayName(previousDays.value[0]), x: 33 }, { text: dayName(salesDays.value[0]), x: 67 });
   return {
     line: line(now), prior: line(then), labels,
@@ -533,7 +537,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
         <div><h1>Overview</h1><p class="muted">{{ rangeLabel }}, compared with the previous {{ periodName }}</p></div>
         <div class="demo-period" role="group" aria-label="Sales period">
           <p v-if="dateError" class="demo-period-error text-sm text-danger" role="alert">{{ dateError }}</p>
-          <div v-if="custom || !preset" class="join"><label class="input"><span class="muted">From</span><input type="date" aria-label="Sales from" :value="range[0]" :min="earliest" :max="range[1]" @change="setDay(0, $event)" @blur="restoreDay(0, $event)"></label><label class="input"><span class="muted">To</span><input type="date" aria-label="Sales to" :value="range[1]" :min="range[0]" :max="today" @change="setDay(1, $event)" @blur="restoreDay(1, $event)"></label></div>
+          <div v-if="custom || !preset" class="join"><label class="input"><span class="muted">From</span><input type="date" aria-label="Sales from" :value="range[0]" :min="earliest" :max="range[1]" @focus="holdRange" @change="setDay(0, $event)" @blur="restoreDay(0, $event)"></label><label class="input"><span class="muted">To</span><input type="date" aria-label="Sales to" :value="range[1]" :min="range[0]" :max="today" @focus="holdRange" @change="setDay(1, $event)" @blur="restoreDay(1, $event)"></label></div>
           <select class="input" aria-label="Sales period preset" :value="custom ? '' : preset" @change="pickPeriod($event.target.value)">
             <option value="">Custom range</option>
             <option v-for="p in presets" :key="p.label">{{ p.label }}</option>
@@ -660,7 +664,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
                 <td class="max-md:pe-0"><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
                 <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku" :class="{ 'demo-sku-match': skuMatched(p) }">{{ matchedFinish(p) ? `${matchedFinish(p).name} · ${matchedFinish(p).sku}` : p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span><span class="muted demo-row-category">{{ p.category }}</span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="offSale(p)" class="badge sm soft warning">Off sale</span><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></span></span></td>
                 <td><span class="demo-stock"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="offSale(p)" class="badge sm soft warning">Off sale</span></span></td>
-                <td class="whitespace-nowrap text-right ps-0 pe-10"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else-if="shown(p).stock" class="muted tabular-nums">{{ shown(p).stock }}</span><span v-else class="muted">Out of stock</span></td>
+                <td class="whitespace-nowrap text-right ps-0 pe-10"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else-if="shown(p).stock" class="tabular-nums">{{ shown(p).stock }}</span><span v-else class="muted">Out of stock</span></td>
                 <td class="muted">{{ p.category }}</td>
                 <td class="text-right font-medium tabular-nums whitespace-nowrap max-md:ps-0">{{ priceLabel(shown(p)) }}</td>
               </tr>

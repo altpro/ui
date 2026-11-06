@@ -275,7 +275,7 @@
     .demo-revenue > header > .demo-chart-key { flex-basis: 100%; margin-inline-start: 0; }
     .demo-chart { grid-template-rows: 180px auto; }
     /* a month's dates don't fit a phone: every other one goes, and the ends stay */
-    .demo-chart-labels.dense > span:nth-child(even):not(:last-child) { display: none; }
+    .demo-chart-labels.dense > span:nth-child(even):not(:last-child), .demo-chart-labels.dense > span:nth-last-child(2) { display: none; }
     .demo-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .demo-product-art { height: 160px; }
     .demo-list-tabs { flex-wrap: nowrap; --tabs-px: .375rem; }
