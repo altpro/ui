@@ -93,30 +93,29 @@ const href = (order) => `/orders/${order.id}${query() ? `?list=${encodeURICompon
             <col>
             <col class="hidden @4xl/page:table-column @4xl/page:w-32">
             <col class="hidden @4xl/page:table-column @4xl/page:w-44">
-            <col class="w-24">
+            <col class="hidden @4xl/page:table-column @4xl/page:w-24">
           </colgroup>
           <thead>
             <tr>
               <th scope="col">Customer</th>
               <th scope="col" class="hidden @4xl/page:table-cell">Placed</th>
               <th scope="col" class="hidden @4xl/page:table-cell">Status</th>
-              <th scope="col" class="text-right">Total</th>
+              <th scope="col" class="hidden text-right @4xl/page:table-cell">Total</th>
             </tr>
           </thead>
           <tbody>
             <tr v-for="order in rows" :key="order.id" class="relative">
               <td class="align-top">
-                <a class="font-medium hover:underline focus-visible:underline after:absolute after:inset-0" :href="href(order)">{{ order.customer }}</a>
-                <span class="block [font-feature-settings:'case']">{{ order.code }}</span>
-                <!-- the phone's folded lines run across the row, under the total -->
-                <div class="-me-20 mt-1 flex flex-col gap-1 @4xl/page:hidden">
+                <a class="font-medium hover:underline focus-visible:underline focus-visible:outline-3 focus-visible:outline-ring/50 after:absolute after:inset-0" :href="href(order)">{{ order.customer }}</a>
+                <span class="block [font-feature-settings:'case']">{{ order.code }}<span class="tabular-nums @4xl/page:hidden"> · {{ order.total }}</span></span>
+                <div class="mt-1 flex flex-col gap-1 @4xl/page:hidden">
                   <p><span class="badge soft info dot">{{ order.status }}</span></p>
                   <p class="muted"><span class="whitespace-nowrap">Placed {{ order.placed }}</span></p>
                 </div>
               </td>
               <td class="hidden align-top @4xl/page:table-cell">{{ order.placed }}</td>
               <td class="hidden align-top @4xl/page:table-cell"><span class="badge soft info dot">{{ order.status }}</span></td>
-              <td class="text-right align-top tabular-nums">{{ order.total }}</td>
+              <td class="hidden text-right align-top tabular-nums @4xl/page:table-cell">{{ order.total }}</td>
             </tr>
           </tbody>
         </table>

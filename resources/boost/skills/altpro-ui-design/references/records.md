@@ -18,7 +18,7 @@ Rules for a page about one record: an order, a job, a product, a customer. `reco
 - **Balance for the typical record.** When the two columns don't end level, move a card between them rather than stretching the shorter one. History length varies, so a record with a long history keeps its facts in view with a sticky stack (`sticky top-gap self-start`).
 - **Between the phone and two columns,** the fact cards sit two across (`@xl/page:grid-cols-2 @4xl/page:grid-cols-1` on the stack). A page is 45rem wide on a tablet and on a 1024 laptop, too wide for a phone's single column.
 - **On the phone,** reorder with `@max-4xl/page:order-*` so a blocker, the latest update and the facts that identify the record come before the ledger. `order` moves what is seen and leaves the tab order where it was, so reorder cards with nothing focusable in them, and write a card with controls in the source where the phone shows it.
-- **A form low on a long record has a way down.** A note form can sit 1,500px down the phone's page. Put a quiet "Add note" (`btn ghost sm @4xl/page:hidden`) beside the latest update, which scrolls to the form and focuses its field.
+- **What the page pushes down has a way to it.** A note form can sit 1,500px down a phone's page and below the fold on a laptop, so a quiet "Add note" (`btn ghost sm`) beside the latest update scrolls to the form and focuses its field, at every width. Where the facts push the record's working content down the phone's page, a second one ("View work", `@4xl/page:hidden`) scrolls to that card and focuses it, with `tabindex="-1"` and the focus outline.
 
 ## Figures
 

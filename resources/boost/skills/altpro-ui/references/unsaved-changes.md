@@ -55,7 +55,7 @@ useUnsavedChanges(form);
 
 ## A dirty dialog
 
-A dialog or drawer can't use `confirm()`, whose buttons say OK and Cancel. It opens a second dialog with "Keep editing" and "Discard changes". `@cancel.prevent` catches Escape, which would otherwise close it with no event to stop.
+A dialog or drawer can't use `confirm()`, whose buttons say OK and Cancel. It opens a second dialog with "Keep editing" and "Discard changes". `@cancel.prevent` catches Escape. A browser closes the dialog anyway on a repeated Escape, firing no `cancel`, so `@close` brings a dirty editor back and asks. A save closes the editor once the form is clean.
 
 ```vue
 <script setup>
@@ -65,18 +65,27 @@ const props = defineProps({ isDirty: { type: Boolean, required: true } });
 const editor = ref();
 const discard = ref();
 
+let discarding = false;
 const requestClose = () => (props.isDirty ? discard.value.showModal() : editor.value.close());
 const discardChanges = () => {
+  discarding = true;
   discard.value.close();
   editor.value.close();
+};
+const closed = () => {
+  if (props.isDirty && !discarding) {
+    editor.value.showModal();
+    discard.value.showModal();
+  }
+  discarding = false;
 };
 </script>
 
 <template>
-  <dialog ref="editor" class="dialog divided" aria-labelledby="edit-title" @cancel.prevent="requestClose">
+  <dialog ref="editor" class="dialog divided" aria-labelledby="edit-title" @cancel.prevent="requestClose" @close="closed">
     <header>
       <h2 id="edit-title">Edit pricing</h2>
-      <button type="button" class="btn ghost sm" aria-label="Close" @click="requestClose"><X class="size-4" aria-hidden="true" /></button>
+      <button type="button" class="btn ghost sm -my-1.5 -me-3" aria-label="Close" @click="requestClose"><X class="size-4" aria-hidden="true" /></button>
     </header>
     <!-- the form -->
     <footer class="justify-end">
