@@ -404,6 +404,29 @@ test('the pager keeps focus on its last page, and archive names only the channel
   await expect(page.getByRole('dialog')).toContainText('It comes off sale in your online store.');
 });
 
+test('forms speak with one inline voice, and a new product has an honest empty state', async ({ page }) => {
+  await page.goto('/app/products.html');
+  await page.getByRole('button', { name: 'Add product', exact: true }).click();
+  const drawer = page.getByRole('dialog', { name: 'Add product', exact: true });
+  await drawer.getByRole('button', { name: 'Add product', exact: true }).click();
+  await expect(drawer.getByText('Enter the product name.')).toBeVisible();
+  await expect(drawer.getByText('Enter the SKU.')).toBeVisible();
+  await expect(drawer.getByText('Enter the retail price.')).toBeVisible();
+  await expect(drawer.getByLabel('Product name', { exact: true })).toBeFocused();
+  await drawer.getByLabel('Product name', { exact: true }).fill('Plain');
+  await expect(drawer.getByText('Enter the product name.')).toHaveCount(0);
+  await drawer.getByLabel('SKU', { exact: true }).fill('FRM-PLN');
+  await drawer.getByLabel('Finish name', { exact: true }).fill('Slate');
+  await drawer.getByLabel('Retail price', { exact: true }).fill('10');
+  await drawer.getByLabel('Cost per item', { exact: true }).fill('4');
+  await drawer.getByRole('button', { name: 'Add product', exact: true }).click();
+  await expect(page.locator('.demo-description')).toContainText('No description yet.');
+  await page.getByRole('button', { name: 'Edit pricing', exact: true }).click();
+  await page.getByLabel('Retail price', { exact: true }).fill('');
+  await page.getByRole('button', { name: 'Save pricing', exact: true }).click();
+  await expect(page.getByText('Enter the retail price.')).toBeVisible();
+});
+
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
   await page.goto('/app/products.html');
   await page.getByRole('combobox', { name: 'Stock level', exact: true }).selectOption('low');

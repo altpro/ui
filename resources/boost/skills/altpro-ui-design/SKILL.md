@@ -23,7 +23,7 @@ Most of what held the screens back was not any single component. It was **drift*
 
 - **Order by the task.** What the user acts on next goes at the top. On a record that is its state, the latest update or blocker, and the next action. On a list it is what needs attention today. Ledgers, contact details and the full history go lower, and lower still on the phone.
 - **Show the result where the action was.** When finishing a task removes its button (the balance is paid, the order is shipped), the header says so: a badge in the row beside the title, for example `badge soft success` reading "Paid in full". It has no dot, because the dot marks the record's workflow status and this is a fact beside it, as Overdue is. Nobody should have to find a zero in a table to learn it.
-- **Creating a record opens it.** The new row may be on another page, or out of the current tab, and the next step is on the record anyway.
+- **Creating a record opens it.** The new row may be on another page, or out of the current tab, and the next step is on the record anyway. So a record's empty state is on the main path: a blank field says so ("No description yet."), not nothing.
 - **A list page has its primary action:** "New job", "Add product", a `btn primary` at the end of the title row. Creating a record is the most common thing done from a list.
 - **A record is named the way its users name it.** The `h1` is the customer, the item or both ("Niamh Gallagher's Ribble CGR AL"); a code such as J-1047 is the caption above it in an `hgroup`. A bare code tells nobody at the counter which job it is.
 - **The primary button follows what the record is waiting for.** A list page's primary action is fixed; a record's is not. Stock low: "Adjust inventory". A draft: "Publish". Archived: "Make active". Off in every channel: "Choose channels", with those switches first on the phone. A primary that moves focus shows where it went, for a pointer too, with a ring on the card. Only a record waiting for nothing gets "Edit". The card that holds the same action drops its copy of the button while the header has it.
@@ -132,6 +132,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **An editor opens on its first field,** or on the field the caller asked for, not on its close button.
 - **Saving nothing records nothing.** An unchanged save closes without a toast or a history entry. An entry says what really moved, in every editor: "Slate price changed from £249 to £259", "Chalk 28 → 32", "Alex Morgan changed the description and tags". On a record's own page it doesn't repeat the record's name.
 - **Validate the same rule on every route.** Two forms that can set a SKU refuse the same values with the same words, and focus the field that failed.
+- **One voice for errors.** Browser bubbles and inline messages on the same screen read as two products. Give a form `novalidate`, check its constraints on submit, and show each message on its field. Mark the optional fields, and put the required ones first.
 
 ### Phone (390px)
 

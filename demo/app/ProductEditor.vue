@@ -4,10 +4,13 @@ import Field from '@ui/Field.vue';
 import FileInput from '@ui/FileInput.vue';
 import Icon from './Icon.vue';
 import { categories } from './store.js';
+import { fieldErrors } from './validate.js';
 // checkSku answers with what to enter when the code is taken, or nothing
 const props = defineProps({ checkSku: Function });
 const emit = defineEmits(['save', 'leave']);
 const skuError = ref('');
+const errors = ref({});
+const clearError = event => { const { [event.target.name]: _, ...rest } = errors.value; errors.value = rest; };
 const dialog = ref();
 const draft = reactive({});
 const files = ref(null);
@@ -28,11 +31,14 @@ function open(product, create = false, focus) {
   Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: '', cost: '', stock: 0, status: 'Draft', finish: '', tags: [], variants: [] });
   files.value = null;
   skuError.value = '';
+  errors.value = {};
   opened = comparable();
   nextTick(() => { dialog.value.showModal(); dialog.value.querySelector(focus || '[name=name]')?.focus(); });
 }
-async function save() {
+async function save(event) {
   if (imageError.value) return;
+  errors.value = fieldErrors(event.target);
+  if (Object.keys(errors.value).length) return;
   // nothing to save, so nothing goes in the history
   if (!creating.value && clean()) return dialog.value.close();
   skuError.value = props.checkSku?.(draft.sku) ?? '';
@@ -53,14 +59,14 @@ defineExpose({ open, dialog, clean });
 <template>
   <dialog ref="dialog" class="dialog drawer divided demo-editor" aria-labelledby="product-editor-title" @cancel.prevent="requestClose">
     <header><hgroup><p>{{ creating ? 'New product' : editingName }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="requestClose"><Icon name="x"/></button></header>
-    <form id="product-form" @submit.prevent="save" class="space-y-5">
-      <Field v-model="draft.name" name="name" label="Product name" required maxlength="100" placeholder="e.g. Arc headphones"/>
-      <Field v-model="draft.subtitle" name="subtitle" label="Short description" maxlength="140"/>
-      <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" :errors="skuError || undefined" required/></div>
-      <Field v-model="draft.description" name="description" type="textarea" label="Description" rows="5"/>
-      <Field v-model="draft.tags" name="tags" label="Tags" type="combobox" multiple :options="['Wireless', 'Analog', 'Bestseller', 'New arrival', 'Studio', 'Coming soon']"/>
-      <div class="field"><label for="product-photo">Product image</label><FileInput id="product-photo" v-model="files" name="photo" accept="image/*" :errors="imageError || undefined"><span>Any image up to 1 MB.</span></FileInput></div>
-      <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.finish" name="finish" label="Finish name" required/><Field v-model="draft.stock" name="stock" label="In stock" type="number" min="0" step="1" required/><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="draft.cost" name="cost" label="Cost per item" type="number" min="0" step="0.01" prepend="£" required/></div></template>
+    <form id="product-form" novalidate class="space-y-5" @submit.prevent="save" @input="clearError">
+      <Field v-model="draft.name" name="name" label="Product name" :errors="errors" required maxlength="100" placeholder="e.g. Arc headphones"/>
+      <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" :errors="skuError || errors" required/></div>
+      <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.finish" name="finish" label="Finish name" :errors="errors" required/><Field v-model="draft.stock" name="stock" label="In stock" type="number" min="0" step="1" :errors="errors" required/><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" :errors="errors" required/><Field v-model="draft.cost" name="cost" label="Cost per item" type="number" min="0" step="0.01" prepend="£" :errors="errors" required/></div></template>
+      <Field v-model="draft.subtitle" name="subtitle" label="Short description (optional)" maxlength="140"/>
+      <Field v-model="draft.description" name="description" type="textarea" label="Description (optional)" rows="5"/>
+      <Field v-model="draft.tags" name="tags" label="Tags (optional)" type="combobox" multiple :options="['Wireless', 'Analog', 'Bestseller', 'New arrival', 'Studio', 'Coming soon']"/>
+      <div class="field"><label for="product-photo">Product image (optional)</label><FileInput id="product-photo" v-model="files" name="photo" accept="image/*" :errors="imageError || undefined"><span>Any image up to 1 MB.</span></FileInput></div>
     </form>
     <footer class="justify-end"><button type="button" class="btn outlined" @click="requestClose">Cancel</button><button form="product-form" class="btn primary" :disabled="saving || !!imageError" :class="{ loading: saving }" :aria-busy="saving">{{ creating ? 'Add product' : 'Save changes' }}</button></footer>
   </dialog>
