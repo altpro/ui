@@ -30,6 +30,7 @@ const angle = ref(0);
 const activityType = ref('All');
 const note = ref('');
 const noteError = ref('');
+watch(note, () => { noteError.value = ''; });
 const toast = ref('');
 const toastPlain = ref(false);
 let toastTimer;
@@ -109,6 +110,7 @@ const margin = p => { const net = p.price / 1.2; return net > 0 ? Math.round((ne
 const archiveCount = computed(() => Array.isArray(pending.value) ? pending.value.length : 0);
 const archiveName = computed(() => archiveCount.value === 1 ? store.products.find(p => p.id === pending.value[0])?.name : '');
 // a selection can span pages, so the dialog names what it will archive
+const archiveLive = computed(() => Array.isArray(pending.value) && pending.value.some(id => store.products.find(p => p.id === id)?.status === 'Active'));
 const archiveNames = computed(() => Array.isArray(pending.value) ? new Intl.ListFormat('en-GB').format(pending.value.map(id => store.products.find(p => p.id === id)?.name).filter(Boolean)) : '');
 // the dashboard period is the DataTable date filter: a preset or any two dates
 const today = day(new Date());
@@ -172,8 +174,9 @@ const chart = computed(() => {
   const x = i => n > 1 ? i / (n - 1) * 100 : 50;
   // one day is drawn as a flat line across the plot
   const line = values => (values.length > 1 ? values : [values[0], values[0]]).map((v, i, all) => `${(i / (all.length - 1) * 100).toFixed(2)},${y(v).toFixed(2)}`).join(' ');
-  const count = Math.min(n, 7);
-  const labels = [...new Set(Array.from({ length: count }, (_, i) => Math.round(i * (n - 1) / Math.max(count - 1, 1))))]
+  // up to a week, every day; beyond it, even steps back from the last day
+  const tickStep = Math.max(1, Math.ceil((n - 1) / 6));
+  const labels = Array.from({ length: Math.ceil(n / tickStep) }, (_, k) => n - 1 - k * tickStep).reverse()
     .map(i => ({ text: longDate(salesDays.value[i], n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
   const best = now.indexOf(Math.max(...now));
   if (n === 1) labels.splice(0, 1, { text: dayName(previousDays.value[0]), x: 33 }, { text: dayName(salesDays.value[0]), x: 67 });
@@ -224,6 +227,7 @@ const categorySales = computed(() => {
 watch([query, category, status, stockFilter, sort], () => { pageNumber.value = 1; selected.value = []; });
 // only active products have a stock state to act on, so a stock filter opens the Active tab
 watch(stockFilter, value => { if (value) status.value = 'Active'; });
+watch(status, value => { if (value !== 'Active') stockFilter.value = ''; });
 // grid view has no checkboxes, so a selection can't be carried into it unseen
 watch(mode, () => { selected.value = []; });
 // when the header's primary button goes with what it did, focus moves to the one that takes its place
@@ -264,6 +268,8 @@ function clearFilters() { query.value = ''; category.value = ''; stockFilter.val
 const narrowed = computed(() => query.value || filterCount.value > 0);
 const emptyHint = { All: 'Add a product to start your catalogue.', Active: 'Publish a draft and it appears here.', Draft: 'New and duplicated products start here.', Archived: 'Products you archive appear here.' };
 const clearNarrowing = () => { clearFilters(); sort.value = 'name'; };
+// the button that cleared goes with what it cleared, so focus moves to the search field
+const clearAndFocus = () => { clearNarrowing(); nextTick(() => document.querySelector('input[aria-label="Search products"]')?.focus()); };
 // the count names its base: the tab it is counted against, once anything narrows the list
 const countBase = computed(() => stockFilter.value ? 'Active' : status.value);
 const tabCount = computed(() => countBase.value === 'All' ? store.products.length : store.products.filter(p => p.status === countBase.value).length);
@@ -360,7 +366,11 @@ function saveInventory() {
   const p = product.value, before = p.variants, rows = inventoryDraft.value;
   p.variants = rows.map(({ origin, ...v }) => ({ ...v, stock: Number(v.stock), price: Number(v.price) }));
   syncFinishes(p);
-  record(`${p.name} stock updated`, inventoryChanges(before, rows), p.id, 'Inventory');
+  const priceChanged = rows.some(v => v.origin !== undefined && before[v.origin].price !== Number(v.price));
+  const stockChanged = rows.some(v => v.origin !== undefined && before[v.origin].stock !== Number(v.stock));
+  const otherChanged = rows.length !== before.length || rows.some((v, i) => v.origin !== i || before[v.origin].name !== v.name || before[v.origin].sku !== v.sku);
+  const kind = otherChanged || (priceChanged && stockChanged) ? 'finishes' : priceChanged ? 'price' : 'stock';
+  record(`${p.name} ${kind} updated`, inventoryChanges(before, rows), p.id, kind === 'price' ? 'Price' : 'Inventory');
   inventory.value.close(); notify('Inventory updated.');
 }
 // what an inventory save moved, each row matched to the finish it started as
@@ -405,6 +415,15 @@ function saveVariant() {
   record(`${p.name} ${priceOnly ? 'price' : 'finish'} updated`, changes.join(' '), p.id, priceOnly ? 'Price' : 'Inventory');
   variantDialog.value.close(); notify('Finish saved.');
 }
+// the last channel going off takes the product off sale, which asks first as Draft and Archive do
+let channelPending = null;
+function requestChannel(key, event) {
+  const p = product.value, on = event.target.checked, other = key === 'online' ? 'studio' : 'online';
+  if (on || p.status !== 'Active' || channel(p, other)) return setChannel(key, on);
+  event.target.checked = true;
+  channelPending = key; pending.value = 'channel'; confirmation.value.showModal();
+}
+const channelKey = () => channelPending;
 function setChannel(key, on) {
   const p = product.value, place = key === 'online' ? 'the online store' : 'the London studio';
   p.channels = { online: channel(p, 'online'), studio: channel(p, 'studio'), [key]: on };
@@ -450,13 +469,13 @@ function duplicate() {
 function exportProducts() {
   const csv = [['Product', 'Finish', 'SKU', 'Status', 'Price', 'Stock'], ...filtered.value.map(p => { const finish = matchedFinish(p), row = shown(p); return [p.name, finish?.name ?? '', finish?.sku ?? p.sku, p.status, row.price, row.stock]; })].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(',')).join('\n');
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-  const a = Object.assign(document.createElement('a'), { href: url, download: 'forma-products.csv' }); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify('Product list exported.');
+  const a = Object.assign(document.createElement('a'), { href: url, download: 'forma-products.csv' }); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify(`${filtered.value.length} ${filtered.value.length === 1 ? 'product' : 'products'} exported.`);
 }
 function saveNote() {
   if (noteClean()) { noteError.value = 'Enter a note before adding it.'; return void noteDialog.value.querySelector('[name=note]')?.focus(); }
   record('Alex Morgan left a note', note.value, props.screen === 'product' ? product.value.id : null, 'Note'); note.value = ''; noteDialog.value.close(); notify('Note added.');
 }
-function startNote() { note.value = ''; noteError.value = ''; openEditor(noteDialog.value, '[name=note]'); }
+function startNote() { note.value = ''; nextTick(() => { noteError.value = ''; }); openEditor(noteDialog.value, '[name=note]'); }
 // the bar that held the focus goes with the selection, so focus moves to the checkbox beside it
 const selectAll = ref();
 function clearSelection() { selected.value = []; nextTick(() => (selectAll.value ?? document.querySelector('.demo-page-actions .btn.primary'))?.focus()); }
@@ -569,7 +588,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
     <template v-else-if="screen === 'products'">
       <div class="demo-page-heading">
         <div><h1>Products</h1><p class="muted">Products in your online store and at the London studio</p></div>
-        <div class="demo-page-actions"><button class="btn outlined" @click="exportProducts"><Icon name="download"/> Export</button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
+        <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> Export</button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
       </div>
       <section class="card demo-catalogue" aria-label="Product catalogue">
         <div class="tabs demo-list-tabs" role="radiogroup" aria-label="Product status"><label v-for="s in ['All', 'Active', 'Draft', 'Archived']" :key="s"><input v-model="status" type="radio" name="listing-status" :value="s"/>{{ s }} <span class="badge sm">{{ s === 'All' ? store.products.length : store.products.filter(p => p.status === s).length }}</span></label></div>
@@ -578,7 +597,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <select v-model="category" class="input demo-inline-filter" aria-label="Product category"><option value="">All categories</option><option v-for="c in categories" :key="c">{{ c }}</option></select>
           <select v-model="stockFilter" class="input demo-inline-filter" aria-label="Stock level"><option value="">All stock levels</option><option value="low">Low or out of stock</option><option value="out">Out of stock</option></select>
           <button class="btn outlined demo-filter-button" popovertarget="product-filters"><Icon name="sliders"/> Filters <span v-if="filterCount" class="badge primary sm">{{ filterCount }}</span></button>
-          <button v-if="filterCount && filtered.length" class="btn ghost sm demo-inline-filter text-muted-foreground hover:text-foreground" @click="clearNarrowing">Clear</button>
+          <button v-if="filterCount && filtered.length" class="btn ghost sm demo-inline-filter text-muted-foreground hover:text-foreground" @click="clearAndFocus">Clear</button>
           <select v-model="sort" class="input ml-auto demo-inline-filter" aria-label="Sort products"><option value="name">Name: A to Z</option><option value="price-high">Price: high to low</option><option value="price-low">Price: low to high</option><option value="stock-low">Stock: low to high</option></select>
           <div class="join demo-view-toggle" role="group" aria-label="Product layout"><button class="btn outlined" :aria-pressed="mode === 'table'" aria-label="Table view" @click="mode = 'table'"><Icon name="list"/></button><button class="btn outlined" :aria-pressed="mode === 'grid'" aria-label="Grid view" @click="mode = 'grid'"><Icon name="grid"/></button></div>
         </div>
@@ -591,7 +610,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
             <colgroup><col class="w-16 max-md:w-13"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
-            <thead><tr><th class="max-md:pe-0"><input ref="selectAll" class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product<div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="clearSelection"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div></th><th>Status</th><th class="text-right pe-10">In stock</th><th>Category</th><th class="text-right max-md:ps-0">Price</th></tr></thead>
+            <thead><tr><th class="max-md:pe-0"><input ref="selectAll" class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product<div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" :disabled="selected.every(id => store.products.find(p => p.id === id)?.status === 'Archived')" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="clearSelection"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div></th><th>Status</th><th class="text-right pe-10">In stock</th><th>Category</th><th class="text-right max-md:ps-0">Price</th></tr></thead>
             <tbody>
               <tr v-for="p in visible" :key="p.id">
                 <td class="max-md:pe-0"><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
@@ -605,7 +624,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           </table>
         </div>
         <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
-        <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ !query ? 'Clear the filters to see more.' : filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="filterCount ? clearNarrowing() : clearFilters()">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
+        <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ !query ? 'Clear the filters to see more.' : filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearAndFocus">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
         <div v-else class="demo-empty" role="status"><Icon name="package" class="[&_svg]:size-8"/><h2>No {{ status === 'All' ? '' : status.toLowerCase() }} products</h2><p class="muted">{{ emptyHint[status] }}</p></div>
         <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
@@ -671,8 +690,8 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             <header><h2 id="availability-heading">Availability</h2></header>
             <p class="text-sm muted">{{ availability }}</p>
             <div class="demo-channels">
-              <div class="demo-channel"><div><strong>Online store</strong><span class="muted">forma.audio</span></div><label class="switch"><input :checked="channel(product, 'online')" type="checkbox" role="switch" aria-label="Online store availability" :disabled="product.status === 'Archived'" @change="setChannel('online', $event.target.checked)"/></label></div>
-              <div class="demo-channel"><div><strong>London studio</strong><span class="muted">In-person collection</span></div><label class="switch"><input :checked="channel(product, 'studio')" type="checkbox" role="switch" aria-label="London studio availability" :disabled="product.status === 'Archived'" @change="setChannel('studio', $event.target.checked)"/></label></div>
+              <div class="demo-channel"><div><strong>Online store</strong><span class="muted">forma.audio</span></div><label class="switch"><input :checked="channel(product, 'online')" type="checkbox" role="switch" aria-label="Online store availability" :disabled="product.status === 'Archived'" @change="requestChannel('online', $event)"/></label></div>
+              <div class="demo-channel"><div><strong>London studio</strong><span class="muted">In-person collection</span></div><label class="switch"><input :checked="channel(product, 'studio')" type="checkbox" role="switch" aria-label="London studio availability" :disabled="product.status === 'Archived'" @change="requestChannel('studio', $event)"/></label></div>
             </div>
           </section>
           <section class="card demo-pricing" aria-labelledby="pricing-heading">
@@ -700,12 +719,12 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
   <!-- the product's own editors; an unknown id has no product to edit -->
   <template v-if="product">
   <dialog ref="pricing" class="dialog divided" aria-labelledby="price-dialog-title" @cancel.prevent="closePricing"><header><hgroup><p>{{ product.name }}</p><h2 id="price-dialog-title">Edit pricing</h2></hgroup><button class="btn ghost sm" aria-label="Close pricing" @click="closePricing"><Icon name="x"/></button></header><form id="pricing-form" class="space-y-4" @submit.prevent="savePrice"><div class="grid grid-cols-2 gap-4"><Field v-model="priceDraft.price" name="retailPrice" label="Retail price" type="number" prepend="£" min="0" step="0.01" required/><Field v-model="priceDraft.cost" name="itemCost" label="Cost per item" type="number" prepend="£" min="0" step="0.01" required/></div><p class="text-sm muted">Retail price includes VAT; cost per item doesn't. A new retail price moves every finish by the same amount.</p></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closePricing">Cancel</button><button form="pricing-form" class="btn primary">Save pricing</button></footer></dialog>
-  <dialog ref="inventory" class="dialog drawer divided demo-editor" aria-labelledby="stock-dialog-title" @cancel.prevent="closeInventory"><header><hgroup><p>{{ product.name }}</p><h2 id="stock-dialog-title">Adjust inventory</h2></hgroup><button class="btn ghost sm" aria-label="Close inventory" @click="closeInventory"><Icon name="x"/></button></header><form id="inventory-form" class="space-y-5" @submit.prevent="saveInventory"><p class="text-sm muted">Stock at the London studio. Add, reorder or remove finishes here.</p><Repeater v-model="inventoryDraft" name="inventory" item="finish" :make="makeFinish" :errors="inventoryErrors" v-slot="{ row, index, errors }"><div class="grid grid-cols-2 gap-3"><Field v-model="row.name" :name="`inventory.${index}.name`" label="Finish name" required/><Field v-model="row.sku" :name="`inventory.${index}.sku`" label="Finish SKU" :errors="errors" required/></div><div class="grid grid-cols-2 gap-3"><Field v-model="row.stock" :name="`inventory.${index}.stock`" :label="`${row.name || 'New finish'} in stock`" type="number" min="0" step="1" required/><Field v-model="row.price" :name="`inventory.${index}.price`" :label="`${row.name || 'New finish'} price`" type="number" min="0" step="0.01" prepend="£" required/></div></Repeater></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeInventory">Cancel</button><button form="inventory-form" class="btn primary">Save inventory</button></footer></dialog>
+  <dialog ref="inventory" class="dialog drawer divided demo-editor" aria-labelledby="stock-dialog-title" @cancel.prevent="closeInventory"><header><hgroup><p>{{ product.name }}</p><h2 id="stock-dialog-title">Adjust inventory</h2></hgroup><button class="btn ghost sm" aria-label="Close inventory" @click="closeInventory"><Icon name="x"/></button></header><form id="inventory-form" class="space-y-5" @submit.prevent="saveInventory"><p class="text-sm muted">Stock and price of each finish at the London studio. Add, reorder or remove finishes here.</p><Repeater v-model="inventoryDraft" name="inventory" item="finish" :make="makeFinish" :errors="inventoryErrors" v-slot="{ row, index, errors }"><div class="grid grid-cols-2 gap-3"><Field v-model="row.name" :name="`inventory.${index}.name`" label="Finish name" required/><Field v-model="row.sku" :name="`inventory.${index}.sku`" label="Finish SKU" :errors="errors" required/></div><div class="grid grid-cols-2 gap-3"><Field v-model="row.stock" :name="`inventory.${index}.stock`" :label="`${row.name || 'New finish'} in stock`" type="number" min="0" step="1" required/><Field v-model="row.price" :name="`inventory.${index}.price`" :label="`${row.name || 'New finish'} price`" type="number" min="0" step="0.01" prepend="£" required/></div></Repeater></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeInventory">Cancel</button><button form="inventory-form" class="btn primary">Save inventory</button></footer></dialog>
   <dialog ref="variantDialog" class="dialog divided" aria-labelledby="finish-dialog-title" @cancel.prevent="closeVariant"><header><hgroup><p>{{ product.name }}</p><h2 id="finish-dialog-title">Edit finish</h2></hgroup><button class="btn ghost sm" aria-label="Close finish editor" @click="closeVariant"><Icon name="x"/></button></header><form id="finish-form" class="space-y-4" @submit.prevent="saveVariant"><Field v-model="variantDraft.name" name="finishName" label="Finish name" required/><Field v-model="variantDraft.sku" name="finishSku" label="Finish SKU" :errors="variantErrors || undefined" required/><div class="grid grid-cols-2 gap-4"><Field v-model="variantDraft.price" name="finishPrice" label="Finish price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="variantDraft.stock" name="finishStock" label="In stock" type="number" min="0" step="1" required/></div></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeVariant">Cancel</button><button form="finish-form" class="btn primary">Save finish</button></footer></dialog>
   <dialog ref="preview" class="dialog demo-preview" aria-labelledby="preview-title"><header><p class="muted text-sm">Store preview</p><button class="btn ghost sm ml-auto" aria-label="Close preview" @click="preview.close()"><Icon name="x"/></button></header><div class="demo-product-stage"><img v-if="product.image" :src="product.image" :alt="product.name"/><ProductArt v-else :kind="product.kind" :name="product.name" :angle="angle"/></div><div class="flex justify-between gap-4 items-start"><div><h2 id="preview-title" class="text-xl font-semibold">{{ product.name }}</h2><p class="muted mt-1">{{ product.subtitle }}</p></div><strong class="text-xl tabular-nums">{{ money(previewed?.price ?? product.price) }}</strong></div><div v-if="product.variants.length > 1" class="field"><label for="preview-finish">Finish</label><select id="preview-finish" v-model.number="previewFinish" class="input"><option v-for="(v, i) in product.variants" :key="i" :value="i">{{ v.name }}{{ v.stock ? '' : ' (out of stock)' }}</option></select></div><p class="text-sm muted leading-relaxed">{{ product.description }}</p><button class="btn primary" :disabled="!!previewBlock" @click="preview.close(); notify('Preview only, so nothing was added.', true)">{{ previewBlock || 'Add to bag' }}</button></dialog>
   </template>
-  <dialog ref="confirmation" class="dialog divided" aria-labelledby="confirm-title"><header><h2 id="confirm-title">{{ pending === 'reset' ? 'Reset workspace?' : pending === 'draft' ? `Move “${product?.name}” to draft?` : archiveName ? `Archive “${archiveName}”?` : `Archive ${archiveCount} products?` }}</h2></header><p class="text-sm muted">{{ pending === 'reset' ? 'Your changes in this tab will be cleared and the original catalogue restored.' : pending === 'draft' ? 'It comes off sale until you publish it again.' : archiveName ? 'It moves to Archived. You can make it active again from its product page.' : `${archiveNames} move to Archived. You can make each one active again from its product page.` }}</p><footer class="justify-end"><button class="btn outlined" @click="confirmation.close()">Cancel</button><button class="btn" :class="pending === 'reset' ? 'primary' : 'danger'" @click="pending === 'reset' ? (resetWorkspace(), confirmation.close(), notify('Workspace reset.')) : pending === 'draft' ? (confirmation.close(), applyStatus('Draft')) : archiveProducts()">{{ pending === 'reset' ? 'Reset workspace' : pending === 'draft' ? 'Move to draft' : archiveName ? 'Archive product' : `Archive ${archiveCount} products` }}</button></footer></dialog>
-  <dialog ref="noteDialog" class="dialog divided" aria-labelledby="note-title" @cancel.prevent="closeNote"><header><hgroup v-if="product && screen === 'product'"><p>{{ product.name }}</p><h2 id="note-title">Add note</h2></hgroup><h2 v-else id="note-title">Add note</h2><button class="btn ghost sm" aria-label="Close note" @click="closeNote"><Icon name="x"/></button></header><form id="note-form" @submit.prevent="saveNote"><Field v-model="note" name="note" label="Your note" type="textarea" rows="5" required :errors="noteError || undefined" placeholder="What should your team know?"/></form><footer class="justify-end"><button class="btn outlined" type="button" @click="closeNote">Cancel</button><button form="note-form" class="btn primary">Add note</button></footer></dialog>
+  <dialog ref="confirmation" class="dialog divided" aria-labelledby="confirm-title"><header><h2 id="confirm-title">{{ pending === 'reset' ? 'Reset workspace?' : pending === 'draft' ? `Move “${product?.name}” to draft?` : pending === 'channel' ? `Take “${product?.name}” off sale?` : archiveName ? `Archive “${archiveName}”?` : `Archive ${archiveCount} products?` }}</h2></header><p class="text-sm muted">{{ pending === 'reset' ? 'Your changes in this tab will be cleared and the original catalogue restored.' : pending === 'draft' ? 'It comes off sale until you publish it again.' : pending === 'channel' ? 'It is off in every other channel, so nobody can order it.' : archiveName ? (archiveLive ? 'It comes off sale in your store and at the London studio. You can make it active again from its product page.' : 'It moves to Archived. Making it active later publishes it.') : `${archiveNames} move to Archived.${archiveLive ? ' Any that are live come off sale.' : ''} You can make each one active again from its product page.` }}</p><footer class="justify-end"><button class="btn outlined" @click="confirmation.close()">Cancel</button><button class="btn" :class="pending === 'reset' ? 'primary' : 'danger'" @click="pending === 'reset' ? (resetWorkspace(), confirmation.close(), notify('Workspace reset.')) : pending === 'draft' ? (confirmation.close(), applyStatus('Draft')) : pending === 'channel' ? (confirmation.close(), setChannel(channelKey(), false)) : archiveProducts()">{{ pending === 'reset' ? 'Reset workspace' : pending === 'draft' ? 'Move to draft' : pending === 'channel' ? 'Take off sale' : archiveName ? 'Archive product' : `Archive ${archiveCount} products` }}</button></footer></dialog>
+  <dialog ref="noteDialog" class="dialog divided" aria-labelledby="note-title" @cancel.prevent="closeNote"><header><hgroup v-if="product && screen === 'product'"><p>{{ product.name }}</p><h2 id="note-title">Add note</h2></hgroup><h2 v-else id="note-title">Add note</h2><button class="btn ghost sm" aria-label="Close note" @click="closeNote"><Icon name="x"/></button></header><form id="note-form" @submit.prevent="saveNote"><Field v-model="note" name="note" label="Your note" type="textarea" rows="5" :errors="noteError || undefined" placeholder="What should your team know?"/></form><footer class="justify-end"><button class="btn outlined" type="button" @click="closeNote">Cancel</button><button form="note-form" class="btn primary">Add note</button></footer></dialog>
   <dialog ref="discardDialog" class="dialog divided" aria-labelledby="discard-title"><header><h2 id="discard-title">Discard your changes?</h2></header><p class="text-sm muted">What you changed here has not been saved.</p><footer class="justify-end"><button class="btn outlined" @click="discardDialog.close()">Keep editing</button><button class="btn danger" @click="discardChanges">Discard changes</button></footer></dialog>
   <div class="toaster" role="region" aria-label="Workspace notifications" aria-live="polite"><div v-if="toast" class="alert" :class="{ success: !toastPlain }"><svg v-if="!toastPlain" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><p>{{ toast }}</p><button class="btn ghost sm" aria-label="Dismiss notification" @click="toast = ''"><Icon name="x"/></button></div></div>
 </template>

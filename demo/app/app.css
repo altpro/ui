@@ -11,7 +11,7 @@
 @layer components {
   :root {
     /* product pictures stay light in dark, under a veil so they aren't the brightest thing on the screen */
-    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 62%, transparent));
+    --demo-veil: light-dark(transparent, color-mix(in oklab, var(--color-card) 50%, transparent));
     /* a thumbnail is small enough not to glare, and needs the contrast to stay recognisable */
     --demo-veil-sm: light-dark(transparent, color-mix(in oklab, var(--color-card) 30%, transparent));
     --demo-stage: var(--color-muted);
@@ -100,7 +100,7 @@
   .demo-chart-bar { fill: var(--color-primary); &.previous { fill: color-mix(in oklab, var(--color-muted-foreground) 70%, var(--color-card)); } }
   .demo-chart-bar-value { position: absolute; translate: -50% calc(-100% - 6px); padding-inline: 4px; border-radius: 2px; background: var(--color-card); font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .demo-chart-prior { fill: none; stroke: var(--color-muted-foreground); stroke-width: 1.5; stroke-dasharray: 4 4; vector-effect: non-scaling-stroke; }
-  .demo-chart-labels { grid-column: 2; position: relative; height: 1.25rem; font-size: .75rem; color: var(--color-muted-foreground); > span { position: absolute; translate: -50% 0; white-space: nowrap; } > span:first-child { translate: 0 0; } > span:last-child:not(:first-child) { translate: -100% 0; } &.bars > span, &.bars > span:last-child:not(:first-child) { translate: -50% 0; } }
+  .demo-chart-labels { grid-column: 2; position: relative; height: 1.25rem; font-size: .75rem; color: var(--color-muted-foreground); > span { position: absolute; translate: -50% 0; white-space: nowrap; } > span:first-child { translate: 0 0; } &.dense > span:first-child { translate: -50% 0; } > span:last-child:not(:first-child) { translate: -100% 0; } &.bars > span, &.bars > span:last-child:not(:first-child) { translate: -50% 0; } }
   .demo-chart-guide { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--color-border); pointer-events: none; }
   .demo-chart-dot { position: absolute; width: 10px; height: 10px; translate: -50% -50%; border: 2px solid var(--color-card); border-radius: 50%; background: var(--color-primary); pointer-events: none; &.previous { width: 8px; height: 8px; background: var(--color-muted-foreground); } }
   /* the tip sits beside the guide and is held inside the plot at any width */
@@ -268,7 +268,7 @@
     .demo-revenue > header > .demo-chart-key { flex-basis: 100%; margin-inline-start: 0; }
     .demo-chart { grid-template-rows: 180px auto; }
     /* a month's dates don't fit a phone: every other one goes, and the ends stay */
-    .demo-chart-labels.dense > span:nth-child(even) { display: none; }
+    .demo-chart-labels.dense > span:nth-last-child(even) { display: none; }
     .demo-product-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .demo-product-art { height: 160px; }
     .demo-list-tabs { flex-wrap: nowrap; --tabs-px: .375rem; }

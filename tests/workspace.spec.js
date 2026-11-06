@@ -24,6 +24,7 @@ test('catalogue searches, filters, changes layout and paginates', async ({ page 
   await page.getByLabel('Search products', { exact: true }).fill('nothing like this');
   await expect(page.getByRole('heading', { name: 'No products match' })).toBeVisible();
   await page.getByRole('button', { name: 'Clear filters', exact: true }).click();
+  await expect(page.getByLabel('Search products', { exact: true })).toBeFocused();
   await page.getByRole('button', { name: 'Table view' }).click();
   await page.getByRole('combobox', { name: 'Stock level', exact: true }).selectOption('low');
   await expect(page.locator('tbody tr')).toHaveCount(3);
@@ -342,6 +343,37 @@ test('a draft is archived in words that fit it, and a bad URL falls back', async
   await expect(page.locator('.timeline > li').first()).not.toContainText('left the store');
   await page.goto('/app/products.html?page=-1&category=Nope&sort=bad&status=Nope');
   await expect(page.getByRole('status')).toHaveText('1–6 of 8 products');
+});
+
+test('the last channel asks before it takes a product off sale, and history titles follow what moved', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  const online = page.getByRole('switch', { name: 'Online store availability', exact: true });
+  const studio = page.getByRole('switch', { name: 'London studio availability', exact: true });
+  await online.uncheck({ force: true });
+  await page.locator('.demo-availability label.switch').last().click();
+  await expect(page.getByRole('dialog', { name: /off sale/ })).toBeVisible();
+  await page.getByRole('dialog').getByRole('button', { name: 'Cancel', exact: true }).click();
+  await expect(studio).toBeChecked();
+  await page.locator('.demo-availability label.switch').last().click();
+  await page.getByRole('button', { name: 'Take off sale', exact: true }).click();
+  await expect(studio).not.toBeChecked();
+  await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
+  await page.getByLabel('Slate price', { exact: true }).fill('255');
+  await page.getByRole('button', { name: 'Save inventory' }).click();
+  await expect(page.locator('.timeline > li').first()).toContainText('Price updated');
+});
+
+test('a note asks for words inline, and a stock filter leaves when the tab does', async ({ page }) => {
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('button', { name: 'Add note', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Add note', exact: true }).click();
+  await expect(page.getByText('Enter a note before adding it.')).toBeVisible();
+  await page.getByLabel('Your note', { exact: true }).fill('x');
+  await expect(page.getByText('Enter a note before adding it.')).toHaveCount(0);
+  await page.goto('/app/products.html?status=Active&stock=out');
+  await page.getByRole('radio', { name: /^Draft/ }).check();
+  await expect(page.getByRole('combobox', { name: 'Stock level', exact: true })).toHaveValue('');
+  await expect(page.locator('tbody tr')).toHaveCount(1);
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {

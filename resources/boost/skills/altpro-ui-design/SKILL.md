@@ -123,7 +123,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **One primary action,** last in the footer, with Cancel `outlined` before it.
 - **A drawer's actions stay on screen.** Its `<footer>` is the last child of the dialog, not of the form, so it stays put while a long form scrolls.
 - **Changes are never lost silently.** Cancel, the cross, Escape and leaving the page all ask first when the editor is dirty, with "Keep editing" and "Discard changes". An unchanged editor closes straight away.
-- **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button, and anything that takes a live record off sale asks too.
+- **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button, and so does anything that takes a live record off sale altogether, such as moving it to draft or switching off its last channel. A reversible switch that leaves it on sale needs no dialog.
 - **Focus never falls to the page.** Close a menu before opening a dialog from it, so the dialog returns focus to the menu's button. When an action removes its own control, as a finished bulk action or a next action does, move focus to what takes its place.
 - **A form states nothing nobody entered.** No prefilled price or silent default cost, on every route that creates something: a figure on the record comes from a person.
 - **Say what happens to this record.** "It leaves your store" is false for a draft. Write a confirmation and its history entry from the record's actual state.
@@ -156,4 +156,4 @@ Compose each screen for the phone. Don't let the desktop layout wrap.
 ### Imagery
 
 - **Every item has its own picture.** Two identical images side by side read as placeholder content.
-- **Product images sit on one stage colour,** drawn from the tokens, and don't invert in dark. A product is the same object in both schemes: a photograph doesn't change, so give an illustration's stage `color-scheme: light`.
+- **Product images sit on one stage colour,** drawn from the tokens, and don't invert in dark. A product is the same object in both schemes: a photograph doesn't change, so give an illustration's stage `color-scheme: light`. In dark, veil the stage so it isn't the brightest thing on the screen, and veil a small thumbnail less, so its object stays recognisable.
