@@ -360,6 +360,8 @@ test('the last channel asks before it takes a product off sale, and history titl
   await expect(studio).not.toBeChecked();
   await expect(page.locator('.demo-record-title')).toContainText('Off sale');
   await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Choose channels');
+  await page.locator('.demo-record-actions .btn.primary').click();
+  await expect(page.locator('.demo-availability')).not.toHaveCSS('box-shadow', 'none');
   expect((await page.locator('.toaster .alert').boundingBox()).height).toBeLessThan(64);
   await page.goto('/app/products.html?view=grid');
   await expect(page.locator('.demo-catalogue-grid > a').first()).toContainText('Off sale');
