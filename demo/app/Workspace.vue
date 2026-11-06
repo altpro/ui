@@ -346,9 +346,9 @@ function saveProduct(draft) {
     store.products.unshift(draft);
     record(`${draft.name} added`, 'Alex Morgan added a new draft product.', draft.id);
   }
-  // a duplicate made on a product page opens, so the next edit lands on the copy
-  if (!editing.value && props.screen === 'product') return void nextTick(() => location.assign(productLink(draft)));
-  notify(editing.value ? 'Product updated.' : 'Product added as a draft.');
+  // a new product or a duplicate opens, so the next step (Publish, stock) lands on it; the list may not even show it
+  if (!editing.value) return void nextTick(() => location.assign(productLink(draft)));
+  notify('Product updated.');
 }
 // an editor opens on its first field, not its close button
 function openEditor(dialog, field) { dialog.showModal(); dialog.querySelector(field)?.focus(); }
@@ -636,7 +636,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             </tbody>
           </table>
         </div>
-        <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="demo-stage-badges"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="offSale(p)" class="badge sm soft warning max-md:hidden">Off sale</span></span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="offSale(p)" class="badge sm soft warning md:hidden">Off sale</span><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
+        <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="demo-stage-badges"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span></span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="offSale(p)" class="badge sm soft warning">Off sale</span><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
         <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ !query ? 'Clear the filters to see more.' : filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearAndFocus">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
         <div v-else class="demo-empty" role="status"><Icon name="package" class="[&_svg]:size-8"/><h2>No {{ status === 'All' ? '' : status.toLowerCase() }} products</h2><p class="muted">{{ emptyHint[status] }}</p></div>
         <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :aria-disabled="pageNumber === 1 || null" @click="pageNumber > 1 && pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :aria-disabled="pageNumber === pageCount || null" @click="pageNumber < pageCount && pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
@@ -662,7 +662,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         </div>
         <div class="demo-page-actions demo-record-actions">
           <button class="btn outlined" :class="{ 'demo-preview-button': nextAction }" @click="preview.showModal()">Preview</button>
-          <button class="btn" :class="nextAction ? 'outlined' : 'primary'" @click="edit(product)"><Icon name="field"/> Edit product</button>
+          <button class="btn" :class="nextAction ? 'outlined' : 'primary'" @click="edit(product)">Edit product</button>
           <button v-if="nextAction" class="btn primary" @click="nextAction.run">{{ nextAction.label }}</button>
           <button class="btn outlined" popovertarget="product-more" aria-label="More product actions"><Icon name="ellipsis"/></button>
         </div>

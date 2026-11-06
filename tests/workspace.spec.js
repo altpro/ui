@@ -65,6 +65,8 @@ test('new products, bulk archive and reset form a complete demo workflow', async
   await drawer.getByLabel('Cost per item', { exact: true }).fill('60');
   await drawer.getByLabel('Finish name', { exact: true }).fill('Slate');
   await drawer.getByRole('button', { name: 'Add product', exact: true }).click();
+  await expect(page.getByRole('heading', { level: 1 })).toContainText('Test speaker');
+  await page.goto('/app/products.html');
   await page.getByLabel('Search products', { exact: true }).fill('Test speaker');
   await expect(page.locator('tbody tr')).toContainText('Test speaker');
   await page.getByLabel('Select Test speaker', { exact: true }).check();
