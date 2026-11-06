@@ -12,7 +12,7 @@ A link in content: in a sentence, a `.dl` value, an `.alert`, a table cell, a hi
 ```
 
 - Not for a link that is already a component: `.btn`, `.badge`, `.nav`, `.tabs`, `.breadcrumb`, `.tree`, `.steps` and dropdown items style their own.
-- Keep the underline. Removing it (`no-underline`) leaves colour as the only difference, which 1.4.1 forbids.
+- Keep the underline. Removing it (`no-underline`) leaves colour as the only difference, which 1.4.1 forbids. The exception is a list row's stretched title, which stands alone and has the whole row as its target: `font-medium hover:underline focus-visible:underline`, as `list-page.md` shows.
 - An Inertia `<Link>` takes the class too: `<Link class="link" href="/orders/1">ORD-10482</Link>`.
 - The colour reads at 4.5:1 on `background`, `card`, `muted` and every `.alert` tint in both schemes. If you change it, keep that.
 

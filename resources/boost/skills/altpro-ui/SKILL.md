@@ -14,7 +14,7 @@ Rule of thumb when writing markup:
 3. Never rebuild an altpro/ui component out of utilities.
 4. For a component altpro/ui does not have, write a CSS component in the app the way the library writes its own: [app-component.md](references/app-component.md).
 
-Building or reworking a whole screen (a page, dashboard, list, record page or dialog), or reviewing how one looks: load the `altpro-ui-design` skill as well. It has the rules that take a screen from working to polished, and the screenshot review that checks them.
+Building or reworking a whole screen (a page, dashboard, list, record page or dialog) or a user-facing feature: load the `altpro-ui-design` skill as well. It has the rules that get a screen and its behaviour right on the first build.
 
 ## Setup (already done if the project uses altpro/ui)
 
@@ -83,7 +83,7 @@ One base class, then bare modifier words in any order. No prefixes.
 
 Write `btn primary`, never `btn-primary` or `btn btn-primary`. Utilities always override component styles because components live in `@layer components`.
 
-Every `<a>` that is not already a component (a `.btn`, a `.nav` or `.tabs` item and so on) takes `class="link"`: a link in a sentence, a `.dl` value, an `.alert`, a table cell. Tailwind's reset makes a bare `<a>` look like plain text.
+Every `<a>` that is not already a component (a `.btn`, a `.nav` or `.tabs` item and so on) takes `class="link"`: a link in a sentence, a `.dl` value, an `.alert`, a table cell. A list row's stretched title is the exception ([list-page.md](references/list-page.md)). Tailwind's reset makes a bare `<a>` look like plain text.
 
 ### Not daisyUI
 
@@ -110,7 +110,7 @@ Every `<a>` that is not already a component (a `.btn`, a `.nav` or `.tabs` item 
 | `breadcrumbs`, `table-zebra` | `breadcrumb`, `table striped` |
 | `link-primary`, `link-hover` | `link` |
 
-Check your markup with this grep; it should print nothing. An `id` or `for` that starts with one of these words is a false alarm.
+Check your markup with this grep; it should print nothing. An `id` or `for` that starts with one of these words is a false alarm. Change the paths at the end if the app's source isn't under `resources/`.
 
 ```sh
 grep -rnE '(^|[^[:alnum:]_/:-])(btn|badge|alert|card|join|link|tabs?|steps?|stats?|input|textarea|modal|menu|dropdown|collapse|toggle|loading|checkbox|radio|range|progress|avatar|tooltip|label|form)-[a-z$]|-(base-[0-9c]|[a-z]+-content[^-[:alnum:]])|class="([^"]*[[:space:]])?(modal|toggle|menu|navbar|tab|stats)[[:space:]"]' resources/js resources/views
@@ -166,6 +166,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Tree `.tree` | Page hierarchies and category trees | CSS | [tree.md](references/tree.md) |
 | Table `.table` | A static data table; line items and totals | CSS | [table.md](references/table.md) |
 | DataTable | Search, sort, filter, page and select rows; with `TableQuery` on the server | Vue (Inertia) | [datatable.md](references/datatable.md) |
+| Hand-built list | A list with no Inertia: its state in the URL, columns that appear when they fit, a folded phone row | pattern | [list-page.md](references/list-page.md) |
 | Repeater | Rows the user adds, removes and reorders | Vue | [repeater.md](references/repeater.md) |
 | Alert `.alert` | A callout box | CSS | [alert.md](references/alert.md) |
 | Tabs `.tabs` | Underlined tabs, as links or radio panels | CSS | [tabs.md](references/tabs.md) |
