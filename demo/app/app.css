@@ -126,7 +126,7 @@
     > img { height: 210px; width: 100%; object-fit: contain; }
   }
   .demo-product-art { display: block; width: 100%; height: 195px; }
-  .demo-product-card-body { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 16px; p { margin-top: 4px; } > strong { font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; } }
+  .demo-product-card-body { flex: 1; display: flex; align-items: baseline; justify-content: space-between; gap: 8px; padding: 16px; p { margin-top: 4px; } > strong { font-size: .875rem; font-weight: 600; font-variant-numeric: tabular-nums; } }
   .demo-activity-list {
     li { display: flex; align-items: center; gap: 12px; padding-block: 12px; border-bottom: 1px solid var(--color-border); }
     li:last-child { border-bottom: 0; padding-bottom: 0; }
@@ -289,7 +289,9 @@
     .demo-row-category { display: block; font-size: .75rem; margin-top: 2px; }
     .demo-sku-match + .demo-row-category, .demo-sku-match .demo-sku-category { display: none; }
     .demo-selection { left: 3.25rem; }
-    .demo-product-card-body { flex-direction: column; align-items: flex-start; gap: 6px; }
+    /* the price holds one line across a row of cards, whatever wraps above it */
+    .demo-product-card-body { flex-direction: column; align-items: flex-start; gap: 6px; > strong { margin-top: auto; } }
+    .demo-product-stage .demo-product-art { padding-top: 6px; }
     /* the page flattens so each card can take its place: state and facts first, then the working content; a product that needs restocking leads with its stock */
     .demo-detail-grid { display: flex; flex-direction: column; align-items: stretch; }
     .demo-detail-side { position: static; }
