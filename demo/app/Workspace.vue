@@ -131,7 +131,6 @@ const range = ref([...presets[1].range]);
 const preset = computed(() => presets.find(p => p.range.join() === range.value.join())?.label ?? '');
 // Custom range shows the two dates; picking a preset hides them again
 const custom = ref(false);
-function restoreDay(i, event) { if (partialYear(event.target.value)) event.target.value = range.value[i]; }
 function pickPeriod(label) {
   custom.value = !label;
   dateError.value = '';
@@ -141,14 +140,21 @@ function pickPeriod(label) {
 }
 // sales history starts here; a range can't reach further back
 const earliest = '2020-01-01';
-// a field commits each digit of a typed year (0002, 0020, 0202), so wait for the whole year; blur restores one left unfinished
-const partialYear = value => value && value < '1000';
+// a date field commits while it's typed in, digit by digit, so nothing is refused or written back while it has focus:
+// a whole valid date applies at once, and anything else is judged on blur
+const unfinished = value => !value || value < '1000';
+const dayError = (value, next) => value > today ? 'Choose a date up to today.' : value < earliest ? 'Choose a date from 2020 onwards.' : next[0] > next[1] ? 'The end date must be on or after the start date.' : '';
 function setDay(i, event) {
   const value = event.target.value, next = range.value.with(i, value);
-  if (partialYear(value)) return;
-  dateError.value = !value ? '' : value > today ? 'Choose a date up to today.' : value < earliest ? 'Choose a date from 2020 onwards.' : next[0] > next[1] ? 'The end date must be on or after the start date.' : '';
-  if (!value || dateError.value) return void (event.target.value = range.value[i]);
+  if (unfinished(value) || dayError(value, next)) return;
+  dateError.value = '';
   range.value = next;
+}
+function restoreDay(i, event) {
+  const value = event.target.value;
+  if (value === range.value[i]) return;
+  dateError.value = unfinished(value) ? '' : dayError(value, range.value.with(i, value));
+  event.target.value = range.value[i];
 }
 // the days with sales: none after today, and a reversed range reads forwards
 const salesDays = computed(() => {
@@ -158,7 +164,7 @@ const salesDays = computed(() => {
   return days;
 });
 const previousDays = computed(() => salesDays.value.map(d => shift(d, -salesDays.value.length)));
-const periodName = computed(() => salesDays.value.length === 1 ? 'day' : `${salesDays.value.length} days`);
+const periodName = computed(() => salesDays.value.length === 1 ? 'day' : `${salesDays.value.length.toLocaleString('en-GB')} days`);
 const longDate = (d, options) => new Date(`${d}T12:00`).toLocaleDateString('en-GB', options);
 const rangeLabel = computed(() => new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })
   .formatRange(new Date(`${salesDays.value[0]}T12:00`), new Date(`${salesDays.value.at(-1)}T12:00`)));
@@ -197,14 +203,16 @@ const chart = computed(() => {
   const ticks = Array.from({ length: Math.ceil((n - 1) / tickStep) }, (_, k) => k * tickStep);
   if (ticks.length > 1 && n - 1 - ticks.at(-1) < tickStep / 2) ticks.pop();
   const labels = [...ticks, n - 1]
-    .map(i => ({ text: longDate(salesDays.value[i], n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
+    .map(i => ({ text: longDate(salesDays.value[i], n > 365 ? { month: 'short', year: 'numeric' } : n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
   const best = now.indexOf(Math.max(...now));
+  // a range over a year names the year, or a day could be in any of them
+  const dayLabel = d => longDate(d, { weekday: 'short', day: 'numeric', month: 'short', ...(n > 365 && { year: 'numeric' }) });
   if (n === 1) labels.splice(0, 1, { text: dayName(previousDays.value[0]), x: 33 }, { text: dayName(salesDays.value[0]), x: 67 });
   return {
     line: line(now), prior: line(then), labels,
     axis: [3, 2, 1, 0].map(k => ({ text: k ? `£${step * k / 1000}k` : '£0', y: y(step * k) })),
-    peak: `${longDate(salesDays.value[best], { weekday: 'short', day: 'numeric', month: 'short' })}, ${money(now[best])}`,
-    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: longDate(salesDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), priorDate: longDate(previousDays.value[i], { weekday: 'short', day: 'numeric', month: 'short' }), now: money(v), then: money(then[i]) })),
+    peak: `${dayLabel(salesDays.value[best])}, ${money(now[best])}`,
+    points: now.map((v, i) => ({ x: x(i), y: y(v), priorY: y(then[i]), date: dayLabel(salesDays.value[i]), priorDate: dayLabel(previousDays.value[i]), now: money(v), then: money(then[i]) })),
   };
 });
 // the day under the pointer or the arrow keys; the tip names it and both totals
@@ -304,6 +312,8 @@ const countLabel = computed(() => {
   if (pageCount.value > 1) return `${(pageNumber.value - 1) * 6 + 1}–${Math.min(pageNumber.value * 6, n)} of ${n}${base} products`;
   return n < tabCount.value ? `${n} of ${tabCount.value}${base} products` : `${n}${base} ${n === 1 ? 'product' : 'products'}`;
 });
+// Clear goes with what it cleared, so focus moves to Done, which closes back to the Filters button
+const clearFilterMenu = () => { clearNarrowing(); nextTick(() => document.querySelector('#product-filters .btn.outlined')?.focus()); };
 const closeFilters = () => document.getElementById('product-filters')?.hidePopover();
 function toggleAll(checked) { selected.value = checked ? [...new Set([...selected.value, ...visible.value.map(p => p.id)])] : selected.value.filter(id => !visible.value.some(p => p.id === id)); }
 // an editor closes straight away when nothing changed; otherwise it asks first
@@ -606,7 +616,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
               <tr v-for="s in topProducts" :key="s.product.id">
                 <td><span class="demo-row-product"><span class="demo-thumb sm"><ProductArt :kind="s.product.kind"/></span><span class="min-w-0"><a class="demo-title-link font-medium" :href="productLink(s.product)">{{ s.product.name }}</a><span class="demo-row-meta md:hidden"><span class="muted">{{ s.units }} sold</span><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="muted">{{ stockLabel(s.product) }}</span></span></span></span></td>
                 <td class="text-right tabular-nums max-md:hidden">{{ s.units }}</td>
-                <td class="text-right max-md:hidden"><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="tabular-nums muted">{{ s.product.stock || 'Out of stock' }}</span></td>
+                <td class="text-right max-md:hidden"><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="tabular-nums">{{ s.product.stock || 'Out of stock' }}</span></td>
                 <td class="text-right font-medium tabular-nums">{{ money(s.revenue) }}</td>
               </tr>
             </tbody>
@@ -639,7 +649,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
           <div class="field"><label for="filter-category">Category</label><select id="filter-category" v-model="category" class="input"><option value="">All categories</option><option v-for="c in categories" :key="c">{{ c }}</option></select></div>
           <div class="field"><label for="filter-stock">Stock level</label><select id="filter-stock" v-model="stockFilter" class="input"><option value="">All stock levels</option><option value="low">Low or out of stock</option><option value="out">Out of stock</option></select></div>
           <div class="field"><label for="filter-sort">Sort by</label><select id="filter-sort" v-model="sort" class="input"><option value="name">Name: A to Z</option><option value="price-high">Price: high to low</option><option value="price-low">Price: low to high</option><option value="stock-low">Stock: low to high</option></select></div>
-          <div class="flex justify-end gap-2"><button v-if="filterCount || sort !== 'name'" class="btn ghost sm me-auto -ms-3" @click="clearNarrowing">Clear</button><button class="btn outlined sm" @click="closeFilters">Done</button></div>
+          <div class="flex justify-end gap-2"><button v-if="filterCount || sort !== 'name'" class="btn ghost sm me-auto -ms-3" @click="clearFilterMenu">Clear</button><button class="btn outlined sm" @click="closeFilters">Done</button></div>
         </div>
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
