@@ -236,6 +236,8 @@ const categorySales = computed(() => {
 });
 watch([query, category, status, stockFilter, sort], () => { pageNumber.value = 1; selected.value = []; });
 // only active products have a stock state to act on, so a stock filter opens the Active tab
+// the list's own message goes as soon as there's a finish again
+watch(() => inventoryDraft.value.length, length => { if (length && inventoryErrors.value.inventory) inventoryErrors.value = withoutField(inventoryErrors.value, { target: { name: 'inventory' } }); });
 watch(stockFilter, value => { if (value) status.value = 'Active'; });
 watch(status, value => { if (value !== 'Active') stockFilter.value = ''; });
 // grid view has no checkboxes, so a selection can't be carried into it unseen
@@ -260,8 +262,6 @@ onMounted(() => {
   if (props.screen === 'products') writeListUrl();
   document.addEventListener('keydown', shortcut);
   window.addEventListener('beforeunload', warnUnsaved);
-  // the breadcrumb goes back to the list as the page's own link does
-  if (props.screen === 'product') document.querySelector('.breadcrumb a[href$="products.html"]')?.setAttribute('href', listUrl.value);
 });
 // the shell's breadcrumb and the tab name the record, as the page does, through a rename too
 watch(() => product.value?.name, name => {
@@ -487,9 +487,10 @@ function duplicate() {
   document.getElementById('product-more').hidePopover(); editing.value = null; editor.value.open(p, true);
 }
 function exportProducts() {
-  const csv = [['Product', 'Finish', 'SKU', 'Category', 'Status', 'Price', 'Stock'], ...filtered.value.map(p => { const finish = matchedFinish(p), row = shown(p); return [p.name, finish?.name ?? '', finish?.sku ?? p.sku, p.category, p.status, row.price, row.stock]; })].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(',')).join('\n');
+  const csv = [['Product', 'Finish', 'SKU', 'Category', 'Status', 'Price', 'Stock'], ...filtered.value.filter(p => !selected.value.length || selected.value.includes(p.id)).map(p => { const finish = matchedFinish(p), row = shown(p); return [p.name, finish?.name ?? '', finish?.sku ?? p.sku, p.category, p.status, row.price, row.stock]; })].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(',')).join('\n');
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
-  const a = Object.assign(document.createElement('a'), { href: url, download: 'forma-products.csv' }); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify(`${filtered.value.length} ${filtered.value.length === 1 ? 'product' : 'products'} exported.`);
+  const a = Object.assign(document.createElement('a'), { href: url, download: 'forma-products.csv' }); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); const count = csv.split('\n').length - 1;
+  notify(`${count} ${count === 1 ? 'product' : 'products'} exported.`);
 }
 function saveNote() {
   if (noteClean()) { noteError.value = 'Enter a note before adding it.'; return void noteDialog.value.querySelector('[name=note]')?.focus(); }
@@ -629,7 +630,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         </div>
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
-            <colgroup><col class="w-16 max-md:w-13"><col><col class="w-48 max-md:hidden"><col class="w-36 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
+            <colgroup><col class="w-16 max-md:w-13"><col><col class="w-48 @max-[56rem]/page:w-32 max-md:hidden"><col class="w-36 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
             <thead><tr><th class="max-md:pe-0"><input ref="selectAll" class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product<div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" :disabled="selected.every(id => store.products.find(p => p.id === id)?.status === 'Archived')" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="clearSelection"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div></th><th>Status</th><th class="text-right pe-10">In stock</th><th>Category</th><th class="text-right max-md:ps-0">Price</th></tr></thead>
             <tbody>
               <tr v-for="p in visible" :key="p.id">

@@ -7,6 +7,7 @@ const blank = el => el.required && !el.value.trim();
 function message(form, el) {
   if (el.validity.badInput) return 'Enter a number.';
   if (/in stock$/i.test(label(form, el)) && el.validity.valueMissing) return 'Enter how many are in stock.';
+  if (/\.price$/.test(el.name) && el.validity.valueMissing) return 'Enter the price.';
   if (el.validity.valueMissing || blank(el)) return `Enter the ${lower(label(form, el))}.`;
   if (el.validity.rangeUnderflow) return 'Enter 0 or more.';
   if (el.validity.stepMismatch) return el.step === '1' ? 'Enter a whole number.' : 'Enter pounds and pence.';

@@ -12,6 +12,7 @@ For every screen you touched:
 | The screen | 1440 wide, as tall as the page | dark |
 | The screen | 390 wide, as tall as the page | light |
 | Each dialog and drawer, open | 1440 × 900 | light |
+| The screen | 768 and 1024 wide, as tall as the page | light |
 
 Add a shot for any state the screen has that the others don't show: empty, a validation failure, a filter that matches nothing.
 

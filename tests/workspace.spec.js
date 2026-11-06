@@ -455,6 +455,18 @@ test('forms speak with one inline voice, and a new product has an honest empty s
   await expect(page.getByText('Enter the finish name.').locator('visible=true')).toBeVisible();
 });
 
+for (const width of [768, 820, 1024, 1100]) {
+  test(`at ${width}px the row's code clears the status beside it`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    await page.goto('/app/products.html');
+    const clear = await page.locator('tbody tr').evaluateAll(rows => rows.map(row => {
+      const code = row.querySelector('.demo-sku').getBoundingClientRect(), status = row.children[2].querySelector('.badge').getBoundingClientRect();
+      return code.right <= status.left;
+    }));
+    expect(clear).toEqual(clear.map(() => true));
+  });
+}
+
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
   await page.goto('/app/products.html');
   await page.getByRole('combobox', { name: 'Stock level', exact: true }).selectOption('low');

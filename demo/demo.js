@@ -156,7 +156,7 @@ header.className = "demo-header";
 header.innerHTML = `
   <label class="btn ghost sm px-2"><input type="checkbox" id="menu" aria-label="Toggle sidebar">${icon("panel")}</label>
   <nav class="breadcrumb" aria-label="Breadcrumb">
-    ${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${root + ({ Application: "app/dashboard.html", Products: "app/products.html" }[c] ?? "index.html")}">${c}</a>` : `<span aria-current="page">${c}</span>`)).join("")}
+    ${crumbs.map((c, i) => (i < crumbs.length - 1 ? `<a href="${root + ({ Application: "app/dashboard.html", Products: `app/products.html${sessionStorage.getItem("demo-list-search") ?? ""}` }[c] ?? "index.html")}">${c}</a>` : `<span aria-current="page">${c}</span>`)).join("")}
   </nav>
   <div class="ml-auto flex items-center gap-2 text-sm">
     ${extras}
