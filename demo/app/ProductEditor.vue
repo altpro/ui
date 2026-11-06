@@ -4,13 +4,11 @@ import Field from '@ui/Field.vue';
 import FileInput from '@ui/FileInput.vue';
 import Icon from './Icon.vue';
 import { categories } from './store.js';
-import { fieldErrors } from './validate.js';
+import { fieldErrors, withoutField } from './validate.js';
 // checkSku answers with what to enter when the code is taken, or nothing
 const props = defineProps({ checkSku: Function });
 const emit = defineEmits(['save', 'leave']);
-const skuError = ref('');
 const errors = ref({});
-const clearError = event => { const { [event.target.name]: _, ...rest } = errors.value; errors.value = rest; };
 const dialog = ref();
 const draft = reactive({});
 const files = ref(null);
@@ -30,7 +28,6 @@ function open(product, create = false, focus) {
   Object.keys(draft).forEach(key => delete draft[key]);
   Object.assign(draft, product ? structuredClone(JSON.parse(JSON.stringify(product))) : { name: '', subtitle: '', description: '', category: 'Headphones', kind: 'headphones', sku: '', price: '', cost: '', stock: 0, status: 'Draft', finish: '', tags: [], variants: [] });
   files.value = null;
-  skuError.value = '';
   errors.value = {};
   opened = comparable();
   nextTick(() => { dialog.value.showModal(); dialog.value.querySelector(focus || '[name=name]')?.focus(); });
@@ -41,8 +38,8 @@ async function save(event) {
   if (Object.keys(errors.value).length) return;
   // nothing to save, so nothing goes in the history
   if (!creating.value && clean()) return dialog.value.close();
-  skuError.value = props.checkSku?.(draft.sku) ?? '';
-  if (skuError.value) return void nextTick(() => dialog.value.querySelector('[name=sku]')?.focus());
+  const taken = props.checkSku?.(draft.sku);
+  if (taken) { errors.value = { sku: taken }; return void dialog.value.querySelector('[name=sku]')?.focus(); }
   saving.value = true;
   const product = JSON.parse(JSON.stringify(draft));
   if (files.value) product.image = await new Promise(resolve => {
@@ -59,9 +56,9 @@ defineExpose({ open, dialog, clean });
 <template>
   <dialog ref="dialog" class="dialog drawer divided demo-editor" aria-labelledby="product-editor-title" @cancel.prevent="requestClose">
     <header><hgroup><p>{{ creating ? 'New product' : editingName }}</p><h2 id="product-editor-title">{{ creating ? 'Add product' : 'Edit product' }}</h2></hgroup><button class="btn ghost sm" aria-label="Close product editor" @click="requestClose"><Icon name="x"/></button></header>
-    <form id="product-form" novalidate class="space-y-5" @submit.prevent="save" @input="clearError">
+    <form id="product-form" novalidate class="space-y-5" @submit.prevent="save" @input="errors = withoutField(errors, $event)">
       <Field v-model="draft.name" name="name" label="Product name" :errors="errors" required maxlength="100" placeholder="e.g. Arc headphones"/>
-      <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" :errors="skuError || errors" required/></div>
+      <div class="grid grid-cols-2 gap-4"><Field v-model="draft.category" name="category" type="select" :options="categories"/><Field v-model="draft.sku" name="sku" label="SKU" :errors="errors" required/></div>
       <template v-if="creating && !hasFinishes"><div class="grid grid-cols-2 gap-4"><Field v-model="draft.finish" name="finish" label="Finish name" :errors="errors" required/><Field v-model="draft.stock" name="stock" label="In stock" type="number" min="0" step="1" :errors="errors" required/><Field v-model="draft.price" name="price" label="Retail price" type="number" min="0" step="0.01" prepend="£" :errors="errors" required/><Field v-model="draft.cost" name="cost" label="Cost per item" type="number" min="0" step="0.01" prepend="£" :errors="errors" required/></div></template>
       <Field v-model="draft.subtitle" name="subtitle" label="Short description (optional)" maxlength="140"/>
       <Field v-model="draft.description" name="description" type="textarea" label="Description (optional)" rows="5"/>

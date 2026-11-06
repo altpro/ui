@@ -425,6 +425,34 @@ test('forms speak with one inline voice, and a new product has an honest empty s
   await page.getByLabel('Retail price', { exact: true }).fill('');
   await page.getByRole('button', { name: 'Save pricing', exact: true }).click();
   await expect(page.getByText('Enter the retail price.')).toBeVisible();
+  // a corrected field loses its message at once, on every form
+  await page.getByLabel('Retail price', { exact: true }).fill('12');
+  await expect(page.getByText('Enter the retail price.')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close pricing', exact: true }).click();
+  await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit Slate finish', exact: true }).click();
+  await page.getByLabel('Finish SKU', { exact: true }).fill('');
+  await page.getByRole('button', { name: 'Save finish', exact: true }).click();
+  await expect(page.getByText('Enter the finish SKU.')).toBeVisible();
+  await page.getByLabel('Finish SKU', { exact: true }).fill('FRM-ARC-01');
+  await expect(page.getByText('Enter the finish SKU.')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Save finish', exact: true }).click();
+  await expect(page.getByText('Enter a SKU no other product or finish uses.')).toBeVisible();
+  await page.getByLabel('Finish SKU', { exact: true }).fill('PLN-SL');
+  await expect(page.getByText('Enter a SKU no other product or finish uses.')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Close finish editor', exact: true }).click();
+  await page.getByRole('button', { name: 'Discard changes', exact: true }).click();
+  await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
+  await page.locator('[name="inventory.0.sku"]').fill('');
+  await page.getByRole('button', { name: 'Save inventory' }).click();
+  await expect(page.getByText('Enter the finish SKU.').locator('visible=true')).toBeVisible();
+  await page.locator('[name="inventory.0.sku"]').fill('PLN-SL');
+  await expect(page.getByText('Enter the finish SKU.').locator('visible=true')).toHaveCount(0);
+  await page.locator('[name="inventory.0.stock"]').fill('');
+  await page.locator('[name="inventory.0.name"]').fill('   ');
+  await page.getByRole('button', { name: 'Save inventory' }).click();
+  await expect(page.getByText('Enter how many are in stock.')).toBeVisible();
+  await expect(page.getByText('Enter the finish name.').locator('visible=true')).toBeVisible();
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
