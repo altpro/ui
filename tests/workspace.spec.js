@@ -675,6 +675,37 @@ test('renaming a product renames its breadcrumb and tab', async ({ page }) => {
   await expect(page).toHaveTitle('Arc mk2 · Forma');
 });
 
+test('typing a year into a custom date waits for the whole year', async ({ page, browserName }) => {
+  test.skip(browserName !== 'chromium', 'Chromium commits each digit, which is the case that broke');
+  const errors = [];
+  page.on('pageerror', error => errors.push(error.message));
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  const from = page.getByLabel('Sales from', { exact: true });
+  await from.focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type('2025');
+  await expect(page.getByRole('heading', { level: 1 }).locator('xpath=following-sibling::p')).toContainText('2025');
+  await expect(page.locator('.demo-stat')).toHaveCount(4);
+  await from.focus();
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.type('19');
+  await page.getByLabel('Sales to', { exact: true }).focus();
+  await expect(from).not.toHaveValue(/^00/);
+  await expect(page.locator('.demo-stat')).toHaveCount(4);
+  expect(errors).toEqual([]);
+});
+
+test('a custom range refuses a date before sales began', async ({ page }) => {
+  await page.goto('/app/dashboard.html');
+  await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
+  await page.getByLabel('Sales from', { exact: true }).fill('1999-01-01');
+  await expect(page.getByRole('alert')).toHaveText('Choose a date from 2020 onwards.');
+  await expect(page.locator('.demo-stat')).toHaveCount(4);
+});
+
 test('a custom range refuses an end before its start', async ({ page }) => {
   await page.goto('/app/dashboard.html');
   await page.getByLabel('Sales period preset', { exact: true }).selectOption('');

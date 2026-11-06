@@ -34,7 +34,7 @@ const activityType = ref('All');
 const note = ref('');
 const noteError = ref('');
 const pricingErrors = ref({});
-// Choose channels marks the card it moved to, until focus leaves it
+// Choose channels marks the card it moved to, until the change is made or focus leaves it
 const channelsLanded = ref(false);
 const finishErrors = ref({});
 watch(note, () => { noteError.value = ''; });
@@ -131,6 +131,7 @@ const range = ref([...presets[1].range]);
 const preset = computed(() => presets.find(p => p.range.join() === range.value.join())?.label ?? '');
 // Custom range shows the two dates; picking a preset hides them again
 const custom = ref(false);
+function restoreDay(i, event) { if (partialYear(event.target.value)) event.target.value = range.value[i]; }
 function pickPeriod(label) {
   custom.value = !label;
   dateError.value = '';
@@ -138,9 +139,14 @@ function pickPeriod(label) {
   if (!label) range.value = range.value.map(d => d > today ? today : d);
   if (label) range.value = [...presets.find(p => p.label === label).range];
 }
+// sales history starts here; a range can't reach further back
+const earliest = '2020-01-01';
+// a field commits each digit of a typed year (0002, 0020, 0202), so wait for the whole year; blur restores one left unfinished
+const partialYear = value => value && value < '1000';
 function setDay(i, event) {
   const value = event.target.value, next = range.value.with(i, value);
-  dateError.value = !value ? '' : value > today ? 'Choose a date up to today.' : next[0] > next[1] ? 'The end date must be on or after the start date.' : '';
+  if (partialYear(value)) return;
+  dateError.value = !value ? '' : value > today ? 'Choose a date up to today.' : value < earliest ? 'Choose a date from 2020 onwards.' : next[0] > next[1] ? 'The end date must be on or after the start date.' : '';
   if (!value || dateError.value) return void (event.target.value = range.value[i]);
   range.value = next;
 }
@@ -472,7 +478,7 @@ function applyStatus(next) {
   p.status = next;
   record(`${p.name} ${next === 'Active' ? 'published' : 'moved to draft'}`, `Alex Morgan changed the product status to ${next.toLowerCase()}.`, p.id);
   const blocked = next !== 'Active' ? '' : !channelNames(p) ? ', but off in every channel' : !p.stock ? ', with no stock to sell' : '';
-  notify(`${p.name} is now ${next.toLowerCase()}${blocked}.`, !!blocked);
+  notify(`${next === 'Active' ? 'Now active' : 'Moved to draft'}${blocked}.`, !!blocked);
 }
 // a product already archived stays out of the count and gets no second history entry
 function requestArchive(ids) {
@@ -517,7 +523,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
         <div><h1>Overview</h1><p class="muted">{{ rangeLabel }}, compared with the previous {{ periodName }}</p></div>
         <div class="demo-period" role="group" aria-label="Sales period">
           <p v-if="dateError" class="demo-period-error text-sm text-danger" role="alert">{{ dateError }}</p>
-          <div v-if="custom || !preset" class="join"><label class="input"><span class="muted">From</span><input type="date" aria-label="Sales from" :value="range[0]" :max="range[1]" @change="setDay(0, $event)"></label><label class="input"><span class="muted">To</span><input type="date" aria-label="Sales to" :value="range[1]" :min="range[0]" :max="today" @change="setDay(1, $event)"></label></div>
+          <div v-if="custom || !preset" class="join"><label class="input"><span class="muted">From</span><input type="date" aria-label="Sales from" :value="range[0]" :min="earliest" :max="range[1]" @change="setDay(0, $event)" @blur="restoreDay(0, $event)"></label><label class="input"><span class="muted">To</span><input type="date" aria-label="Sales to" :value="range[1]" :min="range[0]" :max="today" @change="setDay(1, $event)" @blur="restoreDay(1, $event)"></label></div>
           <select class="input" aria-label="Sales period preset" :value="custom ? '' : preset" @change="pickPeriod($event.target.value)">
             <option value="">Custom range</option>
             <option v-for="p in presets" :key="p.label">{{ p.label }}</option>
@@ -633,7 +639,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
           <div class="field"><label for="filter-category">Category</label><select id="filter-category" v-model="category" class="input"><option value="">All categories</option><option v-for="c in categories" :key="c">{{ c }}</option></select></div>
           <div class="field"><label for="filter-stock">Stock level</label><select id="filter-stock" v-model="stockFilter" class="input"><option value="">All stock levels</option><option value="low">Low or out of stock</option><option value="out">Out of stock</option></select></div>
           <div class="field"><label for="filter-sort">Sort by</label><select id="filter-sort" v-model="sort" class="input"><option value="name">Name: A to Z</option><option value="price-high">Price: high to low</option><option value="price-low">Price: low to high</option><option value="stock-low">Stock: low to high</option></select></div>
-          <div class="flex justify-between gap-2"><button class="btn ghost sm -ms-3" @click="clearNarrowing">Reset</button><button class="btn outlined sm" @click="closeFilters">Done</button></div>
+          <div class="flex justify-end gap-2"><button v-if="filterCount || sort !== 'name'" class="btn ghost sm me-auto -ms-3" @click="clearNarrowing">Clear</button><button class="btn outlined sm" @click="closeFilters">Done</button></div>
         </div>
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">

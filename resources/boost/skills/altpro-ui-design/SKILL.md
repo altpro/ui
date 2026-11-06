@@ -112,7 +112,7 @@ Write **operational** copy, the words of a working tool, never brochure copy.
 - **The axis fits the data in round steps:** £1.5k steps to £4.5k for a £4.3k peak. Zero reads "£0".
 - **Strokes keep their weight at any width** (`vector-effect: non-scaling-stroke`). A comparison series is muted, never faded with opacity.
 - **A chart footer adds a fact,** such as the previous period's total, never a repeat of a stat card.
-- **Period controls:** a preset `select`, with a "Custom range" option that reveals the two date inputs.
+- **Period controls:** a preset `select`, with a "Custom range" option that reveals the two date inputs. A date field commits while it's typed in, so `0002` and `0202` on the way to `2025` aren't errors: wait for a four-digit year, and give the range a lower bound.
 - **A list of shares packs from the top** with a total above it, unless a stat on the screen already shows that total. It is never spread to fill the card.
 - **A range that shrinks to one day stops being a line.** Two flat lines over a filled block read as sales holding constant all day. Draw the day and its comparison as two labelled bars, with each figure over its bar, a key of swatches, a label under each bar, and a footer fact that isn't on the bars: the same day last week.
 - **Axis labels thin out on the phone.** Keep the ends, drop every other label in between, so a month's dates never touch.
