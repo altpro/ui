@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.1`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.2`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.3.2 (6 November 2026)
 
 - The skills resolve what a fifth skills-only test found. `unsaved-changes.md`'s dirty dialog comes back and asks when a repeated Escape closes it with no `cancel` event, and its close cross lines up with the heading. `list-page.md` folds the total onto the code line, so a name takes the phone's whole row, and gives the row's link a focus ring. `altpro-ui-design` adds rules for a closed record that still owes money, a primary reached by a dialog's submit, ways down a long record, and emails that wrap. Run `php artisan boost:update` to get them. Markup is unchanged.
 - The skills resolve what a fourth skills-only test found, several of them faults in the skills' own advice. Money is now a text field with `inputmode="decimal"` and `decimal:0,2` in `recipes.md`, `field.md`, `input.md` and `validation-failure.md`, because `type="number"` took `1e1`. `list-page.md` moves the count and Clear to a line under the title, so the toolbar keeps no empty slot, and `record-header.md`'s actions no longer move with the length of a name. `altpro-ui-design` corrects which laptops reach `@5xl`, fixes a focus ring that `outline-none` cancelled and draws it only for the keyboard, guards a held Enter as well as a double-click, and adds rules for what a filtering stat counts, a filter nobody can see, a record's latest update, tablet widths, tab order and reaching a note form on the phone. Run `php artisan boost:update` to get them. Markup is unchanged.
