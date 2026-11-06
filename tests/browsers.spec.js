@@ -72,6 +72,27 @@ test("dialog: a closing modal or drawer fades where it was, or is gone", async (
   }
 });
 
+// a radio matches :indeterminate while its group has nothing checked, which is not a choice made
+test("check: an unselected radio group draws empty, and an indeterminate checkbox still fills", async ({ page }) => {
+  await page.goto("/check.html");
+  const fills = await page.evaluate(() => {
+    const box = (html) => {
+      const label = document.createElement("label");
+      label.className = html.includes("radio") ? "radio" : "checkbox";
+      label.innerHTML = html;
+      document.querySelector("main").append(label);
+      return label.firstChild;
+    };
+    const blank = box('<input type="radio" name="none-chosen">');
+    const mixed = box('<input type="checkbox">');
+    mixed.indeterminate = true;
+    const bg = (el) => getComputedStyle(el).backgroundColor;
+    return { blank: bg(blank), mixed: bg(mixed), page: bg(box('<input type="checkbox">')) };
+  });
+  expect(fills.blank).toBe(fills.page);
+  expect(fills.mixed).not.toBe(fills.page);
+});
+
 test("tree: a page branch's link navigates and its 24px chevron toggles", async ({ page }) => {
   await page.goto("/tree.html");
   const li = page.locator("main .tree > li").nth(1);

@@ -60,7 +60,8 @@
         scale: 0;
         transition: scale var(--duration-fast);
       }
-      &:is(:checked, :indeterminate) {
+      /* only a checkbox: a radio matches :indeterminate while its group has nothing checked */
+      &:is(:checked, :where([type="checkbox"]):indeterminate) {
         border-color: var(--check-accent);
         background: var(--check-accent);
         &::before {
@@ -82,7 +83,7 @@
         border-color: CanvasText;
         background: Canvas;
         color: CanvasText;
-        &:is(:checked, :indeterminate) {
+        &:is(:checked, :where([type="checkbox"]):indeterminate) {
           border-color: Highlight;
           background: Highlight;
           color: HighlightText;
@@ -90,7 +91,7 @@
         &:disabled {
           border-color: GrayText;
           color: GrayText;
-          &:is(:checked, :indeterminate) {
+          &:is(:checked, :where([type="checkbox"]):indeterminate) {
             background: GrayText;
             color: Canvas;
           }
