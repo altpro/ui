@@ -21,6 +21,8 @@ const query = ref(listParams.get('q') ?? '');
 const category = ref(categories.includes(listParams.get('category')) ? listParams.get('category') : '');
 const stockFilter = ref(['low', 'out'].includes(listParams.get('stock')) ? listParams.get('stock') : '');
 const status = ref(['Active', 'Draft', 'Archived'].includes(listParams.get('status')) ? listParams.get('status') : stockFilter.value ? 'Active' : 'All');
+// a stock filter only applies to the Active tab
+if (status.value !== 'Active') stockFilter.value = '';
 // arriving to restock, the worst product comes first
 const sort = ref(['name', 'price-high', 'price-low', 'stock-low'].includes(listParams.get('sort')) ? listParams.get('sort') : stockFilter.value === 'low' ? 'stock-low' : 'name');
 const mode = ref(listParams.get('view') === 'grid' ? 'grid' : 'table');
@@ -86,9 +88,12 @@ const historyTitle = a => {
 const lastChange = computed(() => productActivity.value.find(a => a.type !== 'Note')?.time.replace(/^(Today|Yesterday|Just now)/, t => t.toLowerCase()));
 // a product saved before channels existed is on in both
 const channel = (p, key) => p.channels?.[key] ?? true;
+// the channels a product is on in, as they read in a sentence; live in none of them, it's off sale whatever its status says
+const channelNames = p => [channel(p, 'online') && 'your online store', channel(p, 'studio') && 'the London studio'].filter(Boolean).join(' and ');
+const offSale = p => p.status === 'Active' && !channelNames(p);
 const availability = computed(() => {
   const p = product.value;
-  if (p.status === 'Draft') return 'Goes live in these channels when published.';
+  if (p.status === 'Draft') return channelNames(p) ? 'Goes live in these channels when published.' : 'Off in every channel, so publishing won\'t put it on sale.';
   if (p.status === 'Archived') return 'Not listed. Make it active to sell it again.';
   const online = channel(p, 'online'), studio = channel(p, 'studio');
   if (!online && !studio) return 'Switched off in every channel, so nobody can order it.';
@@ -110,7 +115,7 @@ const margin = p => { const net = p.price / 1.2; return net > 0 ? Math.round((ne
 const archiveCount = computed(() => Array.isArray(pending.value) ? pending.value.length : 0);
 const archiveName = computed(() => archiveCount.value === 1 ? store.products.find(p => p.id === pending.value[0])?.name : '');
 // a selection can span pages, so the dialog names what it will archive
-const archiveLive = computed(() => Array.isArray(pending.value) && pending.value.some(id => store.products.find(p => p.id === id)?.status === 'Active'));
+const archiveLive = computed(() => Array.isArray(pending.value) && pending.value.some(id => { const p = store.products.find(p => p.id === id); return p?.status === 'Active' && channelNames(p); }));
 const archiveNames = computed(() => Array.isArray(pending.value) ? new Intl.ListFormat('en-GB').format(pending.value.map(id => store.products.find(p => p.id === id)?.name).filter(Boolean)) : '');
 // the dashboard period is the DataTable date filter: a preset or any two dates
 const today = day(new Date());
@@ -174,9 +179,11 @@ const chart = computed(() => {
   const x = i => n > 1 ? i / (n - 1) * 100 : 50;
   // one day is drawn as a flat line across the plot
   const line = values => (values.length > 1 ? values : [values[0], values[0]]).map((v, i, all) => `${(i / (all.length - 1) * 100).toFixed(2)},${y(v).toFixed(2)}`).join(' ');
-  // up to a week, every day; beyond it, even steps back from the last day
+  // both ends, with even steps from the first day; a step that lands right beside the last is dropped
   const tickStep = Math.max(1, Math.ceil((n - 1) / 6));
-  const labels = Array.from({ length: Math.ceil(n / tickStep) }, (_, k) => n - 1 - k * tickStep).reverse()
+  const ticks = Array.from({ length: Math.ceil((n - 1) / tickStep) }, (_, k) => k * tickStep);
+  if (ticks.length > 1 && n - 1 - ticks.at(-1) < tickStep / 2) ticks.pop();
+  const labels = [...ticks, n - 1]
     .map(i => ({ text: longDate(salesDays.value[i], n > 7 ? { day: 'numeric', month: 'short' } : { weekday: 'short' }), x: x(i) }));
   const best = now.indexOf(Math.max(...now));
   if (n === 1) labels.splice(0, 1, { text: dayName(previousDays.value[0]), x: 33 }, { text: dayName(salesDays.value[0]), x: 67 });
@@ -269,7 +276,11 @@ const narrowed = computed(() => query.value || filterCount.value > 0);
 const emptyHint = { All: 'Add a product to start your catalogue.', Active: 'Publish a draft and it appears here.', Draft: 'New and duplicated products start here.', Archived: 'Products you archive appear here.' };
 const clearNarrowing = () => { clearFilters(); sort.value = 'name'; };
 // the button that cleared goes with what it cleared, so focus moves to the search field
-const clearAndFocus = () => { clearNarrowing(); nextTick(() => document.querySelector('input[aria-label="Search products"]')?.focus()); };
+const clearAndFocus = () => {
+  clearNarrowing();
+  // on touch the list takes focus instead, or the keyboard would cover what was just restored
+  nextTick(() => document.querySelector(matchMedia('(pointer: coarse)').matches ? '.demo-catalogue' : 'input[aria-label="Search products"]')?.focus());
+};
 // the count names its base: the tab it is counted against, once anything narrows the list
 const countBase = computed(() => stockFilter.value ? 'Active' : status.value);
 const tabCount = computed(() => countBase.value === 'All' ? store.products.length : store.products.filter(p => p.status === countBase.value).length);
@@ -371,7 +382,7 @@ function saveInventory() {
   const otherChanged = rows.length !== before.length || rows.some((v, i) => v.origin !== i || before[v.origin].name !== v.name || before[v.origin].sku !== v.sku);
   const kind = otherChanged || (priceChanged && stockChanged) ? 'finishes' : priceChanged ? 'price' : 'stock';
   record(`${p.name} ${kind} updated`, inventoryChanges(before, rows), p.id, kind === 'price' ? 'Price' : 'Inventory');
-  inventory.value.close(); notify('Inventory updated.');
+  inventory.value.close(); notify({ price: 'Prices updated.', stock: 'Stock updated.', finishes: 'Finishes updated.' }[kind]);
 }
 // what an inventory save moved, each row matched to the finish it started as
 function inventoryChanges(before, rows) {
@@ -411,8 +422,8 @@ function saveVariant() {
     old.price !== variant.price && `${variant.name} price changed from ${money(old.price)} to ${money(variant.price)}.`,
     old.stock !== variant.stock && `${variant.name} stock changed from ${old.stock} to ${variant.stock}.`,
   ].filter(Boolean);
-  const priceOnly = changes.length === 1 && old.price !== variant.price;
-  record(`${p.name} ${priceOnly ? 'price' : 'finish'} updated`, changes.join(' '), p.id, priceOnly ? 'Price' : 'Inventory');
+  const only = changes.length > 1 ? 'finish' : old.price !== variant.price ? 'price' : old.stock !== variant.stock ? 'stock' : 'finish';
+  record(`${p.name} ${only} updated`, changes.join(' '), p.id, only === 'price' ? 'Price' : 'Inventory');
   variantDialog.value.close(); notify('Finish saved.');
 }
 // the last channel going off takes the product off sale, which asks first as Draft and Archive do
@@ -430,6 +441,7 @@ function setChannel(key, on) {
   record(`${p.name} ${on ? 'added to' : 'removed from'} ${place}`, `Alex Morgan turned ${on ? 'on' : 'off'} ${place} for this product.`, p.id);
   if (p.status !== 'Active') return notify(on ? `${p.name} will go live in ${place}.` : `${p.name} will stay out of ${place}.`);
   if (on && !p.stock) return notify(`${p.name} is listed in ${place}, with no stock to sell.`);
+  if (!on && !channelNames(p)) return notify(`${p.name} is off sale.`, true);
   notify(on ? `${p.name} is available in ${place}.` : `${p.name} is no longer available in ${place}.`);
 }
 function changeStatus(next) {
@@ -445,8 +457,8 @@ function applyStatus(next) {
   const p = product.value;
   p.status = next;
   record(`${p.name} ${next === 'Active' ? 'published' : 'moved to draft'}`, `Alex Morgan changed the product status to ${next.toLowerCase()}.`, p.id);
-  const noStock = next === 'Active' && !p.stock;
-  notify(`${p.name} is now ${next.toLowerCase()}${noStock ? ', with no stock to sell' : ''}.`, noStock);
+  const blocked = next !== 'Active' ? '' : !channelNames(p) ? ', but off in every channel' : !p.stock ? ', with no stock to sell' : '';
+  notify(`${p.name} is now ${next.toLowerCase()}${blocked}.`, !!blocked);
 }
 // a product already archived stays out of the count and gets no second history entry
 function requestArchive(ids) {
@@ -455,7 +467,7 @@ function requestArchive(ids) {
   else notify('Already archived.', true);
 }
 function archiveProducts() {
-  pending.value.forEach(id => { const p = store.products.find(p => p.id === id); if (p) { const wasLive = p.status === 'Active'; p.status = 'Archived'; record(`${p.name} archived`, wasLive ? 'Alex Morgan archived the product, so it left the store and the London studio.' : 'Alex Morgan archived the product.', id); } });
+  pending.value.forEach(id => { const p = store.products.find(p => p.id === id); if (p) { const left = p.status === 'Active' && channelNames(p); p.status = 'Archived'; record(`${p.name} archived`, left ? `Alex Morgan archived the product, so it left ${left}.` : 'Alex Morgan archived the product.', id); } });
   confirmation.value.close(); clearSelection(); notify(pending.value.length === 1 ? 'Product archived.' : 'Products archived.');
 }
 function duplicate() {
@@ -572,7 +584,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
               <tr v-for="s in topProducts" :key="s.product.id">
                 <td><span class="demo-row-product"><span class="demo-thumb sm"><ProductArt :kind="s.product.kind"/></span><span class="min-w-0"><a class="demo-title-link font-medium" :href="productLink(s.product)">{{ s.product.name }}</a><span class="demo-row-meta md:hidden"><span class="muted">{{ s.units }} sold</span><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="muted">{{ stockLabel(s.product) }}</span></span></span></span></td>
                 <td class="text-right tabular-nums max-md:hidden">{{ s.units }}</td>
-                <td class="text-right max-md:hidden"><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="tabular-nums muted">{{ s.product.stock }}</span></td>
+                <td class="text-right max-md:hidden"><span v-if="stockAlert(s.product)" class="badge sm" :class="stockAlert(s.product).class">{{ stockAlert(s.product).label }}</span><span v-else class="tabular-nums muted">{{ s.product.stock || 'Out of stock' }}</span></td>
                 <td class="text-right font-medium tabular-nums">{{ money(s.revenue) }}</td>
               </tr>
             </tbody>
@@ -587,10 +599,10 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
 
     <template v-else-if="screen === 'products'">
       <div class="demo-page-heading">
-        <div><h1>Products</h1><p class="muted">Products in your online store and at the London studio</p></div>
+        <div><h1>Products</h1></div>
         <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> Export</button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
       </div>
-      <section class="card demo-catalogue" aria-label="Product catalogue">
+      <section class="card demo-catalogue" tabindex="-1" aria-label="Product catalogue">
         <div class="tabs demo-list-tabs" role="radiogroup" aria-label="Product status"><label v-for="s in ['All', 'Active', 'Draft', 'Archived']" :key="s"><input v-model="status" type="radio" name="listing-status" :value="s"/>{{ s }} <span class="badge sm">{{ s === 'All' ? store.products.length : store.products.filter(p => p.status === s).length }}</span></label></div>
         <div class="demo-table-toolbar">
           <label class="input demo-search"><Icon name="search"/><input v-model="query" type="search" placeholder="Search products or SKU…" aria-label="Search products"/><kbd v-if="!query" class="hidden xl:inline">/</kbd></label>
@@ -614,8 +626,8 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             <tbody>
               <tr v-for="p in visible" :key="p.id">
                 <td class="max-md:pe-0"><input v-model="selected" class="checkbox" type="checkbox" :value="p.id" :aria-label="`Select ${p.name}`"/></td>
-                <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku" :class="{ 'demo-sku-match': skuMatched(p) }">{{ matchedFinish(p) ? `${matchedFinish(p).name} · ${matchedFinish(p).sku}` : p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span><span class="muted demo-row-category">{{ p.category }}</span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></span></span></td>
-                <td><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span></td>
+                <td><span class="demo-table-product"><span class="demo-thumb"><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></span><span class="min-w-0"><a :href="productLink(p)" class="demo-title-link"><strong>{{ p.name }}</strong></a><span class="muted demo-sku" :class="{ 'demo-sku-match': skuMatched(p) }">{{ matchedFinish(p) ? `${matchedFinish(p).name} · ${matchedFinish(p).sku}` : p.sku }}<span class="demo-sku-category"> · {{ p.category }}</span></span><span class="muted demo-row-category">{{ p.category }}</span></span><span class="demo-table-meta"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="offSale(p)" class="badge sm soft warning">Off sale</span><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></span></span></td>
+                <td><span class="demo-stock"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="offSale(p)" class="badge sm soft warning">Off sale</span></span></td>
                 <td class="whitespace-nowrap text-right pe-10"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else-if="shown(p).stock" class="muted tabular-nums">{{ shown(p).stock }}</span><span v-else class="muted">Out of stock</span></td>
                 <td class="muted">{{ p.category }}</td>
                 <td class="text-right font-medium tabular-nums whitespace-nowrap max-md:ps-0">{{ priceLabel(shown(p)) }}</td>
@@ -626,7 +638,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
         <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ !query ? 'Clear the filters to see more.' : filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearAndFocus">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
         <div v-else class="demo-empty" role="status"><Icon name="package" class="[&_svg]:size-8"/><h2>No {{ status === 'All' ? '' : status.toLowerCase() }} products</h2><p class="muted">{{ emptyHint[status] }}</p></div>
-        <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :disabled="pageNumber === 1" @click="pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :disabled="pageNumber === pageCount" @click="pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
+        <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :aria-disabled="pageNumber === 1 || null" @click="pageNumber > 1 && pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :aria-disabled="pageNumber === pageCount || null" @click="pageNumber < pageCount && pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
     </template>
 
@@ -642,6 +654,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           <div class="demo-record-title">
             <h1>{{ product.name }}</h1>
             <button class="badge" :class="statusClass(product.status)" popovertarget="status-popover" :aria-label="`${product.status}, change status`">{{ product.status }} <Icon name="chevron-down"/></button>
+            <span v-if="offSale(product)" class="badge soft warning whitespace-nowrap">Off sale</span>
             <span v-if="stockAlert(product)" class="badge whitespace-nowrap" :class="stockAlert(product).class">{{ stockAlert(product).label }}</span>
           </div>
           <p v-if="lastChange" class="muted">Last updated {{ lastChange }}</p>
@@ -723,7 +736,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
   <dialog ref="variantDialog" class="dialog divided" aria-labelledby="finish-dialog-title" @cancel.prevent="closeVariant"><header><hgroup><p>{{ product.name }}</p><h2 id="finish-dialog-title">Edit finish</h2></hgroup><button class="btn ghost sm" aria-label="Close finish editor" @click="closeVariant"><Icon name="x"/></button></header><form id="finish-form" class="space-y-4" @submit.prevent="saveVariant"><Field v-model="variantDraft.name" name="finishName" label="Finish name" required/><Field v-model="variantDraft.sku" name="finishSku" label="Finish SKU" :errors="variantErrors || undefined" required/><div class="grid grid-cols-2 gap-4"><Field v-model="variantDraft.price" name="finishPrice" label="Finish price" type="number" min="0" step="0.01" prepend="£" required/><Field v-model="variantDraft.stock" name="finishStock" label="In stock" type="number" min="0" step="1" required/></div></form><footer class="justify-end"><button type="button" class="btn outlined" @click="closeVariant">Cancel</button><button form="finish-form" class="btn primary">Save finish</button></footer></dialog>
   <dialog ref="preview" class="dialog demo-preview" aria-labelledby="preview-title"><header><p class="muted text-sm">Store preview</p><button class="btn ghost sm ml-auto" aria-label="Close preview" @click="preview.close()"><Icon name="x"/></button></header><div class="demo-product-stage"><img v-if="product.image" :src="product.image" :alt="product.name"/><ProductArt v-else :kind="product.kind" :name="product.name" :angle="angle"/></div><div class="flex justify-between gap-4 items-start"><div><h2 id="preview-title" class="text-xl font-semibold">{{ product.name }}</h2><p class="muted mt-1">{{ product.subtitle }}</p></div><strong class="text-xl tabular-nums">{{ money(previewed?.price ?? product.price) }}</strong></div><div v-if="product.variants.length > 1" class="field"><label for="preview-finish">Finish</label><select id="preview-finish" v-model.number="previewFinish" class="input"><option v-for="(v, i) in product.variants" :key="i" :value="i">{{ v.name }}{{ v.stock ? '' : ' (out of stock)' }}</option></select></div><p class="text-sm muted leading-relaxed">{{ product.description }}</p><button class="btn primary" :disabled="!!previewBlock" @click="preview.close(); notify('Preview only, so nothing was added.', true)">{{ previewBlock || 'Add to bag' }}</button></dialog>
   </template>
-  <dialog ref="confirmation" class="dialog divided" aria-labelledby="confirm-title"><header><h2 id="confirm-title">{{ pending === 'reset' ? 'Reset workspace?' : pending === 'draft' ? `Move “${product?.name}” to draft?` : pending === 'channel' ? `Take “${product?.name}” off sale?` : archiveName ? `Archive “${archiveName}”?` : `Archive ${archiveCount} products?` }}</h2></header><p class="text-sm muted">{{ pending === 'reset' ? 'Your changes in this tab will be cleared and the original catalogue restored.' : pending === 'draft' ? 'It comes off sale until you publish it again.' : pending === 'channel' ? 'It is off in every other channel, so nobody can order it.' : archiveName ? (archiveLive ? 'It comes off sale in your store and at the London studio. You can make it active again from its product page.' : 'It moves to Archived. Making it active later publishes it.') : `${archiveNames} move to Archived.${archiveLive ? ' Any that are live come off sale.' : ''} You can make each one active again from its product page.` }}</p><footer class="justify-end"><button class="btn outlined" @click="confirmation.close()">Cancel</button><button class="btn" :class="pending === 'reset' ? 'primary' : 'danger'" @click="pending === 'reset' ? (resetWorkspace(), confirmation.close(), notify('Workspace reset.')) : pending === 'draft' ? (confirmation.close(), applyStatus('Draft')) : pending === 'channel' ? (confirmation.close(), setChannel(channelKey(), false)) : archiveProducts()">{{ pending === 'reset' ? 'Reset workspace' : pending === 'draft' ? 'Move to draft' : pending === 'channel' ? 'Take off sale' : archiveName ? 'Archive product' : `Archive ${archiveCount} products` }}</button></footer></dialog>
+  <dialog ref="confirmation" class="dialog divided" aria-labelledby="confirm-title"><header><h2 id="confirm-title">{{ pending === 'reset' ? 'Reset workspace?' : pending === 'draft' ? `Move “${product?.name}” to draft?` : pending === 'channel' ? `Take “${product?.name}” off sale?` : archiveName ? `Archive “${archiveName}”?` : `Archive ${archiveCount} products?` }}</h2></header><p class="text-sm muted">{{ pending === 'reset' ? 'Your changes in this tab will be cleared and the original catalogue restored.' : pending === 'draft' ? (channelNames(product) ? `It comes off sale in ${channelNames(product)} until you publish it again.` : 'It moves to Draft.') : pending === 'channel' ? 'It is off in every other channel, so nobody can order it.' : archiveName ? (archiveLive ? `It comes off sale in ${channelNames(store.products.find(p => p.id === pending[0]))}. You can make it active again from its product page.` : 'It moves to Archived. Making it active later publishes it.') : `${archiveNames} move to Archived.${archiveLive ? ' Any that are live come off sale.' : ''} You can make each one active again from its product page.` }}</p><footer class="justify-end"><button class="btn outlined" @click="confirmation.close()">Cancel</button><button class="btn" :class="pending === 'reset' ? 'primary' : 'danger'" @click="pending === 'reset' ? (resetWorkspace(), confirmation.close(), notify('Workspace reset.')) : pending === 'draft' ? (confirmation.close(), applyStatus('Draft')) : pending === 'channel' ? (confirmation.close(), setChannel(channelKey(), false)) : archiveProducts()">{{ pending === 'reset' ? 'Reset workspace' : pending === 'draft' ? 'Move to draft' : pending === 'channel' ? 'Take off sale' : archiveName ? 'Archive product' : `Archive ${archiveCount} products` }}</button></footer></dialog>
   <dialog ref="noteDialog" class="dialog divided" aria-labelledby="note-title" @cancel.prevent="closeNote"><header><hgroup v-if="product && screen === 'product'"><p>{{ product.name }}</p><h2 id="note-title">Add note</h2></hgroup><h2 v-else id="note-title">Add note</h2><button class="btn ghost sm" aria-label="Close note" @click="closeNote"><Icon name="x"/></button></header><form id="note-form" @submit.prevent="saveNote"><Field v-model="note" name="note" label="Your note" type="textarea" rows="5" :errors="noteError || undefined" placeholder="What should your team know?"/></form><footer class="justify-end"><button class="btn outlined" type="button" @click="closeNote">Cancel</button><button form="note-form" class="btn primary">Add note</button></footer></dialog>
   <dialog ref="discardDialog" class="dialog divided" aria-labelledby="discard-title"><header><h2 id="discard-title">Discard your changes?</h2></header><p class="text-sm muted">What you changed here has not been saved.</p><footer class="justify-end"><button class="btn outlined" @click="discardDialog.close()">Keep editing</button><button class="btn danger" @click="discardChanges">Discard changes</button></footer></dialog>
   <div class="toaster" role="region" aria-label="Workspace notifications" aria-live="polite"><div v-if="toast" class="alert" :class="{ success: !toastPlain }"><svg v-if="!toastPlain" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg><p>{{ toast }}</p><button class="btn ghost sm" aria-label="Dismiss notification" @click="toast = ''"><Icon name="x"/></button></div></div>

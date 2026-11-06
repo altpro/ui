@@ -357,6 +357,7 @@ test('the last channel asks before it takes a product off sale, and history titl
   await page.locator('.demo-availability label.switch').last().click();
   await page.getByRole('button', { name: 'Take off sale', exact: true }).click();
   await expect(studio).not.toBeChecked();
+  await expect(page.locator('.demo-record-title')).toContainText('Off sale');
   await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
   await page.getByLabel('Slate price', { exact: true }).fill('255');
   await page.getByRole('button', { name: 'Save inventory' }).click();
@@ -374,6 +375,23 @@ test('a note asks for words inline, and a stock filter leaves when the tab does'
   await page.getByRole('radio', { name: /^Draft/ }).check();
   await expect(page.getByRole('combobox', { name: 'Stock level', exact: true })).toHaveValue('');
   await expect(page.locator('tbody tr')).toHaveCount(1);
+});
+
+test('the pager keeps focus on its last page, and archive names only the channels a product is in', async ({ page }) => {
+  await page.goto('/app/products.html');
+  const next = page.getByRole('button', { name: 'Next product page' });
+  await next.focus();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('status')).toHaveText('7–8 of 8 products');
+  await expect(next).toBeFocused();
+  await expect(next).toHaveAttribute('aria-disabled', 'true');
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('status')).toHaveText('7–8 of 8 products');
+  await page.goto('/app/product.html?id=arc');
+  await page.getByRole('switch', { name: 'London studio availability', exact: true }).uncheck({ force: true });
+  await page.getByRole('button', { name: 'More product actions' }).click();
+  await page.getByRole('button', { name: 'Archive product', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('It comes off sale in your online store.');
 });
 
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
