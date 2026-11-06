@@ -108,6 +108,7 @@ const nextAction = computed(() => {
   if (!p) return null;
   if (p.status === 'Draft') return { label: 'Publish', run: () => changeStatus('Active') };
   if (p.status === 'Archived') return { label: 'Make active', run: () => changeStatus('Active') };
+  if (offSale(p)) return { label: 'Choose channels', run: () => document.querySelector('.demo-availability input:not(:checked)')?.focus() };
   return stockAlert(p) ? { label: 'Adjust inventory', run: openInventory } : null;
 });
 // retail prices include VAT at 20%; costs do not, so margin is on the net price
@@ -240,13 +241,13 @@ watch(mode, () => { selected.value = []; });
 // when the header's primary button goes with what it did, focus moves to the one that takes its place
 watch(() => nextAction.value?.label, () => nextTick(() => { if (document.activeElement === document.body) document.querySelector('.demo-record-actions .btn.primary')?.focus(); }), { flush: 'post' });
 watch(pageCount, n => { pageNumber.value = Math.min(pageNumber.value, n); }, { immediate: true });
-watch([query, category, status, stockFilter, sort, mode, pageNumber], () => {
-  if (props.screen !== 'products') return;
+watch([query, category, status, stockFilter, sort, mode, pageNumber], () => { if (props.screen === 'products') writeListUrl(); });
+function writeListUrl() {
   const entries = { q: query.value, category: category.value, stock: stockFilter.value, status: status.value === 'All' ? '' : status.value, sort: sort.value === (stockFilter.value === 'low' ? 'stock-low' : 'name') ? '' : sort.value, view: mode.value === 'grid' ? 'grid' : '', page: pageNumber.value > 1 ? pageNumber.value : '' };
   const search = new URLSearchParams(Object.entries(entries).filter(([, v]) => v)).toString();
   history.replaceState(null, '', search ? `?${search}` : location.pathname);
   sessionStorage.setItem('demo-list-search', search ? `?${search}` : '');
-});
+}
 function shortcut(event) {
   if (event.key === '/' && props.screen === 'products' && !event.ctrlKey && !event.metaKey && !event.altKey && !event.target.closest('input, textarea, select, [contenteditable]')) {
     event.preventDefault(); document.querySelector('input[aria-label="Search products"]')?.focus();
@@ -254,7 +255,7 @@ function shortcut(event) {
 }
 onMounted(() => {
   // arriving on a filtered list counts as leaving it that way, even if no control is touched
-  if (props.screen === 'products') sessionStorage.setItem('demo-list-search', location.search);
+  if (props.screen === 'products') writeListUrl();
   document.addEventListener('keydown', shortcut);
   window.addEventListener('beforeunload', warnUnsaved);
   // the breadcrumb goes back to the list as the page's own link does
@@ -424,7 +425,7 @@ function saveVariant() {
   ].filter(Boolean);
   const only = changes.length > 1 ? 'finish' : old.price !== variant.price ? 'price' : old.stock !== variant.stock ? 'stock' : 'finish';
   record(`${p.name} ${only} updated`, changes.join(' '), p.id, only === 'price' ? 'Price' : 'Inventory');
-  variantDialog.value.close(); notify('Finish saved.');
+  variantDialog.value.close(); notify({ price: 'Price updated.', stock: 'Stock updated.', finish: 'Finish updated.' }[only]);
 }
 // the last channel going off takes the product off sale, which asks first as Draft and Archive do
 let channelPending = null;
@@ -438,7 +439,7 @@ const channelKey = () => channelPending;
 function setChannel(key, on) {
   const p = product.value, place = key === 'online' ? 'the online store' : 'the London studio';
   p.channels = { online: channel(p, 'online'), studio: channel(p, 'studio'), [key]: on };
-  record(`${p.name} ${on ? 'added to' : 'removed from'} ${place}`, `Alex Morgan turned ${on ? 'on' : 'off'} ${place} for this product.`, p.id);
+  record(`${p.name} ${on ? 'added to' : 'removed from'} ${place}`, `Alex Morgan turned it ${on ? 'on' : 'off'}.`, p.id);
   if (p.status !== 'Active') return notify(on ? `${p.name} will go live in ${place}.` : `${p.name} will stay out of ${place}.`);
   if (on && !p.stock) return notify(`${p.name} is listed in ${place}, with no stock to sell.`);
   if (!on && !channelNames(p)) return notify(`${p.name} is off sale.`, true);
@@ -475,11 +476,11 @@ function duplicate() {
   // the first free -COPY suffix, so duplicating twice still gives every code its own
   let suffix = '-COPY', n = 1;
   while ([p, ...p.variants].some(item => skuTaken(item.sku + suffix))) suffix = `-COPY-${++n}`;
-  p.sku += suffix; p.variants.forEach(v => { v.sku += suffix; });
+  p.sku += suffix; p.stock = 0; p.variants.forEach(v => { v.sku += suffix; v.stock = 0; });
   document.getElementById('product-more').hidePopover(); editing.value = null; editor.value.open(p, true);
 }
 function exportProducts() {
-  const csv = [['Product', 'Finish', 'SKU', 'Status', 'Price', 'Stock'], ...filtered.value.map(p => { const finish = matchedFinish(p), row = shown(p); return [p.name, finish?.name ?? '', finish?.sku ?? p.sku, p.status, row.price, row.stock]; })].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(',')).join('\n');
+  const csv = [['Product', 'Finish', 'SKU', 'Category', 'Status', 'Price', 'Stock'], ...filtered.value.map(p => { const finish = matchedFinish(p), row = shown(p); return [p.name, finish?.name ?? '', finish?.sku ?? p.sku, p.category, p.status, row.price, row.stock]; })].map(row => row.map(v => `"${String(v).replaceAll('"', '""')}"`).join(',')).join('\n');
   const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
   const a = Object.assign(document.createElement('a'), { href: url, download: 'forma-products.csv' }); a.click(); setTimeout(() => URL.revokeObjectURL(url), 1000); notify(`${filtered.value.length} ${filtered.value.length === 1 ? 'product' : 'products'} exported.`);
 }
@@ -621,7 +622,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
         </div>
         <div v-if="mode === 'table' && visible.length" class="demo-table-scroll">
           <table class="table hover table-fixed demo-products-table demo-row-links">
-            <colgroup><col class="w-16 max-md:w-13"><col><col class="w-32 max-md:hidden"><col class="w-40 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
+            <colgroup><col class="w-16 max-md:w-13"><col><col class="w-44 max-md:hidden"><col class="w-36 max-md:hidden"><col class="w-36"><col class="w-32 max-md:w-24"></colgroup>
             <thead><tr><th class="max-md:pe-0"><input ref="selectAll" class="checkbox" type="checkbox" aria-label="Select all visible products" :checked="allSelected" :indeterminate.prop="partlySelected" @change="toggleAll($event.target.checked)"/></th><th>Product<div v-if="selected.length" class="demo-selection"><p class="font-medium whitespace-nowrap" role="status">{{ selected.length }} selected</p><button class="btn outlined sm" :disabled="selected.every(id => store.products.find(p => p.id === id)?.status === 'Archived')" @click="requestArchive(selected)"><Icon name="archive"/> <span>Archive<span class="max-md:sr-only"> selected</span></span></button><button class="btn ghost sm ml-auto -me-3" @click="clearSelection"><span>Clear<span class="max-md:sr-only"> selection</span></span></button></div></th><th>Status</th><th class="text-right pe-10">In stock</th><th>Category</th><th class="text-right max-md:ps-0">Price</th></tr></thead>
             <tbody>
               <tr v-for="p in visible" :key="p.id">
@@ -635,7 +636,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             </tbody>
           </table>
         </div>
-        <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
+        <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="demo-stage-badges"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span><span v-if="offSale(p)" class="badge sm soft warning">Off sale</span></span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
         <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ !query ? 'Clear the filters to see more.' : filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearAndFocus">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
         <div v-else class="demo-empty" role="status"><Icon name="package" class="[&_svg]:size-8"/><h2>No {{ status === 'All' ? '' : status.toLowerCase() }} products</h2><p class="muted">{{ emptyHint[status] }}</p></div>
         <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :aria-disabled="pageNumber === 1 || null" @click="pageNumber > 1 && pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :aria-disabled="pageNumber === pageCount || null" @click="pageNumber < pageCount && pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
@@ -668,7 +669,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
       </div>
       <div id="status-popover" popover class="dropdown"><div class="nav"><button v-for="s in ['Active', 'Draft', 'Archived']" :key="s" :aria-current="product.status === s || null" @click="changeStatus(s)"><span class="badge sm" :class="statusClass(s)">{{ s }}</span><span v-if="product.status === s" aria-hidden="true">✓</span></button></div></div>
       <div id="product-more" popover class="dropdown right"><div class="nav"><button v-if="nextAction" class="demo-preview-item" @click="$event.target.closest('[popover]').hidePopover(); preview.showModal()"><Icon name="expand"/> Preview</button><button @click="duplicate"><Icon name="copy"/> Duplicate product</button><button v-if="product.status !== 'Archived'" @click="$event.target.closest('[popover]').hidePopover(); requestArchive([product.id])"><Icon name="archive"/> Archive product</button></div></div>
-      <div class="demo-detail-grid" :class="{ 'demo-restock': stockAlert(product) }">
+      <div class="demo-detail-grid" :class="{ 'demo-restock': stockAlert(product), 'demo-offsale': offSale(product) }">
         <div class="demo-detail-main">
           <div class="demo-detail-top">
             <section class="card demo-gallery" aria-label="Product images">
@@ -703,8 +704,8 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
             <header><h2 id="availability-heading">Availability</h2></header>
             <p class="text-sm muted">{{ availability }}</p>
             <div class="demo-channels">
-              <div class="demo-channel"><div><strong>Online store</strong><span class="muted">forma.audio</span></div><label class="switch"><input :checked="channel(product, 'online')" type="checkbox" role="switch" aria-label="Online store availability" :disabled="product.status === 'Archived'" @change="requestChannel('online', $event)"/></label></div>
-              <div class="demo-channel"><div><strong>London studio</strong><span class="muted">In-person collection</span></div><label class="switch"><input :checked="channel(product, 'studio')" type="checkbox" role="switch" aria-label="London studio availability" :disabled="product.status === 'Archived'" @change="requestChannel('studio', $event)"/></label></div>
+              <div class="demo-channel"><div><strong>Online store</strong><span class="muted">forma.audio</span></div><label class="switch"><input :checked="product.status !== 'Archived' && channel(product, 'online')" type="checkbox" role="switch" aria-label="Online store availability" :disabled="product.status === 'Archived'" @change="requestChannel('online', $event)"/></label></div>
+              <div class="demo-channel"><div><strong>London studio</strong><span class="muted">In-person collection</span></div><label class="switch"><input :checked="product.status !== 'Archived' && channel(product, 'studio')" type="checkbox" role="switch" aria-label="London studio availability" :disabled="product.status === 'Archived'" @change="requestChannel('studio', $event)"/></label></div>
             </div>
           </section>
           <section class="card demo-pricing" aria-labelledby="pricing-heading">

@@ -4,6 +4,7 @@ Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.1`). On 0.x a breaking cha
 
 ## Unreleased
 
+- An `.alert` with no icon keeps its message and dismiss cross on one row. The message took the whole row and the cross dropped below it. Markup is unchanged.
 - A selected table row keeps its tint under the pointer. `.table.hover` left out rows with `aria-selected`, but not rows selected by a checked checkbox in their first cell, so hovering one looked like deselecting it. Markup is unchanged.
 - A `.dialog.drawer` no longer squashes its children when the form is taller than the screen, and a `<footer>` as its last child stays on screen while the rest scrolls, so Save never drops below the fold. Put the actions in the drawer's own footer (the submit button takes `form="…"`) to get this.
 - The sample app's Overview, Products and product screens are reworked after two rounds of review, with no change to the library's classes: every Overview figure follows one period control in the title row and adds up, a product's primary button follows what it is waiting for, and the screens measure themselves rather than the viewport, so a laptop beside the sidebar composes as a tablet does.

@@ -22,6 +22,6 @@
     {"id":8,"type":"Price","title":"Arc headphones price updated","detail":"Alex Morgan changed the Clay finish from £249 to £259.","time":"28 Oct, 15:12","product":"arc"},
     {"id":13,"type":"Price","title":"Dot earbuds price updated","detail":"Alex Morgan changed the retail price from £119 to £129.","time":"21 Oct, 11:02","product":"dot"},
     {"id":5,"type":"Note","title":"Alex Morgan left a note","detail":"Check the Loop and Duo stock levels before the weekend newsletter.","time":"2 Oct, 11:20","product":"loop"},
-    {"id":10,"type":"Product","title":"Mono mini archived","detail":"Alex Morgan removed the product from the online store.","time":"12 Sep, 10:15","product":"mini"}
+    {"id":10,"type":"Product","title":"Mono mini archived","detail":"Alex Morgan archived the product.","time":"12 Sep, 10:15","product":"mini"}
   ]
 }

@@ -8,7 +8,8 @@
    a heading or <strong> is the title, a direct-child <button> is pinned to
    the far side (a dismiss cross), and anything else is body text on its
    own line, indented past the icon. The first thing after the icon shares
-   its row, so `<svg> <p>Saved.</p>` is one line. Colour words follow the
+   its row, so `<svg> <p>Saved.</p>` is one line, and so does a lone <p>
+   beside a dismiss cross. Colour words follow the
    button: the tint, border and icon take the accent; text stays the page
    foreground so it reads on the tint in both schemes. Layered so Tailwind
    utilities win. */
@@ -47,6 +48,10 @@
     }
     /* whatever follows the icon shares its row; the title always does */
     > :is(h2, h3, h4, h5, h6, strong), > svg + :not(button) {
+      flex: 1 1 0;
+    }
+    /* with no icon, a message still shares its row with the dismiss cross */
+    > :first-child:not(svg, button):has(+ button) {
       flex: 1 1 0;
     }
     /* everything else takes its own line, indented past the icon */

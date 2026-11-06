@@ -185,12 +185,13 @@ test('channel switches belong to their product and survive a reload', async ({ p
   await expect(online).toBeChecked();
 });
 
-test('a duplicate opens as its own product', async ({ page }) => {
+test('a duplicate opens as its own product, with no stock of its own', async ({ page }) => {
   await page.goto('/app/product.html?id=arc');
   await page.getByRole('button', { name: 'More product actions' }).click();
   await page.getByRole('button', { name: 'Duplicate product', exact: true }).click();
   await page.getByRole('dialog').getByRole('button', { name: 'Add product', exact: true }).click();
   await expect(page.getByRole('heading', { level: 1 })).toContainText('Arc headphones (copy)');
+  await expect(page.locator('.demo-finishes tfoot')).toContainText('0');
 });
 
 test('on a phone the filters move into a popover that holds every filter and the sort', async ({ page }) => {
@@ -358,6 +359,11 @@ test('the last channel asks before it takes a product off sale, and history titl
   await page.getByRole('button', { name: 'Take off sale', exact: true }).click();
   await expect(studio).not.toBeChecked();
   await expect(page.locator('.demo-record-title')).toContainText('Off sale');
+  await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Choose channels');
+  expect((await page.locator('.toaster .alert').boundingBox()).height).toBeLessThan(64);
+  await page.goto('/app/products.html?view=grid');
+  await expect(page.locator('.demo-catalogue-grid > a').first()).toContainText('Off sale');
+  await page.goto('/app/product.html?id=arc');
   await page.getByRole('button', { name: 'Adjust inventory', exact: true }).click();
   await page.getByLabel('Slate price', { exact: true }).fill('255');
   await page.getByRole('button', { name: 'Save inventory' }).click();
