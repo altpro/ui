@@ -467,6 +467,16 @@ for (const width of [768, 820, 1024, 1100]) {
   });
 }
 
+test('the restock queue keeps its toolbar on one row at a laptop width, and a new sort keeps the ticks', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto('/app/products.html?status=Active&stock=low');
+  const heights = await page.locator('.demo-table-toolbar > :visible').evaluateAll(els => new Set(els.map(el => Math.round(el.getBoundingClientRect().top + el.getBoundingClientRect().height / 2))).size);
+  expect(heights).toBe(1);
+  await page.locator('tbody .checkbox').first().check();
+  await page.getByRole('combobox', { name: 'Sort products', exact: true }).selectOption('name');
+  await expect(page.getByRole('button', { name: 'Export 1 selected', exact: true })).toBeVisible();
+});
+
 test('a stock filter moves to the Active tab and the count names its base', async ({ page }) => {
   await page.goto('/app/products.html');
   await page.getByRole('combobox', { name: 'Stock level', exact: true }).selectOption('low');

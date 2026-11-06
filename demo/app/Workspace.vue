@@ -236,7 +236,9 @@ const categorySales = computed(() => {
   [...shares].sort((a, b) => (b.exact - b.share) - (a.exact - a.share)).slice(0, 100 - shares.reduce((n, c) => n + c.share, 0)).forEach(c => c.share += 1);
   return shares;
 });
-watch([query, category, status, stockFilter, sort], () => { pageNumber.value = 1; selected.value = []; });
+// a new set of rows starts from its first page with nothing ticked; a new order is the same rows
+watch([query, category, status, stockFilter], () => { pageNumber.value = 1; selected.value = []; });
+watch(sort, () => { pageNumber.value = 1; });
 // only active products have a stock state to act on, so a stock filter opens the Active tab
 // the list's own message goes as soon as there's a finish again
 watch(() => inventoryDraft.value.length, length => { if (length && inventoryErrors.value.inventory) inventoryErrors.value = withoutField(inventoryErrors.value, { target: { name: 'inventory' } }); });
@@ -611,7 +613,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
     <template v-else-if="screen === 'products'">
       <div class="demo-page-heading">
         <div><h1>Products</h1></div>
-        <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> <span class="tabular-nums">{{ selected.length ? `Export ${selected.length} selected` : 'Export' }}</span></button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
+        <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> <span class="tabular-nums">{{ selected.length ? `Export ${selected.length}` : 'Export' }}<span v-if="selected.length" class="demo-export-scope"> selected</span></span></button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
       </div>
       <section class="card demo-catalogue" tabindex="-1" aria-label="Product catalogue">
         <div class="tabs demo-list-tabs" role="radiogroup" aria-label="Product status"><label v-for="s in ['All', 'Active', 'Draft', 'Archived']" :key="s"><input v-model="status" type="radio" name="listing-status" :value="s"/>{{ s }} <span class="badge sm">{{ s === 'All' ? store.products.length : store.products.filter(p => p.status === s).length }}</span></label></div>
@@ -647,7 +649,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
           </table>
         </div>
         <div v-else-if="mode === 'grid' && visible.length" class="demo-product-grid demo-catalogue-grid"><a v-for="p in visible" :key="p.id" class="card demo-product-card" :href="productLink(p)"><div class="demo-product-stage"><span class="demo-stage-badges"><span class="badge sm" :class="statusClass(p.status)">{{ p.status }}</span></span><img v-if="p.image" :src="p.image" alt=""/><ProductArt v-else :kind="p.kind"/></div><div class="demo-product-card-body"><div><h2>{{ p.name }}</h2><p class="muted text-xs">{{ p.category }}</p><p v-if="matchedFinish(p)" class="muted text-xs demo-sku">{{ matchedFinish(p).name }} · {{ matchedFinish(p).sku }}</p><p class="demo-stock text-xs"><span v-if="offSale(p)" class="badge sm soft warning">Off sale</span><span v-if="stockAlert(shown(p))" class="badge sm" :class="stockAlert(shown(p)).class">{{ stockAlert(shown(p)).label }}</span><span v-else class="muted">{{ stockLabel(shown(p)) }}</span></p></div><strong>{{ priceLabel(shown(p)) }}</strong></div></a></div>
-        <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query ? `No products match “${query}”` : 'No products match' }}</h2><p class="muted">{{ !query ? 'Clear the filters to see more.' : filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearAndFocus">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
+        <div v-else-if="narrowed" class="demo-empty" role="status"><Icon name="search" class="[&_svg]:size-8"/><h2>{{ query.trim() ? `No products match “${query.trim()}”` : 'No products match' }}</h2><p class="muted">{{ !query ? 'Clear the filters to see more.' : filterCount || status !== 'All' ? 'Try another name or SKU, or clear the filters.' : 'Try another name or SKU.' }}</p><button class="btn outlined" @click="clearAndFocus">{{ query && !filterCount && status === 'All' ? 'Clear search' : 'Clear filters' }}</button></div>
         <div v-else class="demo-empty" role="status"><Icon name="package" class="[&_svg]:size-8"/><h2>No {{ status === 'All' ? '' : status.toLowerCase() }} products</h2><p class="muted">{{ emptyHint[status] }}</p></div>
         <footer v-if="filtered.length" class="demo-table-footer"><p class="muted text-sm" role="status">{{ countLabel }}</p><nav v-if="pageCount > 1" class="flex items-center gap-2" aria-label="Product pagination"><button class="btn outlined sm" :aria-disabled="pageNumber === 1 || null" @click="pageNumber > 1 && pageNumber--" aria-label="Previous product page"><Icon name="arrow-left"/></button><span class="text-sm muted">Page {{ pageNumber }} of {{ pageCount }}</span><button class="btn outlined sm" :aria-disabled="pageNumber === pageCount || null" @click="pageNumber < pageCount && pageNumber++" aria-label="Next product page"><Icon name="arrow-right"/></button></nav></footer>
       </section>
