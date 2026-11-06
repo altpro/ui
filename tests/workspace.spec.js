@@ -179,7 +179,7 @@ test('channel switches belong to their product and survive a reload', async ({ p
   await page.goto('/app/product.html?id=arc');
   const online = page.getByRole('switch', { name: 'Online store availability', exact: true });
   await online.uncheck({ force: true });
-  await expect(page.locator('.toaster')).toContainText('no longer available in the online store');
+  await expect(page.locator('.toaster')).toContainText('No longer on sale in the online store');
   await expect(page.locator('[aria-labelledby="availability-heading"] > p')).toHaveText('Hidden online. Available at the London studio only.');
   await page.reload();
   await expect(online).not.toBeChecked();
@@ -364,8 +364,17 @@ test('the last channel asks before it takes a product off sale, and history titl
   await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Choose channels');
   await page.locator('.demo-record-actions .btn.primary').click();
   await expect(page.locator('.demo-availability')).not.toHaveCSS('box-shadow', 'none');
+  // moving between the switches keeps the mark; leaving the card or making the change ends it
+  await page.keyboard.press('Tab');
+  await expect(page.locator('.demo-availability')).not.toHaveCSS('box-shadow', 'none');
   await page.locator('.demo-record-actions').getByRole('button', { name: 'Edit product', exact: true }).focus();
   await expect(page.locator('.demo-availability')).toHaveCSS('box-shadow', 'none');
+  await page.locator('.demo-record-actions .btn.primary').click();
+  await page.locator('.demo-availability label.switch').first().click();
+  await expect(page.locator('.demo-availability')).toHaveCSS('box-shadow', 'none');
+  await expect(page.locator('.demo-record-actions .btn.primary')).toHaveText('Edit product');
+  await page.locator('.demo-availability label.switch').first().click();
+  await page.getByRole('button', { name: 'Take off sale', exact: true }).click();
   expect((await page.locator('.toaster .alert').boundingBox()).height).toBeLessThan(64);
   await page.goto('/app/products.html?view=grid');
   await expect(page.locator('.demo-catalogue-grid > a').first()).toContainText('Off sale');

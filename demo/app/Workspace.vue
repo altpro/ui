@@ -453,10 +453,10 @@ function setChannel(key, on) {
   const p = product.value, place = key === 'online' ? 'the online store' : 'the London studio';
   p.channels = { online: channel(p, 'online'), studio: channel(p, 'studio'), [key]: on };
   record(`${p.name} ${on ? 'added to' : 'removed from'} ${place}`, `Alex Morgan turned it ${on ? 'on' : 'off'}.`, p.id);
-  if (p.status !== 'Active') return notify(on ? `${p.name} will go live in ${place}.` : `${p.name} will stay out of ${place}.`);
-  if (on && !p.stock) return notify(`${p.name} is listed in ${place}, with no stock to sell.`);
-  if (!on && !channelNames(p)) return notify(`Off sale: ${p.name}.`, true);
-  notify(on ? `${p.name} is available in ${place}.` : `${p.name} is no longer available in ${place}.`);
+  if (p.status !== 'Active') return notify(on ? `Will go live in ${place}.` : `Will stay out of ${place}.`);
+  if (on && !p.stock) return notify(`Now listed in ${place}, with no stock to sell.`);
+  if (!on && !channelNames(p)) return notify('Now off sale in every channel.', true);
+  notify(on ? `Now on sale in ${place}.` : `No longer on sale in ${place}.`);
 }
 function changeStatus(next) {
   const p = product.value;
@@ -715,7 +715,7 @@ const partlySelected = computed(() => !allSelected.value && selected.value.lengt
           </section>
         </div>
         <div class="demo-detail-side">
-          <section class="card demo-availability" :class="{ 'demo-landed': channelsLanded }" aria-labelledby="availability-heading" @focusout="channelsLanded = false">
+          <section class="card demo-availability" :class="{ 'demo-landed': channelsLanded }" aria-labelledby="availability-heading" @change="channelsLanded = false" @focusout="!$event.currentTarget.contains($event.relatedTarget) && (channelsLanded = false)">
             <header><h2 id="availability-heading">Availability</h2></header>
             <p class="text-sm muted">{{ availability }}</p>
             <div class="demo-channels">
