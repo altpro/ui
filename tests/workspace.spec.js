@@ -254,7 +254,7 @@ test('history names what moved in each editor', async ({ page }) => {
 
 test('search reaches a finish SKU and an empty tab says what belongs there', async ({ page }) => {
   await page.goto('/app/products.html');
-  await page.getByLabel('Search products', { exact: true }).fill('ARC-CH');
+  await page.getByLabel('Search products', { exact: true }).fill(' ARC-CH ');
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await expect(page.locator('tbody tr')).toContainText('Chalk · ARC-CH');
   await expect(page.locator('tbody tr')).toContainText('28 in stock');
@@ -482,6 +482,7 @@ test('ticking a row moves nothing, and the list reads as one column of figures o
   const before = await row.boundingBox();
   await row.locator('.checkbox').check();
   await expect(page.getByRole('button', { name: 'Archive selected', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Export 1 selected', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Clear selection', exact: true }).click();
   await expect(page.getByLabel('Select all visible products')).toBeFocused();
   await row.locator('.checkbox').check();

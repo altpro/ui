@@ -55,12 +55,14 @@ const product = computed(() => store.products.find(p => p.id === productId));
 const productLink = p => `product.html?id=${encodeURIComponent(p.id)}`;
 // the way back from a record finds the list as it was left, filtered queue and all
 const listUrl = ref(`products.html${sessionStorage.getItem('demo-list-search') ?? ''}`);
+// a SKU pasted with a stray space still finds its product
+const searchTerm = computed(() => query.value.trim().toLowerCase());
 // the finish a search found by its SKU, which the row then names
 const matchedFinish = p => {
-  const q = query.value.toLowerCase();
+  const q = searchTerm.value;
   return q && !`${p.name} ${p.sku}`.toLowerCase().includes(q) ? p.variants.find(v => `${v.name} ${v.sku}`.toLowerCase().includes(q)) : null;
 };
-const skuMatched = p => query.value && (p.sku.toLowerCase().includes(query.value.toLowerCase()) || matchedFinish(p));
+const skuMatched = p => searchTerm.value && (p.sku.toLowerCase().includes(searchTerm.value) || matchedFinish(p));
 // a row found through a finish shows that finish's stock and price, not the product's total and lowest
 const shown = p => { const finish = matchedFinish(p); return finish ? { ...p, stock: finish.stock, price: finish.price, variants: [finish] } : p; };
 const sorts = { name: (a, b) => a.name.localeCompare(b.name), 'price-high': (a, b) => b.price - a.price, 'price-low': (a, b) => a.price - b.price, 'stock-low': (a, b) => a.stock - b.stock };
@@ -68,7 +70,7 @@ const filtered = computed(() => store.products.filter(p =>
   (status.value === 'All' || p.status === status.value) &&
   (!category.value || p.category === category.value) &&
   (!stockFilter.value || (stockFilter.value === 'low' ? stockAlert(shown(p)) : p.status === 'Active' && shown(p).stock === 0)) &&
-  `${p.name} ${p.sku} ${p.category} ${p.variants.map(v => `${v.name} ${v.sku}`).join(' ')}`.toLowerCase().includes(query.value.toLowerCase())
+  `${p.name} ${p.sku} ${p.category} ${p.variants.map(v => `${v.name} ${v.sku}`).join(' ')}`.toLowerCase().includes(searchTerm.value)
 ).sort((a, b) => sorts[sort.value](shown(a), shown(b))));
 const pageCount = computed(() => Math.max(1, Math.ceil(filtered.value.length / 6)));
 const visible = computed(() => filtered.value.slice((pageNumber.value - 1) * 6, pageNumber.value * 6));
@@ -609,7 +611,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
     <template v-else-if="screen === 'products'">
       <div class="demo-page-heading">
         <div><h1>Products</h1></div>
-        <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> Export</button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
+        <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> <span class="tabular-nums">Export<template v-if="selected.length"> {{ selected.length }} selected</template></span></button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
       </div>
       <section class="card demo-catalogue" tabindex="-1" aria-label="Product catalogue">
         <div class="tabs demo-list-tabs" role="radiogroup" aria-label="Product status"><label v-for="s in ['All', 'Active', 'Draft', 'Archived']" :key="s"><input v-model="status" type="radio" name="listing-status" :value="s"/>{{ s }} <span class="badge sm">{{ s === 'All' ? store.products.length : store.products.filter(p => p.status === s).length }}</span></label></div>
