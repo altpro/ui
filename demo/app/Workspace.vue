@@ -611,7 +611,7 @@ const partlySelected = computed(() => !allSelected.value && visible.value.some(p
     <template v-else-if="screen === 'products'">
       <div class="demo-page-heading">
         <div><h1>Products</h1></div>
-        <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> <span class="tabular-nums">Export<template v-if="selected.length"> {{ selected.length }} selected</template></span></button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
+        <div class="demo-page-actions"><button class="btn outlined" :disabled="!filtered.length" @click="exportProducts"><Icon name="download"/> <span class="tabular-nums">{{ selected.length ? `Export ${selected.length} selected` : 'Export' }}</span></button><button class="btn primary" @click="edit()"><Icon name="plus"/> Add product</button></div>
       </div>
       <section class="card demo-catalogue" tabindex="-1" aria-label="Product catalogue">
         <div class="tabs demo-list-tabs" role="radiogroup" aria-label="Product status"><label v-for="s in ['All', 'Active', 'Draft', 'Archived']" :key="s"><input v-model="status" type="radio" name="listing-status" :value="s"/>{{ s }} <span class="badge sm">{{ s === 'All' ? store.products.length : store.products.filter(p => p.status === s).length }}</span></label></div>
