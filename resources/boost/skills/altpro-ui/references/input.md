@@ -23,8 +23,8 @@ A `<select>` opts into `appearance: base-select` where the browser has it (Chrom
 Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (a `<span>` symbol or unit, a `size-4` svg, a `<kbd>` drawn as a key cap) sits in the same border in muted text, and the focus ring goes round the whole box. Clicking an addon focuses the control. A `<select>` can be a second control inside the wrapper. A button next to an input is a `.join`, not an addon.
 
 ```html
-<label class="input"><span>£</span><input type="number" aria-label="Price"></label>
-<label class="input"><input type="number" aria-label="Weight"><span>kg</span></label>
+<label class="input"><span>£</span><input inputmode="decimal" aria-label="Price"></label>
+<label class="input"><input inputmode="decimal" aria-label="Weight"><span>kg</span></label>
 <div class="join">
   <input class="input sm" type="search" aria-label="Search">
   <button class="btn primary sm">Go</button>

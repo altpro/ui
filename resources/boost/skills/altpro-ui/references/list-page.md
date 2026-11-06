@@ -1,6 +1,6 @@
 # Hand-built list (pattern)
 
-No class. A list page with no `DataTable.vue`, which needs Inertia: a `.table` with its search and filters in the URL, columns that appear when they fit, and a folded row on the phone. In an Inertia app use the list page in [recipes.md](recipes.md).
+No class. A list page with no `DataTable.vue`, which needs Inertia: a `.table` with its search and filters in the URL, its count on the line under the title, columns that appear when they fit, and a folded row on the phone. In an Inertia app use the list page in [recipes.md](recipes.md).
 
 A composable holds the state:
 
@@ -20,7 +20,8 @@ export function useListState(defaults) {
   onMounted(() => addEventListener("popstate", onPopState));
   onUnmounted(() => removeEventListener("popstate", onPopState));
 
-  const query = () => new URLSearchParams(Object.entries(state.value).filter(([key, value]) => value !== defaults[key])).toString();
+  // `changes` previews a state, for a link to it
+  const query = (changes) => new URLSearchParams(Object.entries({ ...state.value, ...changes }).filter(([key, value]) => value !== defaults[key])).toString();
   // a search replaces the entry as it is typed; a filter adds one, so Back steps through the filters
   const set = (changes, method = "pushState") => {
     state.value = { ...state.value, ...changes };
@@ -60,24 +61,26 @@ const href = (order) => `/orders/${order.id}${query() ? `?list=${encodeURICompon
 
 <template>
   <div class="@container/page flex flex-col gap-gap">
-    <h1 class="text-2xl font-semibold tracking-tight">Orders</h1>
-
-    <div class="grid grid-cols-2 items-center gap-3 @4xl/page:flex" role="search" aria-label="Orders">
-      <label class="input col-span-2 @4xl/page:flex-1">
-        <Search class="size-4" aria-hidden="true" />
-        <input type="search" placeholder="Search customers" aria-label="Search customers" :value="state.q" @input="set({ q: $event.target.value }, 'replaceState')">
-      </label>
-      <select class="input min-w-0 @4xl/page:w-44" aria-label="Status" :value="state.status" @change="set({ status: $event.target.value })">
-        <option value="">All statuses</option>
-        <option v-for="status in statuses" :key="status" :value="status">{{ status }}</option>
-      </select>
-      <div class="flex min-h-8 items-center justify-end gap-2 @4xl/page:min-w-44">
-        <p class="text-sm whitespace-nowrap muted" role="status">{{ filtered ? `${rows.length} of ${orders.length} orders` : "" }}</p>
-        <button v-if="filtered" type="button" class="btn ghost sm -me-3 text-muted-foreground hover:text-foreground" @click="reset">Clear</button>
+    <div>
+      <h1 class="text-2xl font-semibold tracking-tight">Orders</h1>
+      <div class="flex min-h-8 items-center gap-1">
+        <p class="text-sm muted" role="status">{{ filtered ? `${rows.length} of ${orders.length} orders` : `${orders.length} orders` }}</p>
+        <button v-if="filtered" type="button" class="btn ghost sm text-muted-foreground hover:text-foreground" @click="reset">Clear</button>
       </div>
     </div>
 
-    <div ref="results" tabindex="-1" class="rounded-(--radius) outline-none focus:outline-3 focus:outline-ring/50">
+    <div class="flex flex-wrap items-center gap-3" role="search" aria-label="Orders">
+      <label class="input grow basis-full @4xl/page:basis-0">
+        <Search class="size-4" aria-hidden="true" />
+        <input type="search" placeholder="Search customers" aria-label="Search customers" :value="state.q" @input="set({ q: $event.target.value }, 'replaceState')">
+      </label>
+      <select class="input min-w-0 flex-1 @4xl/page:w-44 @4xl/page:flex-none" aria-label="Status" :value="state.status" @change="set({ status: $event.target.value })">
+        <option value="">All statuses</option>
+        <option v-for="status in statuses" :key="status" :value="status">{{ status }}</option>
+      </select>
+    </div>
+
+    <div ref="results" tabindex="-1" class="rounded-(--radius) focus-visible:outline-3 focus-visible:outline-ring/50">
       <div v-if="!rows.length" class="card items-center py-3gap text-center">
         <h2 class="font-semibold">No orders match</h2>
         <p class="text-sm muted">Try another name or status.</p>
@@ -123,8 +126,10 @@ const href = (order) => `/orders/${order.id}${query() ? `?list=${encodeURICompon
 </template>
 ```
 
-- The columns fold together at one tier. Beside the shell's sidebar `@4xl/page` is 56rem, which a 1280 laptop reaches and 1024 doesn't. Add the fixed columns' widths and leave the name at least 16rem before moving a tier or adding a column, and put the same threshold on the `col`, `th` and `td`.
+- The columns fold together at one tier. Beside the shell's sidebar `@4xl/page` is 56rem, which a 1280 laptop reaches and 1024 doesn't. Size each fixed column for its widest content, add them up and leave the name at least 16rem before moving a tier or adding a column, and put the same threshold on the `col`, `th` and `td`.
 - A row's `relative` and the link's `after:` pseudo-element stretch the link over the row. A checkbox in the row needs `relative z-10` to stay above it.
-- The status line is `role="status"`, so a screen reader hears the count, and the count and Clear share the toolbar's row, so the table stays where it is when a filter starts.
+- The count's line is always there and `role="status"`, so a screen reader hears it change and the table stays where it is when a filter starts. A primary action goes at the end of the title's row. With a stat above that gives the total, the unfiltered line says what the page covers instead.
+- Each select takes half a phone's row, so two share one row; a third filter wraps to the next.
+- A stat that filters the list links to its own state (`` `?${query({ status: "Shipped" })}` ``) and counts the rows that link would show.
 - Read `list` on the record page and hand it to the breadcrumb's link, so the way back returns to this list as it was left.
 - Without a filter, an empty list says what belongs there: [empty-state.md](empty-state.md).

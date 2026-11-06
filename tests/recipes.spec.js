@@ -35,6 +35,11 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
   await page.keyboard.press("Tab");
   await expect(name).toBeFocused();
 
+  // money is a text field, so the server refuses what a number field would pass as 10
+  await price.fill("1e1");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(summary.getByRole("listitem")).toHaveText(["The name field is required.", "The price field must have 0-2 decimal places."]);
+
   await name.fill("Arc studio pro");
   await price.fill("399");
   await page.getByRole("button", { name: "Save", exact: true }).click();
