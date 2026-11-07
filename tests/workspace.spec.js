@@ -675,7 +675,12 @@ test('renaming a product renames its breadcrumb and tab', async ({ page }) => {
   await expect(page).toHaveTitle('Arc mk2 · Forma');
 });
 
+// the default period runs back from today, so typing "to 31 October" is only valid while it starts on or before then
+const writtenOn = new Date('2026-11-06T12:00');
+
 test.describe('typing a custom date', () => {
+  test.beforeEach(({ page }) => page.clock.setFixedTime(writtenOn));
+
   // a date field's order comes from the machine, not the page, so learn it and type in that order
   const keysFor = async (page, day, month, year) => {
     const from = page.getByLabel('Sales from', { exact: true });
@@ -703,6 +708,7 @@ test.describe('typing a custom date', () => {
 
 test('a refused date goes back to what the field held, not a date passed through on the way', async ({ page, browserName }) => {
   test.skip(browserName !== 'chromium', 'Chromium commits each digit, which is the case that broke');
+  await page.clock.setFixedTime(writtenOn);
   await page.goto('/app/dashboard.html');
   await page.getByLabel('Sales period preset', { exact: true }).selectOption('');
   const to = page.getByLabel('Sales to', { exact: true });
