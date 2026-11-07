@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.2`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.3`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.3.3 (7 November 2026)
 
 - A click anywhere in a `Field` password `reveal` box lands in the input. The wrapper is a `<div>`, so its padding and the space above and below the input did nothing. This covers any `.input` wrapper that is not a `<label>`, including the `guest.js` sign-in pages in `app-shell.md`. An app that worked around it with its own rules on `div.input` must delete them in the same update: the input now pulls itself over the wrapper's padding, so a workaround that removes that padding leaves the text at the box's edge. Markup is unchanged. `.input` gains a `--input-gap` custom property.
 - A `Field` password `reveal` hides again when its dialog closes, its form resets, or something other than the user empties it, so a dialog no longer reopens in "show" mode. It stays shown on blur and while the user clears the field to retype. Markup is unchanged.
