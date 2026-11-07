@@ -20,7 +20,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "test": "npm run test:unit && playwright test",
-    "test:unit": "vue-tsc --noEmit && php tests/table-query.php && node --test tests/table-view.ts tests/inventory.test.js tests/skill-code.test.js",
+    "test:unit": "vue-tsc --noEmit && php tests/table-query.php && node --test tests/table-view.ts tests/inventory.test.js tests/skill-code.test.js tests/build.test.js",
     "test:a11y": "playwright test a11y.spec.js --project=chromium",
     "test:browsers": "playwright test --project=firefox --project=webkit"
   },
@@ -46,7 +46,7 @@
     "@vitejs/plugin-vue": "^6.0.9",
     "tailwindcss": "^4.1.0",
     "typescript": "^6.0.3",
-    "vite": "^7.0.0",
+    "vite": "^8.3.6",
     "vue": "^3.5.43",
     "vue-tsc": "^3.3.12"
   }

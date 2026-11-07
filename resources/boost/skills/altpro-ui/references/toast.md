@@ -26,6 +26,7 @@ A region fixed in a corner, in the page from load and empty. The app appends an 
 - Anything with an action, or that the user must read, is `pinned` with a dismiss cross (`btn ghost xs`, `aria-label="Dismiss"`, `onclick="this.closest('.alert').remove()"`), same as a dismissible alert. Never make a toast the only way to reach an action.
 - On a page with a save bar, put the toaster at the top (`toaster top`): in the bottom corner a toast covers Save. The [app shell](app-shell.md)'s root view does, on every page.
 - Toasts are polite. Something that must interrupt is a dialog, not a toast.
+- An open modal `<dialog>` covers the toaster and makes it inert: nothing in it can be clicked or focused, and a `popover` does not change that. So the `toast` function in [Flash messages](#flash-messages-laravel) also puts the message in the dialog, above its footer, as `role="alert"`, until the dialog closes or the next toast replaces it. Use that function whenever an app can toast with a modal open.
 
 ## Flash messages (Laravel)
 
@@ -53,6 +54,18 @@ export function toast(message, type = "") {
   el.append(Object.assign(document.createElement("p"), { textContent: message }));
   el.addEventListener("animationend", (e) => e.animationName === "toast-life" && el.remove());
   document.getElementById("toaster").append(el);
+
+  // An open modal covers the toaster and makes it inert, so say it in the dialog as well. The toast stays too, as a
+  // dialog that closes on success takes this copy with it.
+  const dialog = [...document.querySelectorAll("dialog:modal")].at(-1);
+  if (!dialog) return;
+  dialog.querySelector("[data-toast]")?.remove();
+  const inline = el.cloneNode(true);
+  inline.setAttribute("role", "alert");
+  inline.dataset.toast = "";
+  const footer = dialog.querySelector("footer");
+  footer ? footer.before(inline) : dialog.append(inline);
+  dialog.addEventListener("close", () => inline.remove(), { once: true });
 }
 ```
 

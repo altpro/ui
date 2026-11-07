@@ -40,6 +40,12 @@ Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.3
 @import "@altpro/ui";
 ```
 
+Set `build.cssTarget` in `vite.config.js`. Without it, Vite 8 and vite-plus break [scheme regions](#scheme-regions) in production builds:
+
+```js
+build: { cssTarget: ["chrome123", "firefox120", "safari17.5"] },
+```
+
 Vue components bring their own JavaScript; Blade components need none. Import Vue components through a `@ui` alias in the app's `vite.config.js`, so the import does not depend on where the importing file lives. Every example in this skill uses it:
 
 ```js
@@ -229,6 +235,8 @@ The page follows the OS. To pin it, set `data-theme="light"` or `data-theme="dar
 | `inverse` | the opposite of the nearest region above it, at any nesting depth |
 
 Regions paint their own background and text colour. Use `inverse` for things like a dark footer on a light site that should become light when the site is dark.
+
+**Regions fail silently in a production build without `build.cssTarget`** (see Setup). Lightning CSS, the CSS minifier in Vite 8 and vite-plus, rewrites `light-dark()` for browsers older than that target, so the tokens resolve once on `:root`. A `.dark` region then has `color-scheme: dark` and the page's light colours. `npm run dev` does not show it. To check an app, build it and search the CSS: `grep -l lightningcss-dark public/build/assets/*.css`. A match means regions are broken. Lowering any of the three versions brings it back, and Tailwind's `optimize` option makes no difference.
 
 Tailwind's `dark:` variant follows the OS media query and ignores these regions. Prefer the tokens. If an app really needs `dark:` to follow regions, add to its stylesheet:
 

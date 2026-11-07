@@ -186,6 +186,9 @@
   &lt;Field name="headline" :value="post.headline" :errors="errors" /&gt;
   &lt;Field name="topics" type="combobox" multiple :options="topics" :value="post.topics" :errors="errors" /&gt;
 &lt;/Form&gt;</pre>
+    <p class="text-sm muted"><code>reveal</code> puts an eye inside the box. The password hides again when its dialog closes, its form resets or something other than the user empties it, so a dialog never reopens showing the next one.</p>
+    <div id="reveal-demo"></div>
+<pre>&lt;Field name="password" type="password" reveal autocomplete="current-password" :errors="errors" /&gt;</pre>
   </section>
 
   <section class="space-y-3">
@@ -207,7 +210,7 @@
         <p class="hint">A hint.</p>
       </div>
     </div>
-    <p class="text-sm muted">Custom properties on the input: <code>--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text</code>.</p>
+    <p class="text-sm muted">Custom properties on the input: <code>--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text --input-gap</code>.</p>
   </section>
 </main>
 </div>

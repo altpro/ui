@@ -19,11 +19,12 @@
     --input-h: 2.25rem;
     --input-px: 0.75rem;
     --input-text: var(--text-sm, 0.875rem);
+    --input-gap: 0.5rem;
     --join-divider: var(--input-border);
 
     display: inline-flex;
     align-items: center;
-    gap: 0.5rem;
+    gap: var(--input-gap);
     height: var(--input-h);
     padding-inline: var(--input-px);
     font-size: var(--input-text);
@@ -183,7 +184,7 @@
     /* wrapper: the control inside loses its own chrome, everything else is muted.
        The control keeps its natural one-line height rather than stretching, so
        it and the addon are the same box centred the same way, whatever the
-       font's metrics. The wrapper is a <label>, so clicks still land. */
+       font's metrics. A <label> passes its clicks on to the control. */
     &:is(label) {
       cursor: text;
     }
@@ -196,6 +197,23 @@
       background: transparent;
       color: inherit;
       font: inherit;
+    }
+    /* any other wrapper passes nothing on (Field's reveal is a div, as a label would add the
+       button's name to the input's), so its input covers the box: the height, the padding
+       when it comes first, and the gap before whatever follows it */
+    &:not(label) > input {
+      align-self: stretch;
+
+      &:first-child {
+        margin-inline-start: calc(-1 * var(--input-px));
+        padding-inline-start: var(--input-px);
+        border-start-start-radius: inherit;
+        border-end-start-radius: inherit;
+      }
+      &:not(:last-child) {
+        margin-inline-end: calc(-1 * var(--input-gap));
+        padding-inline-end: var(--input-gap);
+      }
     }
     /* a select beside an input keeps to its text so the chevron stays by it */
     > select:has(~ input), > input ~ select {

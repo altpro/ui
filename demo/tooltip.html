@@ -42,7 +42,13 @@
       <button class="btn" data-tooltip="Short">Left edge</button>
       <button class="btn" data-tooltip="Short">Right edge</button>
     </div>
-<pre>&lt;button class="btn" data-tooltip="Short"&gt;Left edge&lt;/button&gt;</pre>
+    <p class="text-sm muted">A dialog's edge clips a centred bubble. <code>data-tooltip-align</code> lines it up with that edge of the host instead.</p>
+    <div class="flex justify-between">
+      <button class="btn" data-tooltip="Copy the setup key to your clipboard" data-tooltip-align="start">Start</button>
+      <button class="btn" data-tooltip="Copy the setup key to your clipboard" data-tooltip-align="end">End</button>
+    </div>
+<pre>&lt;button class="btn" data-tooltip="Short"&gt;Left edge&lt;/button&gt;
+&lt;button class="btn" data-tooltip="Copy the setup key" data-tooltip-align="end"&gt;Right edge&lt;/button&gt;</pre>
   </section>
 
   <section class="space-y-3">

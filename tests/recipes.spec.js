@@ -109,6 +109,32 @@ test("edit page: leaving with unsaved changes asks first, in the app and through
   expect(await unloadBlocked()).toBe(false);
 });
 
+// an open modal makes the toaster inert, so its dismiss cross, and any screen reader, could not reach a toast there
+test("toast: with a modal open the message also shows in the dialog, until it closes, and the toast stays", async ({ page }) => {
+  await page.goto("/app/recipe-settings.html");
+  const say = (message, type) => page.evaluate(([message, type]) => import("/app/toast.js").then((m) => m.toast(message, type)), [message, type]);
+  const toaster = page.locator("#toaster"), dialog = page.getByRole("dialog", { name: "Delete your account?" });
+
+  await say("No modal", "info");
+  await expect(toaster.getByText("No modal")).toBeVisible();
+  await expect(page.locator("[data-toast]")).toHaveCount(0);
+
+  await page.locator("section").getByRole("button", { name: "Delete account" }).click();
+  await say("First failure", "danger");
+  await say("Can't reach the server", "danger");
+  const inline = dialog.getByRole("alert");
+  await expect(inline).toHaveText("Can't reach the server");
+  await expect(inline).toHaveClass(/alert danger/);
+  // above the actions, and no second copy of the first failure
+  expect(await inline.evaluate((el) => el.nextElementSibling.tagName)).toBe("FOOTER");
+  await expect(dialog.locator("[data-toast]")).toHaveCount(1);
+
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeHidden();
+  await expect(page.locator("[data-toast]")).toHaveCount(0);
+  await expect(toaster.getByText("Can't reach the server")).toBeVisible();
+});
+
 test("delete account: a wrong password keeps the dialog open with the error in it, closing forgets it, and the right one deletes", async ({ page }) => {
   await page.goto("/app/recipe-settings.html");
   const open = page.locator("section").getByRole("button", { name: "Delete account" });

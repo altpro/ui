@@ -2,6 +2,16 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.2`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+- A click anywhere in a `Field` password `reveal` box lands in the input. The wrapper is a `<div>`, so its padding and the space above and below the input did nothing. This covers any `.input` wrapper that is not a `<label>`, including the `guest.js` sign-in pages in `app-shell.md`. An app that worked around it with its own rules on `div.input` must delete them in the same update: the input now pulls itself over the wrapper's padding, so a workaround that removes that padding leaves the text at the box's edge. Markup is unchanged. `.input` gains a `--input-gap` custom property.
+- A `Field` password `reveal` hides again when its dialog closes, its form resets, or something other than the user empties it, so a dialog no longer reopens in "show" mode. It stays shown on blur and while the user clears the field to retype. Markup is unchanged.
+- The README and `altpro-ui` skill now tell apps to set `build.cssTarget`. Without it, Vite 8 and vite-plus rewrite `light-dark()` in production builds, and `.dark`, `.light` and `.inverse` regions silently keep the page's colours. This package's CSS is unchanged: **add the setting to `vite.config.js`** and run the check in the README. Run `php artisan boost:update` to get the skill.
+- The active tab no longer turns heavier, because the wider text moved every tab after it by 2px between pages. It keeps its colour and bar. Markup is unchanged.
+- A tooltip takes `data-tooltip-align="start"` or `"end"`, which lines the bubble up with that edge of its host, so a dialog's or the screen's edge no longer clips it. `CopyButton` passes the attribute on. Apps that nudged a bubble with a `translate` utility can use this instead.
+- `toast.md`'s `toast()` shows the message inside an open modal as well, above its footer, because a modal makes the toaster inert. To get this, copy the new function into `resources/js/toast.js`, and run `php artisan boost:update` to get the skill.
+- This repo's demo now builds with Vite 8 and sets the same `build.cssTarget`, and `npm run test:unit` builds it and fails if `light-dark()` has been rewritten. Apps can stay on Vite 7 or move to 8.
+
 ## 0.3.2 (6 November 2026)
 
 - The skills resolve what a fifth skills-only test found. `unsaved-changes.md`'s dirty dialog comes back and asks when a repeated Escape closes it with no `cancel` event, and its close cross lines up with the heading. `list-page.md` folds the total onto the code line, so a name takes the phone's whole row, and gives the row's link a focus ring. `altpro-ui-design` adds rules for a closed record that still owes money, a primary reached by a dialog's submit, ways down a long record, and emails that wrap. Run `php artisan boost:update` to get them. Markup is unchanged.

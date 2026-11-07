@@ -6,14 +6,14 @@
   Options take [{ value, label }], { value: label }, a list of strings, or models with id and name.
   A model or a list of models in v-model is handed straight back as ids, so an untouched field never submits models.
   Without v-model (Inertia's <Form>), `value` is the starting value and the inputs are the truth.
-  `reveal` on a password adds a button that shows and hides it. Vue only: the Blade field has no twin for it.
+  `reveal` on a password adds a button that shows and hides it, and it hides again when the field is reused. Vue only: the Blade field has no twin for it.
   `now` fills an empty date, time, datetime-local or month with the current one, in the browser's timezone, and emits it.
   On those types an ISO string (Inertia's 2026-10-13T09:30:00.000000Z) is trimmed to what the input takes, in v-model too.
   Errors take a string, an array, or Laravel's errors object (Inertia's, or a 422 body's `errors`).
   `class` lands on the .field, every other attribute on the control.
 -->
 <script setup>
-import { computed, ref, useAttrs, useId, useSlots, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, useAttrs, useId, useSlots, watch } from "vue";
 import Combobox from "./Combobox.vue";
 import { onFormReset, useDomModel } from "./domModel.js";
 
@@ -106,7 +106,23 @@ const control = () => {
 };
 const file = (e) => (model.value = e.target.multiple ? [...e.target.files] : e.target.files[0] ?? null);
 // nothing can write a file input, so even with v-model a reset empties the model as it empties the input
-onFormReset(root, () => props.type === "file" && file({ target: root.value.querySelector("input") }));
+onFormReset(root, () => {
+  hide();
+  if (props.type === "file") file({ target: root.value.querySelector("input") });
+});
+
+// A revealed password hides again when the field is reused, so a closed dialog never reopens showing the next one. A
+// dialog stays in the DOM and an empty form resets with no event, so its close counts too. Emptying it by hand does
+// not: the user is retyping and asked to see it. useForm's reset() and Inertia's reset('field') only show in the model.
+const hide = () => (shown.value = false);
+let typed = false;
+watch(model, (v, was) => {
+  if (was && !v && !typed) hide();
+  typed = false;
+});
+let dialog;
+onMounted(() => props.reveal && (dialog = root.value.closest("dialog"))?.addEventListener("close", hide));
+onBeforeUnmount(() => dialog?.removeEventListener("close", hide));
 </script>
 
 <template>
@@ -129,10 +145,11 @@ onFormReset(root, () => props.type === "file" && file({ target: root.value.query
         <option v-for="o in options" :key="o.value" :value="o.value">{{ o.label }}</option>
       </select>
       <!-- a string sits in a span; a slot (a currency select, say) goes in as written. With the reveal button the
-           wrapper is a div: a wrapping label would add the button's name to the input's -->
+           wrapper is a div: a wrapping label would add the button's name to the input's. Capture, as a watcher can
+           run between v-model's listener and a later one on the same event -->
       <component :is="reveal ? 'div' : 'label'" v-else-if="prepend || append || $slots.prepend || $slots.append || reveal" class="input">
         <slot name="prepend"><span v-if="prepend">{{ prepend }}</span></slot>
-        <input v-model="model" :type="reveal && shown ? 'text' : type" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()">
+        <input v-model="model" :type="reveal && shown ? 'text' : type" :id="id" :name="name" :aria-describedby="describedby" :aria-invalid="invalid" v-bind="control()" @input.capture="typed = true">
         <slot name="append"><span v-if="append">{{ append }}</span></slot>
         <button v-if="reveal" type="button" class="btn ghost sm -me-2 px-2" aria-label="Show password" :aria-pressed="String(shown)" @click="shown = !shown">
           <svg v-if="shown" class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10.733 5.076a10.744 10.744 0 0 1 11.205 6.575 1 1 0 0 1 0 .696 10.747 10.747 0 0 1-1.444 2.49"/><path d="M14.084 14.158a3 3 0 0 1-4.242-4.242"/><path d="M17.479 17.499a10.75 10.75 0 0 1-15.417-5.151 1 1 0 0 1 0-.696 10.75 10.75 0 0 1 4.446-5.143"/><path d="m2 2 20 20"/></svg>

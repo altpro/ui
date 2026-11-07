@@ -103,6 +103,24 @@ Vue components are at `@altpro/ui/js/Combobox.vue` and alongside; alias `"@ui": 
 
 Keep the app's own `include` entries and add the last one. Copy the `altpro-ui`, `altpro-ui-design` and `altpro-ui-review` directories from `resources/boost/skills/` into the project's `.claude/skills/` for Claude.
 
+## Production builds
+
+Set `build.cssTarget` in `vite.config.js`:
+
+```js
+build: { cssTarget: ["chrome123", "firefox120", "safari17.5"] },
+```
+
+Every colour token is a `light-dark()` value on `:root`, and a `.dark`, `.light` or `.inverse` region sets `color-scheme` so the tokens resolve differently inside it. Vite 8 and vite-plus minify CSS with Lightning CSS, as does any build with `cssMinify: "lightningcss"`. For browsers older than those three, Lightning CSS rewrites `light-dark()` into `--lightningcss-light` and `--lightningcss-dark` variables, which resolve once on `:root`. A region then gets `color-scheme: dark` with the page's light colours. Nothing warns you, and `npm run dev` does not show it. Lower any of the three versions and the rewrite comes back.
+
+To check an app, build it and search the CSS. A match means regions are broken:
+
+```
+grep -l lightningcss-dark public/build/assets/*.css
+```
+
+Vite 7's default minifier leaves `light-dark()` alone, and the setting does no harm there. Tailwind's `optimize` option has no effect on this.
+
 ## Develop
 
 ```

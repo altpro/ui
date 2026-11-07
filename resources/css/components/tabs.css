@@ -96,8 +96,8 @@
       }
     }
     > :is(a[aria-current], label:has(:checked), [aria-selected="true"]) {
+      /* no heavier weight: wider text would move every tab after it */
       color: var(--tabs-active-fg);
-      font-weight: 600;
       &::after { background: var(--tabs-active); }
       /* forced colours repaint the bar as Canvas */
       @media (forced-colors: active) {

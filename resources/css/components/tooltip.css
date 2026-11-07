@@ -4,6 +4,8 @@
    ::before the tail, absolutely positioned over the host. Not anchor
    positioning: a pseudo-element may not anchor to its own host, so
    there is no viewport flip. Overflow ancestors clip it.
+   data-tooltip-align="start" or "end" lines the bubble up with that edge
+   of the host, for a host beside whatever would clip it.
    Anything more than a line of text is a dropdown. */
 @layer components {
   [data-tooltip]:not([data-tooltip=""]) {
@@ -63,6 +65,9 @@
       translate: -50%;
       rotate: 45deg;
     }
+    /* the tail stays on the host's centre */
+    &[data-tooltip-align="start"]::after { inset-inline: 0 auto; translate: none; }
+    &[data-tooltip-align="end"]::after { inset-inline: auto 0; translate: none; }
     &:is(:hover, :focus-visible)::before,
     &:is(:hover, :focus-visible)::after {
       visibility: visible;

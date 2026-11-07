@@ -369,7 +369,7 @@ for (const colorScheme of ["light", "dark"]) {
         const r = await t.evaluate((el) => {
           const s = getComputedStyle(el, "::after"), box = el.getBoundingClientRect();
           const [w, h] = [parseFloat(s.width), parseFloat(s.height)];
-          const cx = box.x + box.width / 2;
+          const cx = { start: box.x + w / 2, end: box.right - w / 2 }[el.dataset.tooltipAlign] ?? box.x + box.width / 2;
           return { visibility: s.visibility, w, left: cx - w / 2, right: cx + w / 2, top: box.y - h, hit: document.elementFromPoint(cx, box.y - h / 2) === el };
         });
         const ok = r.visibility === "visible" && r.hit && r.left >= 0 && r.right <= 1100 && r.top >= 0;

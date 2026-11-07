@@ -26,6 +26,8 @@ export default defineConfig({
   build: {
     outDir: resolve(import.meta.dirname, "dist"),
     emptyOutDir: true,
-    rollupOptions: { input: pages },
+    // the same target the README tells apps to set: below it, Lightning CSS rewrites light-dark() and breaks scheme regions
+    cssTarget: ["chrome123", "firefox120", "safari17.5"],
+    rolldownOptions: { input: pages },
   },
 });

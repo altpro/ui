@@ -31,6 +31,6 @@ Panels, switched in place:
 - One radio `name` per group. Arrow keys move between tabs like a tablist.
 - Keep `display` utilities such as `grid` and `flex` on a child inside each panel. A display utility on the direct panel overrides its hidden state because Tailwind utilities win over component styles.
 - Tabs wrap when the row is too narrow. Add `overflow-x-auto flex-nowrap` for a scrolling row instead.
-- The active bar is `--tabs-active`, the primary colour by default. Text stays the page foreground.
+- The active tab differs by colour and its bar, not by weight, so the row does not move between pages. The bar is `--tabs-active`, the primary colour by default. Text stays the page foreground.
 
 Custom properties: `--tabs-fg --tabs-active-fg --tabs-active --tabs-hover --tabs-border --tabs-radius --tabs-h --tabs-px --tabs-text`.

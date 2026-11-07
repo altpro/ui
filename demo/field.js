@@ -1,7 +1,7 @@
 // The Vue section of field.html. Its props match the Blade templates in
 // tests/browsers.spec.js, which compares the two renders field by field, up to the Vue-only combobox.
 import { createApp, h, reactive, ref } from "vue";
-import { Form } from "@inertiajs/vue3";
+import { Form, useForm } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 
 createApp({
@@ -57,3 +57,38 @@ const inertia = createApp({
 });
 inertia.config.idPrefix = "form";
 inertia.mount("#inertia-demo");
+
+// Three ways a password field gets emptied: a dialog over Inertia's <Form> resets on close, useForm's reset() only
+// changes the model, and a native reset only tells the form. The dialog is the same shape as an app's confirm-password one.
+const reveal = createApp({
+  setup() {
+    const confirm = ref();
+    const change = useForm({ current_password: "" });
+    const plain = ref("");
+    return () => h("div", { class: "grid max-w-3xl gap-6 md:grid-cols-2" }, [
+      h("div", { class: "flex items-end" }, h("button", { type: "button", class: "btn outlined", command: "show-modal", commandfor: "reveal-dialog" }, "Confirm with a password")),
+      h("dialog", { id: "reveal-dialog", class: "dialog", "aria-label": "Confirm your password", onClose: () => confirm.value.resetAndClearErrors() }, [
+        h(Form, { ref: confirm, action: "#", method: "post", class: "contents" }, {
+          default: ({ errors, reset, setError }) => [
+            h(Field, { name: "password", label: "Current password", type: "password", reveal: true, autocomplete: "current-password", errors }),
+            h("footer", { class: "justify-end" }, [
+              // reset-on-error and reset-on-success with field names go this way: the input is written, and no event fires
+              h("button", { type: "button", class: "btn ghost", onClick: () => { reset("password"); setError({ password: "That password is wrong." }); } }, "Wrong password"),
+              h("button", { type: "button", class: "btn outlined", command: "close", commandfor: "reveal-dialog" }, "Cancel"),
+            ]),
+          ],
+        }),
+      ]),
+      h("form", { class: "grid gap-2" }, [
+        h(Field, { modelValue: change.current_password, "onUpdate:modelValue": (v) => (change.current_password = v), name: "current_password", label: "With useForm", type: "password", reveal: true, autocomplete: "off" }),
+        h("button", { type: "button", class: "btn outlined justify-self-start", onClick: () => change.reset() }, "Reset with useForm"),
+      ]),
+      h("form", { class: "grid gap-2" }, [
+        h(Field, { modelValue: plain.value, "onUpdate:modelValue": (v) => (plain.value = v), name: "pin", label: "PIN", type: "password", reveal: true, prepend: "#", autocomplete: "off" }),
+        h("button", { type: "reset", class: "btn outlined justify-self-start" }, "Native reset"),
+      ]),
+    ]);
+  },
+});
+reveal.config.idPrefix = "reveal";
+reveal.mount("#reveal-demo");

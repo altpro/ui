@@ -20,7 +20,7 @@ A textarea grows with `rows`; the size is a minimum height. Width is the browser
 
 A `<select>` opts into `appearance: base-select` where the browser has it (Chrome 135+). The chevron is a Lucide stroke in muted text, the picker matches `.dropdown`, and `<option>`, `<optgroup>` and its `<legend>` are styled. Other browsers keep their native select.
 
-Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (a `<span>` symbol or unit, a `size-4` svg, a `<kbd>` drawn as a key cap) sits in the same border in muted text, and the focus ring goes round the whole box. Clicking an addon focuses the control. A `<select>` can be a second control inside the wrapper. A button next to an input is a `.join`, not an addon.
+Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (a `<span>` symbol or unit, a `size-4` svg, a `<kbd>` drawn as a key cap) sits in the same border in muted text, and the focus ring goes round the whole box. Clicking an addon focuses the control. A `<select>` can be a second control inside the wrapper. A button next to an input is a `.join`, not an addon. The exception is a button that acts on the input itself, like the password reveal: that wrapper is a `<div>`, as a `<label>` would add the button's name to the input's. A `<div>` passes no clicks on, so its input stretches to cover the box instead. An addon before the input in a `<div>` does not focus it.
 
 ```html
 <label class="input"><span>£</span><input inputmode="decimal" aria-label="Price"></label>
@@ -31,4 +31,4 @@ Addons: put `.input` on a `<label>` wrapping the control. Anything else inside (
 </div>
 ```
 
-Custom properties: `--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text`.
+Custom properties: `--input-bg --input-fg --input-border --input-ring --input-radius --input-h --input-px --input-text --input-gap`.

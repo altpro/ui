@@ -23,6 +23,7 @@ tests/blade.php              renders a Blade string through Testbench, for the b
 tests/table-query.php        TableQuery against in-memory SQLite
 tests/table-view.ts          tableView (what DataTable.vue shows for a view) and readView/viewUrl under plain Node
 tests/table-urls.json        URL-to-view cases both of the above read, so the PHP and TS halves agree on the query-string format
+tests/build.test.js          a production build keeps light-dark(), as dev cannot show what Lightning CSS does to it
 tests/component-types.vue    app-side usages of the Vue components that vue-tsc checks in test:unit, so their inferred prop types match the docs
 tests/inventory.test.js      the "Adding a component" checklist below as a test; a component whose demo page or reference has another name goes in its aliases map
 tests/skill-code.test.js     a reference code block headed with a resources/js/ path equals that file in demo/app/ where the demo has it, and every demo page, layout and composable is one, so the skill shows the code the browser tests run
@@ -67,7 +68,7 @@ git config core.hooksPath .githooks   pre-commit and pre-merge-commit run npm ru
 npm run dev            demo site with live reload
 npm run build          production build of the demo into dist/
 npm test               test:unit, then every Playwright spec: test:a11y and test:browsers below, and the rest in Chromium
-npm run test:unit      vue-tsc type check, TableQuery, tableView, the inventory and skill-code tests; no browser
+npm run test:unit      vue-tsc type check, TableQuery, tableView, the inventory and skill-code tests, and a production build; no browser
 npm run test:a11y      axe WCAG 2.2 AA scan of every demo page in light and dark, plus hover, focus and target-size checks (Chromium)
 npm run test:browsers  the Firefox/WebKit matrix
 ```

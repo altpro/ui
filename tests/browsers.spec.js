@@ -4,6 +4,7 @@
 import { test, expect } from "@playwright/test";
 import AxeBuilder from "@axe-core/playwright";
 import { execFileSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 
 const pages = ["button.html", "field.html", "dropdown.html", "combobox.html", "datatable.html", "dialog.html", "tabs.html", "app/product.html"];
 const tags = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"];
@@ -253,6 +254,184 @@ test("field: reveal shows and hides a password, and only the input rings its wra
   await page.keyboard.press("Shift+Tab");
   await expect(input).toBeFocused();
   expect(await wrapperRing()).not.toBe("none");
+});
+
+// a reveal's wrapper is a div, which passes no clicks on, so the input itself has to cover the box. Sampled 2px in from
+// each edge, past the 1px border; beside the button only the strip the button's negative margin leaves stays the wrapper's.
+const hitsInput = (input) => input.evaluate((el) => {
+  el.scrollIntoView({ block: "center" });
+  const box = el.parentElement.getBoundingClientRect(), button = el.parentElement.querySelector("button").getBoundingClientRect();
+  const y = box.top + box.height / 2;
+  return Object.fromEntries(Object.entries({
+    left: [box.left + 2, y], top: [box.left + box.width / 2, box.top + 2], bottom: [box.left + box.width / 2, box.bottom - 2],
+    corner: [box.left + 8, box.top + 2], beside: [button.left - 2, y],
+  }).map(([name, [px, py]]) => [name, document.elementFromPoint(px, py) === el]));
+});
+const everywhere = { left: true, top: true, bottom: true, corner: true, beside: true };
+
+for (const size of ["", "xs", "sm", "lg", "xl"]) test(`field: a click anywhere in a reveal box lands in the input${size && `, at ${size}`}`, async ({ page }) => {
+  await page.goto("/field.html");
+  const input = page.locator("#vue-demo").getByLabel("Password", { exact: true });
+  await input.evaluate((el, size) => size && el.parentElement.classList.add(size), size);
+  expect(await hitsInput(input)).toEqual(everywhere);
+  const box = await input.locator("..").boundingBox();
+  // just inside the corner: nearer than this is the wrapper's curved border
+  await page.mouse.click(box.x + 4, box.y + 4);
+  await expect(input).toBeFocused();
+  // the text stays where every other input keeps it
+  const inset = await input.evaluate((el) => {
+    const box = el.parentElement, range = parseFloat(getComputedStyle(box).getPropertyValue("--input-px")) * parseFloat(getComputedStyle(document.documentElement).fontSize);
+    const text = el.getBoundingClientRect().left + parseFloat(getComputedStyle(el).paddingInlineStart);
+    return [text - box.getBoundingClientRect().left - box.clientLeft, range];
+  });
+  expect(inset[0]).toBeCloseTo(inset[1], 1);
+});
+
+test("field: a reveal with a prepend keeps its text inset, and the input still takes the height", async ({ page }) => {
+  await page.goto("/field.html");
+  const input = page.getByLabel("PIN"), wrapper = input.locator("..");
+  const [offset, px] = await wrapper.evaluate((el) => [el.querySelector("span").getBoundingClientRect().left - el.getBoundingClientRect().left - el.clientLeft, parseFloat(getComputedStyle(el).paddingInlineStart)]);
+  expect(offset).toBeCloseTo(px, 1);
+  expect(px).toBeGreaterThan(0);
+  const { top, bottom, beside } = await hitsInput(input);
+  expect({ top, bottom, beside }).toEqual({ top: true, bottom: true, beside: true });
+});
+
+// the sign-in pages have no Vue: the Blade field, with the skill's own guest.js wrapping it in the same div.input
+test("field: the skill's guest.js reveal lands clicks in the input too", async ({ page }) => {
+  await page.goto("/field.html");
+  const guest = readFileSync("resources/boost/skills/altpro-ui/references/app-shell.md", "utf8").match(/```js\n\/\/ resources\/js\/guest\.js\n([\s\S]*?)```/)[1];
+  await page.evaluate(([field, guest]) => {
+    document.querySelector("main").insertAdjacentHTML("afterbegin", `<div id="guest">${field}</div><template id="reveal"><button type="button" class="btn ghost sm -me-2 px-2" aria-label="Show password" aria-pressed="false"><svg class="size-4"></svg></button></template>`);
+    new Function(guest.replace("document.querySelectorAll(\"input[type=password]\")", "document.querySelectorAll(\"#guest input[type=password]\")"))();
+  }, [render(`<x-ui::field name="sign_in_password" label="Sign-in password" type="password" />`), guest]);
+  const input = page.getByLabel("Sign-in password");
+  await expect(input.locator("..")).toHaveClass("input");
+  expect(await hitsInput(input)).toEqual(everywhere);
+});
+
+test.describe("field: a revealed password hides again", () => {
+  const demo = (page) => page.locator("#reveal-demo");
+  const expectHidden = async (input, button) => {
+    await expect(input).toHaveAttribute("type", "password");
+    await expect(button).toHaveAttribute("aria-pressed", "false");
+  };
+
+  // the case apps hit: nothing typed, so Inertia's reset changes nothing and fires no reset event
+  test("when its dialog closes, with nothing typed", async ({ page }) => {
+    await page.goto("/field.html");
+    const open = demo(page).getByRole("button", { name: "Confirm with a password" }), dialog = demo(page).getByRole("dialog");
+    const input = dialog.getByLabel("Current password"), eye = dialog.getByRole("button", { name: "Show password" });
+    await open.click();
+    await eye.click();
+    await expect(input).toHaveAttribute("type", "text");
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await open.click();
+    await expectHidden(input, eye);
+  });
+
+  test("when its dialog closes, with a password typed", async ({ page }) => {
+    await page.goto("/field.html");
+    const open = demo(page).getByRole("button", { name: "Confirm with a password" }), dialog = demo(page).getByRole("dialog");
+    const input = dialog.getByLabel("Current password"), eye = dialog.getByRole("button", { name: "Show password" });
+    await open.click();
+    await input.fill("hunter2");
+    await eye.click();
+    await dialog.getByRole("button", { name: "Cancel" }).click();
+    await open.click();
+    await expect(input).toHaveValue("");
+    await expectHidden(input, eye);
+  });
+
+  test("when Inertia resets that one field and fires no event", async ({ page }) => {
+    await page.goto("/field.html");
+    const dialog = demo(page).getByRole("dialog");
+    await demo(page).getByRole("button", { name: "Confirm with a password" }).click();
+    const input = dialog.getByLabel("Current password"), eye = dialog.getByRole("button", { name: "Show password" });
+    await input.fill("hunter2");
+    await eye.click();
+    await dialog.getByRole("button", { name: "Wrong password" }).click();
+    await expect(dialog.locator(".error")).toHaveText("That password is wrong.");
+    await expect(input).toHaveValue("");
+    await expectHidden(input, eye);
+  });
+
+  test("when useForm resets the model, which fires no native reset", async ({ page }) => {
+    await page.goto("/field.html");
+    const input = demo(page).getByLabel("With useForm"), eye = input.locator("..").getByRole("button", { name: "Show password" });
+    await input.fill("hunter2");
+    await eye.click();
+    await expect(input).toHaveAttribute("type", "text");
+    await demo(page).getByRole("button", { name: "Reset with useForm" }).click();
+    await expect(input).toHaveValue("");
+    await expectHidden(input, eye);
+  });
+
+  test("on a native form reset", async ({ page }) => {
+    await page.goto("/field.html");
+    const input = page.getByLabel("PIN"), eye = input.locator("..").getByRole("button", { name: "Show password" });
+    await input.fill("1234");
+    await eye.click();
+    await expect(input).toHaveAttribute("type", "text");
+    await demo(page).getByRole("button", { name: "Native reset" }).click();
+    await expectHidden(input, eye);
+  });
+
+  test("but not on blur, or when the user clears it to retype", async ({ page }) => {
+    await page.goto("/field.html");
+    const input = demo(page).getByLabel("With useForm"), eye = input.locator("..").getByRole("button", { name: "Show password" });
+    await input.fill("hunter2");
+    await eye.click();
+    await input.focus();
+    await page.locator("h1").click();
+    await expect(input).toHaveAttribute("type", "text");
+    await input.focus();
+    await page.keyboard.press("ControlOrMeta+A");
+    await page.keyboard.press("Delete");
+    await expect(input).toHaveValue("");
+    await expect(input).toHaveAttribute("type", "text");
+    await expect(eye).toHaveAttribute("aria-pressed", "true");
+    await page.keyboard.type("hunter3");
+    await expect(input).toHaveAttribute("type", "text");
+    await expect(input).toHaveValue("hunter3");
+  });
+});
+
+// a heavier active tab is wider, and moved every tab after it between pages
+test("tabs: the active tab does not move the tabs after it", async ({ page }) => {
+  await page.goto("/tabs.html");
+  const lefts = await page.evaluate(() => {
+    const labels = ["Profile", "Security", "Sessions", "Appearance"];
+    return labels.map((_, active) => {
+      const nav = document.createElement("nav");
+      nav.className = "tabs";
+      nav.innerHTML = labels.map((label, i) => `<a href="#"${i === active ? ' aria-current="page"' : ""}>${label}</a>`).join("");
+      document.querySelector("main").prepend(nav);
+      return [...nav.children].map((a) => a.getBoundingClientRect().left).join();
+    });
+  });
+  expect(new Set(lefts).size).toBe(1);
+});
+
+// a dialog scrolls, so it clips: the bubble has to fit inside it, and a centred one on a host at the edge cannot
+test("tooltip: data-tooltip-align keeps a long bubble inside a dialog", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 800 });
+  await page.goto("/tooltip.html");
+  const bubbles = await page.evaluate(() => {
+    const dialog = document.createElement("dialog");
+    dialog.className = "dialog";
+    const long = "Copy the setup key to your clipboard";
+    dialog.innerHTML = `<div class="mt-12 flex justify-between"><button class="btn sm" data-tooltip="${long}" data-tooltip-align="start">a</button><button class="btn sm" data-tooltip="${long}" data-tooltip-align="end">b</button></div>`;
+    document.body.append(dialog);
+    dialog.showModal();
+    const box = dialog.getBoundingClientRect();
+    return [...dialog.querySelectorAll("button")].map((host) => {
+      const bubble = getComputedStyle(host, "::after"), rect = host.getBoundingClientRect(), width = parseFloat(bubble.width);
+      const left = host.dataset.tooltipAlign === "start" ? rect.left + parseFloat(bubble.left) : rect.right - parseFloat(bubble.right) - width;
+      return { inside: left >= box.left && left + width <= box.right, tail: getComputedStyle(host, "::before").translate };
+    });
+  });
+  expect(bubbles.map((b) => b.inside)).toEqual([true, true]);
 });
 
 // on its own a combobox is a select's fixed 12rem; in a field it must line up with the inputs around it
