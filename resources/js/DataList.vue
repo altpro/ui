@@ -57,14 +57,16 @@ const badge = computed(() => countFilters(filters.value, state.filters.value, pr
 type Target = () => HTMLElement | null | undefined;
 // a page change or a cleared search redraws when the URL changes, which in server mode is after the response
 let pending: [Element | null, Target] | null = null;
-let paged: { page: number; keyboard: boolean } | null = null;
+let paged: { page: number; from: Element | null; keyboard: boolean } | null = null;
 watch([() => view.value.page, () => view.value.empty], () => {
   // only the page asked for: that visit may have failed, and this be some other change
   const moved = paged?.page === view.value.page ? paged : null;
   paged = null;
-  if (moved && root.value && root.value.getBoundingClientRect().top < 0) root.value.scrollIntoView();
+  // a slow answer must not pull back a reader who has gone on to something else
+  const stayed = moved !== null && [document.body, moved.from].includes(document.activeElement);
+  if (stayed && root.value && root.value.getBoundingClientRect().top < 0) root.value.scrollIntoView();
   // the pager has scrolled out of sight with the rows it was under, and a keyboard's focus goes with them
-  if (moved?.keyboard) root.value?.focus({ preventScroll: true });
+  if (stayed && moved.keyboard) root.value?.focus({ preventScroll: true });
   else if (pending) handOff(...pending, { preventScroll: moved !== null });
   pending = null;
 }, { flush: "post" });
@@ -74,7 +76,7 @@ const goTo = (page: number) => {
   const from = document.activeElement;
   const target = Math.min(Math.max(page, 1), view.value.lastPage);
   pending = [from, () => pager.value?.querySelector<HTMLElement>("[aria-current]")];
-  if (props.scrollOnPage && target !== view.value.page) paged = { page: target, keyboard: from instanceof HTMLElement && from.matches(":focus-visible") };
+  if (props.scrollOnPage && target !== view.value.page) paged = { page: target, from, keyboard: from instanceof HTMLElement && from.matches(":focus-visible") };
   state.apply({ page: target });
 };
 // the button sits in the row it removes; the search box it emptied comes first, and a list without one has its Filters button, its count or itself

@@ -133,6 +133,7 @@
     }
 
     > .foot {
+      container-type: inline-size;
       display: flex;
       flex-wrap: wrap;
       align-items: center;
@@ -148,6 +149,12 @@
         display: inline-flex;
         align-items: center;
         gap: 0.5rem;
+      }
+      /* six pages and up will not fit a phone: Previous, the current page and Next */
+      @container (width < 28rem) {
+        > nav:has(> :nth-child(8)) > :not([aria-current], :first-child, :last-child) {
+          display: none;
+        }
       }
     }
   }

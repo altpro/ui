@@ -97,7 +97,7 @@ const bulkBar = ref<HTMLElement>();
 
 // aria-sort on the th is the one place sort state lives; .table draws the arrow from it
 const ariaSort = (key: string) => (state.sort.value !== key ? undefined : state.direction.value === "asc" ? "ascending" : "descending");
-const toggleSort = (key: string) => state.apply({ sort: key, direction: state.sort.value === key && state.direction.value === "asc" ? "desc" : "asc" });
+const toggleSort = (key: string) => state.apply({ sort: key, direction: state.latestSort.value === key && state.latestDirection.value === "asc" ? "desc" : "asc" });
 
 
 const rowId = (row: TRow, index: number) => keyOf(row, props.rowKey ?? "id", index, props.selectable);
@@ -113,7 +113,7 @@ const canSelectAllMatching = computed(() => allVisibleSelected.value && !allMatc
 const selection = computed<DataTableSelection | null>(() =>
   allMatching.value
     ? // the query the rows on screen answer: in server mode the box can be ahead of a response still on its way
-      { mode: "matching", search: server.value ? state.search.value : state.searchInput.value.trim(), filters: state.filters.value, count: view.value.total }
+      { mode: "matching", search: !list.searchable.value ? "" : server.value ? state.search.value : state.searchInput.value.trim(), filters: state.filters.value, count: view.value.total }
     : selectedIds.value.length
       ? { mode: "ids", ids: [...selectedIds.value] }
       : null,

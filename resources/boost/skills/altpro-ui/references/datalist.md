@@ -63,7 +63,7 @@ Put `aria-busy` on a direct child of the frame, as above, and it dims while the 
 | `storageKey` | Names the stored page size. Defaults to `name`; with neither, the page size is not kept. |
 | `perPage` | Rows per page until the reader picks another. |
 | `searchable` | Client mode: the keys to search. Without it there is no search box, as it could find nothing. |
-| `search` | `false` removes the search box in either mode. |
+| `search` | `false` removes the search box in either mode, and a `search` in the URL is then ignored. |
 | `sortOptions` | `[{ key, direction, label }]`. Draws a sort select, and adds the keys to what a URL may sort by. In server mode list them in `TableQuery`'s `sortable` too. |
 | `sort`, `direction` | The default sort. Defaults to the first of `sortOptions`. |
 | `sortable` | Further keys a URL may sort by. |

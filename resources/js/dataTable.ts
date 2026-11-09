@@ -218,13 +218,16 @@ export const tableView = <TRow>(
     unfilteredTotal?: number;
     /** Without columns: what to compare for a sort key, if not the field itself. */
     sortValue?: (row: TRow, key: string) => unknown;
+    /** False: a search in the URL is ignored, as there is no box to show or clear it. */
+    search?: boolean;
   },
   view: DataTableView,
   pageSize: number,
 ) => {
   const value = (row: TRow, key: string): unknown => (row as Record<string, unknown>)[key];
   const filters = table.filters ?? [];
-  const term = view.search.trim().toLowerCase();
+  // with nothing to search there is no box, so a term in the URL could only hide every row with no way of saying why
+  const term = table.search === false || (!isPaginated(table.rows) && searchKeys(table).length === 0) ? "" : view.search.trim().toLowerCase();
   let rows: TRow[], meta: DataTablePaginationMeta | null = null, unfiltered: number | undefined;
 
   if (isPaginated(table.rows)) {
@@ -416,6 +419,8 @@ export const visitReloadsTable = (visit: { method: string; url: URL; only: strin
 const askedFor = shallowRef<string | null>(null);
 // what that visit reloads, as a visit that cancels it has to reload the same or its rows go stale under their filters. Empty means everything.
 let askedOnly: string[] = [];
+// and whether it rewrites the history entry; if it adds one, a visit that cancels it has to add it instead
+let askedReplace = false;
 let latestVisit: object | null = null;
 
 /**
@@ -457,13 +462,15 @@ export const useTableState = (options: {
     if (!options.server() && !overtaking) return router[replace ? "replace" : "push"]({ url, preserveScroll: true, preserveState: true });
     const own = options.server() ? options.only() : askedOnly;
     const only = !overtaking ? own : own.length && askedOnly.length ? [...new Set([...askedOnly, ...own])] : [];
+    const replaceEntry = replace && (!overtaking || askedReplace);
     const visit = (latestVisit = {});
     askedFor.value = url;
     askedOnly = only;
+    askedReplace = replaceEntry;
     router.get(url, {}, {
       preserveScroll: true,
       preserveState: true,
-      replace,
+      replace: replaceEntry,
       only: only.length ? only : undefined,
       // fails or is cancelled too; a later visit has taken over if this was not the latest
       onFinish: () => {
@@ -496,6 +503,8 @@ export const useTableState = (options: {
   let reloading: object | null = null;
   const offStart = router.on("start", ({ detail: { visit } }) => {
     if (!visitReloadsTable(visit, page.url, options.only())) return;
+    // a list in the browser names no props to reload, so a partial visit is someone else's
+    if (!options.server() && visit.only.length > 0) return;
     reloading = visit;
     busy.value = true;
   });

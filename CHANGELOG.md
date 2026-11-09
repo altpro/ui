@@ -9,7 +9,9 @@ Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.4`). On 0.x a breaking cha
 - `filter-display="drawer"` on `DataTable`, `DataTimeline` or `DataList` keeps the filters, and any sort select, in a drawer behind one Filters button, with Apply. Its badge counts the filters in force, or with `filter-count="changed"` only those the reader changed.
 - A `#filter-<key>` slot draws a declared filter yourself, and it is counted, cleared and drafted like the rest. `:search="false"` removes the search box.
 - A change made while a server visit is on its way builds on it. Two quick ticks in a `multiple` filter, or a filter and a search, lost the first because the next visit cancelled it. Markup is unchanged. `useTableState` gains `latestFilters`, which an app building its own controls on it should bind them to.
-- A poll no longer dims the list every time it reloads the rows.
+- A poll no longer dims the list every time it reloads the rows, and another list's partial reload no longer dims a list held in the browser.
+- A long list's pager no longer makes a phone's page scroll sideways. Below 28rem, with six pages or more, it shows Previous, the current page and Next. Markup is unchanged.
+- A second click on a column header before the first has been answered turns the sort round again, instead of doing nothing.
 - Run `php artisan boost:update` to get the new references.
 
 ## 0.3.4 (9 November 2026)

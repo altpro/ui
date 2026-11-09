@@ -237,7 +237,8 @@ test("tableView: with no columns, search needs its keys and sort reads the field
   const view = (search: string, sort: string, searchable?: string[]) => tableView({ rows, searchable }, { search, filters: {}, sort, direction: "asc", page: 1 }, 25);
   assert.deepEqual(view("", "at").rows.map((r) => r.id), [2, 1]);
   assert.deepEqual(view("alp", "", ["name"]).rows.map((r) => r.id), [2]);
-  assert.deepEqual(view("alp", "").rows, [], "no keys, nothing to find");
+  assert.equal(view("alp", "").rows.length, 2, "no keys: no box to show or clear the term, so it is ignored");
+  assert.equal(tableView({ rows, searchable: ["name"], search: false }, { search: "alp", filters: {}, sort: "", direction: "asc", page: 1 }, 25).rows.length, 2, "search: false too");
   const instants = tableView({ rows, sortValue: (r) => -r.at }, { search: "", filters: {}, sort: "at", direction: "asc", page: 1 }, 25);
   assert.deepEqual(instants.rows.map((r) => r.id), [1, 2], "sortValue compares instead of the field");
 });

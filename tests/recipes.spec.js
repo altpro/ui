@@ -230,6 +230,20 @@ test("list page: a change made before the last response lands builds on it inste
   await expect(dt.getByRole("combobox", { name: "Status", exact: true })).toHaveValue("Active");
 });
 
+test("list page: a second click on a header before the answer turns the sort round again", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  const dt = page.locator(".datatable");
+  await expect(dt.getByRole("status")).toHaveText("Showing 1–10 of 14");
+  await dt.getByRole("button", { name: "Price", exact: true }).evaluate(async (button) => {
+    button.click();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    button.click();
+  });
+  await expect(page).toHaveURL(/sort=price/);
+  await expect(page).toHaveURL(/dir=desc/);
+  await expect(dt.locator('th[aria-sort="descending"]')).toHaveText("Price");
+});
+
 test("list page: a visit that reloads the rows dims the table, and a save does not", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
   const dt = page.locator(".datatable"), rows = dt.locator("tbody tr");

@@ -1592,3 +1592,52 @@ test("datalist: with no search box or count of its own, Clear filters leaves foc
   await expect(list.locator("ul.grid > li")).toHaveCount(3);
 });
 
+test("several lists: a slow page change leaves a keyboard reader where they have gone", async ({ page }) => {
+  await severalLists(page);
+  const one = listNamed(page, "One"), type = listNamed(page, "Two").getByLabel("Type");
+  await page.evaluate(() => { window.delay = 500; });
+  await one.getByRole("button", { name: "Next page" }).focus();
+  await page.keyboard.press("Enter");
+  await type.focus();
+  await expect(one.getByRole("status")).toHaveText("Showing 11–20 of 30");
+  await expect(type).toBeFocused();
+});
+
+test("several lists: a search that overtakes a filter keeps the filter's step in history", async ({ page }) => {
+  await severalLists(page);
+  const one = listNamed(page, "One");
+  const before = await page.evaluate(() => { window.delay = 800; return history.length; });
+  await choose(one.getByLabel("Type"), "x");
+  await one.getByRole("searchbox").fill("Record");
+  await expect(page).toHaveURL(/one_type=x/);
+  await expect(page).toHaveURL(/one_search=Record/);
+  await expect(one.getByRole("status")).toContainText("filtered from 30");
+  expect(await page.evaluate(() => history.length)).toBe(before + 1);
+  await page.goBack();
+  await expect(page).not.toHaveURL(/one_type/);
+});
+
+test("several lists: another list's partial reload does not dim a list held in the browser", async ({ page }) => {
+  await severalLists(page);
+  const one = listNamed(page, "One"), browser = listNamed(page, "Browser");
+  await page.evaluate(() => { window.delay = 800; });
+  await choose(one.getByLabel("Type"), "x");
+  await expect(one.locator("> ul")).toHaveAttribute("aria-busy", "true");
+  await expect(browser.locator("> ul")).not.toHaveAttribute("aria-busy", "true");
+});
+
+test("list frame: a long pager fits a phone, and a list with no search box ignores one in the URL", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/datatimeline.html");
+  const nav = page.getByRole("navigation", { name: "Activity pagination", exact: true });
+  await expect(nav.getByRole("button")).toHaveCount(3);
+  await expect(nav.locator('[aria-current="page"]')).toBeVisible();
+  await nav.getByRole("button", { name: "Next page" }).click();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText("2");
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+  await page.setViewportSize({ width: 1000, height: 700 });
+  await page.goto("/datalist.html?plain_search=zzz");
+  await expect(listIn(page, "A footer of your own").locator("ul.grid > li")).toHaveCount(3);
+});
+
