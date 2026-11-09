@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.4`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.5`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.3.5 (9 November 2026)
 
 - `DataList` is the frame `DataTable` is now built on: search, filters, the count, page size and pagination round whatever you render, such as a card grid. Call `useDataList` from `@ui/dataTable` and hand it to `<DataList :list>`. `sort-options` gives a list with no headers a sort select. See `datalist.md`. `DataTable`'s rendered markup is unchanged.
 - `DataTimeline` is a searchable, filterable, paged `.timeline` grouped by calendar day, taking the same `TableQuery` paginator. See `datatimeline.md`. `.timeline` gains `trailing`, which moves each `<time>` to a right-hand column when there is room.

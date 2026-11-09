@@ -33,7 +33,7 @@ The Blade components register themselves. In `resources/css/app.css`:
 @import "../../vendor/altpro/ui/resources/css/ui.css";
 ```
 
-Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.3.4 @lucide/vue`):
+Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.3.5 @lucide/vue`):
 
 ```css
 @import "tailwindcss";
