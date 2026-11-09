@@ -1,6 +1,6 @@
 ---
 name: altpro-ui
-description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, table, DataTable, repeater, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, table, DataTable, DataList, DataTimeline, repeater, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # altpro/ui
@@ -172,6 +172,8 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Tree `.tree` | Page hierarchies and category trees | CSS | [tree.md](references/tree.md) |
 | Table `.table` | A static data table; line items and totals | CSS | [table.md](references/table.md) |
 | DataTable | Search, sort, filter, page and select rows; with `TableQuery` on the server | Vue (Inertia) | [datatable.md](references/datatable.md) |
+| DataList | The same search, filters and paging round your own markup, such as a card grid | Vue (Inertia) | [datalist.md](references/datalist.md) |
+| DataTimeline | A searchable, filterable, paged `.timeline` grouped by day | Vue (Inertia) | [datatimeline.md](references/datatimeline.md) |
 | Hand-built list | A list with no Inertia: its state in the URL, columns that appear when they fit, a folded phone row | pattern | [list-page.md](references/list-page.md) |
 | Repeater | Rows the user adds, removes and reorders | Vue | [repeater.md](references/repeater.md) |
 | Alert `.alert` | A callout box | CSS | [alert.md](references/alert.md) |

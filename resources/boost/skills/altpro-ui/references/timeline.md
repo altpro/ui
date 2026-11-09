@@ -23,6 +23,8 @@ An `<ol>` of events, a dot each joined by a line. For an audit history or activi
 - An `.avatar` as the first child of an item replaces the dot and is sized to the marker. For a feed of mixed events, an avatar holding a `size-3.5` icon instead of initials shows each entry's type (a speech bubble for a note, a tag for a price).
 - A `<time>` is drawn muted on its own line. Anything else inside the item is ordinary content.
 - Width is the container's: `max-w-md` or a card.
+- `trailing` on the `<ol>` moves each `<time>` into a right-hand column when the list is at least 28rem wide, and leaves it under the entry when it is not.
+- For a timeline people search, filter and page, use [datatimeline.md](datatimeline.md).
 
 Activity feed on a record: a `<blockquote>` in an item is a note (indented behind a rule), `<del>`/`<ins>` show a field change (old muted and struck through, new bold), and an attachment is a link with its size in `.muted`.
 

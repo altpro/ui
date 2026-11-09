@@ -2,6 +2,16 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.4`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+- `DataList` is the frame `DataTable` is now built on: search, filters, the count, page size and pagination round whatever you render, such as a card grid. Call `useDataList` from `@ui/dataTable` and hand it to `<DataList :list>`. `sort-options` gives a list with no headers a sort select. See `datalist.md`. `DataTable`'s rendered markup is unchanged.
+- `DataTimeline` is a searchable, filterable, paged `.timeline` grouped by calendar day, taking the same `TableQuery` paginator. See `datatimeline.md`. `.timeline` gains `trailing`, which moves each `<time>` to a right-hand column when there is room.
+- `filter-display="drawer"` on `DataTable`, `DataTimeline` or `DataList` keeps the filters in a drawer behind one Filters button, with Apply. Its badge counts the filters in force, or with `filter-count="changed"` only those the reader changed.
+- A `#filter-<key>` slot draws a declared filter yourself, and it is counted, cleared and drafted like the rest. `:search="false"` removes the search box.
+- A change made while a server visit is on its way builds on it. Two quick ticks in a `multiple` filter, or a filter and a search, lost the first because the next visit cancelled it. Markup is unchanged. `useTableState` gains `latestFilters`, which an app building its own controls on it should bind them to.
+- A poll no longer dims the list every time it reloads the rows.
+- Run `php artisan boost:update` to get the new references.
+
 ## 0.3.4 (9 November 2026)
 
 - A `DataTable` `multiple` filter keeps working once the server has replied. inertia-laravel builds the page URL with `fullUrl()`, which rewrites `category[]=food` as `category[0]=food`, and the table read and removed only `key[]`: the control went blank, offered no Clear and could not take the value off, and a filter with a `default` showed the default while the list showed something else. It now reads and replaces both forms. An app that set `Inertia::resolveUrlUsing` to work around this can remove it. Markup is unchanged.

@@ -4,11 +4,15 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import fixture from "./table-urls.json" with { type: "json" };
 import {
+  countFilters,
   datePresets,
   formatCellValue,
+  groupByDay,
+  instantOf,
   keyOf,
   readView,
   tableView,
+  timeOfDay,
   viewUrl,
   visitReloadsTable,
   type DataTableColumn,
@@ -226,4 +230,62 @@ test("formats in the locale it is given, and en-GB with no document, as on a ser
   assert.equal(formatCellValue("2026-01-05", "date"), "5 Jan 2026");
   assert.match(formatCellValue("2026-01-05T09:05:00", "datetime"), /^5 Jan 2026, 09:05$/);
   assert.equal(formatCellValue(12.5, "currency", "EUR", "de-DE"), "12,50 €");
+});
+
+test("tableView: with no columns, search needs its keys and sort reads the field", () => {
+  const rows = [{ id: 1, name: "Beta", at: 2 }, { id: 2, name: "Alpha", at: 1 }];
+  const view = (search: string, sort: string, searchable?: string[]) => tableView({ rows, searchable }, { search, filters: {}, sort, direction: "asc", page: 1 }, 25);
+  assert.deepEqual(view("", "at").rows.map((r) => r.id), [2, 1]);
+  assert.deepEqual(view("alp", "", ["name"]).rows.map((r) => r.id), [2]);
+  assert.deepEqual(view("alp", "").rows, [], "no keys, nothing to find");
+  const instants = tableView({ rows, sortValue: (r) => -r.at }, { search: "", filters: {}, sort: "at", direction: "asc", page: 1 }, 25);
+  assert.deepEqual(instants.rows.map((r) => r.id), [1, 2], "sortValue compares instead of the field");
+});
+
+test("countFilters: in force counts what narrows, changed only what the reader set, one each", () => {
+  const filters = [{ key: "status", default: ["live"] }, { key: "tags" }, { key: "when" }, { key: "owner" }];
+  const values = { status: ["live"], tags: ["a", "b"], when: ["2026-01-01", ""], owner: [] };
+  assert.equal(countFilters(filters, values), 3, "a default in force counts, and a filter counts once however many values it holds");
+  assert.equal(countFilters(filters, values, "changed"), 2, "a filter still at its default does not");
+  assert.equal(countFilters(filters, { status: [], tags: [], when: [], owner: [] }), 0);
+  assert.equal(countFilters(filters, { status: [], tags: [], when: [], owner: [] }, "changed"), 0, "a default the reader emptied has been cleared, so Clear takes the badge away");
+  assert.equal(countFilters(filters, { when: ["", ""] }), 0, "two empty dates are no range");
+  assert.equal(countFilters(filters, { status: ["draft"] }, "changed"), 1);
+});
+
+test("groupByDay: days change at midnight where the reader is", () => {
+  const rows = ["2026-11-09T00:01:00Z", "2026-11-08T23:59:00Z"].map((at, id) => ({ id, at }));
+  const now = new Date("2026-11-09T12:00:00Z");
+  const london = groupByDay(rows, (r) => r.at, { now, locale: "en-GB", timeZone: "Europe/London" });
+  assert.deepEqual(london.map((d) => d.label), ["Today", "Yesterday"]);
+  const newYork = groupByDay(rows, (r) => r.at, { now, locale: "en-GB", timeZone: "America/New_York" });
+  assert.deepEqual(newYork.map((d) => [d.label, d.rows.length]), [["Yesterday", 2]], "both are the evening of the 8th there, and midday UTC is still the 9th");
+});
+
+test("groupByDay: Yesterday survives a clock change, and the year shows only when it is not this one", () => {
+  const label = (at: string, now: string) => groupByDay([{ at }], (r) => r.at, { now: new Date(now), locale: "en-GB", timeZone: "Europe/London" })[0]!.label;
+  assert.equal(label("2026-03-28T00:30:00Z", "2026-03-29T22:30:00Z"), "Yesterday", "the 29th of March has 23 hours in London");
+  assert.equal(label("2026-11-04T10:00:00Z", "2026-11-09T12:00:00Z"), "4 Nov");
+  assert.equal(label("2025-12-31T10:00:00Z", "2026-01-01T12:00:00Z"), "Yesterday");
+  assert.equal(label("2025-12-30T10:00:00Z", "2026-01-01T12:00:00Z"), "30 Dec 2025");
+  assert.equal(groupByDay([{ at: "2026-11-04T10:00:00Z" }], (r) => r.at, { now: new Date("2026-11-09T12:00:00Z"), locale: "en-US", timeZone: "UTC" })[0]!.label, "Nov 4");
+});
+
+test("groupByDay: a bare date is that day everywhere, and a row with no usable date neither throws nor goes missing", () => {
+  const now = new Date("2026-11-09T12:00:00Z");
+  for (const timeZone of ["Pacific/Honolulu", "Asia/Tokyo"]) {
+    assert.equal(groupByDay([{ at: "2026-11-04" }], (r) => r.at, { now, locale: "en-GB", timeZone })[0]!.label, "4 Nov", timeZone);
+  }
+  const days = groupByDay([{ at: "nope" }, { at: null }, { at: "2026-02-30" }, { at: "2026-11-09T09:00:00Z" }, { at: "" }], (r) => r.at, { now, locale: "en-GB", timeZone: "UTC" });
+  assert.deepEqual(days.map((d) => [d.label, d.rows.length]), [["No date", 3], ["Today", 1], ["No date", 1]], "2026-02-30 parses, but is no date");
+});
+
+test("timeOfDay and instantOf: a time, nothing for a bare date, and what cannot be read as it came", () => {
+  assert.deepEqual(timeOfDay("2026-11-09T09:05:00Z", { locale: "en-GB", timeZone: "UTC" }), { label: "09:05", datetime: "2026-11-09T09:05:00Z" });
+  assert.equal(timeOfDay("2026-11-09", { locale: "en-GB" }), null);
+  assert.equal(timeOfDay(null, { locale: "en-GB" }), null);
+  assert.deepEqual(timeOfDay("yesterdayish", { locale: "en-GB" }), { label: "yesterdayish" });
+  assert.ok(instantOf("2026-11-09T09:00:00+02:00")! < instantOf("2026-11-09T08:00:00Z")!, "offsets count");
+  assert.equal(instantOf("nope"), null);
+  assert.equal(instantOf(null), null);
 });

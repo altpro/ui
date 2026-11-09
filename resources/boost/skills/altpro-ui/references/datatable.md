@@ -1,5 +1,7 @@
 # DataTable: `DataTable.vue` and `TableQuery`
 
+For rows that are not a table, [datalist.md](datalist.md) is the same frame round your own markup, and [datatimeline.md](datatimeline.md) a `.timeline` grouped by day.
+
 A Vue component for Inertia apps: search, sortable columns, declared filters, page size, hideable columns, row selection with bulk actions, and empty states. Hand it an array and it does the work in the browser. Hand it a Laravel paginator and the server did it, through `Altpro\Ui\TableQuery`. Search, sort, page and filters live in the query string, so the view is a link you can send and the back button works; page size and hidden columns are kept in `localStorage`. It needs `@inertiajs/vue3`. There is no Blade version. It is rendered in the browser only: stored preferences and date formatting would differ from a server render, so an SSR app keeps it out of the server render with a `v-if` on a flag set in `onMounted`.
 
 ```vue
@@ -55,6 +57,9 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `unfiltered-total` | Server mode: the count before search and filters, so the table can say "filtered from" and pick the right empty message. |
 | `only` | Server mode: the props a change reloads, e.g. `['brands']`. Give it, with the controller's other props as closures (below), so a table change skips their queries. |
 | `search-placeholder` | Defaults to "Search…". |
+| `:search="false"` | Removes the search box. Give it when the server has nothing to search: `TableQuery` ignores a term with no searchable columns, and a box that does nothing is worse than none. |
+| `filter-display` | `inline` (default) or `drawer`, which keeps the filters in a panel behind one Filters button. See [datalist.md](datalist.md). |
+| `filter-count` | What the Filters button's badge counts: `in-force` (default) or `changed`. See [datalist.md](datalist.md). |
 | `locale` | Formats `date`, `datetime` and `currency` columns, e.g. `$page.props.locale`. Defaults to `<html lang>` in the browser. Pass it if the app renders on the server (SSR), which has no `<html lang>` to read and would format as `en-GB`. |
 
 | Slot | Gets |
@@ -63,6 +68,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `bulk-actions` | `{ selection, count, clear }`. Buttons for the bar shown while rows are selected. |
 | `filters` | Extra controls in the toolbar. Filtering in the parent works, but then the table cannot count what was hidden. |
 | `empty` | Under `empty-message`, e.g. a "Create one" link. |
+| `filter-<key>` | `{ filter, values, set }`. Draws a declared filter yourself, such as a customer picked from thousands of records. Unlike the `filters` slot it is counted, cleared and drafted like the rest, and goes in the drawer. |
 
 - The header checkbox ticks the visible page only, and shows a dash when part of it is ticked. Once the page is ticked and more rows match, the bar offers "Select all N matching", which hands over the query instead of ids: run it again on the server with `TableQuery::search()`. In server mode that query is the one the rows on screen answer, not a search still on its way. Unticking a row afterwards goes back to `ids`: the page's, less that row.
 - A change to this table's search, filters, sort or page size goes back to page one. A change to its search, filters, sort or page clears the selection. Another table's changes on the same page leave both alone.

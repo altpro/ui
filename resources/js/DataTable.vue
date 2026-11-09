@@ -165,7 +165,7 @@ const rowLabel = (row: TRow, index: number) => {
 </script>
 
 <template>
-  <DataList :list="list" :caption="caption" :search-placeholder="searchPlaceholder">
+  <DataList :list="list" :caption="caption" :search-placeholder="searchPlaceholder" :filter-display="filterDisplay" :filter-count="filterCount">
     <template v-for="name in filterSlots" :key="name" #[name]="scope">
       <slot :name="name" v-bind="scope" />
     </template>

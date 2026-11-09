@@ -456,6 +456,16 @@ for (const colorScheme of ["light", "dark"]) {
       expect(summary(violations)).toEqual([]);
     });
 
+    test("datatimeline.html: the open filter drawer passes axe, badge included", async ({ page }) => {
+      await page.goto("/datatimeline.html");
+      const button = page.locator(".datatable .controls > button.btn", { hasText: "Filters" }).nth(1);
+      await button.click();
+      const drawer = page.getByRole("dialog");
+      await settled(drawer);
+      const { violations } = await axe(page).include("dialog[open]").analyze();
+      expect(summary(violations)).toEqual([]);
+    });
+
     // the bar is a vendor pseudo: its width must follow value/max, and a valueless progress must animate
     test("progress.html: bars are value/max wide, indeterminate sweeps, meter bands colour the bar", async ({ page }) => {
       await page.goto("/progress.html");

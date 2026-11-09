@@ -209,8 +209,12 @@ test("list page: a change made before the last response lands builds on it inste
   await category.click();
   const options = dt.getByRole("listbox", { name: "Category" }).getByRole("option");
   const [one, two] = [await options.first().textContent(), await options.nth(1).textContent()];
-  await options.first().click();
-  await options.nth(1).click();
+  // from inside the page, so the two land inside those 200ms however busy the machine is
+  await options.evaluateAll(async ([first, second]) => {
+    first.click();
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    second.click();
+  });
   await expect(page).toHaveURL(/category%5B1%5D=/);
   await expect(category).toContainText(`${one}, ${two}`);
   await page.keyboard.press("Escape");

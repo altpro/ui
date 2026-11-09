@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · DataList</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">DataList</h1>
+    <p class="muted"><code>DataList.vue</code> is the frame DataTable and DataTimeline are built on: search, filters, the count, page size and pagination, round whatever you render. Call <code>useDataList</code> and put your own markup in its slot, such as this card grid.</p>
+  </section>
+  <div id="app" class="space-y-10"></div>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="datalist.js"></script>
+</body>
+</html>

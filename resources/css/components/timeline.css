@@ -10,7 +10,8 @@
    A dot per event joined by a line. An .avatar as the first child of an
    item takes the dot's place. Colour words on the item recolour the dot.
    A <blockquote> in an item is a note; <del>/<ins> show a field change.
-   Unlike .steps there is no current or done state; every event has
+   `trailing` on the list moves each <time> into a right-hand column when
+   the list is wide enough. Unlike .steps there is no current or done state; every event has
    happened. Layered so Tailwind utilities win. */
 @layer components {
   .timeline {
@@ -79,6 +80,24 @@
       &.success { --timeline-dot: var(--color-success); }
       &.warning { --timeline-dot: var(--color-warning-accent); }
       &.danger, &.error { --timeline-dot: var(--color-danger); }
+    }
+
+    /* the time in a column of its own when there is room, under the entry when there isn't */
+    &.trailing {
+      container-type: inline-size;
+      > li > time {
+        white-space: nowrap;
+        font-variant-numeric: tabular-nums;
+      }
+      @container (min-width: 28rem) {
+        > li {
+          grid-template-columns: var(--timeline-marker) minmax(0, 1fr) auto;
+          > time {
+            grid-column: 3;
+            grid-row: 1;
+          }
+        }
+      }
     }
   }
 }

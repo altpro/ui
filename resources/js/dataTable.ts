@@ -638,6 +638,22 @@ export const useDataList = <TRow>(source: () => DataListSource<TRow>) => {
   };
 };
 
+/**
+ * How many filters the Filters button's badge counts, one per filter whatever it holds. `in-force` is every filter
+ * narrowing the list, a default included; `changed` only those the reader has set to something other than the default.
+ */
+export type DataListFilterCount = "in-force" | "changed";
+
+export const countFilters = (
+  filters: ReadonlyArray<{ key: string; default?: ReadonlyArray<string> }>,
+  values: Record<string, ReadonlyArray<string>>,
+  count: DataListFilterCount = "in-force",
+): number =>
+  filters.filter((filter) => {
+    const given = values[filter.key] ?? [];
+    return count === "changed" ? filterIsSet(filter, given) : given.some((v) => v !== "");
+  }).length;
+
 /** What useDataList returns; DataList.vue's `list` prop. */
 export type DataListController<TRow> = ReturnType<typeof useDataList<TRow>>;
 
@@ -665,4 +681,76 @@ export interface DataListProps<TRow> {
   only?: string[];
   /** Formats dates and money. Defaults to `<html lang>` in the browser; pass it when the page is rendered on the server too. */
   locale?: string;
+  /** `drawer` keeps the filters in a panel behind one Filters button. Default `inline`, in the toolbar. */
+  filterDisplay?: "inline" | "drawer";
+  /** What the Filters button's badge counts. Default `in-force`. */
+  filterCount?: DataListFilterCount;
 }
+
+/** One calendar day of a timeline. `key` repeats if the rows come back to a day they left. */
+export interface DataListDay<TRow> {
+  key: string;
+  label: string;
+  rows: TRow[];
+}
+
+const bareDate = /^\d{4}-\d{2}-\d{2}$/;
+
+const calendarDay = (date: Date, timeZone?: string): string => {
+  const parts = new Intl.DateTimeFormat("en-GB", { timeZone, year: "numeric", month: "2-digit", day: "2-digit" }).formatToParts(date);
+  const part = (type: string) => parts.find((p) => p.type === type)!.value;
+  return `${part("year")}-${part("month")}-${part("day")}`;
+};
+
+// a bare date is that day wherever you read it; parsed, it is UTC midnight, which is the previous day west of Greenwich.
+// null for anything that is no date: Intl throws on an invalid one, and one bad row must not take the page with it.
+const dayOf = (value: unknown, timeZone?: string): string | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const text = String(value);
+  if (bareDate.test(text)) return isDate(text) ? text : null;
+  const date = new Date(text);
+  return Number.isNaN(date.getTime()) ? null : calendarDay(date, timeZone);
+};
+
+const dayLabel = (day: string, today: string, locale: string): string => {
+  const [year, month, date] = day.split("-").map(Number) as [number, number, number];
+  const [thisYear, thisMonth, thisDate] = today.split("-").map(Number) as [number, number, number];
+  if (day === today) return "Today";
+  // by the calendar, not 24 hours back, so a clock change moves nothing
+  if (day === new Date(Date.UTC(thisYear, thisMonth - 1, thisDate - 1)).toISOString().slice(0, 10)) return "Yesterday";
+  return new Intl.DateTimeFormat(locale, { day: "numeric", month: "short", timeZone: "UTC", ...(year !== thisYear && { year: "numeric" }) }).format(Date.UTC(year, month - 1, date));
+};
+
+/** Consecutive rows that share a calendar day, in the browser's timezone unless given one. Rows with no usable date group as "No date". */
+export const groupByDay = <TRow>(
+  rows: ReadonlyArray<TRow>,
+  dateOf: (row: TRow) => unknown,
+  { now = new Date(), locale = pageLocale(), timeZone }: { now?: Date; locale?: string; timeZone?: string } = {},
+): Array<DataListDay<TRow>> => {
+  const today = calendarDay(now, timeZone);
+  const days: Array<DataListDay<TRow>> = [];
+  for (const row of rows) {
+    const day = dayOf(dateOf(row), timeZone);
+    const last = days.at(-1);
+    if (last && last.key === (day ?? "none")) last.rows.push(row);
+    else days.push({ key: day ?? "none", label: day ? dayLabel(day, today, locale) : "No date", rows: [row] });
+  }
+  return days;
+};
+
+/** A timeline row's `<time>`: the time of day, since the day is its heading. A bare date has none; what cannot be read shows as it came. */
+export const timeOfDay = (value: unknown, { locale = pageLocale(), timeZone }: { locale?: string; timeZone?: string } = {}): { label: string; datetime?: string } | null => {
+  if (value === null || value === undefined || value === "") return null;
+  const text = String(value);
+  if (isDate(text)) return null;
+  const date = new Date(text);
+  // 2026-02-30 parses, into March
+  if (bareDate.test(text) || Number.isNaN(date.getTime())) return { label: text };
+  return { label: new Intl.DateTimeFormat(locale, { timeStyle: "short", timeZone }).format(date), datetime: text };
+};
+
+/** A date as a moment, to sort by: strings compare wrongly once their offsets differ. */
+export const instantOf = (value: unknown): number | null => {
+  const time = value === null || value === undefined || value === "" ? Number.NaN : new Date(String(value)).getTime();
+  return Number.isNaN(time) ? null : time;
+};

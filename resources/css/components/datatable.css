@@ -1,4 +1,4 @@
-/* DataTable: the frame DataTable.vue puts round a .table.
+/* DataTable: the frame DataList.vue puts round any list, and DataTable.vue round a .table.
    <div class="datatable">
      <div class="controls">search, filters, Columns</div>
      <div class="bulk">only while rows are selected</div>
@@ -31,6 +31,27 @@
           column-gap: 0.5rem;
           > .join {
             min-width: 0;
+          }
+        }
+      }
+
+      /* a date range in the filter drawer shares its width between the dates */
+      > dialog fieldset {
+        min-width: 0;
+        .join > [type="date"] {
+          flex: 1 1 0;
+          min-width: 0;
+        }
+        /* two dates and Clear will not share a phone's drawer: a row each */
+        @media (width < 26rem) {
+          .join {
+            display: grid;
+            gap: 0.5rem;
+            > * {
+              --radius: var(--join-radius);
+              border-radius: var(--join-radius);
+              margin-inline-start: 0;
+            }
           }
         }
       }
@@ -87,6 +108,15 @@
       width: 1px;
     }
 
+    /* takes focus after a page change on a list that scrolls back to its top (DataList.vue) */
+    &:focus-visible,
+    > .foot > [role="status"]:focus-visible {
+      outline: 3px solid color-mix(in oklab, var(--color-ring) 50%, transparent);
+      outline-offset: 2px;
+    }
+
+    /* the rows, whatever holds them; a table keeps its header */
+    > [aria-busy="true"],
     table[aria-busy="true"] tbody {
       opacity: 0.5;
       transition: opacity var(--duration-fast) ease-in;

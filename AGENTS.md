@@ -10,7 +10,7 @@ resources/css/theme.css      @theme default tokens, all light-dark(); --radius k
 resources/css/scheme.css     color-scheme regions: .light .dark .inverse
 resources/css/components/    one file per component (button, join, input, field, dropzone, check, badge, dl, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, tree, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast, repeater)
 resources/views/components/  Blade components, rendered as <x-ui::name>
-resources/js/                Vue components (Name.vue); domModel.js lets Field.vue work without v-model inside a form; DataTable.vue is Vue only, TypeScript, and needs Inertia; dataTable.json holds the page sizes TableQuery reads too
+resources/js/                Vue components (Name.vue); domModel.js lets Field.vue work without v-model inside a form; DataList.vue is the frame (search, filters, drawer, count, pager) that DataTable.vue and DataTimeline.vue are built on, and DataFilters.vue draws the filters from values in and changes out; all are TypeScript and need Inertia; dataTable.ts holds useDataList, useTableState and the pure functions; dataTable.json holds the page sizes TableQuery reads too
 resources/boost/skills/      reference for agents in consuming projects; Laravel Boost installs every skill directory. altpro-ui/ is the component reference: SKILL.md holds the rules and a component table, each component a file in references/. altpro-ui-design/ is what an agent builds to, so a screen and its behaviour are right first time: core rules in SKILL.md, one references/ file per kind of screen; a lesson from reviewing demo/app goes there. altpro-ui-review/ is the optional review, user-invoked (`disable-model-invocation`), one pass ending in a report
 resources/boost/guidelines/  core.blade.php, the few lines Boost writes into the app's AGENTS.md/CLAUDE.md on every run: load the skills, the naming rule
 src/UiServiceProvider.php    registers the Blade components and the ui-views publish tag; Laravel discovers it from composer.json
@@ -25,7 +25,7 @@ tests/table-view.ts          tableView (what DataTable.vue shows for a view) and
 tests/table-urls.json        URL-to-view cases both of the above read, so the PHP and TS halves agree on the query-string format
 tests/build.test.js          a production build keeps light-dark(), as dev cannot show what Lightning CSS does to it
 tests/component-types.vue    app-side usages of the Vue components that vue-tsc checks in test:unit, so their inferred prop types match the docs
-tests/inventory.test.js      the "Adding a component" checklist below as a test; a component whose demo page or reference has another name goes in its aliases map
+tests/inventory.test.js      the "Adding a component" checklist below as a test, for CSS files and Vue components; one whose demo page or reference has another name goes in its aliases map
 tests/skill-code.test.js     a reference code block headed with a resources/js/ path equals that file in demo/app/ where the demo has it, and every demo page, layout and composable is one, so the skill shows the code the browser tests run
 tests/a11y.spec.js           axe and the hover, focus and target-size checks; its PNG reader reads pixels from screenshots, because getComputedStyle cannot see vendor pseudo-elements (::-webkit-progress-value, ::-webkit-slider-thumb), and it is a few lines over node:zlib rather than a dependency
 ```

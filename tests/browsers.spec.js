@@ -1252,3 +1252,235 @@ test("repeater: errors as an object or an array show under the list, and heading
   // the list's own messages are not a row's
   await expect(own.locator("[aria-invalid]")).toHaveCount(0);
 });
+
+// DataTimeline and DataList: the frame, the days and the filter drawer
+const listIn = (page, heading) => page.locator("section").filter({ has: page.getByRole("heading", { name: heading, exact: true, level: 2 }) }).locator(".datatable");
+const timelineFor = (page, caption) => page.locator(".datatable").filter({ has: page.getByRole("navigation", { name: `${caption} pagination`, exact: true }) });
+const drawerOf = (list) => list.getByRole("dialog");
+const filtersButton = (list) => list.locator(".controls > button.btn", { hasText: "Filters" });
+
+test("datatimeline: entries group under one heading a day, each day its own list", async ({ page }) => {
+  await page.goto("/datatimeline.html");
+  const list = listIn(page, "An audit log");
+  await expect(list.locator("ol.timeline").first()).toBeVisible();
+  await expect(list.getByRole("heading", { level: 3 }).first()).toHaveText("Today");
+  await expect(list.getByRole("heading", { level: 3 }).nth(1)).toHaveText("Yesterday");
+  await expect(list.locator("ol.timeline")).toHaveCount(await list.getByRole("heading", { level: 3 }).count());
+  await expect(list.locator("ol.timeline").first().locator("> li")).toHaveCount(3);
+  await expect(list.locator("ol.timeline").first().locator("> li time").first()).toHaveAttribute("datetime", /T/);
+  // the avatar is the item's first child, so timeline.css gives it the dot's place
+  await expect(timelineFor(page, "Activity").locator("ol.timeline > li").first().locator("> :first-child")).toHaveClass(/avatar/);
+  // the last page holds the row with no usable date, under a heading, and the year-old one with its year
+  await page.goto("/datatimeline.html?audit_page=4");
+  await expect(timelineFor(page, "Audit log").getByRole("heading", { name: "No date", exact: true })).toBeVisible();
+  await expect(timelineFor(page, "Audit log").locator("h3").filter({ hasText: /\d{4}$/ })).toHaveCount(1);
+});
+
+test("datatimeline: the order select is the sort, and a saved page size survives a reload", async ({ page }) => {
+  await page.goto("/datatimeline.html");
+  let list = timelineFor(page, "Audit log");
+  const order = list.getByLabel("Order");
+  await expect(order.locator("option:checked")).toHaveText("Newest first");
+  await list.locator("h3").first().waitFor();
+  await order.selectOption({ label: "Oldest first" });
+  await expect(page).toHaveURL(/audit_dir=asc/);
+  await expect(list.locator("h3").first()).toHaveText("No date");
+  await page.goto("/datatimeline.html?audit_sort=at&audit_dir=up");
+  await expect(timelineFor(page, "Audit log").getByLabel("Order").locator("option:checked")).toHaveText("Newest first");
+
+  await page.goto("/datatimeline.html");
+  list = timelineFor(page, "Audit log");
+  await list.getByLabel("Per page").selectOption("25");
+  await expect(list.getByRole("status")).toHaveText("Showing 1–25 of 36");
+  await page.reload();
+  await expect(timelineFor(page, "Audit log").getByRole("status")).toHaveText("Showing 1–25 of 36");
+  await expect(timelineFor(page, "Audit log").getByLabel("Per page")).toHaveValue("25");
+});
+
+test("datatimeline: every filter type narrows the frame and sits in the URL", async ({ page }) => {
+  await page.goto("/datatimeline.html");
+  const list = listIn(page, "An audit log"), status = list.getByRole("status");
+  await expect(status).toHaveText("Showing 1–10 of 36");
+  await list.getByLabel("Event").selectOption("archive");
+  await expect(page).toHaveURL(/audit_type=archive/);
+  await expect(status).toContainText("of 6, filtered from 36");
+  await list.getByLabel("Flagged only").check();
+  await expect(page).toHaveURL(/audit_flagged=1/);
+  await expect(status).toContainText("of 6, filtered from 36");
+  await list.getByLabel("Flagged only").uncheck();
+  await list.getByLabel("Event").selectOption("");
+  await expect(status).toHaveText("Showing 1–10 of 36");
+
+  const person = list.locator(".controls").getByRole("combobox", { name: "Person", exact: true });
+  await person.click();
+  await list.getByRole("listbox", { name: "Person" }).getByRole("option", { name: "Ann Okafor" }).click();
+  await page.keyboard.press("Escape");
+  await expect(page).toHaveURL(/audit_person/);
+  await expect(status).toContainText("filtered from 36");
+  await page.goto("/datatimeline.html?audit_when_from=2020-01-01&audit_when_to=2020-01-02");
+  await expect(listIn(page, "An audit log").getByRole("heading", { name: "No audit log match your search." })).toBeVisible();
+});
+
+test("datatimeline: Clear filters leaves focus on the search box, Next never drops it, and a page change goes back to the top", async ({ page }) => {
+  await page.setViewportSize({ width: 1000, height: 500 });
+  await page.goto("/datatimeline.html?audit_search=zzzz");
+  let list = listIn(page, "An audit log");
+  const clear = list.getByRole("button", { name: "Clear filters" });
+  await clear.focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByRole("searchbox", { name: "Search Audit log" })).toBeFocused();
+
+  // from the keyboard: the pager has gone up the page with the rows, so focus lands on the list
+  await page.goto("/datatimeline.html?audit_page=3");
+  list = listIn(page, "An audit log");
+  const next = list.getByRole("button", { name: "Next page" });
+  await next.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/audit_page=4/);
+  await expect(list).toBeFocused();
+  expect(await list.evaluate((el) => Math.round(el.getBoundingClientRect().top))).toBeGreaterThanOrEqual(0);
+
+  // the mouse: the disabled Next hands over to the current page, and the top of the list is back in view
+  await page.goto("/datatimeline.html?audit_page=3");
+  list = listIn(page, "An audit log");
+  await list.getByRole("button", { name: "Next page" }).click();
+  await expect(page).toHaveURL(/audit_page=4/);
+  await expect(list.locator('[aria-current="page"]')).toHaveText("4");
+  expect(await page.evaluate(() => document.activeElement === document.body)).toBe(false);
+  await expect.poll(() => list.evaluate((el) => Math.round(el.getBoundingClientRect().top))).toBeGreaterThanOrEqual(0);
+});
+
+test("filter drawer: Apply commits the draft once, anything else lets it go, and the badge counts what is showing", async ({ page }) => {
+  await page.goto("/datatimeline.html");
+  const list = listIn(page, "Filters in a drawer"), status = list.getByRole("status"), button = filtersButton(list), drawer = drawerOf(list);
+  await expect(status).toHaveText("Showing 1–5 of 36");
+  await expect(button.locator(".badge")).toHaveCount(0);
+  await expect(button).toHaveAccessibleName("Filters");
+
+  await button.click();
+  await expect(drawer).toBeVisible();
+  await expect(drawer.getByLabel("Event")).toBeFocused();
+  await drawer.getByLabel("Event").selectOption("archive");
+  await expect(page).not.toHaveURL(/activity_type/);
+  await expect(status).toHaveText("Showing 1–5 of 36");
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(button).toBeFocused();
+  await expect(page).not.toHaveURL(/activity_type/);
+
+  await button.click();
+  await expect(drawer.getByLabel("Event"), "Escape let the draft go").toHaveValue("");
+  await drawer.getByLabel("Event").selectOption("archive");
+  await drawer.getByLabel("Flagged only").check();
+  await drawer.getByLabel("Event").focus();
+  const before = await page.evaluate(() => history.length);
+  await drawer.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(drawer).toBeHidden();
+  await expect(button).toBeFocused();
+  await expect(page).toHaveURL(/activity_type=archive/);
+  await expect(page).toHaveURL(/activity_flagged=1/);
+  expect(await page.evaluate(() => history.length)).toBe(before + 1);
+  await expect(status).toContainText("filtered from 36");
+  await expect(button.locator(".badge")).toHaveText("2 set");
+  await expect(button).toHaveAccessibleName("Filters 2 set");
+
+  // the cross discards too, and the draft starts from what is applied
+  await button.click();
+  await expect(drawer.getByLabel("Event")).toHaveValue("archive");
+  await drawer.getByLabel("Event").selectOption("note");
+  await drawer.getByRole("button", { name: "Close" }).click();
+  await expect(drawer).toBeHidden();
+  await expect(page).toHaveURL(/activity_type=archive/);
+
+  // Clear filters empties the search as it does anywhere, closes, and gives focus back
+  await list.getByRole("searchbox").fill("a");
+  await expect(page).toHaveURL(/activity_search=a/);
+  await button.click();
+  await drawer.getByRole("button", { name: "Clear filters" }).click();
+  await expect(drawer).toBeHidden();
+  await expect(button).toBeFocused();
+  await expect(page).not.toHaveURL(/activity_/);
+  await expect(list.getByRole("searchbox")).toHaveValue("");
+  await expect(button.locator(".badge")).toHaveCount(0);
+  await expect(status).toHaveText("Showing 1–5 of 36");
+});
+
+test("filter drawer: the badge counts every filter in force by default, or only what the reader changed", async ({ page }) => {
+  await page.goto("/datatimeline.html");
+  const inForce = timelineFor(page, "Team activity"), changed = timelineFor(page, "Changed activity");
+  await expect(filtersButton(inForce).locator(".badge")).toHaveText("1 set");
+  await expect(filtersButton(changed).locator(".badge")).toHaveCount(0);
+
+  for (const [list, count] of [[inForce, "2 set"], [changed, "1 set"]]) {
+    await filtersButton(list).click();
+    await drawerOf(list).getByLabel("Event").selectOption("note");
+    await drawerOf(list).getByRole("button", { name: "Apply", exact: true }).click();
+    await expect(filtersButton(list).locator(".badge")).toHaveText(count);
+  }
+
+  // Clear takes both to nothing, with focus on the button, as neither list has a search box
+  for (const list of [inForce, changed]) {
+    await filtersButton(list).click();
+    await drawerOf(list).getByRole("button", { name: "Clear filters" }).click();
+    await expect(drawerOf(list)).toBeHidden();
+    await expect(filtersButton(list).locator(".badge")).toHaveCount(0);
+    await expect(filtersButton(list)).toBeFocused();
+    await expect(list.getByRole("searchbox")).toHaveCount(0);
+  }
+});
+
+test("datalist: a card grid gets the frame, a sort select, and a filter of its own that is drafted and counted", async ({ page }) => {
+  await page.goto("/datalist.html");
+  const list = page.locator(".datatable"), cards = list.locator("ul.grid > li"), button = filtersButton(list), drawer = drawerOf(list);
+  await expect(cards).toHaveCount(10);
+  await expect(list.getByRole("status")).toHaveText("Showing 1–10 of 23");
+
+  await list.getByLabel("Sort").selectOption({ label: "Price, high to low" });
+  await expect(page).toHaveURL(/cards_sort=price/);
+  await expect(page).toHaveURL(/cards_dir=desc/);
+  await expect(cards.first().getByRole("heading")).toHaveText("Sample W");
+  await page.goto("/datalist.html?cards_sort=price&cards_dir=desc");
+  await expect(list.getByLabel("Sort").locator("option:checked")).toHaveText("Price, high to low");
+  await page.goto("/datalist.html?cards_sort=name&cards_dir=desc");
+  await expect(list.getByLabel("Sort").locator("option:checked")).toHaveText("Custom");
+  await page.goto("/datalist.html");
+
+  await button.click();
+  await drawer.getByLabel("Name contains").fill("Sample B");
+  await expect(cards).toHaveCount(10);
+  await drawer.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(cards).toHaveCount(1);
+  await expect(button.locator(".badge")).toHaveText("1 set");
+  await button.click();
+  await expect(drawer.getByLabel("Name contains")).toHaveValue("Sample B");
+  await drawer.getByRole("button", { name: "Clear filters" }).click();
+  await expect(cards).toHaveCount(10);
+  await expect(button.locator(".badge")).toHaveCount(0);
+});
+
+test("datatable: filters in a drawer leave the toolbar to the search box and one button", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Stocklist"), button = filtersButton(dt), drawer = drawerOf(dt);
+  await expect(dt.locator(".controls > .field")).toHaveCount(0);
+  await expect(dt.getByRole("status")).toHaveText("Showing 1–5 of 12");
+  await button.click();
+  await drawer.getByRole("combobox", { name: "Availability", exact: true }).selectOption("in_stock");
+  // a panel opened inside the drawer is not a click outside it
+  const size = drawer.getByRole("combobox", { name: "Size", exact: true });
+  await size.click();
+  await drawer.getByRole("listbox", { name: "Size" }).getByRole("option", { name: "L", exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeVisible();
+  await expect(size).toHaveText("L");
+  await size.click();
+  await drawer.getByRole("listbox", { name: "Size" }).getByRole("option", { name: "L", exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeVisible();
+  await drawer.getByLabel("Added from").fill("2026-03-01");
+  await expect(dt.getByRole("status")).toHaveText("Showing 1–5 of 12");
+  await drawer.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(button.locator(".badge")).toHaveText("2 set");
+  await expect(dt.getByRole("status")).toContainText("filtered from 12");
+  await expect(page).toHaveURL(/stocklist_added_from=2026-03-01/);
+});
+

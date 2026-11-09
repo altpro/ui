@@ -32,3 +32,24 @@ for (const name of components) {
     assert.ok(skill.includes(`](${ref})`), `the Components table in SKILL.md does not link ${ref}`);
   });
 }
+
+// A Vue component has no CSS file for the loop above to find. These have a demo page or reference under another name;
+// DataFilters is DataList's own, and copy-button's page is copy.html.
+const vueAliases = {
+  CopyButton: { demo: "copy", ref: "copy-button" },
+  FileInput: { demo: "file", ref: "file-input" },
+  DataFilters: null,
+};
+
+for (const file of readdirSync(new URL("resources/js/", root)).filter((f) => f.endsWith(".vue"))) {
+  const name = file.slice(0, -4);
+  if (vueAliases[name] === null) continue;
+  const demo = `${vueAliases[name]?.demo ?? name.toLowerCase()}.html`;
+  const ref = `references/${vueAliases[name]?.ref ?? name.toLowerCase()}.md`;
+  test(file, () => {
+    assert.ok(demos.includes(demo), `demo/${demo} does not exist`);
+    assert.ok(menu.includes(demo), `${demo} is not in the components array in demo/demo.js`);
+    assert.ok(existsSync(new URL(`resources/boost/skills/altpro-ui/${ref}`, root)), `the skill has no ${ref}`);
+    assert.ok(skill.includes(`](${ref})`), `the Components table in SKILL.md does not link ${ref}`);
+  });
+}
