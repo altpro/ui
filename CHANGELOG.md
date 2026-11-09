@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.3`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.4`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.3.4 (9 November 2026)
 
 - A `DataTable` `multiple` filter keeps working once the server has replied. inertia-laravel builds the page URL with `fullUrl()`, which rewrites `category[]=food` as `category[0]=food`, and the table read and removed only `key[]`: the control went blank, offered no Clear and could not take the value off, and a filter with a `default` showed the default while the list showed something else. It now reads and replaces both forms. An app that set `Inertia::resolveUrlUsing` to work around this can remove it. Markup is unchanged.
 - An empty `multiple` filter reads "All", as a select does. `Combobox` gains a `placeholder` prop for this.
