@@ -200,6 +200,32 @@ test("list page: a multiple filter survives the server renumbering its URL, and 
   await expect(category).toHaveText("All");
 });
 
+test("list page: a change made before the last response lands builds on it instead of losing it", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  const dt = page.locator(".datatable"), summary = dt.getByRole("status"), category = dt.getByRole("combobox", { name: "Category", exact: true });
+  await expect(summary).toHaveText("Showing 1–10 of 14");
+
+  // the stand-in server takes 200ms, so the second tick lands while the first visit is on its way
+  await category.click();
+  const options = dt.getByRole("listbox", { name: "Category" }).getByRole("option");
+  const [one, two] = [await options.first().textContent(), await options.nth(1).textContent()];
+  await options.first().click();
+  await options.nth(1).click();
+  await expect(page).toHaveURL(/category%5B1%5D=/);
+  await expect(category).toContainText(`${one}, ${two}`);
+  await page.keyboard.press("Escape");
+  await dt.getByRole("button", { name: "Clear Category" }).click();
+  await expect(summary).toHaveText("Showing 1–10 of 14");
+
+  // a filter while a typed search waits its turn, and the search while the filter is on its way
+  await dt.getByRole("searchbox").fill("o");
+  await page.waitForTimeout(150);
+  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Active");
+  await expect(page).toHaveURL(/status=Active/);
+  await expect(page).toHaveURL(/search=o/);
+  await expect(dt.getByRole("combobox", { name: "Status", exact: true })).toHaveValue("Active");
+});
+
 test("list page: a visit that reloads the rows dims the table, and a save does not", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
   const dt = page.locator(".datatable"), rows = dt.locator("tbody tr");

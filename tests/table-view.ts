@@ -153,12 +153,13 @@ test("viewUrl replaces a multiple filter in the numbered form the server's page 
 
 test("only a visit that reloads this page's rows dims the table", () => {
   const visit = (method: string, path: string, only: string[] = [], prefetch = false) => ({ method, url: new URL(path, "https://x.test"), only, prefetch });
-  const reloads = (v: ReturnType<typeof visit>, only: string[] = []) => visitReloadsTable(v, "/stock?page=2", only);
+  const reloads = (v: ReturnType<typeof visit> & { async?: boolean }, only: string[] = []) => visitReloadsTable(v, "/stock?page=2", only);
   assert.equal(reloads(visit("get", "/stock?sort=code")), true, "the table's own visit, or one from elsewhere on the page");
   assert.equal(reloads(visit("get", "/stock", ["stock"]), ["stock"]), true);
   assert.equal(reloads(visit("get", "/stock", ["counts"]), ["stock"]), false, "a partial reload of other props");
   assert.equal(reloads(visit("get", "/stock", ["counts"])), true, "a table that names no props may be among those reloaded");
   assert.equal(reloads(visit("put", "/stock/4")), false, "a save");
+  assert.equal(reloads({ ...visit("get", "/stock"), async: true }), false, "a poll");
   assert.equal(reloads(visit("put", "/stock")), false, "a save to the same path");
   assert.equal(reloads(visit("get", "/orders")), false, "a visit that leaves the page");
   assert.equal(reloads(visit("get", "/stock", [], true)), false, "a prefetch");

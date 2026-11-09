@@ -165,16 +165,16 @@ const clearFilters = () => {
 const ariaSort = (key: string) => (state.sort.value !== key ? undefined : state.direction.value === "asc" ? "ascending" : "descending");
 const toggleSort = (key: string) => state.apply({ sort: key, direction: state.sort.value === key && state.direction.value === "asc" ? "desc" : "asc" });
 
-const filterValue = (key: string) => state.filters.value[key]?.[0] ?? "";
-const setFilter = (key: string, values: string[]) => state.apply({ filters: { ...state.filters.value, [key]: values } });
+const filterValue = (key: string) => state.latestFilters.value[key]?.[0] ?? "";
+const setFilter = (key: string, values: string[]) => state.apply({ filters: { ...state.latestFilters.value, [key]: values } });
 // a preset is only a way to fill in the dates: the select names one while both dates still match it
 const presetOf = (key: string) => {
-  const [from, to] = state.filters.value[key] ?? [];
+  const [from, to] = state.latestFilters.value[key] ?? [];
   return datePresets().find((p) => p.range[0] === from && p.range[1] === to)?.label ?? "";
 };
 const applyPreset = (key: string, label: string) => setFilter(key, [...datePresets().find((p) => p.label === label)!.range]);
 // clearing a range brings its default back, so a default leaves nothing to clear
-const rangeClearable = (filter: DataTableFilter<TRow>) => filterIsSet(filter, state.filters.value[filter.key]);
+const rangeClearable = (filter: DataTableFilter<TRow>) => filterIsSet(filter, state.latestFilters.value[filter.key]);
 
 const rowId = (row: TRow, index: number) => keyOf(row, props.rowKey ?? "id", index, props.selectable);
 const selectedIds = ref<Array<string | number>>([]);
@@ -266,19 +266,19 @@ const rowLabel = (row: TRow, index: number) => {
         <fieldset v-else-if="filter.type === 'daterange'" class="field">
           <legend>{{ filter.label }}</legend>
           <select v-if="filter.presets" class="input" :aria-label="`${filter.label} preset`" :value="presetOf(filter.key)" @change="applyPreset(filter.key, ($event.target as HTMLSelectElement).value)">
-            <option value="" hidden>{{ state.filters.value[filter.key]?.length ? "Custom" : "Any time" }}</option>
+            <option value="" hidden>{{ state.latestFilters.value[filter.key]?.length ? "Custom" : "Any time" }}</option>
             <option v-for="p in datePresets()" :key="p.label">{{ p.label }}</option>
           </select>
           <div class="join">
-            <input type="date" class="input" :aria-label="`${filter.label} from`" :value="filterValue(filter.key)" @change="setFilter(filter.key, [($event.target as HTMLInputElement).value, state.filters.value[filter.key]?.[1] ?? ''])" />
-            <input type="date" class="input" :aria-label="`${filter.label} to`" :value="state.filters.value[filter.key]?.[1] ?? ''" @change="setFilter(filter.key, [filterValue(filter.key), ($event.target as HTMLInputElement).value])" />
+            <input type="date" class="input" :aria-label="`${filter.label} from`" :value="filterValue(filter.key)" @change="setFilter(filter.key, [($event.target as HTMLInputElement).value, state.latestFilters.value[filter.key]?.[1] ?? ''])" />
+            <input type="date" class="input" :aria-label="`${filter.label} to`" :value="state.latestFilters.value[filter.key]?.[1] ?? ''" @change="setFilter(filter.key, [filterValue(filter.key), ($event.target as HTMLInputElement).value])" />
             <!-- aria-disabled, as `disabled` would drop the focus of whoever just pressed it, and it stays in the join so the toolbar holds still -->
             <button type="button" class="btn outlined" :aria-label="filter.clearLabel ? undefined : `Clear ${filter.label}`" :aria-disabled="rangeClearable(filter) ? undefined : 'true'" @click="rangeClearable(filter) && setFilter(filter.key, [])">{{ filter.clearLabel ?? "Clear" }}</button>
           </div>
         </fieldset>
         <div v-else class="field">
           <label>{{ filter.label }}</label>
-          <Combobox multiple :label="filter.label" placeholder="All" :options="[...(filter.options ?? [])]" :model-value="state.filters.value[filter.key] ?? []" @update:model-value="setFilter(filter.key, $event)" />
+          <Combobox multiple :label="filter.label" placeholder="All" :options="[...(filter.options ?? [])]" :model-value="state.latestFilters.value[filter.key] ?? []" @update:model-value="setFilter(filter.key, $event)" />
         </div>
       </template>
 

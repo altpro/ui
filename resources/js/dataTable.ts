@@ -1,7 +1,7 @@
 // Types, helpers and URL state for DataTable.vue.
 // A page imports the types to type its columns: `const columns: DataTableColumn<Brand>[] = [...]`.
 // Without the annotation `key` widens to string and stops being checked against the row.
-import { computed, onUnmounted, ref, watch } from "vue";
+import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import pageSizes from "./dataTable.json" with { type: "json" };
 
@@ -389,13 +389,19 @@ export const viewUrl = (url: string, patch: TableStatePatch, options: DataTableU
 
 /**
  * Whether an Inertia visit reloads this page's rows, so the table should dim. A GET of this page counts wherever
- * it came from, unless it names only other props. A save does not, even one that redirects back, nor does a prefetch.
+ * it came from, unless it names only other props. A save does not, even one that redirects back, nor does a prefetch or a poll: an async visit is not the reader waiting.
  */
-export const visitReloadsTable = (visit: { method: string; url: URL; only: string[]; prefetch: boolean }, pageUrl: string, only: ReadonlyArray<string>): boolean =>
+export const visitReloadsTable = (visit: { method: string; url: URL; only: string[]; prefetch: boolean; async?: boolean }, pageUrl: string, only: ReadonlyArray<string>): boolean =>
   visit.method === "get" &&
   !visit.prefetch &&
+  !visit.async &&
   visit.url.pathname === pageUrl.split("?")[0] &&
   (visit.only.length === 0 || only.length === 0 || visit.only.some((prop) => only.includes(prop)));
+
+// The URL of the server visit on its way. The page's URL only moves when the response lands and a new visit cancels the
+// one in flight, so a change made meanwhile must build on this or the first change is lost. One for the page, as lists share the URL.
+const askedFor = shallowRef<string | null>(null);
+let latestVisit: object | null = null;
 
 /**
  * Table state, held in the query string: search, sort, page and filters are the view,
@@ -410,7 +416,8 @@ export const useTableState = (options: {
   only: () => string[];
 }) => {
   const page = usePage();
-  const read = computed(() => readView(new URLSearchParams(page.url.split("?")[1] ?? ""), options.url()));
+  const readUrl = (url: string) => readView(new URLSearchParams(url.split("?")[1] ?? ""), options.url());
+  const read = computed(() => readUrl(page.url));
 
   // the box answers each keystroke; the URL (a request, in server mode) catches up after a pause
   const searchInput = ref(read.value.search);
@@ -426,11 +433,23 @@ export const useTableState = (options: {
 
   // a sort, page or filter is a step Back undoes; a search rewrites its entry as it is typed, and page size is a preference
   const apply = (patch: TableStatePatch, replace = false) => {
-    const url = viewUrl(page.url, patch, { ...options.url(), server: options.server() });
-    if (url === page.url) return;
+    const from = askedFor.value ?? page.url;
+    const url = viewUrl(from, patch, { ...options.url(), server: options.server() });
+    if (url === from) return;
     if (!options.server()) return router[replace ? "replace" : "push"]({ url, preserveScroll: true, preserveState: true });
     const only = options.only();
-    router.get(url, {}, { preserveScroll: true, preserveState: true, replace, only: only.length ? only : undefined });
+    const visit = (latestVisit = {});
+    askedFor.value = url;
+    router.get(url, {}, {
+      preserveScroll: true,
+      preserveState: true,
+      replace,
+      only: only.length ? only : undefined,
+      // fails or is cancelled too; a later visit has taken over if this was not the latest
+      onFinish: () => {
+        if (latestVisit === visit) askedFor.value = null;
+      },
+    });
   };
 
   const setSearch = (value: string) => {
@@ -478,6 +497,11 @@ export const useTableState = (options: {
     filters: computed<Record<string, string[]>>((old) =>
       old && JSON.stringify(old) === JSON.stringify(read.value.filters) ? old : read.value.filters,
     ),
+    /** The filters as last asked for, ahead of `filters` while a visit is on its way: what the controls show and build on. */
+    latestFilters: computed<Record<string, string[]>>((old) => {
+      const latest = askedFor.value === null ? read.value.filters : readUrl(askedFor.value).filters;
+      return old && JSON.stringify(old) === JSON.stringify(latest) ? old : latest;
+    }),
     /** The search the URL holds, which in server mode is the one the rows on screen answer; the box may be ahead of it. */
     search: computed(() => read.value.search),
     /** The page size the URL asks the server for, if any. */
