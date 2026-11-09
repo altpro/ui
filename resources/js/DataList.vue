@@ -26,7 +26,7 @@ const props = defineProps<{
   scrollOnPage?: boolean;
 }>();
 
-defineSlots<{
+const slots = defineSlots<{
   /** The rows. Rendered with no wrapper, so what you put here is a child of the frame. */
   default?: (props: { rows: TRow[]; busy: boolean; empty: DataListEmpty; clearFilters: () => void }) => unknown;
   /** More controls in the toolbar. */
@@ -50,14 +50,17 @@ const summary = ref<HTMLElement>();
 
 const inDrawer = computed(() => props.filterDisplay === "drawer" && filters.value.length > 0);
 // the rows as they are, not the draft: the badge says what the list is showing
+// a list with nothing else to hand focus to has to be able to take it itself, under a name
+const focusable = computed(() => props.scrollOnPage || (!list.searchable.value && !inDrawer.value && !!slots.foot));
 const badge = computed(() => countFilters(filters.value, state.filters.value, props.filterCount));
 
 type Target = () => HTMLElement | null | undefined;
 // a page change or a cleared search redraws when the URL changes, which in server mode is after the response
 let pending: [Element | null, Target] | null = null;
-let paged: { keyboard: boolean } | null = null;
+let paged: { page: number; keyboard: boolean } | null = null;
 watch([() => view.value.page, () => view.value.empty], () => {
-  const moved = paged;
+  // only the page asked for: that visit may have failed, and this be some other change
+  const moved = paged?.page === view.value.page ? paged : null;
   paged = null;
   if (moved && root.value && root.value.getBoundingClientRect().top < 0) root.value.scrollIntoView();
   // the pager has scrolled out of sight with the rows it was under, and a keyboard's focus goes with them
@@ -71,12 +74,12 @@ const goTo = (page: number) => {
   const from = document.activeElement;
   const target = Math.min(Math.max(page, 1), view.value.lastPage);
   pending = [from, () => pager.value?.querySelector<HTMLElement>("[aria-current]")];
-  if (props.scrollOnPage && target !== view.value.page) paged = { keyboard: from instanceof HTMLElement && from.matches(":focus-visible") };
+  if (props.scrollOnPage && target !== view.value.page) paged = { page: target, keyboard: from instanceof HTMLElement && from.matches(":focus-visible") };
   state.apply({ page: target });
 };
-// the button sits in the row it removes; the search box it emptied comes first, and a list without one has its Filters button or its count
+// the button sits in the row it removes; the search box it emptied comes first, and a list without one has its Filters button, its count or itself
 const clearFilters = () => {
-  pending = [document.activeElement, () => searchBox.value ?? filterButton.value ?? summary.value];
+  pending = [document.activeElement, () => searchBox.value ?? filterButton.value ?? summary.value ?? root.value];
   state.clearAll();
 };
 
@@ -84,32 +87,40 @@ const clearFilters = () => {
 // control. Apply commits it once. However else the drawer closes, the draft goes, with no prompt: it is only a query.
 const copyOf = (values: Record<string, string[]>) => Object.fromEntries(Object.entries(values).map(([key, given]) => [key, [...given]]));
 const draft = ref(copyOf(state.latestFilters.value));
+const sortChoice = computed(() => String(sortOptions.value.findIndex((o) => o.key === state.latestSort.value && o.direction === state.latestDirection.value)));
+const sortPatch = (index: string) => {
+  const option = sortOptions.value[Number(index)];
+  return option ? { sort: option.key, direction: option.direction } : {};
+};
+const draftSort = ref(sortChoice.value);
 const resetDraft = () => {
   draft.value = copyOf(state.latestFilters.value);
+  draftSort.value = sortChoice.value;
 };
 // Back or a link while it is open; the same object until a value changes, so a poll does not lose what is being picked
-watch(state.latestFilters, resetDraft);
+watch([state.latestFilters, sortChoice], resetDraft);
 const setDraft = (key: string, values: string[]) => {
   draft.value = { ...draft.value, [key]: values };
 };
-const applyDraft = () => list.setFilters(draft.value);
+// one visit for the lot; an Apply that changed nothing must not go back to page one, as any change to the view does
+const applyDraft = () => {
+  const sortChanged = draftSort.value !== sortChoice.value;
+  if (!sortChanged && JSON.stringify(draft.value) === JSON.stringify(state.latestFilters.value)) return;
+  state.apply({ filters: draft.value, ...(sortChanged ? sortPatch(draftSort.value) : {}) });
+};
 // the browser hands focus back to the Filters button as the dialog closes
 const clearFromDrawer = () => {
   filterDialog.value?.close();
   clearFilters();
 };
 
-const sortChoice = computed(() => String(sortOptions.value.findIndex((o) => o.key === state.sort.value && o.direction === state.direction.value)));
-const setSort = (index: number) => {
-  const option = sortOptions.value[index];
-  if (option) state.apply({ sort: option.key, direction: option.direction });
-};
+const setSort = (index: string) => state.apply(sortPatch(index));
 
 const filterSlots = (slots: Record<string, unknown>) => Object.keys(slots).filter((name): name is `filter-${string}` => name.startsWith("filter-"));
 </script>
 
 <template>
-  <div ref="root" class="datatable" :tabindex="scrollOnPage ? -1 : undefined">
+  <div ref="root" class="datatable" :tabindex="focusable ? -1 : undefined" :role="focusable ? 'group' : undefined" :aria-label="focusable ? caption : undefined">
     <div class="controls">
       <input
         v-if="list.searchable.value"
@@ -124,6 +135,7 @@ const filterSlots = (slots: Record<string, unknown>) => Object.keys(slots).filte
 
       <template v-if="inDrawer">
         <button ref="filterButton" type="button" class="btn relative" command="show-modal" :commandfor="`${id}-filters`">
+          <svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 20a1 1 0 0 0 .553.895l2 1A1 1 0 0 0 14 21v-7a2 2 0 0 1 .517-1.341L21.74 4.67A1 1 0 0 0 21 3H3a1 1 0 0 0-.742 1.67l7.225 7.989A2 2 0 0 1 10 14z" /></svg>
           Filters
           <span v-if="badge" class="badge sm primary absolute -end-2 -top-2">{{ badge }}<span class="sr-only"> set</span></span>
         </button>
@@ -135,7 +147,7 @@ const filterSlots = (slots: Record<string, unknown>) => Object.keys(slots).filte
             </button>
           </header>
           <form :id="`${id}-filters-form`" method="dialog" class="contents" @submit="applyDraft">
-            <DataFilters :filters="filters" :values="draft" focus-first @change="setDraft">
+            <DataFilters :filters="filters" :values="draft" focus-first :sort-options="sortOptions" :sort="draftSort" :sort-label="sortLabel" @change="setDraft" @sort="draftSort = $event">
               <template v-for="name in filterSlots($slots)" :key="name" #[name]="scope">
                 <slot :name="name" v-bind="scope" />
               </template>
@@ -147,20 +159,11 @@ const filterSlots = (slots: Record<string, unknown>) => Object.keys(slots).filte
           </footer>
         </dialog>
       </template>
-      <DataFilters v-else :filters="filters" :values="state.latestFilters.value" @change="list.setFilter">
+      <DataFilters v-else :filters="filters" :values="state.latestFilters.value" :sort-options="sortOptions" :sort="sortChoice" :sort-label="sortLabel" @change="list.setFilter" @sort="setSort">
         <template v-for="name in filterSlots($slots)" :key="name" #[name]="scope">
           <slot :name="name" v-bind="scope" />
         </template>
       </DataFilters>
-
-      <div v-if="sortOptions.length" class="field">
-        <label :for="`${id}-sort`">{{ sortLabel ?? "Sort" }}</label>
-        <select :id="`${id}-sort`" class="input" :value="sortChoice" @change="setSort(Number(($event.target as HTMLSelectElement).value))">
-          <!-- a link can ask for a direction this list does not offer -->
-          <option v-if="sortChoice === '-1'" value="-1" hidden>Custom</option>
-          <option v-for="(option, index) in sortOptions" :key="index" :value="String(index)">{{ option.label }}</option>
-        </select>
-      </div>
 
       <slot name="filters" />
       <slot name="controls" />

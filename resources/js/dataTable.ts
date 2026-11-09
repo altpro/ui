@@ -414,6 +414,8 @@ export const visitReloadsTable = (visit: { method: string; url: URL; only: strin
 // The URL of the server visit on its way. The page's URL only moves when the response lands and a new visit cancels the
 // one in flight, so a change made meanwhile must build on this or the first change is lost. One for the page, as lists share the URL.
 const askedFor = shallowRef<string | null>(null);
+// what that visit reloads, as a visit that cancels it has to reload the same or its rows go stale under their filters. Empty means everything.
+let askedOnly: string[] = [];
 let latestVisit: object | null = null;
 
 /**
@@ -431,6 +433,7 @@ export const useTableState = (options: {
   const page = usePage();
   const readUrl = (url: string) => readView(new URLSearchParams(url.split("?")[1] ?? ""), options.url());
   const read = computed(() => readUrl(page.url));
+  const latest = computed(() => (askedFor.value === null ? read.value : readUrl(askedFor.value)));
 
   // the box answers each keystroke; the URL (a request, in server mode) catches up after a pause
   const searchInput = ref(read.value.search);
@@ -449,10 +452,14 @@ export const useTableState = (options: {
     const from = askedFor.value ?? page.url;
     const url = viewUrl(from, patch, { ...options.url(), server: options.server() });
     if (url === from) return;
-    if (!options.server()) return router[replace ? "replace" : "push"]({ url, preserveScroll: true, preserveState: true });
-    const only = options.only();
+    const overtaking = askedFor.value !== null;
+    // a list in the browser needs no server, unless a server's answer is coming that would put the URL back without this change
+    if (!options.server() && !overtaking) return router[replace ? "replace" : "push"]({ url, preserveScroll: true, preserveState: true });
+    const own = options.server() ? options.only() : askedOnly;
+    const only = !overtaking ? own : own.length && askedOnly.length ? [...new Set([...askedOnly, ...own])] : [];
     const visit = (latestVisit = {});
     askedFor.value = url;
+    askedOnly = only;
     router.get(url, {}, {
       preserveScroll: true,
       preserveState: true,
@@ -460,7 +467,9 @@ export const useTableState = (options: {
       only: only.length ? only : undefined,
       // fails or is cancelled too; a later visit has taken over if this was not the latest
       onFinish: () => {
-        if (latestVisit === visit) askedFor.value = null;
+        if (latestVisit !== visit) return;
+        askedFor.value = null;
+        askedOnly = [];
       },
     });
   };
@@ -511,10 +520,12 @@ export const useTableState = (options: {
       old && JSON.stringify(old) === JSON.stringify(read.value.filters) ? old : read.value.filters,
     ),
     /** The filters as last asked for, ahead of `filters` while a visit is on its way: what the controls show and build on. */
-    latestFilters: computed<Record<string, string[]>>((old) => {
-      const latest = askedFor.value === null ? read.value.filters : readUrl(askedFor.value).filters;
-      return old && JSON.stringify(old) === JSON.stringify(latest) ? old : latest;
-    }),
+    latestFilters: computed<Record<string, string[]>>((old) =>
+      old && JSON.stringify(old) === JSON.stringify(latest.value.filters) ? old : latest.value.filters,
+    ),
+    /** The sort as last asked for, ahead of `sort` in the same way. */
+    latestSort: computed(() => latest.value.sort),
+    latestDirection: computed(() => latest.value.direction),
     /** The search the URL holds, which in server mode is the one the rows on screen answer; the box may be ahead of it. */
     search: computed(() => read.value.search),
     /** The page size the URL asks the server for, if any. */

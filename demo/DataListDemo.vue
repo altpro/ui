@@ -16,6 +16,10 @@ const sortOptions = [
   { key: "price", direction: "desc", label: "Price, high to low" },
 ];
 const list = useDataList(() => ({ rows: products, filters, name: "cards", searchable: ["name", "brand"], sortOptions, perPage: 10 }));
+// no search box and a footer of its own, for a list too short to page
+const plainRows = products.slice(0, 3);
+const plainFilters = [{ key: "brand", label: "Brand", type: "select", options }];
+const plain = useDataList(() => ({ rows: plainRows, filters: plainFilters, name: "plain", search: false }));
 const money = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" });
 </script>
 
@@ -39,6 +43,23 @@ const money = new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP
         </ul>
         <div v-if="empty === 'no-matches'" class="card items-center py-3gap text-center">
           <h3 class="font-semibold">No cards match</h3>
+          <button type="button" class="btn sm" @click="clearFilters">Clear filters</button>
+        </div>
+      </template>
+    </DataList>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">A footer of your own</h2>
+    <p class="text-sm muted"><code>search: false</code> removes the search box, and a <code>#foot</code> slot replaces the count and pagination.</p>
+    <DataList :list="plain" caption="Made to order">
+      <template #foot><p class="mt-3 text-sm muted">Made to order, usually within a week.</p></template>
+      <template #default="{ rows, empty, clearFilters }">
+        <ul class="grid list-none gap-gap p-0 sm:grid-cols-3">
+          <li v-for="row in rows" :key="row.id" class="card">{{ row.name }}</li>
+        </ul>
+        <div v-if="empty === 'no-matches'" class="card items-center py-3gap text-center">
+          <h3 class="font-semibold">Nothing made to order matches</h3>
           <button type="button" class="btn sm" @click="clearFilters">Clear filters</button>
         </div>
       </template>

@@ -1,21 +1,25 @@
 <!--
-  The controls for a list's declared filters, drawn from values in and changes out, so the toolbar can bind them to the
+  The controls for a list's declared filters and its order, drawn from values in and changes out, so the toolbar can bind them to the
   URL and the drawer to a draft. Renders with no wrapper: its fields are children of whatever holds it.
   Used by DataList.vue; a page has no reason to use it directly.
 -->
 <script setup lang="ts" generic="TRow extends object">
 import { useId } from "vue";
 import Combobox from "./Combobox.vue";
-import { datePresets, filterIsSet, type DataTableFilter } from "./dataTable";
+import { datePresets, filterIsSet, type DataListSortOption, type DataTableFilter } from "./dataTable";
 
 const props = defineProps<{
   filters: ReadonlyArray<DataTableFilter<TRow>>;
   values: Record<string, string[]>;
   /** Focus the first control when a dialog holding these opens. */
   focusFirst?: boolean;
+  sortOptions?: ReadonlyArray<DataListSortOption>;
+  /** Which of `sortOptions` is chosen, by index; "-1" for an order none of them is. */
+  sort?: string;
+  sortLabel?: string;
 }>();
 
-const emit = defineEmits<{ change: [key: string, values: string[]] }>();
+const emit = defineEmits<{ change: [key: string, values: string[]]; sort: [index: string] }>();
 
 defineSlots<{
   [key: `filter-${string}`]: ((props: { filter: DataTableFilter<TRow>; values: string[]; set: (values: string[]) => void }) => unknown) | undefined;
@@ -69,4 +73,13 @@ const first = (index: number) => (props.focusFirst && index === 0) || undefined;
       <Combobox multiple :label="filter.label" placeholder="All" :options="[...(filter.options ?? [])]" :model-value="valuesOf(filter.key)" :autofocus="first(index)" @update:model-value="set(filter.key, $event)" />
     </div>
   </template>
+
+  <div v-if="sortOptions?.length" class="field">
+    <label :for="`${id}-sort`">{{ sortLabel ?? "Sort" }}</label>
+    <select :id="`${id}-sort`" class="input" :value="sort" @change="emit('sort', ($event.target as HTMLSelectElement).value)">
+      <!-- a link can ask for a direction this list does not offer -->
+      <option v-if="sort === '-1'" value="-1" hidden>Custom</option>
+      <option v-for="(option, index) in sortOptions" :key="index" :value="String(index)">{{ option.label }}</option>
+    </select>
+  </div>
 </template>

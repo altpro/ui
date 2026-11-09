@@ -20,8 +20,8 @@ _Avoid_: remote mode, paginated mode
 The search, filters, sort and page: what a link to the table reproduces. It lives in the query string.
 _Avoid_: state, query (when meaning all four)
 
-**Latest filters**:
-The filters as last asked for, ahead of the view while a server visit is on its way. Controls show them; the rows and the badge answer the view.
+**Latest filters** and **latest sort**:
+The filters and sort as last asked for, ahead of the view while a server visit is on its way. Controls show them; the rows and the badge answer the view.
 
 **Draft**:
 Filters being picked in a filter drawer, which change nothing until Apply commits them.

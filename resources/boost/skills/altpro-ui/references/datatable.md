@@ -68,7 +68,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `bulk-actions` | `{ selection, count, clear }`. Buttons for the bar shown while rows are selected. |
 | `filters` | Extra controls in the toolbar. Filtering in the parent works, but then the table cannot count what was hidden. |
 | `empty` | Under `empty-message`, e.g. a "Create one" link. |
-| `filter-<key>` | `{ filter, values, set }`. Draws a declared filter yourself, such as a customer picked from thousands of records. Unlike the `filters` slot it is counted, cleared and drafted like the rest, and goes in the drawer. |
+| `filter-<key>` | `{ filter, values, set }`. Draws a declared filter yourself, such as a customer picked from thousands of records. Unlike the `filters` slot it is counted, cleared and drafted like the rest, and goes in the drawer. Its declared `type` sets how the URL holds the value: `select` keeps one, `multiple` any number. |
 
 - The header checkbox ticks the visible page only, and shows a dash when part of it is ticked. Once the page is ticked and more rows match, the bar offers "Select all N matching", which hands over the query instead of ids: run it again on the server with `TableQuery::search()`. In server mode that query is the one the rows on screen answer, not a search still on its way. Unticking a row afterwards goes back to `ids`: the page's, less that row.
 - A change to this table's search, filters, sort or page size goes back to page one. A change to its search, filters, sort or page clears the selection. Another table's changes on the same page leave both alone.

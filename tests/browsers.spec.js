@@ -1431,11 +1431,19 @@ test("filter drawer: the badge counts every filter in force by default, or only 
 
 test("datalist: a card grid gets the frame, a sort select, and a filter of its own that is drafted and counted", async ({ page }) => {
   await page.goto("/datalist.html");
-  const list = page.locator(".datatable"), cards = list.locator("ul.grid > li"), button = filtersButton(list), drawer = drawerOf(list);
+  const list = listIn(page, "A card grid"), cards = list.locator("ul.grid > li"), button = filtersButton(list), drawer = drawerOf(list);
   await expect(cards).toHaveCount(10);
   await expect(list.getByRole("status")).toHaveText("Showing 1–10 of 23");
 
-  await list.getByLabel("Sort").selectOption({ label: "Price, high to low" });
+  await expect(button.locator("svg")).toBeVisible();
+  await expect(list.locator(".controls > .field")).toHaveCount(0);
+  await button.click();
+  await drawer.getByLabel("Sort").selectOption({ label: "Price, high to low" });
+  await expect(page).not.toHaveURL(/cards_sort/);
+  const before = await page.evaluate(() => history.length);
+  await drawer.getByRole("button", { name: "Apply", exact: true }).click();
+  expect(await page.evaluate(() => history.length)).toBe(before + 1);
+  await expect(button.locator(".badge"), "an order is not a filter").toHaveCount(0);
   await expect(page).toHaveURL(/cards_sort=price/);
   await expect(page).toHaveURL(/cards_dir=desc/);
   await expect(cards.first().getByRole("heading")).toHaveText("Sample W");
@@ -1443,6 +1451,22 @@ test("datalist: a card grid gets the frame, a sort select, and a filter of its o
   await expect(list.getByLabel("Sort").locator("option:checked")).toHaveText("Price, high to low");
   await page.goto("/datalist.html?cards_sort=name&cards_dir=desc");
   await expect(list.getByLabel("Sort").locator("option:checked")).toHaveText("Custom");
+
+  // Escape lets a changed order go, and Clear filters leaves the order alone
+  await page.goto("/datalist.html?cards_sort=price&cards_dir=desc&cards_page=2");
+  await button.click();
+  await drawer.getByLabel("Sort").selectOption({ label: "Name" });
+  await page.keyboard.press("Escape");
+  await expect(drawer).toBeHidden();
+  await expect(page).toHaveURL(/cards_dir=desc/);
+  await button.click();
+  await expect(drawer.getByLabel("Sort").locator("option:checked")).toHaveText("Price, high to low");
+  await drawer.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(drawer).toBeHidden();
+  await expect(page, "an Apply that changed nothing stays on its page").toHaveURL(/cards_page=2/);
+  await button.click();
+  await drawer.getByRole("button", { name: "Clear filters" }).click();
+  await expect(page).toHaveURL(/cards_dir=desc/);
   await page.goto("/datalist.html");
 
   await button.click();
@@ -1482,5 +1506,89 @@ test("datatable: filters in a drawer leave the toolbar to the search box and one
   await expect(button.locator(".badge")).toHaveText("2 set");
   await expect(dt.getByRole("status")).toContainText("filtered from 12");
   await expect(page).toHaveURL(/stocklist_added_from=2026-03-01/);
+});
+
+// lists sharing a URL, against a stand-in server slow enough for their changes to overlap
+const severalLists = async (page, query = "") => {
+  await page.goto(`/app/several-lists.html${query}`);
+  await expect(page.locator(".datatable").first()).toBeVisible();
+};
+const listNamed = (page, caption) => page.locator("section").filter({ has: page.getByRole("heading", { name: caption, exact: true, level: 2 }) }).locator(".datatable");
+const choose = (select, value) => select.evaluate((el, v) => { el.value = v; el.dispatchEvent(new Event("change", { bubbles: true })); }, value);
+// from inside the page, so both changes land inside the server's delay however busy the machine is
+const chooseThen = async (select, value, second) => select.evaluate(async (el, [v, then]) => {
+  el.value = v;
+  el.dispatchEvent(new Event("change", { bubbles: true }));
+  await new Promise((resolve) => setTimeout(resolve, 30));
+  if (then.tagName === "SELECT") { then.value = "y"; then.dispatchEvent(new Event("change", { bubbles: true })); } else then.click();
+}, [value, await second.elementHandle()]);
+
+test("several lists: a change that overtakes another list's reloads that list's rows too", async ({ page }) => {
+  await severalLists(page);
+  const one = listNamed(page, "One"), two = listNamed(page, "Two");
+  await page.evaluate(() => { window.delay = 400; });
+  await chooseThen(one.getByLabel("Type"), "x", two.getByRole("button", { name: "Next page" }));
+  await expect(page).toHaveURL(/one_type=x/);
+  await expect(page).toHaveURL(/two_page=2/);
+  await expect(one.getByRole("status")).toHaveText("Showing 1–10 of 15, filtered from 30");
+  await expect(one.locator("li", { hasText: "(y)" })).toHaveCount(0);
+  await expect(two.getByRole("status")).toHaveText("Showing 11–20 of 30");
+  const visits = await page.evaluate(() => window.visits);
+  expect(visits.at(-1).only.toSorted()).toEqual(["one", "two"]);
+});
+
+test("several lists: a list in the browser keeps a change made during a server list's visit", async ({ page }) => {
+  await severalLists(page);
+  const one = listNamed(page, "One"), browser = listNamed(page, "Browser");
+  await page.evaluate(() => { window.delay = 400; });
+  await chooseThen(one.getByLabel("Type"), "x", browser.getByLabel("Type"));
+  await expect(one.getByRole("status")).toHaveText("Showing 1–10 of 15, filtered from 30");
+  await expect(page).toHaveURL(/one_type=x/);
+  await expect(page).toHaveURL(/browser_type=y/);
+  await expect(browser.getByLabel("Type")).toHaveValue("y");
+  await expect(browser.getByRole("status")).toContainText("filtered from 12");
+  expect((await page.evaluate(() => window.visits)).at(-1).only).toEqual(["one"]);
+});
+
+test("filter drawer: reopened before the server answers, it shows and keeps the order just applied", async ({ page }) => {
+  await severalLists(page);
+  const list = listNamed(page, "Drawer"), button = filtersButton(list), drawer = drawerOf(list);
+  await page.evaluate(() => { window.delay = 1500; });
+  await button.click();
+  await drawer.getByLabel("Order").selectOption({ label: "Z to A" });
+  await drawer.getByRole("button", { name: "Apply", exact: true }).click();
+  await button.click();
+  await expect(drawer.getByLabel("Order").locator("option:checked"), "before the response").toHaveText("Z to A", { timeout: 500 });
+  await drawer.getByLabel("Type").selectOption("x");
+  await drawer.getByRole("button", { name: "Apply", exact: true }).click();
+  await expect(page).toHaveURL(/drawer_type=x/);
+  await expect(page).toHaveURL(/drawer_dir=desc/);
+  await expect(list.locator("li").first()).toContainText("Record 30");
+});
+
+test("datatimeline frame: a page change that never landed does not move the reader later", async ({ page }) => {
+  await severalLists(page);
+  const one = listNamed(page, "One"), type = one.getByLabel("Type");
+  await page.evaluate(() => { window.fail = true; });
+  await one.getByRole("button", { name: "Next page" }).focus();
+  await page.keyboard.press("Enter");
+  await expect.poll(() => page.evaluate(() => window.visits.length)).toBe(1);
+  await page.waitForTimeout(300);
+  await page.evaluate(() => { window.fail = false; });
+  await type.focus();
+  await choose(type, "none");
+  await expect(one.getByRole("status")).toContainText("Showing 0 of 0");
+  await expect(type).toBeFocused();
+});
+
+test("datalist: with no search box or count of its own, Clear filters leaves focus on the named list", async ({ page }) => {
+  await page.goto("/datalist.html?plain_brand=Nobody");
+  const list = page.locator(".datatable").filter({ hasText: "Made to order" });
+  const clear = list.getByRole("button", { name: "Clear filters" });
+  await clear.focus();
+  await page.keyboard.press("Enter");
+  await expect(list).toBeFocused();
+  await expect(list).toHaveAccessibleName("Made to order");
+  await expect(list.locator("ul.grid > li")).toHaveCount(3);
 });
 
