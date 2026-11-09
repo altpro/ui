@@ -251,6 +251,19 @@ const route = (method, url) => {
   }
 };
 
+// inertia-laravel takes the page URL from fullUrl(), where PHP has rewritten `key[]=a&key[]=b` as `key[0]=a&key[1]=b`
+const fullUrl = (url) => {
+  const [path, search] = url.split("?");
+  if (!search) return url;
+  const counts = new Map();
+  const numbered = [...new URLSearchParams(search)].map(([k, v]) => {
+    if (!k.endsWith("[]")) return [k, v];
+    counts.set(k, (counts.get(k) ?? -1) + 1);
+    return [`${k.slice(0, -2)}[${counts.get(k)}]`, v];
+  });
+  return `${path}?${new URLSearchParams(numbered)}`;
+};
+
 // the page object for an Inertia visit. A Back is Laravel's redirect to the page the browser is on, so that page
 // renders again with the errors or flash. A partial reload (DataTable's `only`) gets just the props it asked for,
 // as Laravel skips the closures for the rest.
@@ -261,7 +274,7 @@ function visit(result, url, only) {
   if (only) for (const key of Object.keys(props)) if (key !== "errors" && !only.includes(key)) delete props[key];
   return {
     component: res.component, props, flash: result.flash ?? {},
-    url: result instanceof Back ? here.pathname + here.search : toDemo(url),
+    url: result instanceof Back ? here.pathname + here.search : fullUrl(toDemo(url)),
     version: null, clearHistory: false, encryptHistory: false,
   };
 }

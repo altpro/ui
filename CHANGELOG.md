@@ -2,6 +2,15 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.3`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+- A `DataTable` `multiple` filter keeps working once the server has replied. inertia-laravel builds the page URL with `fullUrl()`, which rewrites `category[]=food` as `category[0]=food`, and the table read and removed only `key[]`: the control went blank, offered no Clear and could not take the value off, and a filter with a `default` showed the default while the list showed something else. It now reads and replaces both forms. An app that set `Inertia::resolveUrlUsing` to work around this can remove it. Markup is unchanged.
+- An empty `multiple` filter reads "All", as a select does. `Combobox` gains a `placeholder` prop for this.
+- A `DataTable` date range's Clear button is inactive (`aria-disabled`) until the range differs from its default, and keeps its place, so the toolbar does not move and focus stays on it after a clear. A filter's `clearLabel` changes its words and accessible name: `{ type: "daterange", clearLabel: "Clear dates" }`. An app that relabels the button through the DOM should use this instead.
+- `format: "date"` and `"datetime"` no longer zero-pad the day: "7 Dec 2016", not "07 Dec 2016", as the skill's date rule has it. An app that formats dates in `#cell-…` slots only to avoid the padding can go back to `format`.
+- A `DataTable` dims only for a visit that reloads its rows: a GET of its own page, unless that visit names only other props. Saving one row's switch no longer fades every row, or marks the table `aria-busy`. An app that overrode the dim with `[&_tbody]:opacity-100!` can remove it.
+- `app-shell.md`'s `<main>` shows focus for the keyboard, inset so the window's edge does not cut it off, instead of `outline-none`, which broke the skill's own rule that focus shows wherever it lands. An app that copied the layout should replace `outline-none` on `main` with `-outline-offset-3 focus-visible:outline-3 focus-visible:outline-ring/50`. Run `php artisan boost:update` to get the skill.
+
 ## 0.3.3 (7 November 2026)
 
 - A click anywhere in a `Field` password `reveal` box lands in the input. The wrapper is a `<div>`, so its padding and the space above and below the input did nothing. This covers any `.input` wrapper that is not a `<label>`, including the `guest.js` sign-in pages in `app-shell.md`. An app that worked around it with its own rules on `div.input` must delete them in the same update: the input now pulls itself over the wrapper's padding, so a workaround that removes that padding leaves the text at the box's edge. Markup is unchanged. `.input` gains a `--input-gap` custom property.

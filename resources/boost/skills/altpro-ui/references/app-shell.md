@@ -246,7 +246,7 @@ onMounted(() => {
         <UserMenu class="ms-auto" />
       </header>
 
-      <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap outline-none">
+      <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap -outline-offset-3 focus-visible:outline-3 focus-visible:outline-ring/50">
         <slot />
       </main>
     </div>

@@ -40,6 +40,7 @@
     { "what": "ignores a page size not on offer", "url": "/?per_page=100000", "view": {} },
     { "what": "ignores a page size spelt another way", "url": "/?per_page=50.0", "view": {} },
     { "what": "a multiple filter reads every value", "url": "/?brand%5B%5D=acme&brand%5B%5D=bolt", "view": { "filters": { "brand": ["acme", "bolt"] } } },
+    { "what": "a multiple filter reads the numbered form PHP rebuilds the page URL in", "url": "/?brand%5B0%5D=acme&brand%5B1%5D=bolt", "view": { "filters": { "brand": ["acme", "bolt"] } } },
     { "what": "brackets may come unencoded", "url": "/?brand[]=acme", "view": { "filters": { "brand": ["acme"] } } },
     { "what": "a multiple filter drops empty values", "url": "/?brand%5B%5D=&brand%5B%5D=acme", "view": { "filters": { "brand": ["acme"] } } },
     { "what": "a multiple filter without brackets is absent", "url": "/?brand=acme", "view": {} },

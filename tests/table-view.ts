@@ -10,6 +10,7 @@ import {
   readView,
   tableView,
   viewUrl,
+  visitReloadsTable,
   type DataTableColumn,
   type DataTableFilter,
   type DataTableUrlOptions,
@@ -139,6 +140,30 @@ test("viewUrl: clearing a filter with a default keeps it clear, and leaving one 
   assert.equal(url("/t?status=draft&live=", {}), "/t", "a patch without a filter restores its default");
 });
 
+test("viewUrl replaces a multiple filter in the numbered form the server's page URL has it in", () => {
+  const withDefaults = { ...table, filters: [...table.filters, { key: "tags", type: "multiple" as const, default: ["new"] }] };
+  const url = (from: string, filters: Record<string, string[]>, name?: string) => viewUrl(from, { filters }, { ...withDefaults, name, server: true });
+  const read = (u: string) => readView(new URLSearchParams(u.split("?")[1] ?? ""), withDefaults).filters;
+  assert.equal(url("/t?brand%5B0%5D=acme&brand%5B1%5D=bolt", { brand: [] }), "/t");
+  assert.equal(url("/t?brand%5B0%5D=acme", { brand: ["acme", "bolt"] }), "/t?brand%5B%5D=acme&brand%5B%5D=bolt");
+  assert.equal(url("/t?shop_brand%5B0%5D=acme", { brand: [] }, "shop"), "/t");
+  assert.equal(url("/t?brandish%5B0%5D=acme", { brand: [] }), "/t?brandish%5B0%5D=acme", "another parameter that starts the same stays");
+  assert.deepEqual(read("/t?tags%5B0%5D="), { ...read("/t"), tags: [] }, "none over a default stays none when the server numbers it");
+});
+
+test("only a visit that reloads this page's rows dims the table", () => {
+  const visit = (method: string, path: string, only: string[] = [], prefetch = false) => ({ method, url: new URL(path, "https://x.test"), only, prefetch });
+  const reloads = (v: ReturnType<typeof visit>, only: string[] = []) => visitReloadsTable(v, "/stock?page=2", only);
+  assert.equal(reloads(visit("get", "/stock?sort=code")), true, "the table's own visit, or one from elsewhere on the page");
+  assert.equal(reloads(visit("get", "/stock", ["stock"]), ["stock"]), true);
+  assert.equal(reloads(visit("get", "/stock", ["counts"]), ["stock"]), false, "a partial reload of other props");
+  assert.equal(reloads(visit("get", "/stock", ["counts"])), true, "a table that names no props may be among those reloaded");
+  assert.equal(reloads(visit("put", "/stock/4")), false, "a save");
+  assert.equal(reloads(visit("put", "/stock")), false, "a save to the same path");
+  assert.equal(reloads(visit("get", "/orders")), false, "a visit that leaves the page");
+  assert.equal(reloads(visit("get", "/stock", [], true)), false, "a prefetch");
+});
+
 test("a daterange keeps rows whose day falls inside it, both ends included", () => {
   type Dated = { id: number; at: string | null };
   const dated: Dated[] = [
@@ -196,7 +221,8 @@ test("keyOf: a selectable row needs its key, a plain one falls back to its posit
 });
 
 test("formats in the locale it is given, and en-GB with no document, as on a server render", () => {
-  assert.equal(formatCellValue("2026-01-05", "date", undefined, "en-US"), "Jan 05, 2026");
-  assert.equal(formatCellValue("2026-01-05", "date"), "05 Jan 2026");
+  assert.equal(formatCellValue("2026-01-05", "date", undefined, "en-US"), "Jan 5, 2026");
+  assert.equal(formatCellValue("2026-01-05", "date"), "5 Jan 2026");
+  assert.match(formatCellValue("2026-01-05T09:05:00", "datetime"), /^5 Jan 2026, 09:05$/);
   assert.equal(formatCellValue(12.5, "currency", "EUR", "de-DE"), "12,50 €");
 });

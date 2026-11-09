@@ -615,6 +615,40 @@ test("datatable: declared filters narrow the rows, sit in the URL and say how ma
   await expect(bodyRows(dt)).toHaveCount(2);
   await page.keyboard.press("Escape");
   await expect(dt.locator(".controls").getByRole("combobox", { name: "Size", exact: true })).toContainText("L");
+  await expect(dt.locator(".controls").getByRole("combobox", { name: "Brand", exact: true })).toHaveText("All");
+});
+
+test("datatable: a date range's clear button waits for a range, holds its place and keeps focus", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Recent products"), from = dt.getByLabel("Added from"), clear = dt.getByRole("button", { name: "Clear dates", exact: true });
+  // the default is in force: nothing to clear
+  await expect(from).toHaveValue("2026-02-01");
+  await expect(clear).toHaveAttribute("aria-disabled", "true");
+  await expect(clear).toHaveText("Clear dates");
+  const left = () => clear.evaluate((el) => el.getBoundingClientRect().left);
+  const place = await left();
+
+  await from.fill("2026-03-01");
+  await expect(clear).not.toHaveAttribute("aria-disabled");
+  expect(await left()).toBeCloseTo(place, 0);
+
+  await clear.focus();
+  await page.keyboard.press("Enter");
+  await expect(from).toHaveValue("2026-02-01");
+  await expect(clear).toHaveAttribute("aria-disabled", "true");
+  await expect(clear).toBeFocused();
+  // pressed again with nothing to clear, it does nothing
+  await page.keyboard.press("Enter");
+  await expect(page).not.toHaveURL(/recent_added/);
+});
+
+test("datatable: a multiple filter reads the numbered URL a Laravel page comes back with, and lets go of it", async ({ page }) => {
+  await page.goto("/datatable.html?products_size%5B0%5D=L&products_size%5B1%5D=M");
+  const dt = datatable(page, "Products"), size = dt.locator(".controls").getByRole("combobox", { name: "Size", exact: true });
+  await expect(size).toContainText("L, M");
+  await dt.getByRole("button", { name: "Clear Size" }).click();
+  await expect(page).not.toHaveURL(/products_size/);
+  await expect(size).toHaveText("All");
 });
 
 test("datatable: a date range works from either end, turns round when reversed and clears", async ({ page }) => {

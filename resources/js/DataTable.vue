@@ -10,6 +10,7 @@ import {
   DEFAULT_PAGE_SIZE,
   PAGE_SIZES,
   datePresets,
+  filterIsSet,
   formatCellValue,
   isPaginated,
   keyOf,
@@ -172,6 +173,8 @@ const presetOf = (key: string) => {
   return datePresets().find((p) => p.range[0] === from && p.range[1] === to)?.label ?? "";
 };
 const applyPreset = (key: string, label: string) => setFilter(key, [...datePresets().find((p) => p.label === label)!.range]);
+// clearing a range brings its default back, so a default leaves nothing to clear
+const rangeClearable = (filter: DataTableFilter<TRow>) => filterIsSet(filter, state.filters.value[filter.key]);
 
 const rowId = (row: TRow, index: number) => keyOf(row, props.rowKey ?? "id", index, props.selectable);
 const selectedIds = ref<Array<string | number>>([]);
@@ -269,12 +272,13 @@ const rowLabel = (row: TRow, index: number) => {
           <div class="join">
             <input type="date" class="input" :aria-label="`${filter.label} from`" :value="filterValue(filter.key)" @change="setFilter(filter.key, [($event.target as HTMLInputElement).value, state.filters.value[filter.key]?.[1] ?? ''])" />
             <input type="date" class="input" :aria-label="`${filter.label} to`" :value="state.filters.value[filter.key]?.[1] ?? ''" @change="setFilter(filter.key, [filterValue(filter.key), ($event.target as HTMLInputElement).value])" />
-            <button type="button" class="btn outlined" :aria-label="`Clear ${filter.label}`" @click="setFilter(filter.key, [])">Clear</button>
+            <!-- aria-disabled, as `disabled` would drop the focus of whoever just pressed it, and it stays in the join so the toolbar holds still -->
+            <button type="button" class="btn outlined" :aria-label="filter.clearLabel ? undefined : `Clear ${filter.label}`" :aria-disabled="rangeClearable(filter) ? undefined : 'true'" @click="rangeClearable(filter) && setFilter(filter.key, [])">{{ filter.clearLabel ?? "Clear" }}</button>
           </div>
         </fieldset>
         <div v-else class="field">
           <label>{{ filter.label }}</label>
-          <Combobox multiple :label="filter.label" :options="[...(filter.options ?? [])]" :model-value="state.filters.value[filter.key] ?? []" @update:model-value="setFilter(filter.key, $event)" />
+          <Combobox multiple :label="filter.label" placeholder="All" :options="[...(filter.options ?? [])]" :model-value="state.filters.value[filter.key] ?? []" @update:model-value="setFilter(filter.key, $event)" />
         </div>
       </template>
 

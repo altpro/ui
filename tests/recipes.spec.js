@@ -175,6 +175,61 @@ test("delete account: a wrong password keeps the dialog open with the error in i
   await expect(page).toHaveURL(/:\d+\/$/);
 });
 
+test("list page: a multiple filter survives the server renumbering its URL, and can be added to and cleared", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  const dt = page.locator(".datatable"), summary = dt.getByRole("status"), category = dt.getByRole("combobox", { name: "Category", exact: true });
+  await expect(summary).toHaveText("Showing 1–10 of 14");
+  await expect(category).toHaveText("All");
+
+  await category.click();
+  const options = dt.getByRole("listbox", { name: "Category" }).getByRole("option"), first = options.first(), second = options.nth(1);
+  const [one, two] = [await first.textContent(), await second.textContent()];
+  await first.click();
+  await expect(page).toHaveURL(/category%5B0%5D=/);
+  await expect(category).toContainText(one);
+  await expect(summary).toContainText("filtered from 14");
+
+  await second.click();
+  await expect(page).toHaveURL(/category%5B1%5D=/);
+  await expect(category).toContainText(`${one}, ${two}`);
+  await page.keyboard.press("Escape");
+
+  await dt.getByRole("button", { name: "Clear Category" }).click();
+  await expect(page).not.toHaveURL(/category/);
+  await expect(summary).toHaveText("Showing 1–10 of 14");
+  await expect(category).toHaveText("All");
+});
+
+test("list page: a visit that reloads the rows dims the table, and a save does not", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  const dt = page.locator(".datatable"), rows = dt.locator("tbody tr");
+  await expect(rows).toHaveCount(10);
+  await dt.locator("table").evaluate((table) => {
+    window.dims = 0;
+    new MutationObserver(() => { if (table.getAttribute("aria-busy") === "true") window.dims++; }).observe(table, { attributeFilter: ["aria-busy"] });
+  });
+
+  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Draft");
+  await expect(rows).toHaveCount(3);
+  expect(await page.evaluate(() => window.dims)).toBeGreaterThan(0);
+
+  await page.evaluate(() => { window.dims = 0; });
+  await rows.first().getByRole("checkbox").check();
+  await dt.getByRole("button", { name: "Archive" }).click();
+  await expect(rows).toHaveCount(2);
+  expect(await page.evaluate(() => window.dims)).toBe(0);
+});
+
+test("app shell: focus on main shows after a keyboard visit, inside the window", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  const link = page.getByRole("link", { name: "Edit Arc headphones" }), main = page.locator("#main");
+  await link.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/recipe-product\.html\?id=1$/);
+  await expect(main).toBeFocused();
+  expect(await main.evaluate((el) => { const s = getComputedStyle(el); return [s.outlineStyle, s.outlineWidth, s.outlineOffset]; })).toEqual(["solid", "3px", "-3px"]);
+});
+
 test("list page: the server searches, filters and pages, and a bulk action runs on ids or on everything matching", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
   const dt = page.locator(".datatable"), rows = dt.locator("tbody tr"), summary = dt.getByRole("status");

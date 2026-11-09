@@ -54,6 +54,7 @@ const productFilters = [
   { key: "brand", label: "Brand", type: "multiple", options: options("Northline", "Orbit", "Acme") },
   { key: "added", label: "Added", type: "daterange", presets: true },
 ];
+const recentFilters = [{ key: "added", label: "Added", type: "daterange", default: ["2026-02-01", ""], clearLabel: "Clear dates" }];
 const guestFilters = [{ key: "role", label: "Role", type: "select", options: options("Admin", "Editor", "Viewer", "Guest"), default: ["Guest"] }];
 
 const selection = ref(null);
@@ -75,6 +76,8 @@ const done = ref("");
         <span class="badge sm" :class="row.in_stock ? 'success' : 'warning'">{{ row.in_stock ? "In stock" : "Out of stock" }}</span>
       </template>
     </DataTable>
+    <p class="text-sm muted">A date range's clear button waits until there is something to clear, and a <code>default</code> is not: clearing brings it back. <code>clearLabel</code> changes the button's words.</p>
+    <DataTable caption="Recent products" name="recent" :columns="reviewColumns" :rows="products" :filters="recentFilters" :per-page="5" />
   </section>
 
   <section class="space-y-3">

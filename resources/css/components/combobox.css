@@ -111,6 +111,9 @@
         white-space: nowrap;
         text-align: start;
         color: inherit;
+        &[data-placeholder] {
+          color: var(--color-muted-foreground);
+        }
       }
       /* the value already lists every item, so the count is visual only */
       &[data-count]::before {

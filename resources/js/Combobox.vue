@@ -22,6 +22,7 @@ import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, useAttrs
 const model = defineModel();
 const props = defineProps({
   label: { type: String, required: true },
+  placeholder: String, // shown on the trigger with nothing selected
   options: { type: Array, default: () => [] }, // [{ value, label }]
   name: String,
   form: String,
@@ -243,7 +244,7 @@ watch(activeId, (v) => v && nextTick(() => document.getElementById(v)?.scrollInt
       <option v-if="!multiple" :ref="hookOption" value="" :selected="!initial.length" />
       <option v-for="k in submitted" :key="k" :ref="hookOption" :value="k" :selected="initial.includes(k)" />
     </select>
-    <button ref="trigger" type="button" class="input" role="combobox" :aria-label="label" :aria-haspopup="selectOnly ? 'listbox' : 'dialog'" :aria-controls="selectOnly ? `${id}-list` : id" :aria-expanded="open" :aria-activedescendant="selectOnly ? activeId : null" :aria-required="required || null" :popovertarget="id" :data-count="multiple && keys.length > 1 ? keys.length : null" :disabled="disabled" :autofocus="autofocus" v-bind="split(true)" @keydown="keydown"><span>{{ selected.map((o) => o.label).join(", ") }}</span></button>
+    <button ref="trigger" type="button" class="input" role="combobox" :aria-label="label" :aria-haspopup="selectOnly ? 'listbox' : 'dialog'" :aria-controls="selectOnly ? `${id}-list` : id" :aria-expanded="open" :aria-activedescendant="selectOnly ? activeId : null" :aria-required="required || null" :popovertarget="id" :data-count="multiple && keys.length > 1 ? keys.length : null" :disabled="disabled" :autofocus="autofocus" v-bind="split(true)" @keydown="keydown"><span :data-placeholder="!selected.length || null">{{ selected.map((o) => o.label).join(", ") || placeholder }}</span></button>
     <div :id="id" ref="pop" popover class="dropdown" :role="selectOnly ? null : 'dialog'" :aria-label="selectOnly ? null : label" @beforetoggle="beforetoggle" @toggle="toggle">
       <input v-if="search" ref="input" v-model="q" class="input" type="text" role="combobox" autocomplete="off" aria-autocomplete="list" aria-expanded="true" :aria-label="`Search ${label}`" :aria-controls="`${id}-list`" :aria-activedescendant="activeId" @keydown="keydown">
       <!-- tabindex: Firefox would put the scrolling list in the tab order -->

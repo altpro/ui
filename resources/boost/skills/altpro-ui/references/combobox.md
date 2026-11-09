@@ -28,6 +28,7 @@ const form = useForm({ customer_id: props.order.customer.id });
 | Prop | |
 |------|-|
 | `label` | Required. The trigger's and the list's accessible name. Not shown: put the visible label outside. |
+| `placeholder` | Muted text on the trigger with nothing selected, such as "All" on a filter. Not a label: the `label` prop still names it. |
 | `options` | `[{ value, label }]`. With `src`, only the labels of the selected values, so "Acme Ltd" (not 42) shows before any search. |
 | `v-model` | The value, or `null`. With `multiple`, an array. Without v-model (Inertia's `<Form>`), pass `model-value` as the starting value. |
 | `name` / `form` | Field name, and the id of a form elsewhere on the page. |

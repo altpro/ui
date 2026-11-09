@@ -56,6 +56,8 @@ export interface DataTableFilter<TRow> {
   match?: (row: TRow, values: string[]) => boolean;
   /** A daterange only: offer Today, Last 7 days, Last 30 days and This month, which fill in both dates. */
   presets?: boolean;
+  /** A daterange only: the words on its clear button, for when "Clear" alone says too little. It is the button's accessible name too. */
+  clearLabel?: string;
 }
 
 export interface DataTablePaginationMeta {
@@ -116,7 +118,7 @@ export const formatCellValue = (value: unknown, format?: DataTableFormat, curren
   // an unparseable date shows what it was given; "Invalid Date" would hide which record is wrong
   if (Number.isNaN(date.getTime())) return text;
   return new Intl.DateTimeFormat(locale, {
-    day: "2-digit",
+    day: "numeric",
     month: "short",
     year: "numeric",
     ...(format === "datetime" && { hour: "2-digit", minute: "2-digit" }),
@@ -171,6 +173,10 @@ export const keyOf = (row: object, key: string, index: number, required = false)
   if (required) throw new Error(`DataTable: a selectable table needs "${key}" on every row. Set row-key to the field that identifies the record.`);
   return index;
 };
+
+/** Whether a filter holds a choice of the reader's: neither empty nor its default. */
+export const filterIsSet = (filter: { default?: ReadonlyArray<string> }, values: ReadonlyArray<string> = []): boolean =>
+  values.length > 0 && values.join("\0") !== (filter.default ?? []).join("\0");
 
 /** The view as the table reads it: search is the box as typed, ahead of the URL. */
 export interface DataTableView {
@@ -258,12 +264,7 @@ export const tableView = <TRow>(
 
   // "nothing yet" offers a way to create, "nothing matches" a way to clear. Without an unfiltered total,
   // the reader having searched or moved a filter off its default is the only clue.
-  const narrowed =
-    term !== "" ||
-    filters.some((f) => {
-      const values = view.filters[f.key] ?? [];
-      return values.length > 0 && values.join("\0") !== (f.default ?? []).join("\0");
-    });
+  const narrowed = term !== "" || filters.some((f) => filterIsSet(f, view.filters[f.key]));
   const empty = rows.length > 0 ? null : (unfiltered === undefined ? !narrowed : unfiltered === 0) ? "nothing-yet" : "no-matches";
 
   return { rows, total, page, lastPage, perPage, from, to, summary, empty };
@@ -281,6 +282,10 @@ export interface DataTableUrlOptions {
 }
 
 const parameter = (name: string | undefined, key: string) => (name ? `${name}_${key}` : key);
+
+// one value of a multiple filter: `key[]` as the table writes it, or `key[0]` once PHP has rebuilt the query string,
+// as it has in the page URL inertia-laravel takes from fullUrl()
+const isListOf = (candidate: string, key: string) => candidate.startsWith(`${key}[`) && /^\[\d*\]$/.test(candidate.slice(key.length));
 
 // a page number as TableQuery accepts it: digits, no sign, no leading zero, and no further than it goes
 const pageNumber = /^[1-9]\d*$/;
@@ -310,11 +315,10 @@ export const readView = (query: URLSearchParams, options: DataTableUrlOptions): 
       filters[filter.key] = !ends.some((end) => query.has(end)) ? [...(filter.default ?? [])] : from || to ? [from, to] : [];
       continue;
     }
-    const key = parameter(options.name, filter.key) + (filter.type === "multiple" ? "[]" : "");
+    const key = parameter(options.name, filter.key);
+    const given = filter.type === "multiple" ? [...query].filter(([k]) => isListOf(k, key)).map(([, v]) => v) : query.getAll(key).slice(-1);
     // present but empty means none; only an absent parameter brings the default back
-    filters[filter.key] = !query.has(key)
-      ? [...(filter.default ?? [])]
-      : (filter.type === "multiple" ? query.getAll(key) : [read(key)]).filter((v) => v !== "");
+    filters[filter.key] = given.length === 0 ? [...(filter.default ?? [])] : given.filter((v) => v !== "");
   }
   const sort = at("sort"), direction = at("dir"), page = at("page"), perPage = at("per_page");
   return {
@@ -358,7 +362,7 @@ export const viewUrl = (url: string, patch: TableStatePatch, options: DataTableU
   if (patch.filters !== undefined) {
     for (const filter of options.filters) {
       const key = parameter(options.name, filter.key), multiple = filter.type === "multiple";
-      for (const k of [key, `${key}[]`, `${key}_from`, `${key}_to`]) next.delete(k);
+      for (const k of [...next.keys()]) if ([key, `${key}_from`, `${key}_to`].includes(k) || isListOf(k, key)) next.delete(k);
       const given = patch.filters[filter.key];
       if (given === undefined) continue;
       if (filter.type === "daterange") {
@@ -382,6 +386,16 @@ export const viewUrl = (url: string, patch: TableStatePatch, options: DataTableU
   const qs = next.toString();
   return qs === "" ? path : `${path}?${qs}`;
 };
+
+/**
+ * Whether an Inertia visit reloads this page's rows, so the table should dim. A GET of this page counts wherever
+ * it came from, unless it names only other props. A save does not, even one that redirects back, nor does a prefetch.
+ */
+export const visitReloadsTable = (visit: { method: string; url: URL; only: string[]; prefetch: boolean }, pageUrl: string, only: ReadonlyArray<string>): boolean =>
+  visit.method === "get" &&
+  !visit.prefetch &&
+  visit.url.pathname === pageUrl.split("?")[0] &&
+  (visit.only.length === 0 || only.length === 0 || visit.only.some((prop) => only.includes(prop)));
 
 /**
  * Table state, held in the query string: search, sort, page and filters are the view,
@@ -436,10 +450,19 @@ export const useTableState = (options: {
     apply({ search: "", filters: Object.fromEntries(options.url().filters.map((f) => [f.key, []])) });
   };
 
-  // any visit dims the table, since a server-mode visit may come from elsewhere; one that leaves the page unmounts it
+  // the dim belongs to the visit that started it: a row's save finishing during a reload says nothing about the reload
   const busy = ref(false);
-  const offStart = router.on("start", () => (busy.value = true));
-  const offFinish = router.on("finish", () => (busy.value = false));
+  let reloading: object | null = null;
+  const offStart = router.on("start", ({ detail: { visit } }) => {
+    if (!visitReloadsTable(visit, page.url, options.only())) return;
+    reloading = visit;
+    busy.value = true;
+  });
+  const offFinish = router.on("finish", ({ detail: { visit } }) => {
+    if (visit !== reloading) return;
+    reloading = null;
+    busy.value = false;
+  });
   onUnmounted(() => {
     clearTimeout(searchTimer);
     offStart();
