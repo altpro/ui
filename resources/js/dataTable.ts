@@ -1,7 +1,7 @@
 // Types, helpers and URL state for DataTable.vue.
 // A page imports the types to type its columns: `const columns: DataTableColumn<Brand>[] = [...]`.
 // Without the annotation `key` widens to string and stops being checked against the row.
-import { computed, onUnmounted, ref, shallowRef, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import pageSizes from "./dataTable.json" with { type: "json" };
 
@@ -178,6 +178,13 @@ export const keyOf = (row: object, key: string, index: number, required = false)
 export const filterIsSet = (filter: { default?: ReadonlyArray<string> }, values: ReadonlyArray<string> = []): boolean =>
   values.length > 0 && values.join("\0") !== (filter.default ?? []).join("\0");
 
+// a virtual column has no field, so searching it would compare undefined
+const searchKeys = <TRow>(table: { columns?: ReadonlyArray<DataTableColumn<TRow>>; searchable?: ReadonlyArray<string> }): ReadonlyArray<string> =>
+  table.searchable ?? (table.columns ?? []).filter((c) => !c.virtual).map((c) => c.key);
+
+/** Why a list has no rows: nothing yet, or nothing that matches. */
+export type DataListEmpty = "nothing-yet" | "no-matches" | null;
+
 /** The view as the table reads it: search is the box as typed, ahead of the URL. */
 export interface DataTableView {
   search: string;
@@ -202,12 +209,15 @@ const compare = (a: unknown, b: unknown): number => {
 export const tableView = <TRow>(
   table: {
     rows: DataTableRows<TRow>;
-    columns: ReadonlyArray<DataTableColumn<TRow>>;
+    /** Without columns, client-mode search needs `searchable` and client-mode sort reads the sort key from the row. */
+    columns?: ReadonlyArray<DataTableColumn<TRow>>;
     filters?: ReadonlyArray<DataTableFilter<TRow>>;
     /** Keys to search. Defaults to every data column. */
     searchable?: ReadonlyArray<string>;
     /** Server mode only: client mode counts its own rows. */
     unfilteredTotal?: number;
+    /** Without columns: what to compare for a sort key, if not the field itself. */
+    sortValue?: (row: TRow, key: string) => unknown;
   },
   view: DataTableView,
   pageSize: number,
@@ -222,8 +232,7 @@ export const tableView = <TRow>(
     rows = table.rows.data;
     unfiltered = table.unfilteredTotal;
   } else {
-    // a virtual column has no field, so searching it would compare undefined
-    const keys = table.searchable ?? table.columns.filter((c) => !c.virtual).map((c) => c.key);
+    const keys = searchKeys(table);
     rows = table.rows.filter(
       (row) =>
         (term === "" || keys.some((key) => String(value(row, key) ?? "").toLowerCase().includes(term))) &&
@@ -241,9 +250,13 @@ export const tableView = <TRow>(
           return filter.type === "boolean" ? Boolean(v) === (values[0] === "1") : values.includes(String(v));
         }),
     );
-    const column = table.columns.find((c) => c.key === view.sort);
-    if (column) {
-      const sortValue = (row: TRow) => (column.virtual ? (column.sortValue?.(row) ?? null) : value(row, column.key));
+    const column = table.columns?.find((c) => c.key === view.sort);
+    const sortValue = column
+      ? (row: TRow) => (column.virtual ? (column.sortValue?.(row) ?? null) : value(row, column.key))
+      : !table.columns && view.sort
+        ? (row: TRow) => (table.sortValue ? table.sortValue(row, view.sort) : value(row, view.sort))
+        : null;
+    if (sortValue) {
       const sign = view.direction === "asc" ? 1 : -1;
       rows.sort((a, b) => sign * compare(sortValue(a), sortValue(b)));
     }
@@ -265,7 +278,7 @@ export const tableView = <TRow>(
   // "nothing yet" offers a way to create, "nothing matches" a way to clear. Without an unfiltered total,
   // the reader having searched or moved a filter off its default is the only clue.
   const narrowed = term !== "" || filters.some((f) => filterIsSet(f, view.filters[f.key]));
-  const empty = rows.length > 0 ? null : (unfiltered === undefined ? !narrowed : unfiltered === 0) ? "nothing-yet" : "no-matches";
+  const empty: DataListEmpty = rows.length > 0 ? null : (unfiltered === undefined ? !narrowed : unfiltered === 0) ? "nothing-yet" : "no-matches";
 
   return { rows, total, page, lastPage, perPage, from, to, summary, empty };
 };
@@ -512,3 +525,144 @@ export const useTableState = (options: {
     clearAll,
   };
 };
+
+/**
+ * A button that disables or removes itself drops focus to the body, and a keyboard or screen reader user loses their
+ * place: once the list has redrawn without it, focus goes to `to`. Only if the focus went with it, so a click elsewhere
+ * in the meantime keeps its own; and only from a focused button, which a mouse click in Safari never makes.
+ */
+export const handOff = (from: Element | null, to: () => HTMLElement | null | undefined, options?: FocusOptions): void => {
+  if (!(from instanceof HTMLElement) || from === document.body) return;
+  const gone = !from.isConnected || (from as HTMLButtonElement).disabled;
+  if (gone && [document.body, from].includes(document.activeElement as HTMLElement)) to()?.focus(options);
+};
+
+/** A choice in a sort select, for a list with no column headers to click. */
+export interface DataListSortOption {
+  key: string;
+  direction: DataTableDirection;
+  label: string;
+}
+
+/** What a list is made from. Read afresh whenever it changes, so return props rather than copies of them. */
+export interface DataListSource<TRow> {
+  rows: DataTableRows<TRow>;
+  filters?: ReadonlyArray<DataTableFilter<TRow>>;
+  /** Prefixes the query parameters. Needed when two lists share a page. */
+  name?: string;
+  /** Names the stored page size, which needs one of this or `name`. */
+  storageKey?: string;
+  /** Rows per page until the reader picks another. */
+  perPage?: number;
+  /** Keys to search. Defaults to every data column of `columns`. */
+  searchable?: ReadonlyArray<string>;
+  /** False removes the search box. */
+  search?: boolean;
+  /** The default sort; a list with `sortOptions` defaults to the first of them. */
+  sort?: string;
+  direction?: DataTableDirection;
+  /** Keys a URL may sort by, beyond those in `sortOptions`. */
+  sortable?: ReadonlyArray<string>;
+  sortOptions?: ReadonlyArray<DataListSortOption>;
+  /** DataTable's: gives search its default keys and sort its virtual columns. */
+  columns?: ReadonlyArray<DataTableColumn<TRow>>;
+  /** Without columns: what to compare for a sort key, if not the field itself. */
+  sortValue?: (row: TRow, key: string) => unknown;
+  /** Server mode: the row count before any search or filter, so an empty list can say which kind of empty it is. */
+  unfilteredTotal?: number;
+  /** Server mode: the props a change reloads. */
+  only?: string[];
+}
+
+/**
+ * The state of one list: the view from the URL, what it shows and the page size kept on the device.
+ * The component that renders the rows calls this and hands the result to <DataList :list>, so its script can read
+ * the same view its template shows. Everything Inertia stays inside useTableState.
+ */
+export const useDataList = <TRow>(source: () => DataListSource<TRow>) => {
+  const start = source();
+  const storageKey = start.storageKey ?? start.name;
+  const defaultSort = start.sort ?? start.sortOptions?.[0]?.key ?? start.sortable?.[0] ?? "";
+  const defaultDirection = (): DataTableDirection => source().direction ?? start.sortOptions?.[0]?.direction ?? "asc";
+
+  const server = computed(() => isPaginated(source().rows));
+  const filters = computed(() => source().filters ?? []);
+  const sortOptions = computed(() => source().sortOptions ?? []);
+  const state = useTableState({
+    url: () => {
+      const { name, sortable = [], sortOptions: options = [] } = source();
+      return { name, defaultSort, defaultDirection: defaultDirection(), sortable: [...new Set([...sortable, ...options.map((o) => o.key)])], filters: filters.value };
+    },
+    server: () => server.value,
+    only: () => source().only ?? [],
+  });
+
+  // Page size is a preference, not the view: a link you send shows the rows, not your page size.
+  // It is read on mount, so a server render and the hydrating browser start from the same list.
+  const preferredSize = ref(start.perPage ?? DEFAULT_PAGE_SIZE);
+  const sizeKey = storageKey === undefined ? null : `datatable:${storageKey}:per-page`;
+
+  const setPageSize = (size: number) => {
+    preferredSize.value = size;
+    if (sizeKey) writePreference(sizeKey, size);
+    state.apply({ perPage: size, page: 1 }, true);
+  };
+
+  const view = computed(() =>
+    tableView(
+      source(),
+      { search: state.searchInput.value, filters: state.filters.value, sort: state.sort.value, direction: state.direction.value, page: state.page.value },
+      preferredSize.value,
+    ),
+  );
+
+  // ponytail: the first server visit does not carry a stored page size, so a changed one costs one extra request.
+  // Store the preference on the user server-side if that ever matters.
+  onMounted(() => {
+    const stored = sizeKey ? readPreference(sizeKey) : undefined;
+    if (typeof stored === "number" && PAGE_SIZES.includes(stored)) preferredSize.value = stored;
+    if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value }, true);
+  });
+
+  return {
+    state,
+    view,
+    server,
+    filters,
+    sortOptions,
+    /** Whether a search box would find anything: in server mode only the app knows, so only `search: false` removes it. */
+    searchable: computed(() => source().search !== false && (server.value || searchKeys(source()).length > 0)),
+    setFilter: (key: string, values: string[]) => state.apply({ filters: { ...state.latestFilters.value, [key]: values } }),
+    setFilters: (values: Record<string, string[]>) => state.apply({ filters: values }),
+    setPageSize,
+  };
+};
+
+/** What useDataList returns; DataList.vue's `list` prop. */
+export type DataListController<TRow> = ReturnType<typeof useDataList<TRow>>;
+
+/** The props every list component shares. */
+export interface DataListProps<TRow> {
+  rows: DataTableRows<TRow>;
+  /** Names the list, its search box and its pagination. */
+  caption: string;
+  /** Prefixes the query parameters and the stored preferences. Needed when two lists share a page. */
+  name?: string;
+  /** Rows per page until the reader picks another; one of the page sizes on offer. */
+  perPage?: number;
+  /** Keys to search. */
+  searchable?: ReadonlyArray<keyof TRow & string>;
+  /** False removes the search box. */
+  search?: boolean;
+  filters?: ReadonlyArray<DataTableFilter<TRow>>;
+  direction?: DataTableDirection;
+  searchPlaceholder?: string;
+  emptyMessage?: string;
+  noMatchesMessage?: string;
+  /** Server mode: the row count before any search or filter, so an empty list can say which kind of empty it is. */
+  unfilteredTotal?: number;
+  /** Server mode: the props a change reloads. */
+  only?: string[];
+  /** Formats dates and money. Defaults to `<html lang>` in the browser; pass it when the page is rendered on the server too. */
+  locale?: string;
+}
