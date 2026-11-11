@@ -576,6 +576,17 @@ test("datatable: sorting writes the URL under the table's name, and aria-sort is
   await expect(page).not.toHaveURL(/basic_sort/);
 });
 
+test("datatable: srOnlyLabel names a header for screen readers and shows nothing", async ({ page }) => {
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Team members");
+  const header = dt.getByRole("columnheader", { name: "Open", exact: true });
+  await expect(header).toHaveCount(1);
+  // the label is in the accessibility tree but takes up no room on screen
+  const box = await header.locator(".sr-only").boundingBox();
+  expect(box.width * box.height).toBeLessThanOrEqual(1);
+  await expect(dt.getByRole("cell").getByRole("link", { name: "Open Ada Lovelace" })).toHaveCount(1);
+});
+
 test("datatable: pages move through the URL, and the page size is kept on the device", async ({ page }) => {
   await page.goto("/datatable.html");
   const dt = datatable(page, "Team members");
@@ -805,10 +816,10 @@ test("datatable: hiding a column removes it from every row and survives a reload
   const dt = datatable(page, "Team members");
   await dt.getByRole("button", { name: "Columns" }).click();
   await dt.getByRole("group", { name: "Team members columns" }).getByRole("checkbox", { name: "Email" }).uncheck();
-  await expect(dt.locator("thead th")).toHaveText(["Name", "Role"]);
-  for (const row of await bodyRows(dt).all()) await expect(row.locator("td")).toHaveCount(2);
+  await expect(dt.locator("thead th")).toHaveText(["Name", "Role", "Open"]);
+  for (const row of await bodyRows(dt).all()) await expect(row.locator("td")).toHaveCount(3);
   await page.reload();
-  await expect(datatable(page, "Team members").locator("thead th")).toHaveText(["Name", "Role"]);
+  await expect(datatable(page, "Team members").locator("thead th")).toHaveText(["Name", "Role", "Open"]);
   // the last data column cannot go: rows with nothing in them cannot be told apart
   const group = datatable(page, "Team members").getByRole("group", { name: "Team members columns" });
   await datatable(page, "Team members").getByRole("button", { name: "Columns" }).click();

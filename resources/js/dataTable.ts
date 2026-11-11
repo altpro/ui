@@ -11,6 +11,8 @@ export type DataTableFormat = "date" | "datetime" | "currency" | "boolean";
 
 interface DataTableColumnBase {
   label: string;
+  /** The header reads `label` to screen readers only, for a column whose cells explain themselves (a row's chevron link). Ignored on a sortable column, whose button needs a visible name. */
+  srOnlyLabel?: boolean;
   sortable?: boolean;
   /** Data columns can be hidden unless this says false; virtual columns only when it says true. */
   hideable?: boolean;

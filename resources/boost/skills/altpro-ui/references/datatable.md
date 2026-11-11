@@ -42,7 +42,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 
 | Prop | Meaning |
 |------|---------|
-| `columns` | `{ key, label, sortable?, hideable?, thClass?, tdClass?, format?, currency? }`. `format` is `date`, `datetime`, `currency` or `boolean`, in `locale` or the page's `<html lang>`; `currency` is an ISO code, default `GBP`. A column with no field behind it (actions, a status built from several fields) sets `virtual: true`; search skips it, and `sortValue: (row) => …` makes it sortable. |
+| `columns` | `{ key, label, srOnlyLabel?, sortable?, hideable?, thClass?, tdClass?, format?, currency? }`. `format` is `date`, `datetime`, `currency` or `boolean`, in `locale` or the page's `<html lang>`; `currency` is an ISO code, default `GBP`. A column with no field behind it (actions, a status built from several fields) sets `virtual: true`; search skips it, and `sortValue: (row) => …` makes it sortable. `srOnlyLabel: true` keeps the header's `label` for screen readers and hides it on screen, for a column whose cells say what it is, such as a chevron linking to each row: `{ key: "open", label: "Open", virtual: true, srOnlyLabel: true, thClass: "w-px" }`. Never leave a `label` empty instead: the header has no name. A sortable column ignores it, as its button needs a visible name. |
 | `rows` | An array (client mode) or a Laravel paginator, flat or under `meta` (server mode). |
 | `caption` | Required. Names the table (sr-only caption), the search box and the pagination. |
 | `name` | Prefixes the query parameters (`brands_sort`) and the stored preferences. Required when two tables share a page. |

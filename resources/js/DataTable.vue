@@ -200,6 +200,7 @@ const rowLabel = (row: TRow, index: number) => {
               </th>
               <th v-for="column in visibleColumns" :key="column.key" scope="col" :aria-sort="ariaSort(column.key)" :class="column.thClass">
                 <button v-if="column.sortable" type="button" @click="toggleSort(column.key)">{{ column.label }}</button>
+                <span v-else-if="column.srOnlyLabel" class="sr-only">{{ column.label }}</span>
                 <template v-else>{{ column.label }}</template>
               </th>
             </tr>

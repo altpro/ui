@@ -16,6 +16,8 @@ const memberColumns = [
   { key: "email", label: "Email", sortable: true },
   { key: "role", label: "Role", sortable: true },
 ];
+// the chevron says what the column is, so its header is for screen readers only
+const basicColumns = [...memberColumns, { key: "open", label: "Open", virtual: true, srOnlyLabel: true, thClass: "w-px" }];
 
 const products = [
   ["Trail Tee", "TS-1001", "Northline", "S", true, 24, "2026-01-14"],
@@ -64,8 +66,12 @@ const done = ref("");
 <template>
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Columns and rows</h2>
-    <p class="text-sm muted">All a searchable, sortable, paged table needs. <code>caption</code> is required: it names the table, the search box and the pagination. <code>name</code> prefixes the query parameters, so two tables on a page do not share one: sort this one and the URL gains <code>basic_sort</code>.</p>
-    <DataTable caption="Team members" name="basic" :columns="memberColumns" :rows="members" :searchable="['name', 'email', 'role']" sort="name" :per-page="5" />
+    <p class="text-sm muted">All a searchable, sortable, paged table needs. <code>caption</code> is required: it names the table, the search box and the pagination. <code>name</code> prefixes the query parameters, so two tables on a page do not share one: sort this one and the URL gains <code>basic_sort</code>. The last column's chevrons need no visible header, so it sets <code>srOnlyLabel: true</code> and screen readers still hear "Open".</p>
+    <DataTable caption="Team members" name="basic" :columns="basicColumns" :rows="members" :searchable="['name', 'email', 'role']" sort="name" :per-page="5">
+      <template #cell-open="{ row }">
+        <a :href="`#member-${row.id}`" class="btn ghost sm" :aria-label="`Open ${row.name}`"><svg class="size-4" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6" /></svg></a>
+      </template>
+    </DataTable>
   </section>
 
   <section class="space-y-3">

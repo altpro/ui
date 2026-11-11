@@ -2,6 +2,10 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.5`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+- A `DataTable` column can name its header for screen readers only: `srOnlyLabel: true` keeps `label` in an sr-only span, for a column whose cells say what it is, such as a chevron linking to each row. An app that left such a header's `label` empty, so it had no name, should give it one and set this. A sortable column ignores it. Run `php artisan boost:update` to get the reference.
+
 ## 0.3.5 (9 November 2026)
 
 - `DataList` is the frame `DataTable` is now built on: search, filters, the count, page size and pagination round whatever you render, such as a card grid. Call `useDataList` from `@ui/dataTable` and hand it to `<DataList :list>`. `sort-options` gives a list with no headers a sort select. See `datalist.md`. `DataTable`'s rendered markup is unchanged.
