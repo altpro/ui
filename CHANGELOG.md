@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.6`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.7`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.3.7 (11 November 2026)
 
 - The page keeps room for its scrollbar on every page (`scrollbar-gutter: stable` on `:root`), so content no longer jumps sideways between a short page and a long one with classic scrollbars (Windows, Linux). On a short page the strip shows the page background. Overlay scrollbars (macOS, mobile) are unaffected. An app that set `scrollbar-gutter` itself, or padded the page to make up for a missing scrollbar, can remove that. Markup is unchanged.
 
