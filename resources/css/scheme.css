@@ -62,3 +62,17 @@
 :root, .light, .dark, .inverse, [data-theme] {
   scrollbar-color: color-mix(in oklab, var(--color-muted-foreground) 40%, transparent) transparent;
 }
+
+/* The page scrollbar's gutter is reserved on every page. A classic scrollbar
+   (Windows, Linux) appears only on a long page and takes its width from it,
+   so content jumped sideways between short and long pages. On a short page
+   the strip shows the page background, because the track is transparent.
+   Plain `stable`, not `both-edges`: centred content sits half a scrollbar
+   left of centre, but the same on every page. Overlay scrollbars (macOS,
+   mobile) take no room, so it does nothing there. Base layer, so an app can
+   override it with a utility. */
+@layer base {
+  :root {
+    scrollbar-gutter: stable;
+  }
+}

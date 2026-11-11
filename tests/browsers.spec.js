@@ -1,7 +1,7 @@
 // Small engine matrix for the native HTML and CSS features altpro/ui depends on.
 // Chromium runs this alongside the detailed accessibility suite; Firefox and
 // WebKit run this file only so browser-specific pixel checks stay meaningful.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures.js";
 import AxeBuilder from "@axe-core/playwright";
 import { execFileSync } from "node:child_process";
 import { readFileSync } from "node:fs";
@@ -113,6 +113,16 @@ test("tree: a page branch's link navigates and its 24px chevron toggles", async 
   await page.keyboard.press("Space");
   await expect(details).not.toHaveAttribute("open");
   await expect(toggle).toHaveAccessibleName("About us");
+});
+
+// the page keeps its scrollbar's room on every page, so classic scrollbars do not shift it sideways between short and long ones;
+// fixtures.js turns this off in Chromium, so the check takes that sheet away first
+test("the root reserves the scrollbar gutter", async ({ page }) => {
+  await page.goto("/button.html");
+  expect(await page.evaluate(() => {
+    document.adoptedStyleSheets = [];
+    return getComputedStyle(document.documentElement).scrollbarGutter;
+  })).toBe("stable");
 });
 
 for (const radius of ["0", "9999px"]) {

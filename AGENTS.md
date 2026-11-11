@@ -20,6 +20,7 @@ demo/app/                    sample store (Forma): one Vue app, Workspace.vue, b
 demo/demo.css                Tailwind, ui.css and the shell's styles
 demo/demo.js                 shared shell: sidebar menu, header with breadcrumb, scheme switcher and a theme drawer for colour tokens and radius
 tests/blade.php              renders a Blade string through Testbench, for the browser tests
+tests/fixtures.js            the test and expect every spec imports: in Chromium it sets the root's scrollbar-gutter back to auto, as headless Chromium hides scrollbars yet still reserves their room
 tests/table-query.php        TableQuery against in-memory SQLite
 tests/table-view.ts          tableView (what DataTable.vue shows for a view) and readView/viewUrl under plain Node
 tests/table-urls.json        URL-to-view cases both of the above read, so the PHP and TS halves agree on the query-string format

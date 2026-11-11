@@ -2,6 +2,10 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.6`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+- The page keeps room for its scrollbar on every page (`scrollbar-gutter: stable` on `:root`), so content no longer jumps sideways between a short page and a long one with classic scrollbars (Windows, Linux). On a short page the strip shows the page background. Overlay scrollbars (macOS, mobile) are unaffected. An app that set `scrollbar-gutter` itself, or padded the page to make up for a missing scrollbar, can remove that. Markup is unchanged.
+
 ## 0.3.6 (11 November 2026)
 
 - A `DataTable` column can name its header for screen readers only: `srOnlyLabel: true` keeps `label` in an sr-only span, for a column whose cells say what it is, such as a chevron linking to each row. An app that left such a header's `label` empty, so it had no name, should give it one and set this. A sortable column ignores it. Run `php artisan boost:update` to get the reference.

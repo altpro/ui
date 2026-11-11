@@ -1,7 +1,7 @@
 // The recipe pages in demo/app (references/recipes.md, validation-failure.md, unsaved-changes.md, destructive-action.md):
 // pages/ in layouts/AppLayout.vue against the stand-in server in demo/app/server.js.
 // Each test gets a new context, so the stand-in's sessionStorage database starts from its seed.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures.js";
 
 const toast = (page) => page.locator("#toaster .alert");
 

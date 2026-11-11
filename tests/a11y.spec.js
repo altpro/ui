@@ -1,7 +1,7 @@
 // WCAG 2.2 AA checks against the demo pages, in both colour schemes.
 // axe covers contrast, names, landmarks and the rest of the automatable rules.
 // The extra tests cover what axe does not: hover contrast, focus visibility, target size.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures.js";
 import AxeBuilder from "@axe-core/playwright";
 import { readdirSync } from "node:fs";
 import { inflateSync } from "node:zlib";

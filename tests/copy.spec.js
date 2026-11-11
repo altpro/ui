@@ -1,5 +1,5 @@
 // CopyButton.vue on copy.html. Chromium only: it is the engine that lets a test grant clipboard permissions.
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures.js";
 
 const bubble = (b) => b.evaluate((el) => { const s = getComputedStyle(el, "::after"); return `${s.content} ${s.visibility}`; });
 

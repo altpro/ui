@@ -1,6 +1,6 @@
 // The replacement application keeps Repeater's engine coverage: keys, focus
 // and errors belong to a finish when its position changes.
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures.js';
 const button = (page, name) => page.getByRole('button', { name, exact: true });
 const rows = page => page.locator('.repeater > ol > li');
 const row = (page, n) => rows(page).nth(n - 1);
