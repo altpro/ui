@@ -14,7 +14,7 @@ The demo pages run this Vue code as written against a stand-in for the server, a
 
 - Inertia 3 with `@inertiajs/vue3`, Laravel with `inertiajs/inertia-laravel`, and the `@ui` alias from SKILL.md's setup.
 - Pages resolve from `resources/js/pages/`, so `Inertia::render('products/Edit')` is `resources/js/pages/products/Edit.vue`: lowercase folders, as Laravel's starter kit has them.
-- The app shell from [app-shell.md](app-shell.md): its root view (`scroll-pb-20` on `<html>`, the toaster at the top) and `resources/js/layouts/AppLayout.vue`, which each page wraps itself in with its breadcrumb. The layout's `<main>` is `p-gap`, which the save bar's `-mx-gap px-gap` matches, and it draws the only breadcrumb.
+- The app shell from [app-shell.md](app-shell.md): its root view (`scroll-pb-28` on `<html>`, the toaster at the top) and `resources/js/layouts/AppLayout.vue`, which each page wraps itself in with its breadcrumb. The layout's `<main>` is the page frame: `p-gap`, which the save bar's `-mx-gap px-gap` matches, `@container/page` for the page's container queries, and a column with `gap-gap` between the page's sections, so a page puts its content straight inside `<AppLayout>`. It draws the only breadcrumb.
 - Saves confirm with a toast: the controller calls `Inertia::flash('toast', ['type' => 'success', 'message' => '…'])` and redirects, and `app.js` shows it, as [toast.md](toast.md) sets up.
 - Icons are Lucide, from `@lucide/vue`: `<Pencil class="size-4" aria-hidden="true" />`.
 - Laravel's default validation messages; the browser tests read them.
@@ -154,12 +154,12 @@ Record header, a grid of `Field`s bound to `useForm`, and the save bar, in the l
 ```vue
 <!-- resources/js/pages/products/Edit.vue -->
 <script setup>
-import { nextTick, ref } from "vue";
+import { computed, nextTick, ref, watch } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { CircleAlert, Upload } from "@lucide/vue";
 import Field from "@ui/Field.vue";
+import { useUnsavedChanges } from "@ui/useUnsavedChanges";
 import AppLayout from "@/layouts/AppLayout.vue";
-import { useUnsavedChanges } from "@/composables/useUnsavedChanges";
 
 const props = defineProps({
   product: { type: Object, required: true },
@@ -181,10 +181,17 @@ useUnsavedChanges(form);
 
 // a failed save focuses the error summary: it is read out, and Tab goes on to the first field
 const summary = ref();
-const save = () => form.put(`/products/${props.product.id}`, {
-  preserveScroll: true,
-  onError: () => nextTick(() => summary.value.focus()),
-});
+// Save on an unchanged form sends nothing and says so, as Save stays enabled
+const unchanged = ref(false);
+watch(() => form.isDirty, () => (unchanged.value = false));
+const save = () => {
+  if (!form.isDirty) return (unchanged.value = true);
+  form.put(`/products/${props.product.id}`, {
+    preserveScroll: true,
+    onError: () => nextTick(() => summary.value.focus()),
+  });
+};
+const status = computed(() => (form.isDirty ? "Unsaved changes" : unchanged.value ? "No changes to save." : form.recentlySuccessful ? "Saved." : ""));
 const discard = () => {
   form.reset();
   form.clearErrors();
@@ -196,43 +203,41 @@ const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.d
 <template>
   <Head :title="product.name" />
   <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name }]">
-    <div class="flex flex-col gap-gap">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="min-w-0">
-          <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-            <h1 class="text-2xl font-semibold tracking-tight break-words">{{ product.name }}</h1>
-            <span class="badge" :class="statusClass[product.status]">{{ product.status }}</span>
-          </div>
-          <p class="mt-1 text-sm muted">SKU {{ product.sku }} · {{ product.category }} · Updated <time :datetime="product.updated_at">{{ updated(product.updated_at) }}</time></p>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0">
+        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
+          <h1 class="text-2xl font-semibold tracking-tight break-words">{{ product.name }}</h1>
+          <span class="badge" :class="statusClass[product.status]">{{ product.status }}</span>
         </div>
-        <div class="flex flex-wrap gap-2">
-          <Link :href="`/products/${product.id}/media`" class="btn outlined"><Upload class="size-4" aria-hidden="true" /> Tags and photos</Link>
-        </div>
+        <p class="mt-1 text-sm muted">SKU {{ product.sku }} · {{ product.category }} · Updated <time :datetime="product.updated_at">{{ updated(product.updated_at) }}</time></p>
       </div>
-
-      <form class="grid max-w-3xl gap-x-gap gap-y-4 sm:grid-cols-2" novalidate @submit.prevent="save">
-        <div v-if="form.hasErrors" ref="summary" class="alert danger col-span-full" role="alert" tabindex="-1">
-          <CircleAlert class="size-4" aria-hidden="true" />
-          <h2>The product was not saved</h2>
-          <ul class="list-disc ps-5">
-            <li v-for="(message, field) in form.errors" :key="field">{{ message }}</li>
-          </ul>
-        </div>
-        <Field v-model="form.name" name="name" :errors="form.errors" required class="sm:col-span-2" />
-        <Field v-model="form.sku" name="sku" label="SKU" :errors="form.errors" required />
-        <Field v-model="form.category" name="category" type="select" :options="categories" :errors="form.errors" required />
-        <Field v-model="form.price" name="price" inputmode="decimal" prepend="£" :errors="form.errors" required />
-        <Field v-model="form.stock" name="stock" type="number" step="1" min="0" hint="Units on the shelf." :errors="form.errors" required />
-        <Field v-model="form.status" name="status" type="select" :options="statuses" :errors="form.errors" />
-        <Field v-model="form.description" name="description" type="textarea" rows="4" :errors="form.errors" class="sm:col-span-2" />
-
-        <div class="sticky bottom-0 z-10 col-span-full -mx-gap flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background px-gap py-3 print:hidden">
-          <p class="me-auto text-sm" role="status">{{ form.isDirty ? "Unsaved changes" : form.recentlySuccessful ? "Saved." : "" }}</p>
-          <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="discard">Discard</button>
-          <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>
-        </div>
-      </form>
+      <div class="flex flex-wrap gap-2">
+        <Link :href="`/products/${product.id}/media`" class="btn outlined"><Upload class="size-4" aria-hidden="true" /> Tags and photos</Link>
+      </div>
     </div>
+
+    <form class="grid max-w-3xl gap-x-gap gap-y-4 sm:grid-cols-2" novalidate @submit.prevent="save">
+      <div v-if="form.hasErrors" ref="summary" class="alert danger col-span-full" role="alert" tabindex="-1">
+        <CircleAlert class="size-4" aria-hidden="true" />
+        <h2>The product was not saved</h2>
+        <ul class="list-disc ps-5">
+          <li v-for="(message, field) in form.errors" :key="field">{{ message }}</li>
+        </ul>
+      </div>
+      <Field v-model="form.name" name="name" :errors="form.errors" required class="sm:col-span-2" />
+      <Field v-model="form.sku" name="sku" label="SKU" :errors="form.errors" required />
+      <Field v-model="form.category" name="category" type="select" :options="categories" :errors="form.errors" required />
+      <Field v-model="form.price" name="price" inputmode="decimal" prepend="£" :errors="form.errors" required />
+      <Field v-model="form.stock" name="stock" type="number" step="1" min="0" hint="Units on the shelf." :errors="form.errors" required />
+      <Field v-model="form.status" name="status" type="select" :options="statuses" :errors="form.errors" />
+      <Field v-model="form.description" name="description" type="textarea" rows="4" :errors="form.errors" class="sm:col-span-2" />
+
+      <div class="save-bar col-span-full -mx-gap px-gap">
+        <p role="status">{{ status }}</p>
+        <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="discard">Discard</button>
+        <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>
+      </div>
+    </form>
   </AppLayout>
 </template>
 ```
@@ -361,28 +366,26 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 <template>
   <Head title="Products" />
   <AppLayout :breadcrumb="[{ label: 'Products' }]">
-    <div class="flex flex-col gap-gap">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="min-w-0">
-          <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
-          <p class="mt-1 text-sm muted">{{ unfilteredTotal }} products in the catalogue</p>
-        </div>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
+        <p class="mt-1 text-sm muted">{{ unfilteredTotal }} products in the catalogue</p>
       </div>
-
-      <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
-          :only="['products']" sort="name" :per-page="10" selectable
-          empty-message="No products yet." no-matches-message="No products match.">
-        <template #cell-status="{ row }">
-          <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
-        </template>
-        <template #cell-actions="{ row }">
-          <Link :href="`/products/${row.id}/edit`" class="btn ghost sm"><Pencil class="size-4" aria-hidden="true" /> Edit <span class="sr-only">{{ row.name }}</span></Link>
-        </template>
-        <template #bulk-actions="{ selection, clear }">
-          <button type="button" class="btn outlined sm" @click="archive(selection, clear)"><Archive class="size-4" aria-hidden="true" /> Archive</button>
-        </template>
-      </DataTable>
     </div>
+
+    <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
+        :only="['products']" sort="name" :per-page="10" selectable
+        empty-message="No products yet." no-matches-message="No products match.">
+      <template #cell-status="{ row }">
+        <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
+      </template>
+      <template #cell-actions="{ row }">
+        <Link :href="`/products/${row.id}/edit`" class="btn ghost sm"><Pencil class="size-4" aria-hidden="true" /> Edit <span class="sr-only">{{ row.name }}</span></Link>
+      </template>
+      <template #bulk-actions="{ selection, clear }">
+        <button type="button" class="btn outlined sm" @click="archive(selection, clear)"><Archive class="size-4" aria-hidden="true" /> Archive</button>
+      </template>
+    </DataTable>
   </AppLayout>
 </template>
 ```
@@ -566,34 +569,32 @@ const uploading = computed(() => progress.value.filter((p) => p != null).length)
 <template>
   <Head :title="`Tags and photos · ${product.name}`" />
   <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
-    <div class="flex flex-col gap-gap">
-      <div class="min-w-0">
-        <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
-        <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
-      </div>
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
+      <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
+    </div>
 
-      <div class="grid items-start gap-gap lg:grid-cols-2">
-        <form class="card" @submit.prevent="saveTags">
-          <h2 class="text-lg font-semibold">Tags</h2>
-          <Field v-model="form.tag_ids" name="tag_ids" label="Tags" type="combobox" multiple :max="5"
-              src="/tags" create="/tags" :options="tags" :errors="form.errors" hint="Up to five. Type to search, or add a new one." />
-          <div class="flex items-center justify-end gap-2">
-            <p class="me-auto text-sm" role="status">{{ form.recentlySuccessful ? "Saved." : "" }}</p>
-            <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save tags</button>
-          </div>
-        </form>
+    <div class="grid items-start gap-gap lg:grid-cols-2">
+      <form class="card" @submit.prevent="saveTags">
+        <h2 class="text-lg font-semibold">Tags</h2>
+        <Field v-model="form.tag_ids" name="tag_ids" label="Tags" type="combobox" multiple :max="5"
+            src="/tags" create="/tags" :options="tags" :errors="form.errors" hint="Up to five. Type to search, or add a new one." />
+        <div class="flex items-center justify-end gap-2">
+          <p class="me-auto text-sm" role="status">{{ form.recentlySuccessful ? "Saved." : "" }}</p>
+          <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save tags</button>
+        </div>
+      </form>
 
-        <section class="card" aria-labelledby="photos-heading">
-          <h2 id="photos-heading" class="text-lg font-semibold">Photos</h2>
-          <div class="field">
-            <label for="photos">Add photos</label>
-            <FileInput v-model="photos" id="photos" name="photos" accept="image/*" multiple :progress="progress" :errors="errors">
-              <span>PNG or JPEG, up to 5 MB each. Each one uploads as you add it.</span>
-            </FileInput>
-          </div>
-          <p class="text-sm muted" role="status">{{ uploading ? `Uploading ${uploading} of ${photos.length}…` : "" }}</p>
-        </section>
-      </div>
+      <section class="card" aria-labelledby="photos-heading">
+        <h2 id="photos-heading" class="text-lg font-semibold">Photos</h2>
+        <div class="field">
+          <label for="photos">Add photos</label>
+          <FileInput v-model="photos" id="photos" name="photos" accept="image/*" multiple :progress="progress" :errors="errors">
+            <span>PNG or JPEG, up to 5 MB each. Each one uploads as you add it.</span>
+          </FileInput>
+        </div>
+        <p class="text-sm muted" role="status">{{ uploading ? `Uploading ${uploading} of ${photos.length}…` : "" }}</p>
+      </section>
     </div>
   </AppLayout>
 </template>

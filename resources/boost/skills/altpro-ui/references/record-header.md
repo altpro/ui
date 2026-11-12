@@ -21,7 +21,7 @@ No class. The top of a record page (an order, a customer, a CMS page): the recor
 </div>
 ```
 
-- The title's width follows the page, not the name's length, so the actions stay in one place on every record. It needs `@container/page` on the page.
+- The title's width follows the page, not the name's length, so the actions stay in one place on every record. It needs `@container/page` round the page, which the [app shell](app-shell.md)'s `main` is.
 - The `h1` is the name people use for the record, and a code is the caption above it in the `hgroup`.
 - The badge sits beside the `h1`, not inside it, so the heading's name is just the record's name.
 - The status is a `soft` badge with a `dot` in a semantic colour (`success` active or paid, `info` in progress, `warning` waiting on someone, `danger` failed, no colour for draft, `outlined dot` for archived), the same classes the list uses for that status. A hue badge is a tag, not a status. Overdue is a flag beside the status, not a status: `badge soft danger`, no dot.

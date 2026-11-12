@@ -21,6 +21,7 @@ Restyled native inputs. Two ways to label, same result: the class on a `<label>`
 - A switch is a checkbox with `role="switch"`, so screen readers say on and off. Use it for a setting that applies at once, saved as it is switched (below); a checkbox for something submitted with a form.
 - A radio is always round and a switch always a pill. A checkbox follows `--radius`, capped at a quarter of its size.
 - A group goes in `<fieldset class="field">` with a `<legend>`, then `.hint` or `.error` as for any field. Point `aria-describedby` on the inputs at the message. `disabled` on the fieldset disables the lot.
+- A choice that needs a description or a picture is a [`.tile`](tile.md): the same input inside a card.
 - The checked fill is `--check-accent`, primary by default. For a green switch: `[--check-accent:var(--color-success)]`.
 
 Custom properties, shared by all three: `--check-border --check-accent --check-fg --check-ring --check-size --check-radius --check-text`.

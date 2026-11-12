@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en" class="scroll-pb-28">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Save bar</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Save bar</h1>
+    <p class="muted"><code>.save-bar</code> holds a long form's status line, Discard and Save. It sticks to the bottom of the window while the form is on screen and settles under the last field at the end. Scroll this page to see it.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">On the page</h2>
+    <p class="text-sm muted">The last child of the <code>&lt;form&gt;</code>. The <code>role="status"</code> line takes the leading space; on a narrow screen it moves to a line of its own above the buttons, and while it is empty it takes no line at all.</p>
+    <form class="grid max-w-3xl gap-4" onsubmit="return false">
+      <div class="field"><label for="name">Name</label><input class="input" id="name" value="Arc studio"></div>
+      <div class="field"><label for="sku">SKU</label><input class="input" id="sku" value="ARC-001"></div>
+      <div class="field"><label for="price">Price</label><input class="input" id="price" inputmode="decimal" value="249.00"></div>
+      <div class="field"><label for="stock">Stock</label><input class="input" id="stock" value="12"></div>
+      <div class="field"><label for="description">Description</label><textarea class="input" id="description" rows="6">A desk lamp with a long reach.</textarea></div>
+      <div class="save-bar">
+        <p role="status">Unsaved changes</p>
+        <button type="button" class="btn outlined">Discard</button>
+        <button class="btn primary">Save</button>
+      </div>
+    </form>
+<pre>&lt;form class="grid gap-4" novalidate @submit.prevent="save"&gt;
+  &lt;!-- fields --&gt;
+  &lt;div class="save-bar -mx-gap px-gap"&gt;
+    &lt;p role="status"&gt;{{ status }}&lt;/p&gt;
+    &lt;button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing"
+        @click="discard"&gt;Discard&lt;/button&gt;
+    &lt;button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing"
+        :aria-busy="form.processing"&gt;Save&lt;/button&gt;
+  &lt;/div&gt;
+&lt;/form&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">In a card, with nothing to say</h2>
+    <p class="text-sm muted">On a card, the bar takes the card's colour with <code>[--save-bar-bg:var(--color-card)]</code>. An empty status line still pushes the buttons to the end.</p>
+    <form class="card max-w-3xl" onsubmit="return false">
+      <div class="field"><label for="email">Support email</label><input class="input" id="email" type="email" value="help@example.com"></div>
+      <div class="save-bar [--save-bar-bg:var(--color-card)]">
+        <p role="status"></p>
+        <button type="button" class="btn outlined" disabled>Discard</button>
+        <button class="btn primary">Save</button>
+      </div>
+    </form>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+</body>
+</html>

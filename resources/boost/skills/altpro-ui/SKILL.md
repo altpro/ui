@@ -1,6 +1,6 @@
 ---
 name: altpro-ui
-description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, table, DataTable, DataList, DataTimeline, repeater, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, tile, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, confirm dialog, accordion, table, DataTable, DataList, DataTimeline, repeater, save bar, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # altpro/ui
@@ -147,8 +147,8 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | App shell | The page frame: sidebar nav, header with breadcrumb and user menu, main, toaster; the sign-in layout; the colour scheme setting | pattern | [app-shell.md](references/app-shell.md) |
 | Page recipes | Whole Inertia screens: list page, edit page, tags and photo uploads, with controllers and endpoint responses | pattern | [recipes.md](references/recipes.md) |
 | Validation failure | A failed save: an error summary that is announced and takes focus; where focus goes after a visit | pattern | [validation-failure.md](references/validation-failure.md) |
-| Destructive action | A delete confirmed in a dialog: pending state, a 422 shown in it, focus back to the trigger | pattern | [destructive-action.md](references/destructive-action.md) |
-| Unsaved changes | Ask before leaving a form with unsaved changes, in the app and in the browser | pattern | [unsaved-changes.md](references/unsaved-changes.md) |
+| Destructive action | A delete confirmed in a `ConfirmDialog`: pending state, a 422 shown in it, focus back to the trigger, with the controller | pattern | [destructive-action.md](references/destructive-action.md) |
+| Unsaved changes `useUnsavedChanges` | Ask before leaving a form with unsaved changes, in the app and in the browser | Vue (Inertia) | [unsaved-changes.md](references/unsaved-changes.md) |
 | Button `.btn` | Actions and links that look like buttons | CSS | [button.md](references/button.md) |
 | Join `.join` | Buttons and inputs fused into one bar | CSS | [join.md](references/join.md) |
 | Segmented control | One choice from a few, as a bar of buttons | pattern | [segmented.md](references/segmented.md) |
@@ -156,6 +156,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Field `.field` | Label, control, hint and errors stacked | CSS, Blade, Vue | [field.md](references/field.md) |
 | File input `.dropzone` | Drop zone and file list with previews and progress | CSS, Vue | [file-input.md](references/file-input.md) |
 | Checkbox, radio, switch | Restyled native checkboxes and radios | CSS | [check.md](references/check.md) |
+| Tile `.tile` | A checkbox or radio drawn as a card, for a choice with a description or a picture | CSS | [tile.md](references/tile.md) |
 | Badge `.badge` | Status, counts, tags | CSS | [badge.md](references/badge.md) |
 | Link `.link` | A link in a sentence, a `.dl` value, an `.alert` or a table cell | CSS | [link.md](references/link.md) |
 | Avatar `.avatar` | A person's photo or initials | CSS | [avatar.md](references/avatar.md) |
@@ -168,6 +169,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Card `.card` | A bordered box for a panel or list item | CSS | [card.md](references/card.md) |
 | Description list `.dl` | Label and value pairs on record pages | CSS | [dl.md](references/dl.md) |
 | Dialog `.dialog` | Modal or drawer on native `<dialog>` | CSS | [dialog.md](references/dialog.md) |
+| Confirm dialog | Ask before an action, held open while its request runs | Vue | [confirm-dialog.md](references/confirm-dialog.md) |
 | Accordion `.accordion` | Collapsible rows on `<details>` | CSS | [accordion.md](references/accordion.md) |
 | Tree `.tree` | Page hierarchies and category trees | CSS | [tree.md](references/tree.md) |
 | Table `.table` | A static data table; line items and totals | CSS | [table.md](references/table.md) |
@@ -188,7 +190,7 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Stat | A big number in a card | pattern | [stat.md](references/stat.md) |
 | Empty state | What an empty list or panel says | pattern | [empty-state.md](references/empty-state.md) |
 | Record header | The top of a record page | pattern | [record-header.md](references/record-header.md) |
-| Save bar | Sticky Save and Discard on a long form | pattern | [save-bar.md](references/save-bar.md) |
+| Save bar `.save-bar` | Sticky status, Save and Discard on a long form | CSS | [save-bar.md](references/save-bar.md) |
 | Long form | A form split into `<fieldset>` sections with headings | pattern | [long-form.md](references/long-form.md) |
 
 ## Theme tokens

@@ -1,0 +1,41 @@
+/* Save bar: Save and Discard stuck to the bottom of the viewport while a long form is on screen.
+   <div class="save-bar"><p role="status">Unsaved changes</p><button …>Discard</button><button …>Save</button></div>
+   The last child of the form, sticky rather than fixed, so it never covers the last field. The status line takes the
+   leading space and keeps its height, so text arriving does not move the buttons. In a bar under 30rem it takes a line
+   of its own above the buttons, which stay together; an empty one takes no line. */
+@layer components {
+  .save-bar {
+    --save-bar-bg: var(--color-background);
+    --save-bar-py: 0.75rem;
+
+    position: sticky;
+    bottom: 0;
+    z-index: 10;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.5rem;
+    padding-block: var(--save-bar-py);
+    border-top: 1px solid var(--color-border);
+    background: var(--save-bar-bg);
+
+    > [role="status"] {
+      /* a basis that is huge below 30rem, so it fills a line, and negative (so 0) above it, so it shares one */
+      flex: 1 1 calc((30rem - 100%) * 999);
+      min-height: 1lh;
+      margin: 0;
+      font-size: var(--text-sm, 0.875rem);
+      line-height: 1.25rem;
+      color: var(--color-muted-foreground);
+      &:empty {
+        flex-basis: 0;
+        min-height: 0;
+      }
+    }
+
+    @media print {
+      display: none;
+    }
+  }
+}

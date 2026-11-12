@@ -2,6 +2,25 @@
 
 Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.7`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## Unreleased
+
+**Breaking** (the next release is 0.4.0):
+
+- Two new component classes, `.tile` and `.save-bar`, take over any class of the same name an app has. **An app with its own `.tile` (the altpro starter kit has one, in `resources/css/components/tile.css`, with `TileCheck.vue`) must delete it** and move its tiles to the library's markup: a visible `<input class="checkbox">` or `<input class="radio">` inside `<label class="tile">`, with no `group`, `TileCheck` or `has-[input:checked]:bg-primary/5`, as `tile.md` shows. An app with its own `.save-bar` must rename it or delete it.
+
+New:
+
+- `.tile`: a checkbox or radio drawn as a card, for a choice with a description or a picture. The input stays visible, so a reader can tell one choice from several and forced colours still show the state; the tile draws the focus ring, the checked edge and tint, disabled and invalid. See `tile.md`.
+- `.save-bar`: the sticky status, Discard and Save of a long form, which `save-bar.md` used to build from utilities. Its `role="status"` line is muted, keeps its height so text arriving does not move the buttons, takes a line of its own above the buttons in a bar narrower than 30rem, and takes no line while empty. Replace `sticky bottom-0 z-10 flex flex-wrap items-center justify-end gap-2 border-t border-border bg-background py-3 print:hidden` with `save-bar` (keep `-mx-gap px-gap` and `col-span-full` where you had them), and drop the classes on the status `<p>`. On a card: `[--save-bar-bg:var(--color-card)]`.
+- `ConfirmDialog.vue`: a `.dialog` that asks before an action and holds itself open while its request runs. While `busy`, Esc, the cross and Cancel do nothing, a close that gets through anyway (a Safari without `closedby`, a repeated Esc) opens it again, and the confirm button keeps focus as `loading` and `aria-disabled`. Focus starts on Cancel, or on a body field with `autofocus`; Enter in the body confirms. A hand-written confirm dialog with `:closedby`, `@cancel` and `disabled` bound to its form's `processing` can become one. See `confirm-dialog.md`; `destructive-action.md` now uses it.
+- `useUnsavedChanges` is now in the library, `import { useUnsavedChanges } from "@ui/useUnsavedChanges"`, instead of code each app copies. It takes the form or a function (`() => a.isDirty || b.isDirty`), returns `allowLeaving()` for a visit that ends the form's need (deleting its record), and comes with `leaveWithoutAsking()` for a logout for inactivity. Once the user has said OK to leaving, a full page load after it no longer asks a second time; a visit to the page's own URL keeps the draft instead of remounting the page. The default question is now "Leave this page? Your changes won't be saved." An app can delete its `resources/js/composables/useUnsavedChanges.js` and change the imports; the call is the same.
+
+Skills (run `php artisan boost:update` to get them):
+
+- The app shell's `<main>` is the page frame: `@container/page flex flex-1 flex-col gap-gap p-gap`. Pages put their content straight inside `<AppLayout>`, without their own `<div class="flex flex-col gap-gap">` or `@container/page` wrapper. An app that copied the layout can add the classes to its `main` and drop the wrappers page by page; a page that keeps one still works. To cap every page's width on very wide screens, add `mx-auto w-full max-w-[100rem]` to `main` once.
+- `scroll-pb-28` on `<html>`, up from `scroll-pb-20`: on a phone the save bar's status takes its own line, and a field tabbed to could sit behind the taller bar. Change it in the app's root view.
+- Save on an unchanged form sends nothing and the status says "No changes to save.", in `save-bar.md` and the edit page in `recipes.md`.
+
 ## 0.3.7 (11 November 2026)
 
 - The page keeps room for its scrollbar on every page (`scrollbar-gutter: stable` on `:root`), so content no longer jumps sideways between a short page and a long one with classic scrollbars (Windows, Linux). On a short page the strip shows the page background. Overlay scrollbars (macOS, mobile) are unaffected. An app that set `scrollbar-gutter` itself, or padded the page to make up for a missing scrollbar, can remove that. Markup is unchanged.

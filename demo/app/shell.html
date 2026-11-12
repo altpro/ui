@@ -1,7 +1,7 @@
 <!doctype html>
 <!-- The app-shell recipe (resources/boost/skills/altpro-ui/references/app-shell.md) rendered as a plain page:
      no demo.js, no demo CSS. Blade's @include('layouts.navigation') is the nav written out twice; <x-lucide-*> are the inline svgs. -->
-<html lang="en" class="scroll-pb-20">
+<html lang="en" class="scroll-pb-28">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -51,7 +51,7 @@
         </div>
       </header>
 
-      <main id="main" class="flex-1 p-gap">
+      <main id="main" class="@container/page flex flex-1 flex-col gap-gap p-gap">
         <div class="max-w-2xl space-y-4">
           <h1 class="text-2xl font-semibold tracking-tight">App shell</h1>
           <p class="muted">The app-shell recipe as a plain page: a sidebar <code>.nav</code>, a header with the breadcrumb and the user menu, this <code>main</code> and a toaster. Below the <code>lg</code> breakpoint the sidebar moves into a drawer behind the menu button.</p>

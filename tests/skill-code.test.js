@@ -23,6 +23,7 @@ for (const ref of readdirSync(refs)) {
 
 test("every page, layout, component and composable in demo/app is shown in a reference file", () => {
   const run = ["pages", "layouts", "components", "composables"]
+    .filter((dir) => existsSync(new URL(`${dir}/`, app)))
     .flatMap((dir) => readdirSync(new URL(`${dir}/`, app), { recursive: true }).map((f) => `${dir}/${f.replaceAll("\\", "/")}`))
     .filter((f) => /\.(vue|js)$/.test(f))
     .concat("toast.js");

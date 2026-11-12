@@ -193,10 +193,12 @@ for (const colorScheme of ["light", "dark"]) {
     });
 
     // dialogs are closed at load, so axe never sees them: open each, check it, and check it fits the viewport
-    test("dialog.html: every open dialog passes axe and stays inside the viewport", async ({ page }) => {
+    for (const p of ["dialog.html", "confirm.html"]) test(`${p}: every open dialog passes axe and stays inside the viewport`, async ({ page }) => {
       await page.setViewportSize({ width: 800, height: 500 });
-      await page.goto("/dialog.html");
+      await page.goto("/" + p);
       await page.addStyleTag({ content: "*, ::backdrop { transition: none !important }" });
+      // confirm.html's triggers are rendered by Vue after load
+      if (p === "confirm.html") await expect(page.locator("main [command^=show]")).toHaveCount(3);
       const failures = [];
       for (const t of await page.locator("main [command^=show]").all()) {
         const id = "#" + (await t.getAttribute("commandfor"));
@@ -211,6 +213,7 @@ for (const colorScheme of ["light", "dark"]) {
         await d.evaluate((el) => (el.matches(":popover-open") ? el.hidePopover() : el.close()));
       }
       expect(failures).toEqual([]);
+      if (p !== "dialog.html") return;
       // the long one is taller than the viewport, so it must scroll inside rather than grow
       await page.locator("[command=show-modal][commandfor=d-long]").click();
       expect(await page.locator("#d-long").evaluate((el) => el.scrollHeight > el.clientHeight)).toBe(true);
@@ -554,7 +557,7 @@ for (const colorScheme of ["light", "dark"]) {
 
     // an empty control is known only by its edge, which needs 3:1 on whatever it sits on (WCAG 1.4.11); axe does not check it.
     // Paint the backgrounds behind it, then the border, on a canvas: it composites translucent fills for us.
-    for (const p of ["field.html", "check.html", "file.html", "combobox.html", "join.html", "table.html", "datatable.html"]) test(`${p}: control borders reach 3:1`, async ({ page }) => {
+    for (const p of ["field.html", "check.html", "tile.html", "file.html", "combobox.html", "join.html", "table.html", "datatable.html"]) test(`${p}: control borders reach 3:1`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
       const low = await page.evaluate(() => {
@@ -578,7 +581,7 @@ for (const colorScheme of ["light", "dark"]) {
       expect(low).toEqual([]);
     });
 
-    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 28], ["link.html", ".link", 9], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2], ["tree.html", ".tree :is(a, summary)", 14]]) {
+    for (const [p, cls, count] of [["button.html", ".btn", 21], ["badge.html", ".badge", 28], ["link.html", ".link", 9], ["nav.html", ".nav :is(a, summary)", 8], ["breadcrumb.html", ".breadcrumb :is(a, button)", 3], ["field.html", ".input", null], ["file.html", ".dropzone > label", 3], ["combobox.html", ".combobox > button", null], ["check.html", ":is(.checkbox, .radio, .switch)", null], ["table.html", ".table :is(button, .checkbox)", null], ["datatable.html", ".datatable > .scroll", null], ["tabs.html", ".tabs :is(a, label)", 6], ["segmented.html", ".join > .btn", 11], ["pagination.html", ".btn:not(span, [aria-disabled])", 5], ["steps.html", ".steps a", 2], ["tree.html", ".tree :is(a, summary)", 14], ["tile.html", ".tile", 7]]) {
     if (count) test(`${p}: every colour and style keeps contrast on hover`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
@@ -598,7 +601,7 @@ for (const colorScheme of ["light", "dark"]) {
     test(`${p}: keyboard focus shows a ring`, async ({ page }) => {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "* { transition: none !important }" });
-      for (let i = 0; i < 60; i++) {
+      for (let i = 0; i < 100; i++) {
         await page.keyboard.press("Tab");
         if (await page.evaluate((cls) => document.activeElement.closest("main " + cls), cls)) break;
       }

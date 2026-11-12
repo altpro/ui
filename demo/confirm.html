@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>altpro/ui · Confirm dialog</title>
+  <script>const t=localStorage.theme;if(t)document.documentElement.dataset.theme=t;document.documentElement.style.cssText=localStorage.tokens||""</script>
+  <link rel="stylesheet" href="demo.css">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+</head>
+<body class="flex min-h-screen bg-background text-foreground">
+<aside></aside>
+<div class="flex min-w-0 flex-1 flex-col">
+<header></header>
+<main>
+  <section class="space-y-2">
+    <h1 class="text-3xl font-semibold tracking-tight">Confirm dialog</h1>
+    <p class="muted"><code>ConfirmDialog.vue</code> is a <code>.dialog</code> that asks before an action and holds still while it runs. A button with <code>command="show-modal"</code> opens it. While <code>busy</code>, Esc, the cross and Cancel do nothing, and the confirm button keeps focus with its spinner.</p>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Delete</h2>
+    <p class="text-sm muted"><code>tone="danger"</code> for an action that can't be undone. Focus starts on Cancel, so Enter does not delete. This one takes a second and a half: try Esc while it runs.</p>
+    <div id="confirm-delete"></div>
+<pre>&lt;button class="btn outlined danger" command="show-modal" commandfor="delete-product"&gt;
+  Delete product
+&lt;/button&gt;
+&lt;ConfirmDialog ref="dialog" id="delete-product" title="Delete Arc studio?"
+    description="It goes from the shop at once. This can't be undone."
+    confirm-label="Delete product" tone="danger" :busy="form.processing" @confirm="destroy" /&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">With a field</h2>
+    <p class="text-sm muted">The default slot is the body, inside the dialog's own form, so Enter in the field confirms. <code>autofocus</code> on the field puts focus there instead of on Cancel. A wrong password keeps the dialog open with the error under the field; <code>@close</code> clears it. The password is <code>password</code>.</p>
+    <div id="confirm-password"></div>
+<pre>&lt;ConfirmDialog ref="dialog" id="delete-account" title="Delete your account?" description="…"
+    confirm-label="Delete account" tone="danger" :busy="form.processing" @confirm="destroy"
+    @close="form.reset(); form.clearErrors()"&gt;
+  &lt;Field v-model="form.password" name="password" type="password" autocomplete="current-password"
+      :errors="form.errors" required autofocus /&gt;
+&lt;/ConfirmDialog&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Not destructive</h2>
+    <p class="text-sm muted">The default tone is <code>primary</code>. The <code>#description</code> slot takes markup where the prop takes text.</p>
+    <div id="confirm-send"></div>
+<pre>&lt;ConfirmDialog id="send-invoice" title="Send invoice INV-2026-0091?" confirm-label="Send invoice"
+    :busy="form.processing" @confirm="send"&gt;
+  &lt;template #description&gt;
+    It goes to &lt;strong&gt;accounts@example.com&lt;/strong&gt; with the PDF attached.
+  &lt;/template&gt;
+&lt;/ConfirmDialog&gt;</pre>
+  </section>
+</main>
+</div>
+<script type="module" src="demo.js"></script>
+<script type="module" src="confirm.js"></script>
+</body>
+</html>

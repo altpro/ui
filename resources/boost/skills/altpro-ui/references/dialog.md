@@ -30,6 +30,7 @@ A card in the top layer, on a native `<dialog>`. Everything in [card.md](card.md
 | Height | Capped at the viewport minus a `gap` each side; taller content scrolls inside. The header and footer scroll with it, except a drawer's footer, which stays on screen. |
 | Drawer | `drawer`: a full-height panel, 24rem wide, that slides in from the end edge. `drawer start` slides from the start edge. Everything else is unchanged. `mt-auto` on the footer pins it to the bottom. |
 
+- A dialog that asks before an action and sends a request (delete, send, suspend) is a [`ConfirmDialog`](confirm-dialog.md), which holds itself open while the request runs.
 - The close cross is a `btn ghost sm` with `aria-label="Close"`, placed straight after the heading or `hgroup` so the header pushes it to the far side. The dialog pulls it onto the heading line.
 - Put `aria-labelledby` on the dialog pointing at its heading. Without it the dialog has no name.
 - Form: the `<header>` and `<footer>` stay direct children of the dialog. Wrap only the fields in `<form id="f" method="dialog" class="contents">` and give the footer's submit button `form="f"`. `method="dialog"` closes on submit. Cancel is a `btn outlined` `command="close"` button, before the one primary action.

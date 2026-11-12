@@ -42,27 +42,25 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 <template>
   <Head title="Products" />
   <AppLayout :breadcrumb="[{ label: 'Products' }]">
-    <div class="flex flex-col gap-gap">
-      <div class="flex flex-wrap items-start justify-between gap-4">
-        <div class="min-w-0">
-          <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
-          <p class="mt-1 text-sm muted">{{ unfilteredTotal }} products in the catalogue</p>
-        </div>
+    <div class="flex flex-wrap items-start justify-between gap-4">
+      <div class="min-w-0">
+        <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
+        <p class="mt-1 text-sm muted">{{ unfilteredTotal }} products in the catalogue</p>
       </div>
-
-      <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
-          :only="['products']" sort="name" :per-page="10" selectable
-          empty-message="No products yet." no-matches-message="No products match.">
-        <template #cell-status="{ row }">
-          <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
-        </template>
-        <template #cell-actions="{ row }">
-          <Link :href="`/products/${row.id}/edit`" class="btn ghost sm"><Pencil class="size-4" aria-hidden="true" /> Edit <span class="sr-only">{{ row.name }}</span></Link>
-        </template>
-        <template #bulk-actions="{ selection, clear }">
-          <button type="button" class="btn outlined sm" @click="archive(selection, clear)"><Archive class="size-4" aria-hidden="true" /> Archive</button>
-        </template>
-      </DataTable>
     </div>
+
+    <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
+        :only="['products']" sort="name" :per-page="10" selectable
+        empty-message="No products yet." no-matches-message="No products match.">
+      <template #cell-status="{ row }">
+        <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
+      </template>
+      <template #cell-actions="{ row }">
+        <Link :href="`/products/${row.id}/edit`" class="btn ghost sm"><Pencil class="size-4" aria-hidden="true" /> Edit <span class="sr-only">{{ row.name }}</span></Link>
+      </template>
+      <template #bulk-actions="{ selection, clear }">
+        <button type="button" class="btn outlined sm" @click="archive(selection, clear)"><Archive class="size-4" aria-hidden="true" /> Archive</button>
+      </template>
+    </DataTable>
   </AppLayout>
 </template>

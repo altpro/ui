@@ -34,8 +34,9 @@ for (const name of components) {
 }
 
 // A Vue component has no CSS file for the loop above to find. These have a demo page or reference under another name;
-// DataFilters is DataList's own, and copy-button's page is copy.html.
+// DataFilters is DataList's own, copy-button's page is copy.html and confirm-dialog's confirm.html.
 const vueAliases = {
+  ConfirmDialog: { demo: "confirm", ref: "confirm-dialog" },
   CopyButton: { demo: "copy", ref: "copy-button" },
   FileInput: { demo: "file", ref: "file-input" },
   DataFilters: null,

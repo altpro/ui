@@ -7,6 +7,7 @@
   "exports": {
     ".": "./resources/css/ui.css",
     "./js/dataTable": "./resources/js/dataTable.ts",
+    "./js/useUnsavedChanges": "./resources/js/useUnsavedChanges.ts",
     "./js/*": "./resources/js/*",
     "./*": "./resources/css/*"
   },

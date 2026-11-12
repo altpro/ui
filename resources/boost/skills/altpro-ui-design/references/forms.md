@@ -1,6 +1,6 @@
 # Forms, dialogs and drawers
 
-Rules for anything that edits, creates or confirms. In `altpro-ui`, `dialog.md`, `validation-failure.md`, `unsaved-changes.md` and `destructive-action.md` have the code.
+Rules for anything that edits, creates or confirms. In `altpro-ui`, `dialog.md`, `confirm-dialog.md`, `save-bar.md`, `validation-failure.md`, `unsaved-changes.md` and `destructive-action.md` have the code.
 
 ## Layout
 
@@ -19,6 +19,7 @@ Rules for anything that edits, creates or confirms. In `altpro-ui`, `dialog.md`,
 - **Money is text.** An amount is a text field with `inputmode="decimal"`, checked on submit against `/^\d+(\.\d{1,2})?$/` (`decimal:0,2` in Laravel), because `type="number"` takes `1e1`, draws a spinner and drops the comma from `1,50`. A prefilled amount goes in as the string `"120.40"`, which keeps its pence, and `Number()` tells whether it changed. Whole quantities stay `type="number"`.
 - **A form states nothing nobody entered.** No prefilled price or silent default cost, on every route that creates something: a figure on the record comes from a person.
 - **Changes are never lost silently.** In a dirty dialog or drawer, Cancel, the cross and Escape all ask first, in a second dialog with "Keep editing" and "Discard changes". A dirty page asks with the browser's own prompt. `unsaved-changes.md` has both. An unchanged editor closes straight away. A filter drawer doesn't ask: it holds a query, not anyone's work.
+- **A confirmation that sends a request holds still until it answers.** Use `ConfirmDialog`: nothing closes it while busy, so the outcome (an error in it, or the dialog going) is never missed.
 - **A destructive change asks however it is reached.** A status menu that can archive goes through the same confirmation as the Archive button, and so does anything that takes a live record off sale altogether, such as moving it to draft or switching off its last channel. A reversible switch that leaves it on sale needs no dialog.
 - **Saving nothing records nothing.** An unchanged save closes without a toast or a history entry. An entry says what really moved, in every editor: "Slate price changed from £249 to £259", "Chalk 28 → 32", "Alex Morgan changed the description and tags". On a record's own page it doesn't repeat the record's name.
 - **Say what happens to this record.** "It leaves your store" is false for a draft, and false for a channel it was never in. Write a confirmation and its history entry from the record's actual state.

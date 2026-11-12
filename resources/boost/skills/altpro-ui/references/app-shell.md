@@ -4,9 +4,9 @@ The frame every page sits in. No class of its own: a [`.nav`](nav.md) sidebar, a
 
 Once copied, the layout is the app's own. Moving the user menu into the sidebar, putting the nav along the top or adding a search box are all fine. When the app's layout differs from this file, follow the app's code and don't move things back to match this file. The page recipes ([recipes.md](recipes.md)) and the patterns that build on them depend only on these parts, so keep them:
 
-- the root view: `scroll-pb-20` on `<html>`, the scheme script in `<head>`, and `<div id="toaster" class="toaster top">` last in `body`;
+- the root view: `scroll-pb-28` on `<html>`, the scheme script in `<head>`, and `<div id="toaster" class="toaster top">` last in `body`;
 - `AppLayout` takes a `breadcrumb` prop, each page wraps itself in it (not a persistent layout), and on each visit to a new page it focuses `<main id="main" tabindex="-1">`;
-- `main` keeps its `p-gap` padding;
+- `main` is the page frame: `p-gap` padding, `@container/page`, and a column with `gap-gap` between whatever the page puts in it;
 - the skip link, landmarks and `aria-current` rules below.
 
 The welcome and sign-in pages are Blade views in a [layout of their own](#sign-in-pages), and the colour scheme switcher goes on a [settings page](#colour-scheme-setting), not in the header.
@@ -19,7 +19,8 @@ The welcome and sign-in pages are Blade views in a [layout of their own](#sign-i
 - **Current link**: `aria-current="page"` on the nav link for this page or the section it is in, and on the last breadcrumb item, which is a `<span>`.
 - **Scheme**: the choice is kept in `localStorage.theme` (`""` follows the OS, or `light`, `dark`) and set as `data-theme` on `<html>` by a one-line script in `<head>` before the stylesheet, so a pinned scheme never flashes the other one first. The control that changes it is on a settings page: [Colour scheme setting](#colour-scheme-setting).
 - **Toaster**: the last thing in `body`, empty, from the first response, at the top (`toaster top`) so a toast never covers a [save bar](save-bar.md)'s Save. `toast(message, type)` appends an `.alert` and removes it when it fades.
-- **`scroll-pb-20` on `<html>`**: keeps a field the browser tabs to clear of a sticky save bar. Harmless on pages without one.
+- **`scroll-pb-28` on `<html>`**: keeps a field the browser tabs to clear of a sticky [save bar](save-bar.md), at its tallest on a phone. Harmless on pages without one.
+- **Page frame**: `main` is `@container/page`, so every page's container queries (`@4xl/page:grid-cols-3`) measure the room beside the sidebar, and a `flex-col gap-gap` column, so a page's sections need no wrapper of their own. A page that wants a reading width caps its own content (`max-w-2xl` on a form or card), as the settings layout below does. To stop every page growing past a width on very wide screens, cap it here once: `mx-auto w-full max-w-[100rem]` on `main`.
 - **Focus after a visit** (Inertia): a visit to a new page focuses `main` (`tabindex="-1"`), so a screen reader starts at the new content instead of on `<body>`, where the clicked link left it. Not on the first load, where the skip link comes first.
 
 Icons are Lucide, `size-4` with `aria-hidden="true"`. Blade uses `mallardduck/blade-lucide-icons` 2.x: `<x-lucide-{name}>`, where `{name}` is the kebab-case name on lucide.dev (`<x-lucide-shopping-cart>`). Vue uses `@lucide/vue` (not the deprecated `lucide-vue-next`): PascalCase exports, `import { ShoppingCart } from "@lucide/vue"`.
@@ -32,7 +33,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. In t
 
 ```blade
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pb-20">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pb-28">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -58,7 +59,7 @@ Change the drawer breakpoint by changing every `lg:` in the shell together. In t
         @include('layouts.user-menu')
       </header>
 
-      <main id="main" class="flex-1 p-gap">
+      <main id="main" class="@container/page flex flex-1 flex-col gap-gap p-gap">
         @yield('content')
       </main>
     </div>
@@ -155,11 +156,11 @@ A controller's `->with('toast', ['type' => 'success', 'message' => 'Order saved.
 
 ## Inertia (Vue)
 
-The root view, `resources/views/app.blade.php`, carries the scheme script, `scroll-pb-20` and the toaster, so all three are in place before Vue mounts and the toaster survives every visit. Keep whatever else the app's root view already has, such as favicons, `@fonts`, or the page entry Laravel's starter kit adds to `@vite`.
+The root view, `resources/views/app.blade.php`, carries the scheme script, `scroll-pb-28` and the toaster, so all three are in place before Vue mounts and the toaster survives every visit. Keep whatever else the app's root view already has, such as favicons, `@fonts`, or the page entry Laravel's starter kit adds to `@vite`.
 
 ```blade
 <!doctype html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pb-20">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-pb-28">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -246,7 +247,7 @@ onMounted(() => {
         <UserMenu class="ms-auto" />
       </header>
 
-      <main id="main" ref="main" tabindex="-1" class="flex-1 p-gap -outline-offset-3 focus-visible:outline-3 focus-visible:outline-ring/50">
+      <main id="main" ref="main" tabindex="-1" class="@container/page flex flex-1 flex-col gap-gap p-gap -outline-offset-3 focus-visible:outline-3 focus-visible:outline-ring/50">
         <slot />
       </main>
     </div>

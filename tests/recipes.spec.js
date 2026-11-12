@@ -62,6 +62,14 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
   await expect(fieldErrors).toHaveCount(0);
   await expect(discard).toBeDisabled();
 
+  // Save on a clean form sends nothing and says so; the next change takes the message away
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(status).toHaveText("No changes to save.");
+  await name.fill("Arc studio pro!");
+  await expect(status).toHaveText("Unsaved changes");
+  await discard.click();
+  await expect(status).toHaveText("");
+
   // the list reads the same database; a clean form lets the visit go without asking
   await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
   await expect(page).toHaveURL(/recipe-products\.html$/);
@@ -90,7 +98,7 @@ test("edit page: leaving with unsaved changes asks first, in the app and through
 
   // an Inertia visit asks with confirm(): Cancel stays on the page with the edit
   await products.click();
-  await expect.poll(() => asked).toEqual(["You have unsaved changes. Leave this page and lose them?"]);
+  await expect.poll(() => asked).toEqual(["Leave this page? Your changes won't be saved."]);
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
   await expect(name).toHaveValue("Arc studio mk2");
 
@@ -150,7 +158,9 @@ test("delete account: a wrong password keeps the dialog open with the error in i
   await password.fill("wrong");
   await confirm.click();
   await expect(confirm).toHaveAttribute("aria-busy", "true");
-  await expect(confirm).toBeDisabled();
+  await expect(confirm).toHaveAttribute("aria-disabled", "true");
+  // nothing closes it while the request runs
+  await page.keyboard.press("Escape");
   await expect(error).toHaveText("The password is incorrect.");
   await expect(dialog).toBeVisible();
   await expect(password).toHaveAttribute("aria-invalid", "true");
