@@ -1,8 +1,8 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.4` (npm `github:altpro/ui#v0.4.0`). On 0.x a breaking change bumps the minor version (0.4 to 0.5), which `^0.4` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.4` (npm `github:altpro/ui#v0.4.1`). On 0.x a breaking change bumps the minor version (0.4 to 0.5), which `^0.4` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.4.1 (12 November 2026)
 
 - `ConfirmDialog` takes `form`, the id of a form its body brings itself, such as Inertia's `<Form>` as Laravel's starter kit writes forms. The confirm button submits that form instead of sending `@confirm`, and while `busy` a press submits nothing. See `confirm-dialog.md`.
 
