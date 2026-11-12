@@ -57,6 +57,7 @@ dialog.value?.close();
     <template #description>Gone <strong>for good</strong>.</template>
     <input name="password" />
   </ConfirmDialog>
+  <ConfirmDialog id="archive" title="Archive?" confirm-label="Archive" form="archive-form" :busy="false"><form id="archive-form" /></ConfirmDialog>
   <ConfirmDialog id="send" title="Send?" description="It goes now." confirm-label="Send" cancel-label="Keep editing" />
   <!-- @vue-expect-error not a tone -->
   <ConfirmDialog id="x" title="X" confirm-label="X" tone="warning" />

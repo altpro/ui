@@ -68,3 +68,22 @@ test("the description slot takes markup, and Esc closes it when not busy", async
   await expect(dialog).toBeHidden();
   await expect(open).toBeFocused();
 });
+
+test("with form, the confirm button submits the body's own form, once while busy", async ({ page }) => {
+  await page.goto("/confirm.html");
+  const open = page.getByRole("button", { name: "Archive order" }).first();
+  const dialog = page.getByRole("dialog", { name: "Archive order 1042?" });
+  const confirm = dialog.getByRole("button", { name: "Archive order" });
+  const status = page.locator("#confirm-form [role=status]");
+
+  await open.click();
+  await expect(confirm).toHaveAttribute("form", "archive-order-form");
+  await confirm.click();
+  await expect(confirm).toHaveAttribute("aria-busy", "true");
+  // a press while busy, as Enter or Space on the focused button would send, submits nothing
+  await confirm.dispatchEvent("click");
+  await page.keyboard.press("Escape");
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toBeHidden({ timeout: 4000 });
+  await expect(status).toHaveText("Sent 1 request.");
+});

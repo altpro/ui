@@ -56,6 +56,29 @@ mount("#confirm-password", () => {
   ];
 });
 
+// the body brings its own form, as Inertia's <Form> does; the confirm button submits it
+mount("#confirm-form", () => {
+  const dialog = ref(), busy = ref(false), sent = ref(0);
+  // no guard of its own: the dialog stops a second press while busy
+  const archive = async () => {
+    sent.value++;
+    busy.value = true;
+    await wait(1200);
+    busy.value = false;
+    dialog.value.close();
+  };
+  return () => [
+    h("div", { class: "flex flex-wrap items-center gap-3" }, [
+      h("button", { type: "button", class: "btn outlined", command: "show-modal", commandfor: "archive-order" }, "Archive order"),
+      h("p", { class: "text-sm muted", role: "status", "data-sent": sent.value }, sent.value ? `Sent ${sent.value} ${sent.value === 1 ? "request" : "requests"}.` : ""),
+    ]),
+    h(ConfirmDialog, {
+      ref: dialog, id: "archive-order", title: "Archive order 1042?", description: "It leaves the open orders list. You can find it under Archived.",
+      confirmLabel: "Archive order", form: "archive-order-form", busy: busy.value,
+    }, () => h("form", { id: "archive-order-form", class: "contents", onSubmit: (e) => (e.preventDefault(), archive()) })),
+  ];
+});
+
 mount("#confirm-send", () => {
   const dialog = ref(), busy = ref(false);
   const send = async () => {

@@ -198,7 +198,7 @@ for (const colorScheme of ["light", "dark"]) {
       await page.goto("/" + p);
       await page.addStyleTag({ content: "*, ::backdrop { transition: none !important }" });
       // confirm.html's triggers are rendered by Vue after load
-      if (p === "confirm.html") await expect(page.locator("main [command^=show]")).toHaveCount(3);
+      if (p === "confirm.html") await expect(page.locator("main [command^=show]")).toHaveCount(4);
       const failures = [];
       for (const t of await page.locator("main [command^=show]").all()) {
         const id = "#" + (await t.getAttribute("commandfor"));

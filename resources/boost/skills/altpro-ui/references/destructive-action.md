@@ -102,6 +102,6 @@ What comes back:
 - The confirm button names the action ("Delete account"), never "OK" or "Yes", and `tone="danger"` makes it red; the trigger on the page is `outlined danger`. The title asks the question and the description says what is lost.
 - With no field, focus starts on Cancel, so a stray Enter does not delete. With a field, `autofocus` on it puts focus there.
 - An empty password reaches the server and comes back with Laravel's message rather than the browser's bubble, as the dialog's form is `novalidate`.
-- With Inertia's `<Form>` in place of `useForm`, as Laravel's starter kit writes forms: `<Form>` is a form, and the dialog already has one, so use `useForm` here, or `router.delete` with `onStart`/`onFinish` setting a `busy` ref. Wayfinder's route objects work with either: `form.submit(destroy())`.
+- With Inertia's `<Form>` in place of `useForm`, as Laravel's starter kit writes forms: put the `<Form id="…">` in the body and name it in `ConfirmDialog`'s `form` prop ([confirm-dialog.md](confirm-dialog.md#with-inertias-form)).
 
 When the page stays, as with a row's Delete in a list: ``useForm({}).delete(`/products/${product.id}`, { preserveScroll: true, onSuccess: () => dialog.value.close() })``, and the controller flashes a toast and returns `back()`. With no password there is no field, so a 422 is rare; show `form.errors` in the dialog's body if the controller can refuse. The trigger goes with its row, so the browser has nowhere to return focus: focus the list's heading (`tabindex="-1"`) in `onSuccess` after closing.

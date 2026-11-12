@@ -43,6 +43,17 @@
   </section>
 
   <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Its own form</h2>
+    <p class="text-sm muted">With <code>form</code>, the body brings the form (Inertia's <code>&lt;Form&gt;</code>, as Laravel's starter kit writes them) and the confirm button submits it. While busy, a press does not submit it again.</p>
+    <div id="confirm-form"></div>
+<pre>&lt;ConfirmDialog id="archive-order" ref="dialog" title="Archive order 1042?" confirm-label="Archive order"
+    form="archive-order-form" :busy="form?.processing" @close="form?.resetAndClearErrors()"&gt;
+  &lt;Form id="archive-order-form" ref="form" v-bind="OrderController.archive.form(order.id)" class="contents"
+      @success="dialog?.close()" /&gt;
+&lt;/ConfirmDialog&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
     <h2 class="text-xl font-semibold">Not destructive</h2>
     <p class="text-sm muted">The default tone is <code>primary</code>. The <code>#description</code> slot takes markup where the prop takes text.</p>
     <div id="confirm-send"></div>
