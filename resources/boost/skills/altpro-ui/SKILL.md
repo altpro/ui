@@ -21,7 +21,7 @@ Building or reworking a whole screen (a page, dashboard, list, record page or di
 An app made from the altpro Vue starter kit has all of this. Laravel installs it with Composer from the GitHub repository (`"repositories": [{ "type": "vcs", "url": "https://github.com/altpro/ui.git" }]` in `composer.json`), with Lucide for icons:
 
 ```
-composer require altpro/ui:^0.3
+composer require altpro/ui:^0.4
 composer require mallardduck/blade-lucide-icons
 npm install @lucide/vue
 ```
@@ -33,7 +33,7 @@ The Blade components register themselves. In `resources/css/app.css`:
 @import "../../vendor/altpro/ui/resources/css/ui.css";
 ```
 
-Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.3.7 @lucide/vue`):
+Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.4.0 @lucide/vue`):
 
 ```css
 @import "tailwindcss";

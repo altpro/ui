@@ -1,10 +1,10 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.3` (npm `github:altpro/ui#v0.3.7`). On 0.x a breaking change bumps the minor version (0.3 to 0.4), which `^0.3` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.4` (npm `github:altpro/ui#v0.4.0`). On 0.x a breaking change bumps the minor version (0.4 to 0.5), which `^0.4` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.4.0 (12 November 2026)
 
-**Breaking** (the next release is 0.4.0):
+**Breaking**:
 
 - Two new component classes, `.tile` and `.save-bar`, take over any class of the same name an app has. **An app with its own `.tile` (the altpro starter kit has one, in `resources/css/components/tile.css`, with `TileCheck.vue`) must delete it** and move its tiles to the library's markup: a visible `<input class="checkbox">` or `<input class="radio">` inside `<label class="tile">`, with no `group`, `TileCheck` or `has-[input:checked]:bg-primary/5`, as `tile.md` shows. An app with its own `.save-bar` must rename it or delete it.
 

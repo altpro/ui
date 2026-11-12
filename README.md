@@ -23,12 +23,12 @@ Add the repository to the app's `composer.json`, then require it, with Lucide fo
 ```
 
 ```
-composer require altpro/ui:^0.3
+composer require altpro/ui:^0.4
 composer require mallardduck/blade-lucide-icons   # icons in Blade: <x-lucide-plus />
 npm install @lucide/vue                           # icons in Vue: <Plus />
 ```
 
-On 0.x a breaking change bumps the minor version, so `^0.3` never installs one; read [CHANGELOG.md](CHANGELOG.md) before raising the constraint.
+On 0.x a breaking change bumps the minor version, so `^0.4` never installs one; read [CHANGELOG.md](CHANGELOG.md) before raising the constraint.
 
 The service provider is discovered automatically, so `<x-ui::field>` works straight away. In `resources/css/app.css`:
 
@@ -82,7 +82,7 @@ The skills land in the agents' skills directory (`.claude/skills/altpro-ui/`, `a
 ## Install anywhere else
 
 ```
-npm install github:altpro/ui#v0.3.7
+npm install github:altpro/ui#v0.4.0
 npm install @lucide/vue   # icons
 ```
 
