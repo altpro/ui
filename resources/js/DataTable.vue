@@ -13,7 +13,9 @@ import {
   readPreference,
   useDataList,
   writePreference,
+  type DataListHeader,
   type DataListProps,
+  type DataListSortOption,
   type DataTableColumn,
   type DataTableFilter,
   type DataTableSelection,
@@ -29,6 +31,12 @@ const props = withDefaults(
       selection?: DataTableSelection | null;
       /** The field that identifies a row, and what a selection hands over. Default `id`; selectable rows must have it. */
       rowKey?: keyof TRow & string;
+      /** A sort select in the toolbar, for a page too narrow for the column headers that sort. Each key is a sortable column. */
+      sortOptions?: ReadonlyArray<DataListSortOption>;
+      /** Classes for that select, such as `@5xl/page:hidden` where the last header it stands in for appears. */
+      sortSelectClass?: string;
+      /** Classes for the `<table>`, such as `table-fixed`. */
+      tableClass?: string;
     }
   >(),
   { search: true },
@@ -41,6 +49,7 @@ const emit = defineEmits<{ "update:selection": [selection: DataTableSelection | 
 defineSlots<{
   [key: `cell-${string}`]: ((props: { row: TRow; value: unknown }) => unknown) | undefined;
   [key: `filter-${string}`]: ((props: { filter: DataTableFilter<TRow>; values: string[]; set: (values: string[]) => void }) => unknown) | undefined;
+  header?: (props: DataListHeader) => unknown;
   filters?: () => unknown;
   empty?: () => unknown;
   "bulk-actions"?: (props: { selection: DataTableSelection; count: number; clear: () => void }) => unknown;
@@ -61,7 +70,7 @@ const list = useDataList<TRow>(() => ({
   perPage: props.perPage,
   sort: props.sort ?? props.columns.find((c) => c.sortable)?.key ?? "",
   direction: props.direction ?? "asc",
-  sortable: props.columns.filter((c) => c.sortable).map((c) => c.key),
+  sortable: [...props.columns.filter((c) => c.sortable).map((c) => c.key), ...(props.sortOptions ?? []).map((o) => o.key)],
   unfilteredTotal: props.unfilteredTotal,
   only: props.only,
 }));
@@ -97,6 +106,12 @@ const bulkBar = ref<HTMLElement>();
 
 // aria-sort on the th is the one place sort state lives; .table draws the arrow from it
 const ariaSort = (key: string) => (state.sort.value !== key ? undefined : state.direction.value === "asc" ? "ascending" : "descending");
+// the select stands in for the headers, so it reads the same latest sort they do; a link can ask for an order it does not offer
+const sortChoice = computed(() => String((props.sortOptions ?? []).findIndex((o) => o.key === state.latestSort.value && o.direction === state.latestDirection.value)));
+const chooseSort = (index: string) => {
+  const option = props.sortOptions?.[Number(index)];
+  if (option) state.apply({ sort: option.key, direction: option.direction });
+};
 const toggleSort = (key: string) => state.apply({ sort: key, direction: state.latestSort.value === key && state.latestDirection.value === "asc" ? "desc" : "asc" });
 
 
@@ -169,7 +184,14 @@ const rowLabel = (row: TRow, index: number) => {
     <template v-for="name in filterSlots" :key="name" #[name]="scope">
       <slot :name="name" v-bind="scope" />
     </template>
-    <template #filters><slot name="filters" /></template>
+    <template v-if="$slots.header" #header="scope"><slot name="header" v-bind="scope" /></template>
+    <template #filters>
+      <select v-if="sortOptions?.length" class="input sort" :class="sortSelectClass" aria-label="Sort" :value="sortChoice" @change="chooseSort(($event.target as HTMLSelectElement).value)">
+        <option v-if="sortChoice === '-1'" value="-1" hidden>Custom order</option>
+        <option v-for="(option, index) in sortOptions" :key="index" :value="String(index)">{{ option.label }}</option>
+      </select>
+      <slot name="filters" />
+    </template>
     <template #controls>
       <template v-if="hideableColumns.length">
         <button type="button" class="btn" :popovertarget="`${id}-columns`">Columns</button>
@@ -191,7 +213,7 @@ const rowLabel = (row: TRow, index: number) => {
       </div>
 
       <div class="scroll" tabindex="0" role="region" :aria-labelledby="`${id}-caption`">
-        <table class="table hover" :aria-busy="busy || undefined">
+        <table class="table hover" :class="tableClass" :aria-busy="busy || undefined">
           <caption :id="`${id}-caption`" class="sr-only">{{ caption }}</caption>
           <thead>
             <tr>
@@ -223,7 +245,8 @@ const rowLabel = (row: TRow, index: number) => {
                 </template>
                 <template v-else>
                   {{ noMatchesMessage ?? `No ${caption.toLowerCase()} match your search.` }}
-                  <button type="button" class="btn sm" @click="clearFilters">Clear filters</button>
+                  <!-- a header with the count has the list's Clear, and one is enough -->
+                  <button v-if="!$slots.header" type="button" class="btn sm" @click="clearFilters">Clear filters</button>
                 </template>
               </td>
             </tr>

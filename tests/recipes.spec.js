@@ -119,7 +119,7 @@ test("edit page: leaving with unsaved changes asks first, in the app and through
 
 test("edit page: Back and Forward keep an unsaved draft, still unsaved, and a reload starts from the server", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
   await name.fill("Arc studio draft");
@@ -161,7 +161,7 @@ test("edit page: Back and Forward keep an unsaved draft, still unsaved, and a re
 
 test("edit page: the draft Back brings is the latest, never one the reader discarded, left or failed to save", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
   const backAndForth = async () => {
     await page.goBack();
@@ -226,7 +226,7 @@ const patchServer = (page, from, to) => page.route("**/app/server.js*", async (r
 test("edit page: Back while a save is under way leaves the page Back went to as it was", async ({ page }) => {
   await patchServer(page, "} else await wait(200, config.signal);", "} else await wait(1500, config.signal);");
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
   await page.getByLabel("Name", { exact: true }).fill("Arc studio mk2");
   await page.waitForTimeout(300);
@@ -247,7 +247,7 @@ test("edit page: Back while a save is under way leaves the page Back went to as 
 test("edit page: text typed while a save is under way stays unsaved", async ({ page }) => {
   await patchServer(page, "} else await wait(200, config.signal);", "} else await wait(1000, config.signal);");
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
   await name.fill("Arc studio mk2");
   await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -272,7 +272,7 @@ const router = (page) => page.evaluate(async () => {
 
 test("edit page: one draft serves the entries a list beside the form makes, and a save leaves none of them one", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
   await router(page);
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
@@ -332,7 +332,7 @@ test("edit page: one draft serves the entries a list beside the form makes, and 
 
 test("edit page: a reload of another page keeps a draft the reader never agreed to lose", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
   page.on("dialog", (dialog) => dialog.accept());
   await name.fill("kept through it all");
@@ -367,7 +367,7 @@ test("edit page: a save that lands on another record's page keeps each record's 
   // the save redirects to product 3's edit page, the same component at another URL, as create to edit does
   await patchServer(page, 'return back({ flash: { toast: { type: "success", message: "Product saved." } } });', "return edit(3);");
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
   await name.fill("Arc studio mk2");
   await page.getByRole("button", { name: "Save", exact: true }).click();
@@ -452,65 +452,147 @@ test("delete account: a wrong password keeps the dialog open with the error in i
   await expect(page).toHaveURL(/:\d+\/$/);
 });
 
+// the list page's cards, count, Clear and drawer
+const listPage = (page) => {
+  const dt = page.locator(".datatable");
+  return {
+    dt,
+    rows: dt.locator("tbody tr"),
+    summary: dt.getByRole("status"),
+    count: dt.locator(".header").getByText(/\d+ products?$/),
+    card: (status) => page.getByRole("navigation", { name: "Filter by status" }).getByRole("link", { name: new RegExp(`^${status}`) }),
+    drawer: page.getByRole("dialog", { name: "Filters" }),
+    statusColumn: dt.locator("tbody td:nth-child(4)"),
+  };
+};
+
 test("list page: a multiple filter survives the server renumbering its URL, and can be added to and cleared", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const dt = page.locator(".datatable"), summary = dt.getByRole("status"), category = dt.getByRole("combobox", { name: "Category", exact: true });
+  const { dt, summary, drawer } = listPage(page);
+  const category = drawer.getByRole("combobox", { name: "Category", exact: true });
   await expect(summary).toHaveText("Showing 1–10 of 14");
-  await expect(category).toHaveText("All");
 
+  await dt.getByRole("button", { name: "Filters" }).click();
+  await expect(category).toHaveText("All");
   await category.click();
-  const options = dt.getByRole("listbox", { name: "Category" }).getByRole("option"), first = options.first(), second = options.nth(1);
-  const [one, two] = [await first.textContent(), await second.textContent()];
-  await first.click();
+  const options = drawer.getByRole("listbox", { name: "Category" }).getByRole("option");
+  const [one, two] = [await options.first().textContent(), await options.nth(1).textContent()];
+  await options.first().click();
+  await page.keyboard.press("Escape");
+  await drawer.getByRole("button", { name: "Apply" }).click();
   await expect(page).toHaveURL(/category%5B0%5D=/);
-  await expect(category).toContainText(one);
   await expect(summary).toContainText("filtered from 14");
 
-  await second.click();
-  await expect(page).toHaveURL(/category%5B1%5D=/);
-  await expect(category).toContainText(`${one}, ${two}`);
+  // the server's renumbered URL reads back into the drawer, and a second value adds to it
+  await dt.getByRole("button", { name: /^Filters/ }).click();
+  await expect(category).toContainText(one);
+  await category.click();
+  await options.nth(1).click();
   await page.keyboard.press("Escape");
+  await drawer.getByRole("button", { name: "Apply" }).click();
+  await expect(page).toHaveURL(/category%5B1%5D=/);
 
-  await dt.getByRole("button", { name: "Clear Category" }).click();
+  await dt.getByRole("button", { name: /^Filters/ }).click();
+  await expect(category).toContainText(`${one}, ${two}`);
+  await drawer.getByRole("button", { name: "Clear Category" }).click();
+  await drawer.getByRole("button", { name: "Apply" }).click();
   await expect(page).not.toHaveURL(/category/);
   await expect(summary).toHaveText("Showing 1–10 of 14");
-  await expect(category).toHaveText("All");
+});
+
+test("list page: a status card filters, counts what its link would show, and takes its filter off again", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  const { dt, rows, count, card, statusColumn } = listPage(page);
+  await expect(count).toHaveText("14 products");
+  await expect(card("Active")).toContainText("10");
+  await expect(card("Draft")).toContainText("3");
+  await expect(card("Archived")).toContainText("1");
+  // a link to the list with that status, for a new tab (here the stand-in's demo page for /products)
+  await expect(card("Draft")).toHaveAttribute("href", /\?status=Draft$/);
+
+  await card("Draft").click();
+  await expect(page).toHaveURL(/status=Draft/);
+  await expect(rows).toHaveCount(3);
+  await expect(statusColumn).toHaveText(Array(3).fill("Draft"));
+  await expect(card("Draft")).toHaveAttribute("aria-current", "true");
+  await expect(card("Draft")).toHaveAccessibleName(/remove this filter/);
+  await expect(count).toHaveText("3 of 14 products");
+  // the drawer's Status is the same filter, and its badge counts it
+  await expect(dt.getByRole("button", { name: /^Filters/ })).toContainText("1");
+
+  // the counts follow the search, whatever the status
+  await dt.getByRole("searchbox").fill("loop");
+  await expect(page).toHaveURL(/search=loop/);
+  await expect(card("Active")).toContainText("1");
+  await expect(card("Draft")).toContainText("1");
+  await expect(card("Archived")).toContainText("0");
+  await expect(rows).toHaveCount(1);
+
+  // another card replaces the status; the current one takes it off
+  await card("Active").click();
+  await expect(page).toHaveURL(/status=Active/);
+  await expect(card("Draft")).not.toHaveAttribute("aria-current");
+  await card("Active").click();
+  await expect(page).not.toHaveURL(/status=/);
+  await expect(page).toHaveURL(/search=loop/);
+  await expect(rows).toHaveCount(2);
+});
+
+test("list page: Clear under the title empties the search and filters, and focus goes to the search box", async ({ page }) => {
+  await page.goto("/app/recipe-products.html?status=Archived&search=mono");
+  const { dt, rows, count } = listPage(page);
+  await expect(rows).toHaveCount(1);
+  await expect(count).toHaveText("1 of 14 products");
+
+  // nothing matches: the empty row says so, and leaves Clear to the line under the title
+  await dt.getByRole("searchbox").fill("monox");
+  await expect(dt.locator("tbody td[colspan]")).toHaveText("No products match.");
+  await expect(dt.locator("tbody").getByRole("button")).toHaveCount(0);
+
+  const clear = dt.locator(".header").getByRole("button", { name: "Clear" });
+  await clear.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).not.toHaveURL(/status=|search=/);
+  await expect(count).toHaveText("14 products");
+  await expect(clear).toBeHidden();
+  await expect(rows).toHaveCount(10);
+  await expect(dt.getByRole("searchbox")).toBeFocused();
+  await expect(dt.getByRole("searchbox")).toHaveValue("");
 });
 
 test("list page: a change made before the last response lands builds on it instead of losing it", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const dt = page.locator(".datatable"), summary = dt.getByRole("status"), category = dt.getByRole("combobox", { name: "Category", exact: true });
+  const { dt, summary, card } = listPage(page);
   await expect(summary).toHaveText("Showing 1–10 of 14");
 
-  // the stand-in server takes 200ms, so the second tick lands while the first visit is on its way
-  await category.click();
-  const options = dt.getByRole("listbox", { name: "Category" }).getByRole("option");
-  const [one, two] = [await options.first().textContent(), await options.nth(1).textContent()];
+  // the stand-in server takes 200ms, so the sort lands while the card's visit is on its way;
   // from inside the page, so the two land inside those 200ms however busy the machine is
-  await options.evaluateAll(async ([first, second]) => {
-    first.click();
+  await page.evaluate(async () => {
+    document.querySelector('nav[aria-label="Filter by status"] a').click();
     await new Promise((resolve) => setTimeout(resolve, 30));
-    second.click();
+    const sort = document.querySelector(".datatable select.sort");
+    sort.value = [...sort.options].find((o) => o.text === "Price, high to low").value;
+    sort.dispatchEvent(new Event("change"));
   });
-  await expect(page).toHaveURL(/category%5B1%5D=/);
-  await expect(category).toContainText(`${one}, ${two}`);
-  await page.keyboard.press("Escape");
-  await dt.getByRole("button", { name: "Clear Category" }).click();
-  await expect(summary).toHaveText("Showing 1–10 of 14");
+  await expect(page).toHaveURL(/status=Active/);
+  await expect(page).toHaveURL(/sort=price/);
+  await expect(card("Active")).toHaveAttribute("aria-current", "true");
+  await expect(dt.locator("select.sort")).toHaveValue(/./);
+  await expect(dt.locator("select.sort").locator("option:checked")).toHaveText("Price, high to low");
 
-  // a filter while a typed search waits its turn, and the search while the filter is on its way
+  // a card while a typed search waits its turn
   await dt.getByRole("searchbox").fill("o");
   await page.waitForTimeout(150);
-  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Active");
-  await expect(page).toHaveURL(/status=Active/);
+  await card("Draft").click();
+  await expect(page).toHaveURL(/status=Draft/);
   await expect(page).toHaveURL(/search=o/);
-  await expect(dt.getByRole("combobox", { name: "Status", exact: true })).toHaveValue("Active");
+  await expect(card("Draft")).toHaveAttribute("aria-current", "true");
 });
 
 test("list page: a second click on a header before the answer turns the sort round again", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const dt = page.locator(".datatable");
-  await expect(dt.getByRole("status")).toHaveText("Showing 1–10 of 14");
+  const { dt, summary } = listPage(page);
+  await expect(summary).toHaveText("Showing 1–10 of 14");
   await dt.getByRole("button", { name: "Price", exact: true }).evaluate(async (button) => {
     button.click();
     await new Promise((resolve) => setTimeout(resolve, 30));
@@ -521,16 +603,74 @@ test("list page: a second click on a header before the answer turns the sort rou
   await expect(dt.locator('th[aria-sort="descending"]')).toHaveText("Price");
 });
 
+test("list page: the sort select stands in for the headers until the last of them has room", async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.goto("/app/recipe-products.html");
+  const { dt, rows } = listPage(page);
+  const sort = dt.getByRole("combobox", { name: "Sort" });
+  await expect(dt.getByRole("columnheader", { name: "Updated" })).toBeHidden();
+  await sort.selectOption({ label: "Updated, newest first" });
+  await expect(page).toHaveURL(/sort=updated_at&dir=desc/);
+  await expect(rows.first()).toContainText("Field portable");
+  // a header click the select has no option for reads as a custom order
+  await dt.getByRole("button", { name: "Stock", exact: true }).click();
+  await dt.getByRole("button", { name: "Stock", exact: true }).click();
+  await expect(page).toHaveURL(/sort=stock&dir=desc/);
+  await expect(sort.locator("option:checked")).toHaveText("Custom order");
+
+  await page.setViewportSize({ width: 1440, height: 800 });
+  await expect(dt.getByRole("columnheader", { name: "Updated" })).toBeVisible();
+  await expect(sort).toBeHidden();
+});
+
+test("list page: a row opens from anywhere on it, its checkbox still ticks, and the way back is the list as it was left", async ({ page }) => {
+  await page.goto("/app/recipe-products.html?status=Active&sort=price");
+  const { dt, rows } = listPage(page);
+  await expect(rows).toHaveCount(10);
+
+  await rows.first().getByRole("checkbox").click();
+  await expect(rows.first().getByRole("checkbox")).toBeChecked();
+  await expect(page).toHaveURL(/recipe-products\.html/);
+  await rows.first().getByRole("checkbox").click();
+
+  // a click on the category cell is a click on the row's link
+  const name = await rows.nth(1).getByRole("link").textContent();
+  // forced, as Playwright refuses a cell another element covers: that cover is the point
+  await rows.nth(1).locator("td").nth(2).click({ force: true });
+  await expect(page).toHaveURL(/recipe-product\.html\?id=\d+$/);
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText(name);
+
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
+  await expect(page).toHaveURL(/recipe-products\.html\?status=Active&sort=price$/);
+  await expect(rows).toHaveCount(10);
+});
+
+test("list page: no width between a phone and a wide screen scrolls the page sideways, and the toolbar shares a phone's row", async ({ page }) => {
+  for (const width of [320, 390, 768, 900, 1024, 1208, 1280, 1440]) {
+    await page.setViewportSize({ width, height: 800 });
+    await page.goto("/app/recipe-products.html");
+    await expect(listPage(page).rows).toHaveCount(10);
+    const [scroll, client] = await page.evaluate(() => [document.documentElement.scrollWidth, document.documentElement.clientWidth]);
+    expect(scroll, `at ${width}px`).toBeLessThanOrEqual(client);
+  }
+  await page.setViewportSize({ width: 390, height: 800 });
+  const { dt } = listPage(page);
+  const [search, filters, sort] = await Promise.all([dt.getByRole("searchbox"), dt.getByRole("button", { name: "Filters" }), dt.getByRole("combobox", { name: "Sort" })].map((l) => l.boundingBox()));
+  expect(filters.y).toBeGreaterThan(search.y + search.height - 1);
+  expect(Math.abs(filters.y - sort.y)).toBeLessThan(2);
+  expect(Math.abs(filters.width - sort.width)).toBeLessThan(2);
+});
+
 test("list page: a visit that reloads the rows dims the table, and a save does not", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const dt = page.locator(".datatable"), rows = dt.locator("tbody tr");
+  const { dt, rows, card } = listPage(page);
   await expect(rows).toHaveCount(10);
   await dt.locator("table").evaluate((table) => {
     window.dims = 0;
     new MutationObserver(() => { if (table.getAttribute("aria-busy") === "true") window.dims++; }).observe(table, { attributeFilter: ["aria-busy"] });
   });
 
-  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Draft");
+  await card("Draft").click();
   await expect(rows).toHaveCount(3);
   expect(await page.evaluate(() => window.dims)).toBeGreaterThan(0);
 
@@ -543,7 +683,7 @@ test("list page: a visit that reloads the rows dims the table, and a save does n
 
 test("app shell: focus on main shows after a keyboard visit, inside the window", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const link = page.getByRole("link", { name: "Edit Arc headphones" }), main = page.locator("#main");
+  const link = page.getByRole("link", { name: "Arc headphones", exact: true }), main = page.locator("#main");
   await link.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/recipe-product\.html\?id=1$/);
@@ -553,7 +693,7 @@ test("app shell: focus on main shows after a keyboard visit, inside the window",
 
 test("list page: the server searches, filters and pages, and a bulk action runs on ids or on everything matching", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const dt = page.locator(".datatable"), rows = dt.locator("tbody tr"), summary = dt.getByRole("status");
+  const { dt, rows, summary, card, statusColumn } = listPage(page);
   await expect(summary).toHaveText("Showing 1–10 of 14");
   await dt.getByRole("button", { name: "Next page" }).click();
   await expect(page).toHaveURL(/page=2/);
@@ -566,8 +706,8 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
   await dt.getByRole("searchbox").fill("");
   await expect(summary).toHaveText("Showing 1–10 of 14");
 
-  // ids: a status filter, then one ticked row
-  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Draft");
+  // ids: a status card, then one ticked row
+  await card("Draft").click();
   await expect(page).toHaveURL(/status=Draft/);
   await expect(rows).toHaveCount(3);
   await rows.first().getByRole("checkbox").check();
@@ -575,22 +715,24 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
   await expect(toast(page)).toHaveText("1 product archived.");
   await expect(rows).toHaveCount(2);
   await expect(dt.locator(".bulk")).toBeHidden();
+  await expect(card("Archived")).toContainText("2");
 
   // matching: the page, then the rest of the query, which the server runs again
-  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Active");
+  await card("Active").click();
   await expect(summary).toHaveText("Showing 1–10 of 10, filtered from 14");
-  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("");
+  await card("Active").click();
   await expect(summary).toContainText("of 14");
   await dt.getByRole("checkbox", { name: /Select every .* row on this page/ }).check();
   await dt.getByRole("button", { name: "Select all 14 matching" }).click();
   await dt.getByRole("button", { name: "Archive" }).click();
   await expect(toast(page).last()).toHaveText("14 products archived.");
-  await expect(dt.locator("tbody .badge")).toHaveText(Array(10).fill("Archived"));
+  await expect(statusColumn).toHaveText(Array(10).fill("Archived"));
+  await expect(card("Archived")).toContainText("14");
   // "matching" re-runs the query from Product::visibleTo(), so another team's product, never listed, is untouched
   expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("demo-recipes")).products.find((p) => p.team_id === 2).status)).toBe("Active");
 
-  // a row's Edit link is an Inertia visit to the edit page
-  await dt.getByRole("link", { name: "Edit Arc headphones" }).click();
+  // a row's name is an Inertia visit to the edit page
+  await dt.getByRole("link", { name: "Arc headphones", exact: true }).click();
   await expect(page).toHaveURL(/recipe-product\.html\?id=1$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Arc headphones");
   // a visit to a new page puts focus on its main, not on <body> where the clicked link left it
@@ -599,14 +741,14 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
 
 test("list page: a table visit another listener cancels is forgotten, not carried into the next change", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const dt = page.locator(".datatable"), rows = dt.locator("tbody tr");
+  const { dt, rows, card } = listPage(page);
   await expect(rows).toHaveCount(10);
   // what an unsaved-changes guard does when the reader presses Cancel
   await page.evaluate(() => {
     window.cancelVisits = (event) => event.preventDefault();
     document.addEventListener("inertia:before", window.cancelVisits);
   });
-  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Draft");
+  await card("Draft").click();
   await page.evaluate(() => document.removeEventListener("inertia:before", window.cancelVisits));
   await expect(page).not.toHaveURL(/status=/);
 

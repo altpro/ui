@@ -8,9 +8,10 @@ import { ref } from "vue";
 import { useForm } from "@inertiajs/vue3";
 import ConfirmDialog from "../resources/js/ConfirmDialog.vue";
 import DataList from "../resources/js/DataList.vue";
+import DataTable from "../resources/js/DataTable.vue";
 import DataTimeline from "../resources/js/DataTimeline.vue";
 import FileInput from "../resources/js/FileInput.vue";
-import { useDataList, type DataTableFilter } from "../resources/js/dataTable";
+import { useDataList, type DataTableColumn, type DataTableFilter } from "../resources/js/dataTable";
 import { leaveWithoutAsking, useUnsavedChanges } from "../resources/js/useUnsavedChanges";
 
 const one = ref<File | null>(null);
@@ -21,6 +22,10 @@ const entries: Entry[] = [];
 const filters: DataTableFilter<Entry>[] = [{ key: "kind", label: "Kind", type: "select" }];
 const list = useDataList<Entry>(() => ({ rows: entries, filters, name: "entries", sortOptions: [{ key: "at", direction: "desc", label: "Newest" }] }));
 const name = (entry: Entry): string => entry.name;
+const columns: DataTableColumn<Entry>[] = [{ key: "name", label: "Name", sortable: true }];
+const link: { href: string; onClick: (event: MouseEvent) => void } = list.filterLink("kind", ["a"]);
+const narrowed: boolean = list.narrowed.value;
+const href: string = list.state.href({ filters: { kind: [] } });
 
 const form = useForm({ name: "" });
 useUnsavedChanges(form);
@@ -54,6 +59,21 @@ dialog.value?.close();
   <DataTimeline caption="Log" :rows="entries" date-key="at" filter-count="some" />
 
   <DataList :list="list" caption="Entries" filter-display="drawer" v-slot="{ rows }">{{ rows.map(name) }}</DataList>
+
+  <DataTable caption="Entries" class="framed" table-class="table-fixed" :columns="columns" :rows="entries" :filters="filters"
+      :sort-options="[{ key: 'name', direction: 'desc', label: 'Name, Z to A' }]" sort-select-class="@5xl/page:hidden">
+    <template #header="{ total, unfilteredTotal, narrowed: some, clear, values, filterLink }">
+      <p>{{ some ? `${total} of ${unfilteredTotal ?? 0}` : total }}</p>
+      <button @click="clear" />
+      <a v-bind="filterLink('kind', values.kind?.[0] === 'a' ? [] : ['a'])">{{ link.href }} {{ narrowed }} {{ href }}</a>
+    </template>
+    <template #cell-name="{ row }">{{ name(row) }}</template>
+  </DataTable>
+  <!-- @vue-expect-error a sort option needs a direction -->
+  <DataTable caption="Entries" :columns="columns" :rows="entries" :sort-options="[{ key: 'name', label: 'Name' }]" />
+  <DataTimeline caption="Log" :rows="entries" date-key="at">
+    <template #header="{ total }">{{ total }}</template>
+  </DataTimeline>
 
   <ConfirmDialog ref="dialog" id="delete" title="Delete?" confirm-label="Delete" tone="danger" :busy="form.processing" @confirm="form.delete('/x')" @close="form.reset()">
     <template #description>Gone <strong>for good</strong>.</template>

@@ -65,7 +65,7 @@ On the server, `created_at` is the sort, newest first:
 | `marker` | `{ row }`. An `.avatar` here takes the dot's place. With no marker, the dot shows. |
 | `time` | `{ row, label, datetime }`. Replaces the `<time>`. |
 | `empty` | Under `empty-message`, e.g. an explanation or the action that adds the first one. |
-| `filters`, `filter-<key>`, `foot` | As in [datalist.md](datalist.md). |
+| `header`, `filters`, `filter-<key>`, `foot` | As in [datalist.md](datalist.md). With `header`, the no-matches state leaves Clear to it. |
 
 - Days read "Today", "Yesterday", then "4 Nov", with the year only when it is not this one. Yesterday goes by the calendar, so a clock change does not move it.
 - Each page groups its own rows, so a day that spans two pages has a heading on both.

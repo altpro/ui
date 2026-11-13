@@ -1,5 +1,5 @@
 <script setup>
-import { computed, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
@@ -14,6 +14,17 @@ const props = defineProps({
 
 // Tags: a form like any other. The combobox searches /tags and creates through POST /tags.
 const form = useForm({ tag_ids: props.product.tag_ids });
+
+// the way back is the list as it was left: its search, filters, sort and page, which the list page keeps for the tab
+const listHref = ref("/products");
+onMounted(() => {
+  try {
+    listHref.value += sessionStorage.getItem("products:list-query") ?? "";
+  } catch {
+    // the list as it starts
+  }
+});
+
 function saveTags() {
   const sent = form.data();
   form.put(`/products/${props.product.id}/tags`, {
@@ -84,7 +95,7 @@ useUnsavedChanges({ get isDirty() { return uploading.value > 0; } });
 
 <template>
   <Head :title="`Tags and photos · ${product.name}`" />
-  <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
+  <AppLayout :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
     <div class="min-w-0">
       <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
       <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>

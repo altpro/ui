@@ -7,6 +7,7 @@ A Vue component for Inertia apps: search, sortable columns, declared filters, pa
 ```vue
 <script setup lang="ts">
 import { Link } from "@inertiajs/vue3";
+import { ChevronRight } from "@lucide/vue";
 import DataTable from "@ui/DataTable.vue";
 import type { DataTableColumn, DataTableFilter } from "@ui/dataTable";
 
@@ -20,9 +21,9 @@ interface Brand {
 defineProps<{ brands: Brand[] }>();
 
 const columns: DataTableColumn<Brand>[] = [
-  { key: "name", label: "Name", sortable: true, tdClass: "font-medium" },
+  { key: "name", label: "Name", sortable: true },
   { key: "created_at", label: "Added", sortable: true, format: "date" },
-  { key: "actions", label: "Actions", virtual: true, thClass: "w-px" },
+  { key: "open", label: "Open", virtual: true, srOnlyLabel: true, thClass: "w-10" },
 ];
 const filters: DataTableFilter<Brand>[] = [
   { key: "featured", label: "Featured only", type: "boolean" },
@@ -31,8 +32,12 @@ const filters: DataTableFilter<Brand>[] = [
 
 <template>
   <DataTable caption="Brands" name="brands" :columns="columns" :rows="brands" :filters="filters" sort="name" empty-message="No brands yet.">
-    <template #cell-actions="{ row }">
-      <Link :href="`/brands/${row.id}/edit`" class="btn ghost sm">Edit <span class="sr-only">{{ row.name }}</span></Link>
+    <!-- the name is the row's link, stretched over the row; DataTable keeps a row's checkbox above it -->
+    <template #cell-name="{ row }">
+      <Link :href="`/brands/${row.id}/edit`" class="font-medium after:absolute after:inset-0 hover:underline focus-visible:underline focus-visible:outline-3 focus-visible:outline-ring/50">{{ row.name }}</Link>
+    </template>
+    <template #cell-open>
+      <ChevronRight class="ms-auto block size-4 muted" aria-hidden="true" />
     </template>
   </DataTable>
 </template>
@@ -60,10 +65,15 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `:search="false"` | Removes the search box. Give it when the server has nothing to search: `TableQuery` ignores a term with no searchable columns, and a box that does nothing is worse than none. |
 | `filter-display` | `inline` (default) or `drawer`, which keeps the filters in a panel behind one Filters button. See [datalist.md](datalist.md). |
 | `filter-count` | What the Filters button's badge counts: `in-force` (default) or `changed`. See [datalist.md](datalist.md). |
+| `sort-options` | `[{ key, direction, label }]`: a sort select in the toolbar, for a page too narrow for the headers that sort. Each `key` is a sortable column, or a key `TableQuery`'s `sortable` allows. It shows the order the headers set, and "Custom order" for one it does not offer. |
+| `sort-select-class` | Classes for that select: `@5xl/page:hidden` hides it once the last sortable header it stands in for has room. |
+| `table-class` | Classes for the `<table>`: `table-fixed`, so the columns hold still as the rows change, with a width on each `th` through `thClass`. |
+| `class="framed"` | Draws the table in a card: border, radius and the card colour round the scroll box. |
 | `locale` | Formats `date`, `datetime` and `currency` columns, e.g. `$page.props.locale`. Defaults to `<html lang>` in the browser. Pass it if the app renders on the server (SSR), which has no `<html lang>` to read and would format as `en-GB`. |
 
 | Slot | Gets |
 |------|------|
+| `header` | `{ total, unfilteredTotal, narrowed, clear, values, filterLink }`. The page's title row and anything above the toolbar, such as stat cards that filter the rows: see below. |
 | `cell-<key>` | `{ row, value }`. Replaces the cell, and wins over `format`. |
 | `bulk-actions` | `{ selection, count, clear }`. Buttons for the bar shown while rows are selected. |
 | `filters` | Extra controls in the toolbar. Filtering in the parent works, but then the table cannot count what was hidden. |
@@ -77,7 +87,40 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 - The Columns panel will not hide the last data column.
 - A `daterange` filter is two native date inputs and a Clear button, for orders placed, tasks due or content scheduled. Its value is `[from, to]` as `Y-m-d`, either of which may be `""`, or `[]` for no range; the URL holds `{key}_from` and `{key}_to`, and either works alone. An impossible or oddly written date is dropped, and a reversed range is turned round. Clear removes both, so a `default` (`["2026-01-01", ""]`) comes back: give one only when the table should never show all time. The button stays in place, inactive until there is a range other than the default to clear. `clearLabel: "Clear dates"` changes its words and its accessible name, for when "Clear" alone says too little. Both ends are inclusive. Client mode compares the field's calendar day where the reader is: a bare date (`2026-06-01`) is that day everywhere, a timestamp with an offset or `Z`, as Laravel serialises a Carbon, falls on the reader's local day (00:30 BST on 2 June arrives as `2026-06-01T23:30:00.000000Z` and counts as 2 June in London), and a value that is no date matches no range. Server mode filters in the app's timezone instead, as `TableQuery` below. `match` covers anything else.
 - `presets: true` on a `daterange` adds a select beside the dates: Today, Last 7 days, Last 30 days, This month (the whole calendar month), counted in the browser's local time. A preset only fills in both dates, so the URL and `TableQuery` see plain `from` and `to`. The select names a preset while both dates still match it, and says "Custom" once either is edited ("Any time" with no range). Give it to backward-looking ranges such as orders placed; a schedule looking forward is better without. `{ key: "placed", label: "Placed", type: "daterange", presets: true }`.
-- Markup: `.datatable` wraps `.controls`, `.bulk`, a scrolling `.scroll` region holding a `.table.hover`, and `.foot` (count, page size, pagination). Utilities on `thClass`/`tdClass` handle alignment and wrapping (`text-right tabular-nums`, `whitespace-nowrap`).
+- Markup: `.datatable` wraps `.header` (with the slot), `.controls`, `.bulk`, a scrolling `.scroll` region holding a `.table.hover`, and `.foot` (count, page size, pagination). Utilities on `thClass`/`tdClass` handle alignment and wrapping (`text-right tabular-nums`, `whitespace-nowrap`). Each body row is `position: relative`, so a link in it can cover the row with `after:absolute after:inset-0`, and the checkbox cell sits above that link. Anything else a cell holds that must take its own clicks, such as a button, takes `relative z-1`.
+- The search box fills the room the other controls leave. On a phone it takes the toolbar's first row, and the Filters button, the sort select and Columns share the next.
+
+### A list page
+
+The list page in [recipes.md](recipes.md#2-list-page) puts these together: the title row and status cards in `#header`, a `framed` table with `table-class="table-fixed"`, title-link rows, columns that appear as the page has room and fold into the name's cell until they do, `sort-options` for the narrow page, and filters in a drawer. The `#header` slot gets:
+
+| Key | Meaning |
+|-----|---------|
+| `total`, `unfilteredTotal` | The rows that match, and the rows before any search or filter: "4 of 14 products", or "14 products" while nothing narrows them. |
+| `narrowed` | A search or a filter is in force, a default included. Show the "of" count and a Clear button while it is true. |
+| `clear` | Empties the search and every filter, as the empty table's "Clear filters" does, and hands focus to the search box once its button has gone. With a `#header` the empty table drops its own button, as the one under the title does the job. |
+| `values` | Each filter's values as last asked for, to mark the current card with `aria-current="true"`. |
+| `filterLink(key, values)` | `{ href, onClick }` for `v-bind` on an `<a>`: the URL of the list with that filter set, for a new tab or a copied link, and a plain click that changes the filter as a control would, building on a change still on its way. A link of your own to `?status=Draft` would lose a search typed just before it. |
+
+```vue
+<template #header="{ total, unfilteredTotal, narrowed, clear, values, filterLink }">
+  <div class="flex flex-wrap items-start justify-between gap-4">
+    <div class="min-w-0">
+      <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
+      <div class="mt-1 flex min-h-8 items-center gap-2 text-sm muted">
+        <p>{{ narrowed ? `${total} of ${unfilteredTotal}` : unfilteredTotal }} products</p>
+        <button v-if="narrowed" type="button" class="btn ghost sm" @click="clear">Clear</button>
+      </div>
+    </div>
+  </div>
+  <nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status">
+    <a v-for="status in ['Active', 'Draft']" :key="status" v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
+        :aria-current="values.status?.[0] === status ? 'true' : undefined" class="card aria-[current=true]:bg-secondary">…</a>
+  </nav>
+</template>
+```
+
+Each card's count comes from the server, counting the rows its link would show: the search and the other filters, with no status. `recipes.md` has the controller.
 
 Server mode, in the controller:
 

@@ -1,5 +1,5 @@
 <script setup>
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { CircleAlert, Upload } from "@lucide/vue";
 import Field from "@ui/Field.vue";
@@ -23,6 +23,16 @@ const form = useForm({
   description: props.product.description,
 });
 useUnsavedChanges(form);
+
+// the way back is the list as it was left: its search, filters, sort and page, which the list page keeps for the tab
+const listHref = ref("/products");
+onMounted(() => {
+  try {
+    listHref.value += sessionStorage.getItem("products:list-query") ?? "";
+  } catch {
+    // the list as it starts
+  }
+});
 
 // a failed save focuses the error summary: it is read out, and Tab goes on to the first field
 const summary = ref();
@@ -50,7 +60,7 @@ const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.d
 
 <template>
   <Head :title="product.name" />
-  <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name }]">
+  <AppLayout :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name }]">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1">

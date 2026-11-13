@@ -74,15 +74,17 @@ It returns what `DataList` needs, and what your own script can read:
 
 | Field | Meaning |
 |------|---------|
-| `view` | Computed: `rows`, `total`, `page`, `lastPage`, `perPage`, `from`, `to`, `summary`, `empty`. |
-| `state` | `search` and `filters`, the query the rows on screen answer; `searchInput` and `latestFilters`, what has been asked for and may be ahead of them; `sort`, `direction`, `page`, `busy`; `apply(patch)`, `setSearch`, `clearAll`. |
+| `view` | Computed: `rows`, `total`, `page`, `lastPage`, `perPage`, `from`, `to`, `summary`, `empty`, `unfiltered` (the count before any search or filter). |
+| `state` | `search` and `filters`, the query the rows on screen answer; `searchInput` and `latestFilters`, what has been asked for and may be ahead of them; `sort`, `direction`, `page`, `busy`; `apply(patch)`, `setSearch`, `clearAll`; `href(patch)`, the URL `apply` would visit. |
+| `narrowed` | Computed: a search or a filter is in force, a default included. |
 | `setFilter(key, values)`, `setFilters(all)`, `setPageSize(size)` | Change the view. |
+| `filterLink(key, values)` | `{ href, onClick }` for an `<a>` that sets one filter, as `#header` below gives it. |
 
 To export or re-run what is on screen, send `state.search.value` and `state.filters.value`.
 
 **`<DataList>` props:** `list`, `caption` (required; names the search box and pagination), `search-placeholder`, `sort-label` (default "Sort"), `filter-display`, `filter-count`, `scroll-on-page`, which goes back to the top of the list on a page change, for rows tall enough that the next page would start out of sight.
 
-**Slots:** the default slot gets `{ rows, busy, empty, clearFilters }`. `filters` and `controls` add to the toolbar. `filter-<key>` draws a declared filter. `foot` replaces the count, page size and pagination, for a list that loads more as it scrolls.
+**Slots:** the default slot gets `{ rows, busy, empty, clearFilters }`. `header` goes above the toolbar, for the page's title row and stat cards that filter the list, and gets `{ total, unfilteredTotal, narrowed, clear, values, filterLink }`, as [datatable.md](datatable.md#a-list-page) shows. `filters` and `controls` add to the toolbar. `filter-<key>` draws a declared filter. `foot` replaces the count, page size and pagination, for a list that loads more as it scrolls.
 
 ## Filters in a drawer
 

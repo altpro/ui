@@ -9,7 +9,7 @@
 <script setup lang="ts" generic="TRow extends object">
 import { computed, useSlots } from "vue";
 import DataList from "./DataList.vue";
-import { groupByDay, instantOf, keyOf, timeOfDay, useDataList, type DataListProps, type DataTableFilter } from "./dataTable";
+import { groupByDay, instantOf, keyOf, timeOfDay, useDataList, type DataListHeader, type DataListProps, type DataTableFilter } from "./dataTable";
 
 const props = withDefaults(
   defineProps<
@@ -35,6 +35,7 @@ defineSlots<{
   entry?: (props: { row: TRow }) => unknown;
   time?: (props: { row: TRow; label: string; datetime?: string }) => unknown;
   empty?: () => unknown;
+  header?: (props: DataListHeader) => unknown;
   filters?: () => unknown;
   foot?: () => unknown;
   [key: `filter-${string}`]: ((props: { filter: DataTableFilter<TRow>; values: string[]; set: (values: string[]) => void }) => unknown) | undefined;
@@ -76,6 +77,7 @@ const filterSlots = computed(() => Object.keys(slots).filter((name): name is `fi
     <template v-for="name in filterSlots" :key="name" #[name]="scope">
       <slot :name="name" v-bind="scope" />
     </template>
+    <template v-if="$slots.header" #header="scope"><slot name="header" v-bind="scope" /></template>
     <template #filters><slot name="filters" /></template>
     <template v-if="$slots.foot" #foot><slot name="foot" /></template>
 
@@ -103,7 +105,8 @@ const filterSlots = computed(() => Object.keys(slots).filter((name): name is `fi
           </template>
           <template v-else>
             <component :is="heading" class="font-semibold">{{ noMatchesMessage ?? `No ${caption.toLowerCase()} match your search.` }}</component>
-            <button type="button" class="btn sm" @click="clearFilters">Clear filters</button>
+            <!-- a header with the count has the list's Clear, and one is enough -->
+            <button v-if="!$slots.header" type="button" class="btn sm" @click="clearFilters">Clear filters</button>
           </template>
         </div>
       </div>

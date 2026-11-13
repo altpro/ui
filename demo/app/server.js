@@ -93,6 +93,9 @@ function index(query) {
     products: { data, current_page: current, last_page: last, per_page: perPage, total: rows.length, from, to: from && from + data.length - 1 },
     filters,
     unfilteredTotal: visible().length,
+    // each status card's count: the search and the other filters, with that status in place of any chosen
+    statusCounts: Object.fromEntries(statuses.map((status) =>
+      [status, search(applyFilters(visible(), { ...view.filters, status: [status] }), view.search).length])),
   });
 }
 

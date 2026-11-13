@@ -20,7 +20,7 @@ const loaded = (page, name) => page.evaluate(async (name) => {
 
 const openEdit = async (page) => {
   await page.goto("/app/recipe-products.html");
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
 };
 const products = (page) => page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" });
@@ -68,7 +68,7 @@ test("leaveWithoutAsking lets one leave go unasked, and the next page's forms as
   expect(asked).toHaveLength(0);
 
   // the next reader's edits are guarded again
-  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   await page.getByLabel("Name", { exact: true }).fill("the next reader's edit");
   await products(page).click();
   await expect.poll(() => asked).toEqual(["Leave this page? Your changes won't be saved."]);
@@ -199,7 +199,7 @@ test("another guarded form's save that lands on another page leaves this form's 
   await page.waitForTimeout(300);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   // the stand-in answers at the request's URL: the list, at /products/2
-  await expect(page.getByRole("link", { name: "Edit Arc studio mk2" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Arc studio mk2", exact: true })).toBeVisible();
   expect(asked).toEqual([]);
   await page.goBack();
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);

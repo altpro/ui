@@ -1,15 +1,25 @@
 /* DataTable: the frame DataList.vue puts round any list, and DataTable.vue round a .table.
    <div class="datatable">
-     <div class="controls">search, filters, Columns</div>
+     <div class="header">the page's title row and stats, from the #header slot</div>
+     <div class="controls">search, filters, sort, Columns</div>
      <div class="bulk">only while rows are selected</div>
      <div class="scroll" tabindex="0" role="region"><table class="table hover">…</table></div>
      <div class="foot">count, page size, pagination</div>
    </div>
    The empty state is a lone body row with one cell spanning every column,
-   so it is read off the markup rather than a class. Layered so Tailwind
-   utilities win. */
+   so it is read off the markup rather than a class. `framed` draws the
+   scroll box as a card. Every body row is positioned, so a link in it can
+   stretch over the row with ::after inset-0; the select cell sits above it.
+   Layered so Tailwind utilities win. */
 @layer components {
   .datatable {
+    > .header {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-gap);
+      margin-block-end: var(--spacing-gap);
+    }
+
     > .controls {
       display: flex;
       flex-wrap: wrap;
@@ -17,9 +27,21 @@
       gap: var(--spacing-gap);
       margin-block-end: var(--spacing-gap);
 
+      /* the search takes whatever the row has left */
       > .search {
         flex: 1 1 12rem;
-        max-width: 24rem;
+      }
+
+      /* a phone: the search takes the row, and the buttons and the sort select share the next */
+      @media (width < 48rem) {
+        > .search {
+          flex-basis: 100%;
+        }
+        /* a basis wider than any padding, so they share it equally */
+        > :is(.btn, .input):not(.search) {
+          flex: 1 1 6rem;
+          min-width: 0;
+        }
       }
 
       /* a date range: a fieldset will not shrink below its content, which is wider than a phone */
@@ -107,8 +129,22 @@
       }
     }
 
+    &.framed > .scroll {
+      border: 1px solid var(--color-border);
+      border-radius: min(var(--radius), 1rem);
+      background: var(--color-card);
+      color: var(--color-card-foreground);
+    }
+
+    tbody > tr {
+      position: relative;
+    }
+
     .select {
       width: 1px;
+      /* above a link stretched over its row */
+      position: relative;
+      z-index: 1;
     }
 
     /* takes focus after a page change on a list that scrolls back to its top (DataList.vue) */

@@ -7,7 +7,7 @@ The server side is the app's: its routes, controllers, models and policies follo
 | Recipe | Chains | Demo page, in the altpro/ui repository |
 |--------|--------|-----------|
 | [1. Edit page](#1-edit-page) | breadcrumb, record header, `Field`s, save bar; defaults, server errors, save, discard | `demo/app/recipe-product.html` |
-| [2. List page](#2-list-page) | breadcrumb, record header, server-mode `DataTable` with filters, `only` and a bulk action | `demo/app/recipe-products.html` |
+| [2. List page](#2-list-page) | title row with count and Clear, status cards that filter, server-mode `DataTable` in a frame with title-link rows, columns that fit, filters in a drawer, `only` and a bulk action | `demo/app/recipe-products.html` |
 | [3. Tags and photos](#3-tags-and-photos) | `Combobox` with `src` and `create` endpoints; `FileInput` uploading each file with progress | `demo/app/recipe-media.html` |
 
 The demo pages run this Vue code as written against a stand-in for the server, and `tests/recipes.spec.js` drives them; both are in the altpro/ui repository, not in the installed package. Run `npm run dev` there and open them under Application.
@@ -26,6 +26,7 @@ The endpoints behind all three, every one behind `auth`:
 | Endpoint | Used by |
 |----------|---------|
 | `GET /products` | the list page |
+| `GET /products/create` | Add product, the app's own create page |
 | `POST /products/bulk` | the list's bulk action |
 | `GET /products/{id}/edit`, `PUT /products/{id}` | the edit page |
 | `GET /products/{id}/media`, `PUT /products/{id}/tags` | the tags-and-photos page |
@@ -41,7 +42,7 @@ Record header, a grid of `Field`s bound to `useForm`, and the save bar, in the l
 ```vue
 <!-- resources/js/pages/products/Edit.vue -->
 <script setup>
-import { computed, nextTick, ref, watch } from "vue";
+import { computed, nextTick, onMounted, ref, watch } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
 import { CircleAlert, Upload } from "@lucide/vue";
 import Field from "@ui/Field.vue";
@@ -65,6 +66,16 @@ const form = useForm({
   description: props.product.description,
 });
 useUnsavedChanges(form);
+
+// the way back is the list as it was left: its search, filters, sort and page, which the list page keeps for the tab
+const listHref = ref("/products");
+onMounted(() => {
+  try {
+    listHref.value += sessionStorage.getItem("products:list-query") ?? "";
+  } catch {
+    // the list as it starts
+  }
+});
 
 // a failed save focuses the error summary: it is read out, and Tab goes on to the first field
 const summary = ref();
@@ -92,7 +103,7 @@ const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.d
 
 <template>
   <Head :title="product.name" />
-  <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name }]">
+  <AppLayout :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name }]">
     <div class="flex flex-wrap items-start justify-between gap-4">
       <div class="min-w-0">
         <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -152,16 +163,19 @@ What comes back:
 
 ## 2. List page
 
-A record-header-shaped title and a server-mode `DataTable`, in the layout: search, sort, filters and pages come from `TableQuery`, a table change reloads only `products`, and the selection drives a bulk action. The bulk endpoint gets either ids or, after "Select all N matching", the search and filters the table showed, reads them back with `TableQuery::selection()`, and re-runs them through the same `filter()` and `TableQuery::search()` as the index.
+A list that does more than list: the title row with its count and Clear, a card per status that filters the rows and counts what its link would show, rows whose name is the link to the record, and columns that appear as the page has room for them, with the row folding their facts under the name until it does. It is a server-mode `DataTable`: search, sort, filters and pages come from `TableQuery`, a table change reloads only `products` and `statusCounts`, the filters wait in a drawer, and the selection drives a bulk action. The bulk endpoint gets either ids or, after "Select all N matching", the search and filters the table showed, reads them back with `TableQuery::selection()`, and re-runs them through the same `filter()` and `TableQuery::search()` as the index.
 
 ```vue
 <!-- resources/js/pages/products/Index.vue -->
 <script setup lang="ts">
 import { Head, Link, router } from "@inertiajs/vue3";
-import { Archive, Pencil } from "@lucide/vue";
+import { Archive, ChevronRight, CircleCheck, PencilLine, Plus, X } from "@lucide/vue";
 import DataTable from "@ui/DataTable.vue";
-import type { DataTableColumn, DataTableFilter, DataTablePaginated, DataTableSelection } from "@ui/dataTable";
+import { formatCellValue } from "@ui/dataTable";
+import type { DataListSortOption, DataTableColumn, DataTableFilter, DataTablePaginated, DataTableSelection } from "@ui/dataTable";
 import AppLayout from "@/layouts/AppLayout.vue";
+
+type Status = "Active" | "Draft" | "Archived";
 
 interface Product {
   id: number;
@@ -170,7 +184,7 @@ interface Product {
   category: string;
   price: number;
   stock: number;
-  status: "Active" | "Draft" | "Archived";
+  status: Status;
   updated_at: string;
 }
 
@@ -178,19 +192,47 @@ defineProps<{
   products: DataTablePaginated<Product>;
   filters: DataTableFilter<Product>[];
   unfilteredTotal: number;
+  statusCounts: Record<Status, number>;
 }>();
 
+// A column shows once the page has room for it beside the name's 16rem; below that, the name's cell folds its facts under it
+const wide = "@max-4xl/page:hidden";
+const widest = "@max-5xl/page:hidden";
+
 const columns: DataTableColumn<Product>[] = [
-  { key: "name", label: "Name", sortable: true, tdClass: "font-medium" },
-  { key: "sku", label: "SKU", sortable: true, tdClass: "whitespace-nowrap" },
-  { key: "category", label: "Category", sortable: true },
-  { key: "status", label: "Status" },
-  { key: "stock", label: "Stock", sortable: true, thClass: "text-right", tdClass: "text-right tabular-nums" },
-  { key: "price", label: "Price", sortable: true, format: "currency", thClass: "text-right", tdClass: "text-right tabular-nums" },
-  { key: "updated_at", label: "Updated", sortable: true, format: "date" },
-  { key: "actions", label: "Actions", virtual: true, thClass: "w-px" },
+  { key: "name", label: "Name", sortable: true, hideable: false },
+  { key: "category", label: "Category", sortable: true, hideable: false, thClass: `${wide} @4xl/page:w-36`, tdClass: wide },
+  { key: "status", label: "Status", hideable: false, thClass: `${wide} @4xl/page:w-30`, tdClass: wide },
+  { key: "stock", label: "Stock", sortable: true, hideable: false, thClass: `${wide} @4xl/page:w-32 text-right`, tdClass: `${wide} text-right tabular-nums` },
+  { key: "price", label: "Price", sortable: true, hideable: false, format: "currency", thClass: `${wide} @4xl/page:w-26 text-right`, tdClass: `${wide} text-right tabular-nums` },
+  { key: "updated_at", label: "Updated", sortable: true, hideable: false, format: "date", thClass: `${widest} @5xl/page:w-34`, tdClass: `${widest} whitespace-nowrap` },
+  { key: "open", label: "Open", srOnlyLabel: true, virtual: true, thClass: "w-10" },
 ];
-const statusClass: Record<Product["status"], string> = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
+
+// the headers sort once Updated, the last of them, has room; until then this select does
+const sortOptions: DataListSortOption[] = [
+  { key: "name", direction: "asc", label: "Name, A to Z" },
+  { key: "name", direction: "desc", label: "Name, Z to A" },
+  { key: "price", direction: "asc", label: "Price, low to high" },
+  { key: "price", direction: "desc", label: "Price, high to low" },
+  { key: "stock", direction: "asc", label: "Stock, lowest first" },
+  { key: "updated_at", direction: "desc", label: "Updated, newest first" },
+];
+
+const statuses: Status[] = ["Active", "Draft", "Archived"];
+const statusClass: Record<Status, string> = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
+const statusIcon = { Active: CircleCheck, Draft: PencilLine, Archived: Archive };
+const statusHue: Record<Status, string> = { Active: "green", Draft: "", Archived: "" };
+const only = ["products", "statusCounts"];
+
+// the edit page's way back returns to the list as it was left: its search, filters, sort and page
+const rememberList = () => {
+  try {
+    sessionStorage.setItem("products:list-query", location.search);
+  } catch {
+    // the way back is then the list as it starts
+  }
+};
 
 // the selection is ids, or the search and filters behind "Select all N matching": the server runs either
 const archive = (selection: DataTableSelection, clear: () => void) =>
@@ -200,21 +242,59 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 <template>
   <Head title="Products" />
   <AppLayout :breadcrumb="[{ label: 'Products' }]">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0">
-        <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
-        <p class="mt-1 text-sm muted">{{ unfilteredTotal }} products in the catalogue</p>
-      </div>
-    </div>
-
-    <DataTable caption="Products" :columns="columns" :rows="products" :filters="filters" :unfiltered-total="unfilteredTotal"
-        :only="['products']" sort="name" :per-page="10" selectable
+    <DataTable caption="Products" class="framed" table-class="table-fixed" :columns="columns" :rows="products" :filters="filters"
+        :unfiltered-total="unfilteredTotal" :only="only" sort="name" :per-page="10" selectable filter-display="drawer"
+        :sort-options="sortOptions" sort-select-class="@5xl/page:hidden" search-placeholder="Search name or SKU"
         empty-message="No products yet." no-matches-message="No products match.">
+      <template #header="{ total, unfilteredTotal: all, narrowed, clear, values, filterLink }">
+        <div class="flex flex-wrap items-start justify-between gap-4">
+          <div class="min-w-0">
+            <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
+            <div class="mt-1 flex min-h-8 items-center gap-2 text-sm muted">
+              <p>{{ narrowed ? `${total} of ${all}` : all }} {{ all === 1 ? "product" : "products" }}</p>
+              <button v-if="narrowed" type="button" class="btn ghost sm" @click="clear">Clear</button>
+            </div>
+          </div>
+          <Link href="/products/create" class="btn primary max-md:w-full" @click="rememberList"><Plus class="size-4" aria-hidden="true" /> Add product</Link>
+        </div>
+
+        <!-- each card counts the rows its link shows: the search and category apply, its own status replaces any other -->
+        <nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status">
+          <a v-for="status in statuses" :key="status" v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
+              :aria-current="values.status?.[0] === status ? 'true' : undefined"
+              class="card group flex-row items-center gap-3 transition-colors hover:border-input focus-visible:outline-3 focus-visible:outline-ring/50 aria-[current=true]:bg-secondary aria-[current=true]:text-secondary-foreground">
+            <span class="avatar max-md:hidden" :class="statusHue[status]" aria-hidden="true"><component :is="statusIcon[status]" class="size-4" /></span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm muted group-aria-[current=true]:text-secondary-foreground">{{ status }}</span>
+              <span class="block text-2xl font-semibold tracking-tight tabular-nums">{{ statusCounts[status] }}</span>
+            </span>
+            <!-- the current card takes its status off again, without opening the filters -->
+            <span v-if="values.status?.[0] === status" class="sr-only">, remove this filter</span>
+            <component :is="values.status?.[0] === status ? X : ChevronRight" class="size-4 shrink-0 muted group-aria-[current=true]:text-secondary-foreground" aria-hidden="true" />
+          </a>
+        </nav>
+      </template>
+
+      <template #cell-name="{ row }">
+        <Link :href="`/products/${row.id}/edit`" class="font-medium wrap-anywhere after:absolute after:inset-0 hover:underline focus-visible:underline focus-visible:outline-3 focus-visible:outline-ring/50" @click="rememberList">{{ row.name }}</Link>
+        <p class="text-sm muted [font-feature-settings:'case']">{{ row.sku }}<span class="@4xl/page:hidden"> · {{ row.category }}</span></p>
+        <!-- until the columns have room -->
+        <p class="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm @4xl/page:hidden">
+          <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
+          <span class="tabular-nums">{{ formatCellValue(row.price, "currency") }}</span>
+          <span v-if="row.stock === 0" class="badge sm soft danger">Out of stock</span>
+          <span v-else class="muted">{{ row.stock }} in stock</span>
+        </p>
+      </template>
       <template #cell-status="{ row }">
         <span class="badge sm" :class="statusClass[row.status]">{{ row.status }}</span>
       </template>
-      <template #cell-actions="{ row }">
-        <Link :href="`/products/${row.id}/edit`" class="btn ghost sm"><Pencil class="size-4" aria-hidden="true" /> Edit <span class="sr-only">{{ row.name }}</span></Link>
+      <template #cell-stock="{ row }">
+        <span v-if="row.stock === 0" class="badge sm soft danger">Out of stock</span>
+        <template v-else>{{ row.stock }}</template>
+      </template>
+      <template #cell-open>
+        <ChevronRight class="ms-auto block size-4 muted" aria-hidden="true" />
       </template>
       <template #bulk-actions="{ selection, clear }">
         <button type="button" class="btn outlined sm" @click="archive(selection, clear)"><Archive class="size-4" aria-hidden="true" /> Archive</button>
@@ -245,7 +325,8 @@ class ProductController extends Controller
         Gate::authorize('viewAny', Product::class);
 
         $filters = $this->filters();
-        $query = $this->filter(Product::visibleTo($request->user()), TableQuery::filters($request, $filters))
+        $values = TableQuery::filters($request, $filters);
+        $query = $this->filter(Product::visibleTo($request->user()), $values)
             ->select('id', 'name', 'sku', 'category', 'price', 'stock', 'status', 'updated_at');
 
         // closures, so a table change (`only: ['products']`) runs the table's query and nothing else
@@ -258,7 +339,23 @@ class ProductController extends Controller
             ),
             'filters' => $filters,
             'unfilteredTotal' => fn () => Product::visibleTo($request->user())->count(),
+            'statusCounts' => fn () => $this->statusCounts($request, $values),
         ]);
+    }
+
+    /**
+     * Each status card's count: the search and the other filters, with no status, so a card reading 4 leads to 4 rows.
+     *
+     * @param  array<string, array<int, string>>  $values
+     * @return array<string, int>
+     */
+    private function statusCounts(Request $request, array $values): array
+    {
+        $query = $this->filter(Product::visibleTo($request->user()), [...$values, 'status' => []]);
+        TableQuery::search($query, self::SEARCHABLE, TableQuery::view($request)['search']);
+        $counts = $query->toBase()->selectRaw('status, count(*) as aggregate')->groupBy('status')->pluck('aggregate', 'status');
+
+        return array_map(fn (string $status): int => (int) ($counts[$status] ?? 0), array_combine(Product::STATUSES, Product::STATUSES));
     }
 
     /**
@@ -297,13 +394,19 @@ What comes back:
 
 | Request | Response |
 |---------|----------|
-| `GET /products?search=loop&status=Active&category[]=Turntables&sort=price&dir=desc&page=2&per_page=25` | Inertia page `products/Index`. `products` is the paginator: `{ data: [{ id, name, sku, … }], current_page, last_page, per_page, total, from, to, … }`; `filters` the array above; `unfilteredTotal` a number. |
-| The same, from a table change | DataTable sends `only: ['products']`, so the response carries `products` alone and the closures for the rest never run. |
+| `GET /products?search=loop&status=Active&category[]=Turntables&sort=price&dir=desc&page=2&per_page=25` | Inertia page `products/Index`. `products` is the paginator: `{ data: [{ id, name, sku, … }], current_page, last_page, per_page, total, from, to, … }`; `filters` the array above; `unfilteredTotal` a number; `statusCounts` `{ Active: 2, Draft: 1, Archived: 0 }`, here the products matching "loop" in Turntables, whatever their status. |
+| The same, from a table change or a status card | DataTable sends `only: ['products', 'statusCounts']`, so the response carries those two and the closures for the rest never run. |
 | `POST /products/bulk` with `{ action: "archive", selection: { mode: "ids", ids: [2, 9] } }` | Redirect back to the list URL it came from, flash `toast` "2 products archived.". |
 | `POST /products/bulk` with `{ action: "archive", selection: { mode: "matching", search: "", filters: { status: [], category: ["Speakers"] }, count: 5 } }` | The same, over every product the query matches now. `count` is what the table saw; the server counts again. |
 | `POST /products/bulk` from a user who is not a manager | `403`, and nothing changes. |
 
-- `defaultSort` and `perPage` match the component's `sort` and `:per-page`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`.
+- `defaultSort` and `perPage` match the component's `sort` and `:per-page`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`, and holds every key the column headers and `sortOptions` sort by.
+- `statusCounts` starts from the same `Product::visibleTo()`, `filter()` and search as the rows, with the status filter left out, so each card counts the rows its link would show. A search for "loop" makes the cards count loop products.
+- The `#header` slot holds the title row and the cards, above the toolbar. It gets the count (`total` of `unfilteredTotal`), whether anything narrows the list, `clear`, the filters as last asked for (`values`), and `filterLink(key, values)`, which a card binds with `v-bind` on its `<a>`: the link is the list with that status, for a new tab, and a plain click changes the filter as the drawer would. With a header the empty table drops its own Clear filters, as the one under the title does the job. The current card takes its status off again, so the filter needs no trip to the drawer.
+- A column takes the same container query on its `thClass` and `tdClass`, and the name cell shows what the hidden columns would with the opposite one (`@4xl/page:hidden`). `table-class="table-fixed"` with a width on each `th` keeps the columns still as the rows change, and `hideable: false` leaves out the Columns menu, as the page decides what fits. Until the last sortable header appears, `sort-options` puts a sort select in the toolbar, and `sort-select-class` hides it from there on.
+- The row's name is its link, stretched over the row with `after:absolute after:inset-0`; DataTable positions each row and keeps the checkbox above the link. The chevron says the row opens. A click stores the list's query for the tab, which the edit and tags-and-photos pages read for their breadcrumb, so the way back is the list as it was left.
+- `framed` draws the table in a card. On a phone the search takes the toolbar's first row, and the Filters button and the sort select share the next.
+- Add product goes to the app's create page, which no recipe gives: recipe 1's form with empty defaults, posting to `POST /products`.
 - The bulk action authorises (`archive` here, whether this user may archive at all), validates `action`, `selection.mode` and the ids, and starts from the same `Product::visibleTo()` as the index. For `ids` it takes those ids. For `matching` it reads the search and filters with `TableQuery::selection($request, $this->filters())`, which returns `['search' => …, 'filters' => …]`, runs `filter()` with the filters and `TableQuery::search()` with `self::SEARCHABLE` and the search, and the one `filter()` serves the index and the bulk action. It updates, flashes `toast` ("2 products archived.") and returns `back()`.
 - Read `selection.search` and `selection.filters` only through `TableQuery::selection()`, never straight from the request. It checks the body as `TableQuery::filters()` checks the URL, so a nested array, a NUL byte or invalid UTF-8 in it reads as absent instead of reaching the database as a 500, and an empty search, which Laravel turns into null, reads as no search. Do not also check filter values against their options: a daterange or boolean has none, and the index does not either.
 - `onSuccess: clear` empties the selection once the server has answered. The page's new props show the archived rows; the rows that no longer match a filter drop out.
@@ -317,7 +420,7 @@ Two ways to send data from one page. Tags are an ordinary form: `Field type="com
 ```vue
 <!-- resources/js/pages/products/Media.vue -->
 <script setup>
-import { computed, reactive, ref, watch } from "vue";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
@@ -332,6 +435,17 @@ const props = defineProps({
 
 // Tags: a form like any other. The combobox searches /tags and creates through POST /tags.
 const form = useForm({ tag_ids: props.product.tag_ids });
+
+// the way back is the list as it was left: its search, filters, sort and page, which the list page keeps for the tab
+const listHref = ref("/products");
+onMounted(() => {
+  try {
+    listHref.value += sessionStorage.getItem("products:list-query") ?? "";
+  } catch {
+    // the list as it starts
+  }
+});
+
 function saveTags() {
   const sent = form.data();
   form.put(`/products/${props.product.id}/tags`, {
@@ -402,7 +516,7 @@ useUnsavedChanges({ get isDirty() { return uploading.value > 0; } });
 
 <template>
   <Head :title="`Tags and photos · ${product.name}`" />
-  <AppLayout :breadcrumb="[{ label: 'Products', href: '/products' }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
+  <AppLayout :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
     <div class="min-w-0">
       <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
       <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>

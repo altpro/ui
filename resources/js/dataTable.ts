@@ -287,7 +287,7 @@ export const tableView = <TRow>(
   const narrowed = term !== "" || filters.some((f) => filterIsSet(f, view.filters[f.key]));
   const empty: DataListEmpty = rows.length > 0 ? null : (unfiltered === undefined ? !narrowed : unfiltered === 0) ? "nothing-yet" : "no-matches";
 
-  return { rows, total, page, lastPage, perPage, from, to, summary, empty };
+  return { rows, total, page, lastPage, perPage, from, to, summary, empty, unfiltered };
 };
 
 /** What reading and writing a table's URL needs. A server-mode controller hands TableQuery the same. */
@@ -562,6 +562,8 @@ export const useTableState = (options: {
     apply,
     setSearch,
     clearAll,
+    /** The URL `apply` would visit for this change, built on the page as it stands, for a link to it. */
+    href: (patch: TableStatePatch) => viewUrl(page.url, patch, { ...options.url(), server: options.server() }),
   };
 };
 
@@ -665,15 +667,31 @@ export const useDataList = <TRow>(source: () => DataListSource<TRow>) => {
     if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value }, true);
   });
 
+  const setFilter = (key: string, values: string[]) => state.apply({ filters: { ...state.latestFilters.value, [key]: values } });
+
   return {
     state,
     view,
     server,
     filters,
     sortOptions,
+    /** A search or a filter is narrowing the rows, a default included: what the count's "of" and a Clear need. */
+    narrowed: computed(() => (server.value ? state.search.value : state.searchInput.value).trim() !== "" || countFilters(filters.value, state.filters.value) > 0),
+    /**
+     * `href` and `onClick` for an `<a>` that sets one filter, such as a stat card: the href is the list with that filter,
+     * for a new tab or a copied link, and a plain click makes the change as a control would, building on one still on its way.
+     */
+    filterLink: (key: string, values: string[]) => ({
+      href: state.href({ filters: { ...state.latestFilters.value, [key]: values } }),
+      onClick: (event: MouseEvent) => {
+        if (event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+        event.preventDefault();
+        setFilter(key, values);
+      },
+    }),
     /** Whether a search box would find anything: in server mode only the app knows, so only `search: false` removes it. */
     searchable: computed(() => source().search !== false && (server.value || searchKeys(source()).length > 0)),
-    setFilter: (key: string, values: string[]) => state.apply({ filters: { ...state.latestFilters.value, [key]: values } }),
+    setFilter,
     setFilters: (values: Record<string, string[]>) => state.apply({ filters: values }),
     setPageSize,
   };
@@ -694,6 +712,22 @@ export const countFilters = (
     const given = values[filter.key] ?? [];
     return count === "changed" ? filterIsSet(filter, given) : given.some((v) => v !== "");
   }).length;
+
+/** What a list's `#header` slot is given: the line under the title, and links that set a filter. */
+export interface DataListHeader {
+  /** The rows the search and filters leave. */
+  total: number;
+  /** Before any search or filter: `unfiltered-total` in server mode, every row in client mode. */
+  unfilteredTotal: number | undefined;
+  /** A search or a filter in force, a default included. */
+  narrowed: boolean;
+  /** Empties the search and every filter, as the empty table's Clear filters does. */
+  clear: () => void;
+  /** Each filter's values as last asked for, to mark the link that is in force. */
+  values: Record<string, string[]>;
+  /** `v-bind` it on an `<a>`: the list with that filter set to those values. */
+  filterLink: (key: string, values: string[]) => { href: string; onClick: (event: MouseEvent) => void };
+}
 
 /** What useDataList returns; DataList.vue's `list` prop. */
 export type DataListController<TRow> = ReturnType<typeof useDataList<TRow>>;

@@ -9,7 +9,7 @@
 <script setup lang="ts" generic="TRow extends object">
 import { computed, ref, useId, watch } from "vue";
 import DataFilters from "./DataFilters.vue";
-import { PAGE_SIZES, countFilters, handOff, pageWindow, type DataListController, type DataListEmpty, type DataListFilterCount, type DataTableFilter } from "./dataTable";
+import { PAGE_SIZES, countFilters, handOff, pageWindow, type DataListController, type DataListEmpty, type DataListHeader, type DataListFilterCount, type DataTableFilter } from "./dataTable";
 
 const props = defineProps<{
   list: DataListController<TRow>;
@@ -27,6 +27,11 @@ const props = defineProps<{
 }>();
 
 const slots = defineSlots<{
+  /**
+   * The page's title row and anything else above the toolbar, such as stat cards that filter the list: it has what the
+   * line under the title needs (the count, whether anything narrows it, and Clear) and a link for each filter value.
+   */
+  header?: (props: DataListHeader) => unknown;
   /** The rows. Rendered with no wrapper, so what you put here is a child of the frame. */
   default?: (props: { rows: TRow[]; busy: boolean; empty: DataListEmpty; clearFilters: () => void }) => unknown;
   /** More controls in the toolbar. */
@@ -58,7 +63,8 @@ type Target = () => HTMLElement | null | undefined;
 // a page change or a cleared search redraws when the URL changes, which in server mode is after the response
 let pending: [Element | null, Target] | null = null;
 let paged: { page: number; from: Element | null; keyboard: boolean } | null = null;
-watch([() => view.value.page, () => view.value.empty], () => {
+// and when nothing narrows the list any more, which takes away a Clear in the header that leaves page and rows as they were
+watch([() => view.value.page, () => view.value.empty, () => list.narrowed.value], () => {
   // only the page asked for: that visit may have failed, and this be some other change
   const moved = paged?.page === view.value.page ? paged : null;
   paged = null;
@@ -123,6 +129,17 @@ const filterSlots = (slots: Record<string, unknown>) => Object.keys(slots).filte
 
 <template>
   <div ref="root" class="datatable" :tabindex="focusable ? -1 : undefined" :role="focusable ? 'group' : undefined" :aria-label="focusable ? caption : undefined">
+    <div v-if="slots.header" class="header">
+      <slot
+        name="header"
+        :total="view.total"
+        :unfiltered-total="view.unfiltered"
+        :narrowed="list.narrowed.value"
+        :clear="clearFilters"
+        :values="state.latestFilters.value"
+        :filter-link="list.filterLink"
+      />
+    </div>
     <div class="controls">
       <input
         v-if="list.searchable.value"
