@@ -27,7 +27,7 @@ createApp({
       // Vue only, so they come after the fields the Blade parity test compares
       field("tags", { name: "tags", type: "combobox", multiple: true, options: tags, max: 2, hint: "Up to two." }),
       field("password", { name: "password", type: "password", reveal: true, autocomplete: "new-password" }),
-      h("output", { class: "text-sm md:col-span-2" }, `v-model: ${JSON.stringify(form)}`),
+      h("output", { class: "text-sm wrap-anywhere md:col-span-2" }, `v-model: ${JSON.stringify(form)}`),
     ]);
   },
 }).mount("#vue-demo");

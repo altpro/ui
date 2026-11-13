@@ -10,7 +10,17 @@ An HTML and CSS component layer for Tailwind v4. Tailwind does layout; altpro/ui
 | Vue components (Field, FileInput, Combobox, Repeater, CopyButton) | the above, plus `vue` | the above, plus `@vitejs/plugin-vue` | Vue 3.5+, plugin-vue 6+ |
 | DataTable | the above, plus `@inertiajs/vue3`; `TableQuery` on the server | the above | Inertia 3+ (client and `inertiajs/inertia-laravel`), Laravel 13. Written in TypeScript, which Vite compiles without extra setup |
 
-Current Chrome, Firefox and Safari. Some styling (the open `<select>` picker) is Chrome-only and falls back to the native control elsewhere.
+### Browsers
+
+| Browser | Minimum | What sets it |
+|---------|---------|--------------|
+| Chrome, Edge | 135 | `command`/`commandfor` buttons, which open every dialog and drawer |
+| Firefox | 147 | anchor positioning, which places every dropdown under its button |
+| Safari, on Mac, iPhone and iPad | 26.2 | `command`/`commandfor` buttons |
+
+Below these, buttons that open a dialog or drawer (Delete, Filters, the phone menu) do nothing, and dropdowns open away from their button. altpro/ui ships no polyfill for them. Safari 26.2 needs iOS 26.2, so an iPhone that stops at iOS 18 (an XS or XR) is below it; so is Firefox ESR 140.
+
+Inside the range, two things degrade rather than break: the open `<select>` picker is styled in Chrome only (`appearance: base-select`) and is the native control elsewhere, and `.inverse` regions flip the scheme from Firefox 151, keeping the surrounding scheme in Firefox 147 to 150.
 
 ## Install in Laravel
 
@@ -110,6 +120,8 @@ Set `build.cssTarget` in `vite.config.js`:
 ```js
 build: { cssTarget: ["chrome123", "firefox120", "safari17.5"] },
 ```
+
+These versions are where Lightning CSS stops rewriting `light-dark()`, not the browsers altpro/ui supports, which are newer (see Browsers).
 
 Every colour token is a `light-dark()` value on `:root`, and a `.dark`, `.light` or `.inverse` region sets `color-scheme` so the tokens resolve differently inside it. Vite 8 and vite-plus minify CSS with Lightning CSS, as does any build with `cssMinify: "lightningcss"`. For browsers older than those three, Lightning CSS rewrites `light-dark()` into `--lightningcss-light` and `--lightningcss-dark` variables, which resolve once on `:root`. A region then gets `color-scheme: dark` with the page's light colours. Nothing warns you, and `npm run dev` does not show it. Lower any of the three versions and the rewrite comes back.
 

@@ -1,6 +1,6 @@
 # Confirm dialog: `ConfirmDialog.vue`
 
-A [`.dialog`](dialog.md) that asks before an action and holds still while it runs: a title, an optional description, any body (a password field), Cancel and one confirm button. Opened like any dialog, with `command="show-modal"`. While `busy` nothing closes it, which takes four separate guards on a hand-written dialog, so use this for every confirm that sends a request. [destructive-action.md](destructive-action.md) is the full page, with the controller.
+A [`.dialog`](dialog.md) that asks before an action and holds still while it runs: a title, an optional description, any body (a password field), Cancel and one confirm button. Opened like any dialog, with `command="show-modal"`. While `busy` nothing closes it, which takes four separate guards on a hand-written dialog, so use this for every confirm that sends a request. [destructive-action.md](destructive-action.md) is the full page, with what the server must return.
 
 ```vue
 <script setup>

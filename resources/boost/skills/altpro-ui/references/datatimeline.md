@@ -56,7 +56,7 @@ On the server, `created_at` is the sort, newest first:
 | `row-key` | The field that identifies an entry. Default `id`. |
 | `heading-level` | The day headings and the empty state's. Default 2, for `<h2>`: set it to fit the page's outline. |
 | `entry-class` | `(row) => classes` for the `<li>`, where a colour word recolours its dot. |
-| `time-zone` | Which timezone a day starts in. Defaults to the reader's. Pass the app's when people work across timezones, so a day heading agrees with a date filter, which compares in the app's. |
+| `time-zone` | Which timezone a day starts in, for the day headings and, in client mode, the date filter. Defaults to the reader's. Pass the app's when people work across timezones and the rows are filtered on the server, so a day heading agrees with a date filter, which `TableQuery` applies in the app's timezone. |
 | `empty-message`, `no-matches-message` | The heading of each empty state. |
 
 | Slot | Gets |

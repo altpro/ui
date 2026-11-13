@@ -31,8 +31,11 @@ const unchanged = ref(false);
 watch(() => form.isDirty, () => (unchanged.value = false));
 const save = () => {
   if (!form.isDirty) return (unchanged.value = true);
+  const sent = form.data();
   form.put(`/products/${props.product.id}`, {
     preserveScroll: true,
+    // what was sent is what was saved: anything typed while the save was under way stays unsaved
+    onSuccess: () => JSON.stringify(form.data()) !== JSON.stringify(sent) && form.defaults(sent),
     onError: () => nextTick(() => summary.value.focus()),
   });
 };

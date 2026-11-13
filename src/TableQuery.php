@@ -106,7 +106,7 @@ final class TableQuery
     ): array {
         // an array (`sort[]=`) is another parameter to the browser, so it reads as absent
         $at = static function (string $key) use ($request, $name): string {
-            $value = $request->query(self::parameter($name, $key));
+            [, $value] = self::query($request, self::parameter($name, $key));
 
             return is_string($value) ? $value : '';
         };
@@ -143,24 +143,83 @@ final class TableQuery
      */
     public static function filters(Request $request, array $filters, ?string $name = null): array
     {
+        return self::read(static fn (string $key): array => self::query($request, $key), $filters, $name);
+    }
+
+    /**
+     * The search and filters of a "Select all N matching" selection, read from the request body
+     * (`selection.search` and `selection.filters`, or under `$key`) with the checks view() and
+     * filters() give the URL, and in their shapes: the search trimmed, '' for none, and the
+     * filters as filters() returns them, from the same declared `$filters`. A filter's value is
+     * the array DataTable sends: a select or boolean `[value]` or `[]`, a daterange `[from, to]`
+     * or `[]`. The wrong shape, a nested array, a NUL byte or invalid UTF-8 reads as absent, as
+     * in the URL, so the filter gets its default; a null, which ConvertEmptyStringsToNull makes
+     * of `""`, is empty. Which rows (ids or matching) and what an action means stay the controller's.
+     *
+     * @param  array<int, array<string, mixed>>  $filters
+     * @return array{search: string, filters: array<string, array<int, string>>}
+     */
+    public static function selection(Request $request, array $filters, string $key = 'selection'): array
+    {
+        $selection = $request->input($key);
+        $sent = is_array($selection) && is_array($selection['filters'] ?? null) ? $selection['filters'] : [];
+        $search = is_array($selection) && is_string($selection['search'] ?? null) ? trim($selection['search']) : '';
+        $params = [];
+
+        // the body's arrays, as the URL parameters filters() reads: `[value]` is `key=value`, `[from, to]` `key_from` and `key_to`
+        // anything else, a string or a list of the wrong length, is no parameter, so absent
+        foreach ($filters as $filter) {
+            $key = $filter['key'];
+            $value = $sent[$key] ?? null;
+
+            if (! is_array($value)) {
+                continue;
+            }
+
+            $list = array_values($value);
+
+            if ($filter['type'] === 'multiple') {
+                $params[$key] = $value;
+            } elseif ($filter['type'] === 'daterange' && in_array(count($list), [0, 2], true)) {
+                [$params["{$key}_from"], $params["{$key}_to"]] = $list + [null, null];
+            } elseif ($filter['type'] !== 'daterange' && count($list) <= 1) {
+                $params[$key] = $list[0] ?? null;
+            }
+        }
+
+        return [
+            'search' => self::readable($search) ? $search : '',
+            'filters' => self::read(static fn (string $key): array => array_key_exists($key, $params) ? self::checked(true, $params[$key]) : [false, null], $filters, null),
+        ];
+    }
+
+    /**
+     * filters(), from wherever `$at` reads a parameter: it gives whether there is one, and its value, checked.
+     *
+     * @param  \Closure(string): array{0: bool, 1: mixed}  $at
+     * @param  array<int, array<string, mixed>>  $filters
+     * @return array<string, array<int, string>>
+     */
+    private static function read(\Closure $at, array $filters, ?string $name): array
+    {
         $values = [];
 
         foreach ($filters as $filter) {
             $key = self::parameter($name, $filter['key']);
 
             if ($filter['type'] === 'daterange') {
-                $values[$filter['key']] = self::dateRange($request, $key, $filter['default'] ?? []);
+                $values[$filter['key']] = self::dateRange($at, $key, $filter['default'] ?? []);
 
                 continue;
             }
 
-            $value = $request->query($key);
+            [$present, $value] = $at($key);
             $multiple = $filter['type'] === 'multiple';
 
             // the wrong shape for the type (`brand=` for a multiple, `brand[]=` for a select) is another
             // parameter to the browser, so absent. A null is `brand=` after ConvertEmptyStringsToNull.
             $values[$filter['key']] = match (true) {
-                ! $request->query->has($key) || $multiple !== is_array($value) => $filter['default'] ?? [],
+                ! $present || $multiple !== is_array($value) => $filter['default'] ?? [],
                 $multiple => array_values(array_filter($value, static fn ($v): bool => is_string($v) && $v !== '')),
                 default => is_string($value) && $value !== '' ? [$value] : [],
             };
@@ -172,17 +231,20 @@ final class TableQuery
     /**
      * Public so a bulk action over "everything matching" re-runs the search the
      * table showed, the same way, rather than a second way that could disagree.
+     * Take the term from selection(). A null, which ConvertEmptyStringsToNull
+     * makes of an empty search, is no search.
      *
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
      * @param  Builder<TModel>  $query
      * @param  array<int, string>  $searchable
      */
-    public static function search(Builder $query, array $searchable, string $term): void
+    public static function search(Builder $query, array $searchable, ?string $term): void
     {
-        $term = trim($term);
+        $term = trim($term ?? '');
 
-        if ($term === '' || $searchable === []) {
+        // as view() reads it: a term no database takes is no term
+        if ($term === '' || ! self::readable($term) || $searchable === []) {
             return;
         }
 
@@ -206,18 +268,19 @@ final class TableQuery
      * Either end present speaks for the range; with neither, the default applies.
      * An invalid date is dropped and a reversed range turned round.
      *
+     * @param  \Closure(string): array{0: bool, 1: mixed}  $at
      * @param  array<int, string>  $default
      * @return array<int, string>
      */
-    private static function dateRange(Request $request, string $key, array $default): array
+    private static function dateRange(\Closure $at, string $key, array $default): array
     {
         $present = false;
         $ends = [];
 
         foreach (["{$key}_from", "{$key}_to"] as $end) {
-            $value = $request->query($end);
+            [$has, $value] = $at($end);
             // as for a select, an array (`placed_from[]=`) is another parameter to the browser, so absent
-            $present = $present || ($request->query->has($end) && ! is_array($value));
+            $present = $present || ($has && ! is_array($value));
             // a day as a date input writes it; 2026-02-30 rolls over into March, so it is not one.
             // The pattern goes first: createFromFormat throws on a null byte (`%00`)
             $date = is_string($value) && preg_match('/^\d{4}-\d{2}-\d{2}$/D', $value) === 1
@@ -234,6 +297,43 @@ final class TableQuery
             $from !== '' && $to !== '' && $from > $to => [$to, $from],
             default => $ends,
         };
+    }
+
+    /**
+     * Whether it has the parameter, and its value. A value no database takes (see readable()) is not
+     * in the URL, as readView() reads it; in a list, nor is such an entry, or a list of nothing else.
+     *
+     * @return array{0: bool, 1: mixed}
+     */
+    private static function query(Request $request, string $key): array
+    {
+        return self::checked($request->query->has($key), $request->query($key));
+    }
+
+    /**
+     * query()'s check, for a value from anywhere: given whether it is there, and what it is.
+     *
+     * @return array{0: bool, 1: mixed}
+     */
+    private static function checked(bool $has, mixed $value): array
+    {
+        if (is_array($value) && $value !== []) {
+            $value = array_filter($value, static fn ($v): bool => ! is_string($v) || self::readable($v));
+
+            return [$value !== [], $value];
+        }
+
+        return is_string($value) && ! self::readable($value) ? [false, null] : [$has, $value];
+    }
+
+    /**
+     * Postgres refuses a NUL byte and invalid UTF-8 (SQLSTATE 22021) even bound, and json_encode() the
+     * latter, so a URL a bot made up would be a 500. U+FFFD is what the browser reads invalid UTF-8 as,
+     * so it goes too, or readView() would read a view this does not.
+     */
+    private static function readable(string $value): bool
+    {
+        return mb_check_encoding($value, 'UTF-8') && ! str_contains($value, "\0") && ! str_contains($value, "\u{FFFD}");
     }
 
     private static function parameter(?string $name, string $key): string

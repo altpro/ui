@@ -13,7 +13,7 @@
   `class` lands on the .field, every other attribute on the control.
 -->
 <script setup>
-import { computed, onBeforeUnmount, onMounted, ref, useAttrs, useId, useSlots, watch } from "vue";
+import { computed, getCurrentInstance, onBeforeUnmount, onMounted, ref, useAttrs, useId, useSlots, watch } from "vue";
 import Combobox from "./Combobox.vue";
 import { onFormReset, useDomModel } from "./domModel.js";
 
@@ -47,16 +47,29 @@ const label = computed(() => {
 });
 
 if (model.value === undefined && props.value !== undefined) model.value = props.value;
-if (props.now && (model.value == null || model.value === "")) {
+// Inertia sends a date cast as 2026-10-13T09:30:00.000000Z, which a date input rejects: keep the part the type takes,
+// as the Blade field formats a Carbon. A watch, as useForm's reset() puts the default string back.
+const iso = { date: [0, 10], month: [0, 7], "datetime-local": [0, 16], time: [11, 16] };
+const trim = (v) => iso[props.type] && /^\d{4}-\d\d-\d\dT\d\d:\d\d:/.test(v) && (model.value = v.slice(...iso[props.type]));
+watch(model, trim);
+const fill = () => {
+  if (!props.now || (model.value != null && model.value !== "")) return;
   const d = new Date(), p = (n) => String(n).padStart(2, "0");
   const date = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`, time = `${p(d.getHours())}:${p(d.getMinutes())}`;
   const value = { date, time, month: date.slice(0, 7), "datetime-local": `${date}T${time}` }[props.type];
   if (value) model.value = value;
-}
-// Inertia sends a date cast as 2026-10-13T09:30:00.000000Z, which a date input rejects: keep the part the type takes,
-// as the Blade field formats a Carbon. A watch, as useForm's reset() puts the default string back.
-const iso = { date: [0, 10], month: [0, 7], "datetime-local": [0, 16], time: [11, 16] };
-watch(model, (v) => iso[props.type] && /^\d{4}-\d\d-\d\dT\d\d:\d\d:/.test(v) && (model.value = v.slice(...iso[props.type])), { immediate: true });
+};
+// With v-model the first trim or fill waits for mount. Written in setup it reaches the parent at once, and when the
+// field mounts inside a render already under way (a page an Inertia visit brings), the parent renders the new value
+// before the input's v-model has mounted: that mount, queued with the setup's value, then empties the input while the
+// model keeps the date. Mounted hooks run child first, so a page's onMounted(() => form.defaults()) still takes it.
+// Without v-model the write stays in setup: it is local, and useDomModel reads the input back before every render.
+const settle = () => {
+  trim(model.value);
+  fill();
+};
+if ("onUpdate:modelValue" in (getCurrentInstance().vnode.props ?? {})) onMounted(settle);
+else settle();
 
 const isObject = (v) => v !== null && typeof v === "object";
 const toId = (v) => (isObject(v) ? v.id ?? v.value : v);

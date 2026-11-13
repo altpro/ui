@@ -5,9 +5,11 @@ import Repeater from "@ui/Repeater.vue";
 
 const mount = (selector, lines, errors, props = {}) => createApp({
   setup() {
-    const rows = ref(lines);
+    const rows = ref(lines), disabled = ref(false);
+    // for tests/repeater-drag.spec.js: what an app changes under a drag (a reload, a save starting)
+    document.querySelector(selector).demo = { rows, disabled };
     return () => h("div", { class: "max-w-xl space-y-3" }, [
-      h(Repeater, { modelValue: rows.value, "onUpdate:modelValue": (v) => (rows.value = v), name: "lines", item: "line", errors, make: () => ({ product: "", qty: 1 }), ...props },
+      h(Repeater, { modelValue: rows.value, "onUpdate:modelValue": (v) => (rows.value = v), name: "lines", item: "line", errors, disabled: disabled.value, make: () => ({ product: "", qty: 1 }), ...props },
         ({ row, index, errors }) => h("div", { class: "grid gap-3 sm:grid-cols-[1fr_8rem]" }, [
           h(Field, { modelValue: row.product, "onUpdate:modelValue": (v) => (row.product = v), name: `lines.${index}.product`, label: "Product", errors }),
           h(Field, { modelValue: row.qty, "onUpdate:modelValue": (v) => (row.qty = v), name: `lines.${index}.qty`, label: "Quantity", type: "number", errors }),

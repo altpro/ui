@@ -168,10 +168,15 @@ async function add() {
   if (!canCreate.value || creating.value || full.value) return;
   creating.value = true;
   error.value = "";
+  const was = JSON.stringify(model.value ?? null);
   try {
     const o = typeof props.create === "function" ? await props.create(label) : await request(props.create, { label });
-    q.value = "";
-    choose(o);
+    // the reader picked something else while it was being added: the record exists, and a search finds it, but the
+    // choice stays theirs. Several values only grow, so the new one joins them.
+    if (!props.multiple && JSON.stringify(model.value ?? null) !== was) return;
+    if (q.value.trim() === label) q.value = "";
+    // a value the reader picked meanwhile stays picked: choose() would toggle it off
+    if (!(props.multiple && has(o))) choose(o);
   } catch (e) {
     error.value = e.message || `Could not add “${label}”.`;
   } finally {

@@ -50,42 +50,11 @@ const forget = () => {
 </template>
 ```
 
-```php
-// routes/web.php
-use App\Http\Controllers\AccountController;
-use Inertia\Inertia;
+The route and controller are the app's: `DELETE /account` behind `auth`, checking the password, signing out and deleting. What the dialog needs from them:
 
-Route::middleware('auth')->group(function () {
-    Route::get('/settings', fn () => Inertia::render('settings/Account'))->name('settings');
-    Route::delete('/account', [AccountController::class, 'destroy'])->name('account.destroy');
-});
-```
-
-```php
-// app/Http/Controllers/AccountController.php
-namespace App\Http\Controllers;
-
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
-
-class AccountController extends Controller
-{
-    public function destroy(Request $request): RedirectResponse
-    {
-        // current_password checks it against the signed-in user's hash
-        $request->validate(['password' => ['required', 'current_password']]);
-
-        $user = $request->user();
-        Auth::logout();
-        $user->delete();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return redirect('/');
-    }
-}
-```
+- A wrong or empty password is a validation error on `password` (Laravel's `current_password` rule), so it comes back as `errors.password` and the dialog stays open.
+- Password attempts are limited: anyone at the page with a signed-in session, on a borrowed laptop or with a stolen cookie, could otherwise guess until one deletes the account. Past the limit, answer with a validation error on `password` too, not a bare `429`, which the dialog has nowhere to show. A rate limiter keyed by the user, counting only requests that carry a password, does this; so does every other request that asks for the current password.
+- Success signs the user out and redirects.
 
 What comes back:
 
@@ -93,6 +62,7 @@ What comes back:
 |---------|----------|---------------|
 | `DELETE /account` `{ password: "" }` | Back, with `errors.password` "The password field is required." | Stays open; the error is under the field, which is `aria-invalid` and has focus again. |
 | `DELETE /account` `{ password: "wrong" }` | Back, with `errors.password` "The password is incorrect." | The same. |
+| `DELETE /account`, past the limit | Back, with `errors.password` "Too many attempts. Try again in 60 seconds." | The same. |
 | `DELETE /account` with the right password | Redirect to `/`, signed out | Inertia follows the redirect as a visit, so the page and the dialog go. |
 
 - `ConfirmDialog` puts its body in a form of its own, so Enter in the field confirms as Delete does. Cancel, the cross and Esc close it with no request.

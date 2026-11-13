@@ -1,8 +1,9 @@
 /* Repeater: the markup Repeater.vue renders. Each row is a .card whose
-   header holds its title and the move and remove buttons.
+   header holds the drag grip, its title and the move and remove buttons.
+   The grip is for pointers only; the buttons are the keyboard's way.
    <div class="repeater">
      <ol>
-       <li class="card"><header><h3>Line 1</h3><div>…buttons</div></header>…fields</li>
+       <li class="card"><header><span data-handle aria-hidden="true">…grip</span><h3>Line 1</h3><div>…buttons</div></header>…fields</li>
      </ol>
      <p class="error">Add at least one line.</p>
      <button class="btn outlined sm">Add line</button>
@@ -22,6 +23,29 @@
 
       > li > header {
         align-items: center;
+        /* the grip: 24px wide, as tall as the buttons, its icon in line with
+           the card's content and close to the title across the header's gap.
+           No hover-contrast loop in a11y.spec.js: it has no text for axe to
+           check, and its colours are the text tokens, at 4.5:1 on a card. */
+        > [data-handle] {
+          display: grid;
+          place-items: center;
+          width: 1.5rem;
+          height: 2rem;
+          margin-inline: -0.25rem -0.75rem;
+          color: var(--color-muted-foreground);
+          cursor: grab;
+          touch-action: none;
+          user-select: none;
+          &:hover {
+            color: var(--color-foreground);
+          }
+          &[data-disabled],
+          fieldset:disabled & {
+            opacity: 0.5;
+            pointer-events: none;
+          }
+        }
         :is(h1, h2, h3, h4, h5, h6) {
           font-size: var(--text-sm, 0.875rem);
         }
@@ -33,6 +57,27 @@
         .btn {
           --btn-px: 0;
           width: var(--btn-h);
+        }
+      }
+
+      /* while a card is dragged the others slide aside to show where it will land */
+      &[data-sorting] {
+        user-select: none;
+        > li {
+          transition: translate var(--duration-fast) var(--ease-smooth);
+          @media (prefers-reduced-motion: reduce) {
+            transition-duration: 0s;
+          }
+        }
+        > li[data-dragging] {
+          z-index: 1;
+          transition: none;
+          /* the control border, as the shadow alone barely shows on a dark page */
+          --card-border: var(--color-input);
+          box-shadow: 0 8px 24px -8px color-mix(in oklab, var(--color-shadow) 30%, transparent);
+          > header > [data-handle] {
+            cursor: grabbing;
+          }
         }
       }
     }

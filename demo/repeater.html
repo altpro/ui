@@ -15,12 +15,12 @@
 <main>
   <section class="space-y-2">
     <h1 class="text-3xl font-semibold tracking-tight">Repeater</h1>
-    <p class="muted"><code>Repeater.vue</code>: rows the user adds, removes and reorders. Order lines, contact methods, product attributes. Each row is a <code>.card</code> with its title and move and remove buttons; the row's fields come from the slot. Vue only.</p>
+    <p class="muted"><code>Repeater.vue</code>: rows the user adds, removes and reorders. Order lines, contact methods, product attributes. Each row is a <code>.card</code> with a drag grip, its title, and move and remove buttons; the row's fields come from the slot. Vue only.</p>
   </section>
 
   <section class="space-y-3">
     <h2 class="text-xl font-semibold">Order lines</h2>
-    <p class="text-sm muted"><code>make</code> returns the row "Add" appends. <code>item</code> names a row in its title and the button labels, and a screen reader hears each add, move and remove.</p>
+    <p class="text-sm muted"><code>make</code> returns the row "Add" appends. <code>item</code> names a row in its title and the button labels, and a screen reader hears each add, move and remove. Drag a row by its grip, or use the arrows: the grip is for pointers only, and the arrows are the way from the keyboard or a screen reader.</p>
     <div id="repeater-lines"></div>
 <pre>&lt;script setup&gt;
 import Field from "@ui/Field.vue";

@@ -155,6 +155,14 @@ test("viewUrl replaces a multiple filter in the numbered form the server's page 
   assert.deepEqual(read("/t?tags%5B0%5D="), { ...read("/t"), tags: [] }, "none over a default stays none when the server numbers it");
 });
 
+test("readView: a multiple filter of nothing but values Postgres refuses is absent, so takes its default, as TableQuery reads it", () => {
+  const withDefaults = { ...table, filters: [...table.filters, { key: "tags", type: "multiple" as const, default: ["new"] }] };
+  const read = (u: string) => readView(new URLSearchParams(u), withDefaults).filters.tags;
+  assert.deepEqual(read("tags%5B%5D=%00&tags%5B%5D=%FF"), ["new"]);
+  assert.deepEqual(read("tags%5B%5D=&tags%5B%5D=%FF"), [], "an empty value still says none");
+  assert.deepEqual(read("tags%5B%5D=sale&tags%5B%5D=%FF"), ["sale"]);
+});
+
 test("only a visit that reloads this page's rows dims the table", () => {
   const visit = (method: string, path: string, only: string[] = [], prefetch = false) => ({ method, url: new URL(path, "https://x.test"), only, prefetch });
   const reloads = (v: ReturnType<typeof visit> & { async?: boolean }, only: string[] = []) => visitReloadsTable(v, "/stock?page=2", only);
@@ -183,6 +191,42 @@ test("a daterange keeps rows whose day falls inside it, both ends included", () 
   assert.deepEqual(run(["2026-03-02", ""]), [2, 4]);
   assert.deepEqual(run(["", "2026-03-01"]), [1]);
   assert.deepEqual(run([]), [1, 2, 3, 4]);
+});
+
+test("a daterange reads a timestamp on the reader's own calendar day, a bare date as itself, and junk as no date", () => {
+  type Dated = { id: number; at: string | null };
+  const dated: Dated[] = [
+    // as Laravel sends a Carbon: 00:30 BST on 2 June, 19:30 on 1 June in New York
+    { id: 1, at: "2026-06-01T23:30:00.000000Z" },
+    { id: 2, at: "2026-06-01" },
+    { id: 3, at: "2026-06-02T01:00:00+01:00" },
+    { id: 4, at: "nope" },
+    { id: 5, at: "2026-02-30" },
+  ];
+  const filters: DataTableFilter<Dated>[] = [{ key: "at", label: "At", type: "daterange" }];
+  const run = (range: string[]) => ids(tableView({ rows: dated, columns: [{ key: "at", label: "At" }], filters }, at({ filters: { at: range } }), 25));
+  const tz = process.env.TZ;
+  try {
+    process.env.TZ = "Europe/London";
+    assert.deepEqual(run(["2026-06-02", "2026-06-02"]), [1, 3]);
+    assert.deepEqual(run(["2026-06-01", "2026-06-01"]), [2]);
+    process.env.TZ = "America/New_York";
+    assert.deepEqual(run(["2026-06-01", "2026-06-01"]), [1, 2, 3]);
+    assert.deepEqual(run(["2026-06-02", ""]), []);
+    // east of UTC a bare date's midnight is still the same day
+    process.env.TZ = "Pacific/Kiritimati";
+    assert.deepEqual(run(["", "2026-06-01"]), [2]);
+    // what is no date matches no range, however wide
+    process.env.TZ = "UTC";
+    assert.deepEqual(run(["1000-01-01", ""]), [1, 2, 3]);
+    // a list given a timezone (DataTimeline's time-zone) filters by its days, wherever the reader is
+    const inLondon = (range: string[]) => ids(tableView({ rows: dated, columns: [{ key: "at", label: "At" }], filters, timeZone: "Europe/London" }, at({ filters: { at: range } }), 25));
+    process.env.TZ = "America/New_York";
+    assert.deepEqual(inLondon(["2026-06-02", "2026-06-02"]), [1, 3]);
+  } finally {
+    if (tz === undefined) delete process.env.TZ;
+    else process.env.TZ = tz;
+  }
 });
 
 test("date presets count calendar days in local time, across month ends and clock changes", () => {

@@ -26,7 +26,7 @@ createApp({
         h("label", { for: "photos" }, "Photos"),
         h(FileInput, { modelValue: photos.value, "onUpdate:modelValue": (v) => (photos.value = v), id: "photos", name: "photos", accept: "image/*", multiple: true, errors: errors.value, progress: progress.value },
           () => h("span", "PNG or JPEG, up to 5 MB each.")),
-        h("div", { class: "flex gap-2" }, [
+        h("div", { class: "flex flex-wrap gap-2" }, [
           h("button", { type: "button", class: "btn primary", disabled: !photos.value.length, onClick: upload }, "Upload"),
           h("button", { type: "button", class: "btn ghost", onClick: () => (errors.value = { photos: ["Add no more than 10 photos."] }) }, "Show a field error"),
           h("button", { type: "reset", class: "btn ghost" }, "Reset"),

@@ -82,44 +82,16 @@ function save(name, event) {
 </template>
 ```
 
-```php
-// routes/web.php
-Route::get('/settings/notifications', [NotificationSettingsController::class, 'edit']);
-Route::patch('/settings/notifications', [NotificationSettingsController::class, 'update']);
-```
+The server side is the app's. What the page needs from it:
 
-```php
-// app/Http/Controllers/NotificationSettingsController.php
-namespace App\Http\Controllers;
+| Request | Response | On the page |
+|---------|----------|-------------|
+| `GET /settings/notifications` | Inertia page `settings/Notifications` with `settings: { order_emails: true, weekly_report: false }` | The switches, as saved. |
+| `PATCH /settings/notifications` `{ order_emails: false }` | Back, with the saved value in `settings` | The switch stays where it moved. |
+| The same, refused | Back, with `errors.order_emails` | The switch goes back and the message shows under it. |
 
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Inertia\Inertia;
-use Inertia\Response;
-
-class NotificationSettingsController extends Controller
-{
-    public function edit(Request $request): Response
-    {
-        return Inertia::render('settings/Notifications', [
-            'settings' => $request->user()->only('order_emails', 'weekly_report'),
-        ]);
-    }
-
-    public function update(Request $request): RedirectResponse
-    {
-        $settings = $request->validate([
-            'order_emails' => ['sometimes', 'boolean'],
-            'weekly_report' => ['sometimes', 'boolean'],
-        ]);
-        $request->user()->forceFill($settings)->save();
-
-        return back();
-    }
-}
-```
-
-Both columns are cast to `boolean` on the `User` model, so the props are `true` and `false`, not `1` and `0`.
+- Each request carries one setting, so validate each as `sometimes` and `boolean`, and save only what came.
+- The values are `true` and `false`, not `1` and `0`: cast the columns to `boolean` on the model.
 
 - Inertia 3's `optimistic` changes the page's props before the request and restores them if it fails. It also makes the visit async, so saving one switch does not cancel another that is still saving.
 - While saving, the switch is `aria-disabled`, not `disabled`: a control that becomes disabled drops keyboard focus.

@@ -1,6 +1,8 @@
 # Recipes: whole screens in a Laravel/Inertia app
 
-Three screens built from the documented components, each with the Vue page, the controller, the routes and what every endpoint returns. Copy them and rename. They share one `Product` model, so together they are a small products area: a list, an edit form, and a tags-and-photos page.
+Three screens built from the documented components, each with the Vue page and what every endpoint must return. Copy them and rename. They share one product record, so together they are a small products area: a list, an edit form, and a tags-and-photos page.
+
+The server side is the app's: its routes, controllers, models and policies follow the app's own conventions, and no recipe gives them. Each recipe gives what the screen needs from the server instead: the props, a table of requests and responses, and the rules a screen breaks without. The list page's index is the exception, as `TableQuery` is this package's.
 
 | Recipe | Chains | Demo page, in the altpro/ui repository |
 |--------|--------|-----------|
@@ -19,133 +21,18 @@ The demo pages run this Vue code as written against a stand-in for the server, a
 - Icons are Lucide, from `@lucide/vue`: `<Pencil class="size-4" aria-hidden="true" />`.
 - Laravel's default validation messages; the browser tests read them.
 
-The model and tables behind all three:
+The endpoints behind all three, every one behind `auth`:
 
-```php
-// app/Models/Product.php
-// products: id, team_id, name, sku (unique), category, price decimal(8,2), stock unsigned int, status, description text null, timestamps
-// tags: id, name; product_tag: product_id, tag_id; photos: id, product_id, name, path, timestamps
-// users: the usual columns, plus team_id and is_manager boolean
-namespace App\Models;
+| Endpoint | Used by |
+|----------|---------|
+| `GET /products` | the list page |
+| `POST /products/bulk` | the list's bulk action |
+| `GET /products/{id}/edit`, `PUT /products/{id}` | the edit page |
+| `GET /products/{id}/media`, `PUT /products/{id}/tags` | the tags-and-photos page |
+| `POST /products/{id}/photos`, `DELETE /photos/{id}` | each photo, as it is added or removed |
+| `GET /tags`, `POST /tags` | the tags combobox |
 
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-
-class Product extends Model
-{
-    public const CATEGORIES = ['Headphones', 'Speakers', 'Turntables'];
-    public const STATUSES = ['Active', 'Draft', 'Archived'];
-
-    protected $fillable = ['name', 'sku', 'category', 'price', 'stock', 'status', 'description'];
-
-    /**
-     * The products this user may see. The list and every bulk action start from it.
-     *
-     * @param  Builder<Product>  $query
-     */
-    public function scopeVisibleTo(Builder $query, User $user): void
-    {
-        $query->where('team_id', $user->team_id);
-    }
-
-    /** @return BelongsToMany<Tag, $this> */
-    public function tags(): BelongsToMany
-    {
-        return $this->belongsToMany(Tag::class);
-    }
-
-    /** @return HasMany<Photo, $this> */
-    public function photos(): HasMany
-    {
-        return $this->hasMany(Photo::class);
-    }
-}
-```
-
-```php
-// app/Models/Photo.php
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-
-class Photo extends Model
-{
-    protected $fillable = ['name', 'path'];
-
-    /** @return BelongsTo<Product, $this> */
-    public function product(): BelongsTo
-    {
-        return $this->belongsTo(Product::class);
-    }
-}
-```
-
-```php
-// app/Models/Tag.php
-namespace App\Models;
-
-use Illuminate\Database\Eloquent\Model;
-
-class Tag extends Model
-{
-    protected $fillable = ['name'];
-}
-```
-
-```php
-// app/Policies/ProductPolicy.php: Laravel finds it by the model's name
-namespace App\Policies;
-
-use App\Models\Product;
-use App\Models\User;
-
-class ProductPolicy
-{
-    // the list itself; which rows it holds is Product::visibleTo()
-    public function viewAny(User $user): bool
-    {
-        return true;
-    }
-
-    public function update(User $user, Product $product): bool
-    {
-        return $product->team_id === $user->team_id;
-    }
-
-    // whether a bulk action may run at all; the rows it reaches are Product::visibleTo() again
-    public function archive(User $user): bool
-    {
-        return $user->is_manager;
-    }
-}
-```
-
-Every action authorises in its own code: route model binding finds any record by its id.
-
-```php
-// routes/web.php
-use App\Http\Controllers\ProductController;
-use App\Http\Controllers\ProductMediaController;
-use App\Http\Controllers\TagController;
-
-Route::middleware('auth')->group(function () {
-    Route::get('/products', [ProductController::class, 'index'])->name('products.index');
-    Route::post('/products/bulk', [ProductController::class, 'bulk'])->name('products.bulk');
-    Route::get('/products/{product}/edit', [ProductController::class, 'edit'])->name('products.edit');
-    Route::put('/products/{product}', [ProductController::class, 'update'])->name('products.update');
-
-    Route::get('/products/{product}/media', [ProductMediaController::class, 'edit'])->name('products.media');
-    Route::put('/products/{product}/tags', [ProductMediaController::class, 'updateTags']);
-    Route::post('/products/{product}/photos', [ProductMediaController::class, 'storePhoto']);
-    Route::delete('/photos/{photo}', [ProductMediaController::class, 'destroyPhoto']);
-
-    Route::get('/tags', [TagController::class, 'index']);
-    Route::post('/tags', [TagController::class, 'store']);
-});
-```
+A product has `id`, `name`, `sku`, `category`, `price`, `stock`, `status`, `description` and `updated_at`; tags and photos belong to it. Every action authorises in its own code, as route model binding finds any record by its id, whoever asks.
 
 ## 1. Edit page
 
@@ -186,8 +73,11 @@ const unchanged = ref(false);
 watch(() => form.isDirty, () => (unchanged.value = false));
 const save = () => {
   if (!form.isDirty) return (unchanged.value = true);
+  const sent = form.data();
   form.put(`/products/${props.product.id}`, {
     preserveScroll: true,
+    // what was sent is what was saved: anything typed while the save was under way stays unsaved
+    onSuccess: () => JSON.stringify(form.data()) !== JSON.stringify(sent) && form.defaults(sent),
     onError: () => nextTick(() => summary.value.focus()),
   });
 };
@@ -242,66 +132,10 @@ const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.d
 </template>
 ```
 
-```php
-// app/Http/Controllers/ProductController.php (edit and update; index and bulk are in recipe 2)
-use App\Http\Requests\UpdateProductRequest;
-use App\Models\Product;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Support\Facades\Gate;
-use Inertia\Inertia;
-use Inertia\Response;
+What the server does:
 
-public function edit(Product $product): Response
-{
-    Gate::authorize('update', $product);
-
-    return Inertia::render('products/Edit', [
-        'product' => $product->only('id', 'name', 'sku', 'category', 'price', 'stock', 'status', 'description', 'updated_at'),
-        'categories' => Product::CATEGORIES,
-        'statuses' => Product::STATUSES,
-    ]);
-}
-
-// UpdateProductRequest::authorize() checks the same `update` ability before this runs
-public function update(UpdateProductRequest $request, Product $product): RedirectResponse
-{
-    $product->update($request->validated());
-    Inertia::flash('toast', ['type' => 'success', 'message' => 'Product saved.']);
-
-    return to_route('products.edit', $product);
-}
-```
-
-```php
-// app/Http/Requests/UpdateProductRequest.php
-namespace App\Http\Requests;
-
-use App\Models\Product;
-use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
-
-class UpdateProductRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return $this->user()->can('update', $this->route('product'));
-    }
-
-    /** @return array<string, mixed> */
-    public function rules(): array
-    {
-        return [
-            'name' => ['required', 'string', 'max:120'],
-            'sku' => ['required', 'string', 'max:20', Rule::unique('products')->ignore($this->route('product'))],
-            'category' => ['required', Rule::in(Product::CATEGORIES)],
-            'price' => ['required', 'decimal:0,2', 'min:0'],
-            'stock' => ['required', 'integer', 'min:0'],
-            'status' => ['required', Rule::in(Product::STATUSES)],
-            'description' => ['nullable', 'string', 'max:2000'],
-        ];
-    }
-}
-```
+- `edit` authorises `update` on the product and renders `products/Edit` with `product` (the fields above), `categories` and `statuses`.
+- `update` authorises the same, validates, saves, flashes `toast` ("Product saved.") and redirects to the edit page. The rules: `name` required, at most 120; `sku` required, at most 20, unique but for this product; `category` and `status` one of their lists; `price` at least 0 with at most two decimals; `stock` a whole number, at least 0; `description` optional, at most 2000.
 
 What comes back:
 
@@ -318,7 +152,7 @@ What comes back:
 
 ## 2. List page
 
-A record-header-shaped title and a server-mode `DataTable`, in the layout: search, sort, filters and pages come from `TableQuery`, a table change reloads only `products`, and the selection drives a bulk action. The bulk endpoint gets either ids or, after "Select all N matching", the search and filters the table showed, and re-runs them through the same `filter()` and `TableQuery::search()` as the index.
+A record-header-shaped title and a server-mode `DataTable`, in the layout: search, sort, filters and pages come from `TableQuery`, a table change reloads only `products`, and the selection drives a bulk action. The bulk endpoint gets either ids or, after "Select all N matching", the search and filters the table showed, reads them back with `TableQuery::selection()`, and re-runs them through the same `filter()` and `TableQuery::search()` as the index.
 
 ```vue
 <!-- resources/js/pages/products/Index.vue -->
@@ -391,17 +225,14 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 ```
 
 ```php
-// app/Http/Controllers/ProductController.php (index and bulk)
+// app/Http/Controllers/ProductController.php: the index; the rest of the controller is the app's
 namespace App\Http\Controllers;
 
 use Altpro\Ui\TableQuery;
 use App\Models\Product;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -430,37 +261,6 @@ class ProductController extends Controller
         ]);
     }
 
-    public function bulk(Request $request): RedirectResponse
-    {
-        Gate::authorize('archive', Product::class);
-
-        $data = $request->validate([
-            'action' => ['required', Rule::in(['archive'])],
-            'selection.mode' => ['required', Rule::in(['ids', 'matching'])],
-            'selection.ids' => ['required_if:selection.mode,ids', 'array'],
-            'selection.ids.*' => ['integer'],
-            'selection.search' => ['nullable', 'string'],
-            'selection.filters' => ['array'],
-            'selection.filters.*' => ['array'],
-        ]);
-        $selection = $data['selection'];
-
-        // the index's starting point, so neither ids nor "matching" reach a row the list would hide
-        $query = Product::visibleTo($request->user());
-        if ($selection['mode'] === 'ids') {
-            $query->whereKey($selection['ids']);
-        } else {
-            // the query the table showed, run the same way: the index's filters, then TableQuery's search
-            $this->filter($query, $selection['filters'] ?? []);
-            TableQuery::search($query, self::SEARCHABLE, $selection['search'] ?? '');
-        }
-
-        $count = $query->update(['status' => 'Archived']);
-        Inertia::flash('toast', ['type' => 'success', 'message' => "{$count} ".Str::plural('product', $count).' archived.']);
-
-        return back();
-    }
-
     /**
      * Declared once: DataTable's `filters` prop, and what TableQuery::filters() reads.
      *
@@ -468,6 +268,7 @@ class ProductController extends Controller
      */
     private function filters(): array
     {
+        // Product::STATUSES and Product::CATEGORIES are the app's lists of allowed values
         $options = fn (array $values) => array_map(fn ($v) => ['value' => $v, 'label' => $v], $values);
 
         return [
@@ -477,7 +278,7 @@ class ProductController extends Controller
     }
 
     /**
-     * What each filter means, for the index and for a bulk action over everything matching.
+     * What each filter means, for the index and for the bulk action over everything matching.
      *
      * @param  Builder<Product>  $query
      * @param  array<string, array<int, string>>  $values
@@ -503,14 +304,15 @@ What comes back:
 | `POST /products/bulk` from a user who is not a manager | `403`, and nothing changes. |
 
 - `defaultSort` and `perPage` match the component's `sort` and `:per-page`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`.
-- `selection.filters` has the shape `TableQuery::filters()` returns, so the one `filter()` serves both.
+- The bulk action authorises (`archive` here, whether this user may archive at all), validates `action`, `selection.mode` and the ids, and starts from the same `Product::visibleTo()` as the index. For `ids` it takes those ids. For `matching` it reads the search and filters with `TableQuery::selection($request, $this->filters())`, which returns `['search' => …, 'filters' => …]`, runs `filter()` with the filters and `TableQuery::search()` with `self::SEARCHABLE` and the search, and the one `filter()` serves the index and the bulk action. It updates, flashes `toast` ("2 products archived.") and returns `back()`.
+- Read `selection.search` and `selection.filters` only through `TableQuery::selection()`, never straight from the request. It checks the body as `TableQuery::filters()` checks the URL, so a nested array, a NUL byte or invalid UTF-8 in it reads as absent instead of reaching the database as a 500, and an empty search, which Laravel turns into null, reads as no search. Do not also check filter values against their options: a daterange or boolean has none, and the index does not either.
 - `onSuccess: clear` empties the selection once the server has answered. The page's new props show the archived rows; the rows that no longer match a filter drop out.
 - A destructive bulk action (delete) asks first: a `.dialog` that says how many, built as [destructive-action.md](destructive-action.md) builds one.
-- `Product::visibleTo()` starts the index, its count and `bulk()`. The endpoint takes whatever ids and filters it is sent, so a bulk query starting from `Product::query()` would reach rows the list never showed. `Gate::authorize('archive', …)` is the other half: whether this user may archive at all.
+- `Product::visibleTo()`, the app's scope for the products this user may see, starts the index, its count and the bulk action. The endpoint takes whatever ids and filters it is sent, so a bulk query starting from `Product::query()` would reach rows the list never showed.
 
 ## 3. Tags and photos
 
-Two ways to send data from one page. Tags are an ordinary form: `Field type="combobox"` searches `GET /tags`, creates through `POST /tags`, and Save submits the ids. Photos upload as they are added, one `useHttp` request per file, so each file has its own progress bar and its own errors, and removing a file cancels its upload or deletes it on the server.
+Two ways to send data from one page. Tags are an ordinary form: `Field type="combobox"` searches `GET /tags`, creates through `POST /tags`, and Save submits the ids. Photos upload as they are added, one `useHttp` request per file, so each file has its own progress bar and its own errors, and removing a file cancels its upload or deletes it on the server. A file removed after its last byte has gone may already be stored, so it is deleted once the server answers.
 
 ```vue
 <!-- resources/js/pages/products/Media.vue -->
@@ -519,6 +321,7 @@ import { computed, reactive, ref, watch } from "vue";
 import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
+import { useUnsavedChanges } from "@ui/useUnsavedChanges";
 import AppLayout from "@/layouts/AppLayout.vue";
 
 const props = defineProps({
@@ -529,11 +332,19 @@ const props = defineProps({
 
 // Tags: a form like any other. The combobox searches /tags and creates through POST /tags.
 const form = useForm({ tag_ids: props.product.tag_ids });
-const saveTags = () => form.put(`/products/${props.product.id}/tags`, { preserveScroll: true });
+function saveTags() {
+  const sent = form.data();
+  form.put(`/products/${props.product.id}/tags`, {
+    preserveScroll: true,
+    // what was sent is what was saved: a tag picked while the save was under way stays unsaved
+    onSuccess: () => JSON.stringify(form.data()) !== JSON.stringify(sent) && form.defaults(sent),
+  });
+}
 
 // Photos: each file uploads as it is added, one request per file, so each has its own progress and errors.
 const photos = ref([]);
-const uploads = reactive(new Map()); // File → { percent, id, error, request }
+const uploads = reactive(new Map()); // File → { percent, id, error, request, added }
+let added = 0;
 
 watch(photos, (now, before = []) => {
   for (const file of now) if (!uploads.has(file)) upload(file);
@@ -541,21 +352,39 @@ watch(photos, (now, before = []) => {
 });
 
 function upload(file) {
-  const state = reactive({ percent: 0, id: null, error: null, request: useHttp({ photo: file }) });
+  const state = reactive({ percent: 0, id: null, error: null, request: useHttp({ photo: file }), added: added++, removed: false });
   uploads.set(file, state);
   state.request.post(`/products/${props.product.id}/photos`, {
     onProgress: (event) => (state.percent = event.percentage),
-    onSuccess: (photo) => (state.id = photo.id),
+    onSuccess: (photo) => {
+      state.id = photo.id;
+      // removed while the server was storing it: delete what it stored
+      if (state.removed) destroy(file, state);
+    },
     onError: (errors) => (state.error = errors.photo),
     onFinish: () => (state.percent = null),
   }).catch(() => (state.error ??= "The upload failed. Remove the file and try again.")); // a 422 resolves; this is a 500 or no network (or a cancel, whose file has gone)
 }
 
+// A file still sending is cancelled. Once every byte has gone the server may have stored it already, so it leaves the
+// list and is deleted when the server answers. A stored photo leaves the list at once, and comes back in its place with
+// an error if the server did not delete it. Its place is the order the files were added in, which holds however many
+// other removals are under way.
 function remove(file) {
   const state = uploads.get(file);
   uploads.delete(file);
-  if (state?.id) useHttp({}).delete(`/photos/${state.id}`);
-  else state?.request.cancel();
+  if (!state) return;
+  if (state.id) return destroy(file, state);
+  if (state.percent === 100) state.removed = true;
+  else state.request.cancel();
+}
+function destroy(file, state) {
+  const failed = () => {
+    state.error = "The photo was not removed. Try again.";
+    uploads.set(file, state);
+    photos.value = [...photos.value, file].sort((a, b) => uploads.get(a).added - uploads.get(b).added);
+  };
+  useHttp({}).delete(`/photos/${state.id}`, { onError: failed }).catch(failed); // a 422 calls onError; a 403, 500 or no network rejects
 }
 
 // FileInput takes progress by position, and errors as `photos.0`, `photos.1`… by position
@@ -564,6 +393,11 @@ const errors = computed(() => Object.fromEntries(
   photos.value.flatMap((file, i) => (uploads.get(file)?.error ? [[`photos.${i}`, uploads.get(file).error]] : [])),
 ));
 const uploading = computed(() => progress.value.filter((p) => p != null).length);
+
+// unsaved tags, which Log out would lose as well; with no draft, as a tag added since has no label to show by
+useUnsavedChanges(form, { remember: false });
+// a photo still uploading, which leaving would cut off; an object, not a function, so Log out asks too
+useUnsavedChanges({ get isDirty() { return uploading.value > 0; } });
 </script>
 
 <template>
@@ -600,105 +434,13 @@ const uploading = computed(() => progress.value.filter((p) => p != null).length)
 </template>
 ```
 
-```php
-// app/Http/Controllers/ProductMediaController.php
-namespace App\Http\Controllers;
+What the server does:
 
-use App\Models\Photo;
-use App\Models\Product;
-use App\Models\Tag;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Gate;
-use Illuminate\Support\Facades\Storage;
-use Inertia\Inertia;
-use Inertia\Response;
-
-class ProductMediaController extends Controller
-{
-    public function edit(Product $product): Response
-    {
-        Gate::authorize('update', $product);
-
-        return Inertia::render('products/Media', [
-            'product' => [...$product->only('id', 'name', 'sku'), 'tag_ids' => $product->tags->modelKeys()],
-            'tags' => $product->tags->map(fn (Tag $tag) => ['value' => $tag->id, 'label' => $tag->name]),
-        ]);
-    }
-
-    public function updateTags(Request $request, Product $product): RedirectResponse
-    {
-        Gate::authorize('update', $product);
-
-        $data = $request->validate([
-            'tag_ids' => ['array', 'max:5'],
-            'tag_ids.*' => ['integer', 'exists:tags,id'],
-        ]);
-        $product->tags()->sync($data['tag_ids'] ?? []);
-        Inertia::flash('toast', ['type' => 'success', 'message' => 'Tags saved.']);
-
-        return back();
-    }
-
-    // one file per request, so each has its own progress and its own 422
-    public function storePhoto(Request $request, Product $product): JsonResponse
-    {
-        Gate::authorize('update', $product);
-
-        $request->validate(['photo' => ['required', 'image', 'max:5120']]);
-        $file = $request->file('photo');
-        $photo = $product->photos()->create([
-            'name' => $file->getClientOriginalName(),
-            'path' => $file->store('photos', 'public'),
-        ]);
-
-        return response()->json(['id' => $photo->id, 'name' => $photo->name], 201);
-    }
-
-    public function destroyPhoto(Photo $photo): \Illuminate\Http\Response
-    {
-        Gate::authorize('update', $photo->product);
-
-        Storage::disk('public')->delete($photo->path);
-        $photo->delete();
-
-        return response()->noContent();
-    }
-}
-```
-
-```php
-// app/Http/Controllers/TagController.php: the combobox's `src` and `create`
-namespace App\Http\Controllers;
-
-use App\Models\Tag;
-use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
-
-class TagController extends Controller
-{
-    public function index(Request $request): JsonResponse
-    {
-        return response()->json(Tag::query()
-            ->where('name', 'like', '%'.$request->string('q').'%')
-            ->orderBy('name')
-            ->limit(20)
-            ->get()
-            ->map(fn (Tag $tag) => ['value' => $tag->id, 'label' => $tag->name]));
-    }
-
-    // an existing tag with that name, ignoring case, is returned rather than duplicated
-    public function store(Request $request): JsonResponse
-    {
-        $label = $request->validate(['label' => ['required', 'string', 'max:30']])['label'];
-        $tag = Tag::query()->whereRaw('lower(name) = ?', [mb_strtolower($label)])->first()
-            ?? Tag::create(['name' => $label]);
-
-        return response()->json(['value' => $tag->id, 'label' => $tag->name], $tag->wasRecentlyCreated ? 201 : 200);
-    }
-}
-```
+- `GET /products/{id}/media` renders `products/Media` with `product` (`id`, `name`, `sku` and `tag_ids`) and `tags`, the product's tags as `{ value, label }`.
+- `PUT /products/{id}/tags` takes `tag_ids`, at most 5, each an existing tag, syncs them, flashes `toast` ("Tags saved.") and returns `back()`.
+- `POST /products/{id}/photos` takes one file, `photo`: an image, at most 5120 KB. It stores it and answers JSON, so each file has its own progress and its own 422.
+- `DELETE /photos/{id}` deletes the stored file and the record and answers `204`.
+- `GET /tags` matches `q` anywhere in the name, at most 20, in name order. `POST /tags` returns an existing tag with that name, ignoring case, rather than making a second one.
 
 What comes back:
 
@@ -708,11 +450,12 @@ What comes back:
 | `POST /tags` `{ "label": "Vinyl" }` | Combobox's "Add “Vinyl”" | `201 { "value": 9, "label": "Vinyl" }`, which is selected. A 422 `{ "message": …, "errors": { "label": ["The label field is required."] } }` shows in the panel. |
 | `PUT /products/{id}/tags` `{ "tag_ids": [1, 9] }` | Save tags (`useForm`) | Redirect back with flash `toast`; or back with `errors.tag_ids`, which the `Field` shows. |
 | `POST /products/{id}/photos`, multipart `photo` | `useHttp`, one per file | `201 { "id": 14, "name": "front.png" }`; or `422 { "errors": { "photo": ["The photo field must not be greater than 5120 kilobytes."] } }`, which `onError` gets as `{ photo: "…" }`. |
-| `DELETE /photos/{id}` | Removing an uploaded file | `204`. |
+| `DELETE /photos/{id}` | Removing an uploaded file | `204`. Anything else (a `403`, a `500`, no network) puts the file back in its place with "The photo was not removed. Try again.", as the photo is still stored. |
 
 - Both JSON endpoints answer JSON errors because the requests send `Accept: application/json`; the combobox and `useHttp` both do, and both send the `XSRF-TOKEN` cookie back as `X-XSRF-TOKEN`, which Laravel's CSRF check accepts.
 - `useHttp` reports progress from the browser's upload events, so the bar measures the bytes sent; the server's work after the last byte shows as 100%. `onFinish` takes the bar away.
 - `FileInput` reads per-file errors by position (`photos.1`); the `errors` computed builds them from the file, so they stay with their file when another is removed.
+- Two `useUnsavedChanges` guards, one question between them: the tags form, so Log out and every other way out ask while tags are unsaved, and an object whose `isDirty` says uploads are still running, which leaving would cut off (an object rather than a function, so Log out asks too). The tags guard keeps no draft (`remember: false`): a tag added since would come back on Back and Forward with no label to show ([unsaved-changes.md](unsaved-changes.md)).
 - `accept="image/*"` refuses other files in the browser before any request; `image` in the rules is the check that counts.
 - Saved photos are the app's to show (a grid of thumbnails above the drop zone, each with a delete button that calls `DELETE /photos/{id}`). The drop zone lists only this visit's uploads.
-- Each action authorises `update` on the product, `destroyPhoto` on the photo's product: route model binding alone would let anyone signed in delete any photo. A `403` on an upload lands in the `catch`, so the file says the upload failed.
+- Each action authorises `update` on the product, the photo's delete `update` on the photo's product: route model binding alone would let anyone signed in delete any photo. A `403` on an upload lands in the `catch`, so the file says the upload failed.

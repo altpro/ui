@@ -117,6 +117,273 @@ test("edit page: leaving with unsaved changes asks first, in the app and through
   expect(await unloadBlocked()).toBe(false);
 });
 
+test("edit page: Back and Forward keep an unsaved draft, still unsaved, and a reload starts from the server", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
+  await name.fill("Arc studio draft");
+  await expect(status).toHaveText("Unsaved changes");
+
+  // history brings the page back with no visit, so nothing can ask; the draft comes back with it instead
+  await page.goBack();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await page.goForward();
+  await expect(name).toHaveValue("Arc studio draft");
+  await expect(status).toHaveText("Unsaved changes");
+  // still unsaved: Discard goes back to the saved name, and the draft can come back again
+  await page.getByRole("button", { name: "Discard" }).click();
+  await expect(name).toHaveValue("Arc studio");
+  await name.fill("Arc studio mk2");
+
+  // a reload is a fresh start, as the browser's own prompt said
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.reload();
+  await expect(name).toHaveValue("Arc studio");
+  await expect(status).toHaveText("");
+
+  // the draft saves, and once saved there is nothing to bring back
+  await name.fill("Arc studio mk3");
+  await page.goBack();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await page.goForward();
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await expect(name).toHaveValue("Arc studio mk3");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(status).toHaveText("Saved.");
+  await page.goBack();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await page.goForward();
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await expect(name).toHaveValue("Arc studio mk3");
+  await expect(status).toHaveText("");
+});
+
+test("edit page: the draft Back brings is the latest, never one the reader discarded, left or failed to save", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
+  const backAndForth = async () => {
+    await page.goBack();
+    await expect(page).toHaveURL(/recipe-products\.html$/);
+    await page.goForward();
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Arc studio");
+  };
+
+  // a second change straight after the first, inside the time history writes are spaced by
+  await name.fill("A");
+  await name.fill("AB");
+  await backAndForth();
+  await expect(name).toHaveValue("AB");
+  // a Discard straight after a change
+  await name.fill("old draft");
+  await page.getByRole("button", { name: "Discard" }).click();
+  await backAndForth();
+  await expect(name).toHaveValue("Arc studio");
+  await expect(status).toHaveText("");
+
+  // a failed save keeps the draft
+  await name.fill("");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.locator("form").getByRole("alert")).toBeFocused();
+  await backAndForth();
+  await expect(name).toHaveValue("");
+  await expect(status).toHaveText("Unsaved changes");
+
+  // a submit or a leave another listener cancels (a second form's question answered Cancel) forgets nothing
+  page.on("dialog", (dialog) => dialog.accept());
+  const cancelVisits = (on) => page.evaluate((on) => {
+    window.cancelVisits ??= (event) => event.preventDefault();
+    document[on ? "addEventListener" : "removeEventListener"]("inertia:before", window.cancelVisits);
+  }, on);
+  await name.fill("kept");
+  await cancelVisits(true);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
+  await cancelVisits(false);
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await backAndForth();
+  await expect(name).toHaveValue("kept");
+  await expect(status).toHaveText("Unsaved changes");
+
+  // OK to "Your changes won't be saved" means they aren't, on Back either
+  await name.fill("left behind");
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await page.goBack();
+  await expect(name).toHaveValue("Arc studio");
+  await expect(status).toHaveText("");
+});
+
+// the stand-in server rewritten as it is served, for a slower answer or a save that goes elsewhere
+const patchServer = (page, from, to) => page.route("**/app/server.js*", async (route) => {
+  const response = await route.fetch();
+  const body = (await response.text()).replace(from, to);
+  expect(body).toContain(to);
+  await route.fulfill({ response, body });
+});
+
+test("edit page: Back while a save is under way leaves the page Back went to as it was", async ({ page }) => {
+  await patchServer(page, "} else await wait(200, config.signal);", "} else await wait(1500, config.signal);");
+  await page.goto("/app/recipe-products.html");
+  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await page.getByLabel("Name", { exact: true }).fill("Arc studio mk2");
+  await page.waitForTimeout(300);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.waitForTimeout(400);
+  // Back cancels the save, whose end must not write the edit page into the list's history entry
+  await page.goBack();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await expect(page.locator(".datatable")).toBeVisible();
+  await page.waitForTimeout(300);
+  expect(await page.evaluate(() => [history.state.page.component, location.pathname])).toEqual(["products/Index", "/app/recipe-products.html"]);
+  // and the save Back cut short was never made, so its draft is still there
+  await page.goForward();
+  await expect(page.getByLabel("Name", { exact: true })).toHaveValue("Arc studio mk2");
+  await expect(page.locator("form [role=status]")).toHaveText("Unsaved changes");
+});
+
+test("edit page: text typed while a save is under way stays unsaved", async ({ page }) => {
+  await patchServer(page, "} else await wait(200, config.signal);", "} else await wait(1000, config.signal);");
+  await page.goto("/app/recipe-products.html");
+  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
+  await name.fill("Arc studio mk2");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await name.fill("Arc studio mk3");
+  await expect(page.getByRole("button", { name: "Save", exact: true })).not.toHaveClass(/loading/);
+  await expect(status).toHaveText("Unsaved changes");
+  // the draft Back and Forward bring differs from what was saved, not from what was there before
+  await page.goBack();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await page.goForward();
+  await expect(name).toHaveValue("Arc studio mk3");
+  await expect(status).toHaveText("Unsaved changes");
+  await page.getByRole("button", { name: "Discard" }).click();
+  await expect(name).toHaveValue("Arc studio mk2");
+});
+
+// Inertia's router, as the page loaded it
+const router = (page) => page.evaluate(async () => {
+  const url = performance.getEntriesByType("resource").map((e) => e.name).find((n) => n.includes("@inertiajs_vue3"));
+  window.inertia = await import(url);
+});
+
+test("edit page: one draft serves the entries a list beside the form makes, and a save leaves none of them one", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await router(page);
+  const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
+  // what a list on the page sends: a sort pushes an entry, a search replaces it, both keeping the page mounted
+  const visit = (query, replace) => page.evaluate(([query, replace]) =>
+    window.inertia.router.get(`${location.pathname}${location.search}&${query}`, {}, { preserveState: true, replace, only: ["product"] }), [query, replace]);
+
+  await name.fill("before the sort");
+  await visit("sort=price", false);
+  await expect(page).toHaveURL(/sort=price$/);
+  await name.fill("after the sort");
+  await visit("q=arc", true);
+  await expect(page).toHaveURL(/sort=price&q=arc$/);
+  await name.fill("after the search");
+  // Back to before the sort keeps the latest edit, and so does Forward
+  await page.goBack();
+  await expect(page).toHaveURL(/id=2$/);
+  await expect(name).toHaveValue("after the search");
+  await expect(status).toHaveText("Unsaved changes");
+  await page.goForward();
+  await expect(page).toHaveURL(/q=arc$/);
+  await expect(name).toHaveValue("after the search");
+
+  // a save leaves no entry a draft to bring back
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(status).toHaveText("Saved.");
+  await page.goBack();
+  await expect(page).toHaveURL(/id=2$/);
+  // the entry's own props, as Inertia kept them, and no draft over them
+  await expect(name).toHaveValue("Arc studio");
+  await expect(status).toHaveText("");
+
+  // nor after a reload, which starts a new document that has not seen the save
+  await page.goForward();
+  await expect(page).toHaveURL(/q=arc$/);
+  page.on("dialog", (dialog) => dialog.accept());
+  await page.reload();
+  await page.goBack();
+  await expect(page).toHaveURL(/id=2$/);
+  await expect(name).toHaveValue("Arc studio");
+  await expect(status).toHaveText("");
+
+  // a reload the reader agreed to starts afresh, and the entries before it don't bring back what they agreed to lose
+  await name.fill("typed before the sort");
+  await router(page);
+  await visit("sort=name", false);
+  await expect(page).toHaveURL(/sort=name$/);
+  await name.fill("typed after the sort");
+  await page.reload();
+  // the record as the server has it, saved above
+  await expect(name).toHaveValue("after the search");
+  await page.goBack();
+  await expect(page).toHaveURL(/id=2$/);
+  await expect(name).toHaveValue("Arc studio");
+  await expect(status).toHaveText("");
+});
+
+test("edit page: a reload of another page keeps a draft the reader never agreed to lose", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
+  page.on("dialog", (dialog) => dialog.accept());
+  await name.fill("kept through it all");
+  // out of the app, which notes the page, and back to the draft
+  await page.goto("/button.html");
+  await page.goBack();
+  await expect(name).toHaveValue("kept through it all");
+  // back to the list, a reload there, and forward to the form
+  await page.goBack();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await page.reload();
+  await page.goForward();
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await expect(name).toHaveValue("kept through it all");
+  await expect(status).toHaveText("Unsaved changes");
+});
+
+test("edit page: leaving the app straight after typing keeps the last of it for Back", async ({ page }) => {
+  await page.goto("/app/recipe-product.html?id=2");
+  const name = page.getByLabel("Name", { exact: true });
+  page.on("dialog", (dialog) => dialog.accept());
+  await name.fill("A");
+  await name.fill("AB");
+  // a full page load: the document goes, and the draft with it unless history has it
+  await page.goto("/button.html");
+  await page.goBack();
+  await expect(name).toHaveValue("AB");
+  await expect(page.locator("form [role=status]")).toHaveText("Unsaved changes");
+});
+
+test("edit page: a save that lands on another record's page keeps each record's draft to itself", async ({ page }) => {
+  // the save redirects to product 3's edit page, the same component at another URL, as create to edit does
+  await patchServer(page, 'return back({ flash: { toast: { type: "success", message: "Product saved." } } });', "return edit(3);");
+  await page.goto("/app/recipe-products.html");
+  await page.getByRole("link", { name: "Edit Arc studio" }).click();
+  const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
+  await name.fill("Arc studio mk2");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(name).toHaveValue("Arc studio mk2");
+  await expect(page).not.toHaveURL(/recipe-product\.html\?id=2$/);
+  // the record the save landed on, edited
+  await name.fill("draft for the other record");
+  await page.goBack();
+  await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
+  await expect(status).toHaveText("");
+  await expect(name).not.toHaveValue("draft for the other record");
+  await page.goForward();
+  await expect(name).toHaveValue("draft for the other record");
+  await expect(status).toHaveText("Unsaved changes");
+});
+
 // an open modal makes the toaster inert, so its dismiss cross, and any screen reader, could not reach a toast there
 test("toast: with a modal open the message also shows in the dialog, until it closes, and the toast stays", async ({ page }) => {
   await page.goto("/app/recipe-settings.html");
@@ -330,6 +597,25 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
   await expect(page.locator("#main")).toBeFocused();
 });
 
+test("list page: a table visit another listener cancels is forgotten, not carried into the next change", async ({ page }) => {
+  await page.goto("/app/recipe-products.html");
+  const dt = page.locator(".datatable"), rows = dt.locator("tbody tr");
+  await expect(rows).toHaveCount(10);
+  // what an unsaved-changes guard does when the reader presses Cancel
+  await page.evaluate(() => {
+    window.cancelVisits = (event) => event.preventDefault();
+    document.addEventListener("inertia:before", window.cancelVisits);
+  });
+  await dt.getByRole("combobox", { name: "Status", exact: true }).selectOption("Draft");
+  await page.evaluate(() => document.removeEventListener("inertia:before", window.cancelVisits));
+  await expect(page).not.toHaveURL(/status=/);
+
+  await dt.getByRole("button", { name: /^Price/ }).click();
+  await expect(page).toHaveURL(/sort=price/);
+  await expect(page).not.toHaveURL(/status=/);
+  await expect(rows).toHaveCount(10);
+});
+
 test("tags and photos: the combobox searches and creates on the server, and each photo uploads with progress and its own errors", async ({ page }) => {
   await page.goto("/app/recipe-media.html?id=3");
   const box = page.locator(".combobox"), trigger = box.getByRole("combobox", { name: "Tags", exact: true }), search = box.getByRole("combobox", { name: "Search Tags" });
@@ -373,8 +659,82 @@ test("tags and photos: the combobox searches and creates on the server, and each
   await expect(files).toHaveCount(1);
   await expect(page.getByText("The photo field must not be greater than 5120 kilobytes.")).toBeHidden();
   expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("demo-recipes")).photos.map((p) => p.name))).toEqual(["front.png"]);
+  // a delete the server never got puts the file back in its place, with an error, as the photo is still stored
+  await page.context().setOffline(true);
   await page.getByRole("button", { name: "Remove front.png" }).click();
+  await expect(files.filter({ hasText: "front.png" })).toContainText("The photo was not removed. Try again.");
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("demo-recipes")).photos.length)).toBe(1);
+  await page.context().setOffline(false);
+  await page.getByRole("button", { name: "Remove front.png" }).click();
+  await expect(files).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => JSON.parse(sessionStorage.getItem("demo-recipes")).photos.length)).toBe(0);
+
+  // two removals failing together come back in the order the files were added
+  await page.locator("#photos").setInputFiles(["a", "b", "c"].map((n) => ({ name: `${n}.png`, mimeType: "image/png", buffer: png })));
+  await expect(page.getByRole("progressbar")).toHaveCount(0);
+  await page.context().setOffline(true);
+  await page.getByRole("button", { name: "Remove a.png" }).click();
+  await page.getByRole("button", { name: "Remove b.png" }).click();
+  await expect(files.filter({ hasText: "The photo was not removed." })).toHaveCount(2);
+  expect(await files.evaluateAll((items) => items.map((li) => li.textContent.match(/[abc]\.png/)[0]))).toEqual(["a.png", "b.png", "c.png"]);
+  await page.context().setOffline(false);
+});
+
+test("tags and photos: a photo removed once all of it has been sent is deleted when the server answers", async ({ page }) => {
+  // the server takes a while to store the file after its last byte, and stores it even if the browser stops waiting
+  await patchServer(page, "    } else await wait(200, config.signal);", "      await wait(1500);\n    } else await wait(200, config.signal);");
+  await page.goto("/app/recipe-media.html?id=3");
+  const stored = () => page.evaluate(() => (JSON.parse(sessionStorage.getItem("demo-recipes") ?? "{}").photos ?? []).filter((p) => p.name === "late.png").length);
+  const png = Buffer.from("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=", "base64");
+  await page.locator("#photos").setInputFiles([{ name: "late.png", mimeType: "image/png", buffer: png }]);
+  await expect.poll(() => page.getByRole("progressbar", { name: "Uploading late.png" }).evaluate((bar) => bar.value)).toBe(100);
+  await page.getByRole("button", { name: "Remove late.png" }).click();
+  await expect(page.locator(".dropzone li")).toHaveCount(0);
+  // the server stores it after all, and the page deletes what it stored
+  await page.waitForTimeout(2500);
+  expect(await stored()).toBe(0);
+  await expect(page.locator(".dropzone li")).toHaveCount(0);
+});
+
+test("tags and photos: a tag picked while the save is under way stays unsaved, and leaving asks", async ({ page }) => {
+  await patchServer(page, "} else await wait(200, config.signal);", "} else await wait(1500, config.signal);");
+  await page.goto("/app/recipe-media.html?id=3");
+  const box = page.locator(".combobox"), trigger = box.getByRole("combobox", { name: "Tags", exact: true });
+  const pick = async () => {
+    await trigger.click();
+    await box.locator('[role="option"][aria-selected="false"]').first().click();
+    await page.keyboard.press("Escape");
+  };
+  await pick();
+  await page.getByRole("button", { name: "Save tags" }).click();
+  await pick();
+  await expect(toast(page)).toHaveText("Tags saved.");
+  const asked = [];
+  page.on("dialog", (dialog) => {
+    asked.push(dialog.message());
+    return dialog.dismiss();
+  });
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
+  await expect.poll(() => asked.length).toBe(1);
+  await expect(page).toHaveURL(/recipe-media\.html\?id=3$/);
+});
+
+test("tags and photos: leaving with unsaved tags asks first", async ({ page }) => {
+  await page.goto("/app/recipe-media.html?id=3");
+  const asked = [];
+  page.on("dialog", (dialog) => {
+    asked.push(dialog.message());
+    return dialog.dismiss();
+  });
+  const box = page.locator(".combobox"), trigger = box.getByRole("combobox", { name: "Tags", exact: true });
+  await trigger.click();
+  await box.getByRole("option", { name: "Analog" }).click();
+  await page.keyboard.press("Escape");
+  await expect(trigger).toContainText("Analog");
+  await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
+  await expect.poll(() => asked).toEqual(["Leave this page? Your changes won't be saved."]);
+  await expect(page).toHaveURL(/recipe-media\.html\?id=3$/);
+  await expect(trigger).toContainText("Analog");
 });
 
 test("user menu: the avatar in the header opens a menu with the shared user's name and email, and Log out posts and leaves the app", async ({ page }) => {
@@ -393,4 +753,56 @@ test("user menu: the avatar in the header opens a menu with the shared user's na
   expect(m.x).toBeGreaterThanOrEqual(0);
   await menu.getByRole("button", { name: "Log out" }).click();
   await expect(page).toHaveURL(/\/(index\.html)?$/);
+});
+
+// A page with `now` and an Inertia date cast, standing in for Settings: the demo has no such form, so the served
+// server.js gains one, written with h() as the browser gets no template compiler. The imports reuse the URLs Vite
+// gave server.js's own, so the page shares its Vue and Inertia.
+const routeDatePage = (page) => page.route("**/app/server.js*", async (route) => {
+  const response = await route.fetch();
+  const served = await response.text();
+  const inertia = served.match(/from "([^"]*@inertiajs_vue3[^"]*)"/)[1], ui = served.match(/from "([^"]*)\/dataTable\.ts"/)[1];
+  const body = `import { h as $h, onMounted as $onMounted } from "${inertia.replace("@inertiajs_vue3", "vue")}";
+import { useForm as $useForm } from "${inertia}";
+import $Field from "${ui}/Field.vue";
+import $AppLayout from "/app/layouts/AppLayout.vue";
+const $Release = { setup() {
+  const form = $useForm({ name: "", released: "", shipped: "2026-10-13T09:30:00.000000Z" });
+  $onMounted(() => form.defaults());
+  const field = (key, attrs) => $h($Field, { modelValue: form[key], "onUpdate:modelValue": (v) => (form[key] = v), name: key, ...attrs });
+  return () => $h($AppLayout, { breadcrumb: [{ label: "Release" }] }, () => $h("form", [
+    field("name"), field("released", { type: "date", now: true }), field("shipped", { type: "date" }),
+    $h("output", JSON.stringify({ released: form.released, shipped: form.shipped, isDirty: form.isDirty })),
+  ]));
+} };
+${served}`.replace('const settings = () => page("settings/Account", {});', 'const settings = () => page("Release", {});')
+    .replace("resolve: (name) =>", 'resolve: (name) => name === "Release" ? $Release :');
+  expect(body).toContain('page("Release", {})');
+  expect(body).toContain("$Release :");
+  await route.fulfill({ response, body });
+});
+
+test("date fields: `now` and a trimmed ISO date show in the input on a visit as on a page load, and the form's defaults take them", async ({ page }) => {
+  await routeDatePage(page);
+  const d = new Date(), p = (n) => String(n).padStart(2, "0");
+  const today = `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
+  const released = page.getByLabel("Released"), shipped = page.getByLabel("Shipped");
+  const check = (how) => test.step(how, async () => {
+    // the model and the input agree, and the filled values are the defaults, so the form starts clean
+    await expect(page.locator("form output")).toHaveText(JSON.stringify({ released: today, shipped: "2026-10-13", isDirty: false }));
+    await expect(released).toHaveValue(today);
+    await expect(shipped).toHaveValue("2026-10-13");
+    // a render of the form for another field leaves them as they are
+    await page.getByLabel("Name").fill("Spring catalogue");
+    await expect(page.locator("form output")).toContainText('"isDirty":true');
+    await expect(released).toHaveValue(today);
+    await expect(shipped).toHaveValue("2026-10-13");
+  });
+  await page.goto("/app/recipe-settings.html");
+  await check("page load");
+  // an Inertia visit mounts the page while the app re-renders, which is where the input lost the value
+  await page.goto("/app/recipe-product.html?id=2");
+  await page.getByRole("navigation", { name: "Main" }).first().getByRole("link", { name: "Settings" }).click();
+  await expect(page).toHaveURL(/recipe-settings\.html$/);
+  await check("Inertia visit");
 });

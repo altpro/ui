@@ -11,7 +11,9 @@ const unchanged = ref(false);
 watch(() => form.isDirty, () => (unchanged.value = false));
 const save = () => {
   if (!form.isDirty) return (unchanged.value = true);
-  form.put(url, { preserveScroll: true });
+  const sent = form.data();
+  // what was sent is what was saved: anything typed while the save was under way stays unsaved
+  form.put(url, { preserveScroll: true, onSuccess: () => JSON.stringify(form.data()) !== JSON.stringify(sent) && form.defaults(sent) });
 };
 const status = computed(() => (form.isDirty ? "Unsaved changes" : unchanged.value ? "No changes to save." : form.recentlySuccessful ? "Saved." : ""));
 </script>
@@ -37,7 +39,7 @@ const status = computed(() => (form.isDirty ? "Unsaved changes" : unchanged.valu
 - `scroll-pb-28` on `<html>` (the bar's height on a phone, where the status takes its own line, plus a little) stops the browser tabbing a field behind the bar. The [app shell](app-shell.md)'s root view has it. Inside a scrolling panel instead of the page, put it on that panel.
 - `-mx-gap px-gap` takes the bar to the edges of a `p-gap` container, such as the app shell's `main`; match whatever padding the page has. The bar is opaque, since fields scroll behind it: on a card give it the card's colour with `[--save-bar-bg:var(--color-card)]`. In a grid form give it `col-span-full`.
 - Save stays enabled while the form is clean: a disabled Save gives no reason. Pressing it then sends nothing and the status says "No changes to save." While saving it is `loading`, `disabled` and `aria-busy`, as in [button.md](button.md). Discard is a `type="button"` (never `type="reset"`, which bypasses `v-model`) and is disabled while there is nothing to discard or a save is running.
-- Inertia takes the saved data as the new defaults after a successful save, so `isDirty` goes false by itself. If a `Field` makes `isDirty` start true, call `form.defaults()` on mount (see [field.md](field.md)).
+- Inertia takes the saved data as the new defaults after a successful save, so `isDirty` goes false by itself. It takes the form as it is when the answer comes, though, so text typed while the save was under way would count as saved; `onSuccess` gives the defaults what was sent instead, and the save bar goes on saying "Unsaved changes". `form.data()` copies the top level only: in a form with nested fields edited in place (`form.address.city`, rows in a Repeater left enabled while saving), copy what was sent deeply, or a change typed during the save lands in it too. If a `Field` makes `isDirty` start true, call `form.defaults()` on mount (see [field.md](field.md)).
 - The status line says "Unsaved changes" once, when the form first changes, "Saved." after a save and "No changes to save." for a Save with nothing changed. Keep the element in the page at load and change only its text; keep `{{ status }}` its only content, so an empty status is `:empty`.
 - Always shown, not `v-if="form.isDirty"`: a bar that appears shifts the page and hides Save until something changes.
 - Leaving with unsaved changes asks first: [unsaved-changes.md](unsaved-changes.md) has the composable, one line per page.

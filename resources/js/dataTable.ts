@@ -222,6 +222,8 @@ export const tableView = <TRow>(
     sortValue?: (row: TRow, key: string) => unknown;
     /** False: a search in the URL is ignored, as there is no box to show or clear it. */
     search?: boolean;
+    /** Client mode: the timezone a date filter's days start in. Defaults to the reader's. */
+    timeZone?: string;
   },
   view: DataTableView,
   pageSize: number,
@@ -247,10 +249,10 @@ export const tableView = <TRow>(
           if (filter.match) return filter.match(row, values);
           const v = value(row, filter.field ?? filter.key);
           if (filter.type === "daterange") {
-            // ponytail: compares the date part as the row gives it, so a timestamp must arrive in the app's timezone; `match` covers others
-            const day = v == null ? "" : String(v).slice(0, 10);
+            // the reader's calendar day, as groupByDay heads it: a UTC timestamp just after local midnight is the local day, a bare date never moves
+            const day = dayOf(v, table.timeZone);
             const [from = "", to = ""] = values;
-            return day !== "" && (from === "" || day >= from) && (to === "" || day <= to);
+            return day !== null && (from === "" || day >= from) && (to === "" || day <= to);
           }
           return filter.type === "boolean" ? Boolean(v) === (values[0] === "1") : values.includes(String(v));
         }),
@@ -320,8 +322,11 @@ const isDate = (value: string) => {
  * TableQuery::view() and ::filters() read it the same way; tests/table-urls.json holds both sides to that.
  */
 export const readView = (query: URLSearchParams, options: DataTableUrlOptions): DataTableView & { perPage: number | null } => {
-  // a repeated parameter means its last value, as PHP reads it
-  const read = (key: string) => query.getAll(key).at(-1) ?? "";
+  // a repeated parameter means its last value, as PHP reads it. One with a NUL or invalid UTF-8 (U+FFFD once
+  // the browser has decoded it) is not there at all, as TableQuery reads it: Postgres refuses both
+  const readable = (value: string) => !/[\0\uFFFD]/.test(value);
+  const last = (key: string) => query.getAll(key).slice(-1).filter(readable);
+  const read = (key: string) => last(key)[0] ?? "";
   const at = (key: string) => read(parameter(options.name, key));
   const filters: Record<string, string[]> = {};
   for (const filter of options.filters) {
@@ -330,11 +335,11 @@ export const readView = (query: URLSearchParams, options: DataTableUrlOptions): 
       // either end present speaks for the range; an invalid date is dropped and a reversed range turned round
       let [from = "", to = ""] = ends.map((end) => (isDate(read(end)) ? read(end) : ""));
       if (from !== "" && to !== "" && from > to) [from, to] = [to, from];
-      filters[filter.key] = !ends.some((end) => query.has(end)) ? [...(filter.default ?? [])] : from || to ? [from, to] : [];
+      filters[filter.key] = !ends.some((end) => last(end).length) ? [...(filter.default ?? [])] : from || to ? [from, to] : [];
       continue;
     }
     const key = parameter(options.name, filter.key);
-    const given = filter.type === "multiple" ? [...query].filter(([k]) => isListOf(k, key)).map(([, v]) => v) : query.getAll(key).slice(-1);
+    const given = filter.type === "multiple" ? [...query].filter(([k]) => isListOf(k, key)).map(([, v]) => v).filter(readable) : last(key);
     // present but empty means none; only an absent parameter brings the default back
     filters[filter.key] = given.length === 0 ? [...(filter.default ?? [])] : given.filter((v) => v !== "");
   }
@@ -465,15 +470,18 @@ export const useTableState = (options: {
     const own = options.server() ? options.only() : askedOnly;
     const only = !overtaking ? own : own.length && askedOnly.length ? [...new Set([...askedOnly, ...own])] : [];
     const replaceEntry = replace && (!overtaking || askedReplace);
+    const was = { latestVisit, askedFor: askedFor.value, askedOnly, askedReplace };
     const visit = (latestVisit = {});
     askedFor.value = url;
     askedOnly = only;
     askedReplace = replaceEntry;
+    let started = false;
     router.get(url, {}, {
       preserveScroll: true,
       preserveState: true,
       replace: replaceEntry,
       only: only.length ? only : undefined,
+      onStart: () => (started = true),
       // fails or is cancelled too; a later visit has taken over if this was not the latest
       onFinish: () => {
         if (latestVisit !== visit) return;
@@ -481,6 +489,15 @@ export const useTableState = (options: {
         askedOnly = [];
       },
     });
+    // Inertia starts a visit within router.get. One a `before` listener cancelled (an unsaved-changes guard) never
+    // starts or finishes, so it must not stay asked for, or the next change would carry it into its URL. (A visit
+    // answered from a prefetch of this exact URL also skips onStart; forgetting it then costs nothing, as it lands as asked.)
+    if (!started) {
+      latestVisit = was.latestVisit;
+      askedFor.value = was.askedFor;
+      askedOnly = was.askedOnly;
+      askedReplace = was.askedReplace;
+    }
   };
 
   const setSearch = (value: string) => {
@@ -580,6 +597,8 @@ export interface DataListSource<TRow> {
   searchable?: ReadonlyArray<string>;
   /** False removes the search box. */
   search?: boolean;
+  /** Client mode: the timezone a date filter's days start in. Defaults to the reader's. */
+  timeZone?: string;
   /** The default sort; a list with `sortOptions` defaults to the first of them. */
   sort?: string;
   direction?: DataTableDirection;

@@ -96,7 +96,10 @@
       }
     }
 
+    /* positioned, so an absolutely placed .sr-only inside a cell (an Edit link's row name) is clipped by the scroll box
+       instead of widening the page on a phone */
     > .scroll {
+      position: relative;
       overflow-x: auto;
       border-radius: 0.25rem;
       &:focus-visible {

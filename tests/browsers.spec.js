@@ -679,6 +679,10 @@ test("datatable: a date range works from either end, turns round when reversed a
   await expect(page).toHaveURL(/products_added_from=2026-02-01/);
   await expect(bodyRows(dt)).toHaveCount(9);
   await dt.getByLabel("Added to").fill("2026-01-01");
+  // turned round once the reader leaves the field, not under the cursor
+  await expect(dt.getByLabel("Added to")).toHaveValue("2026-01-01");
+  await expect(bodyRows(dt)).toHaveCount(3);
+  await dt.getByLabel("Added to").blur();
   await expect(dt.getByLabel("Added from")).toHaveValue("2026-01-01");
   await expect(dt.getByLabel("Added to")).toHaveValue("2026-02-01");
   await expect(bodyRows(dt)).toHaveCount(3);
@@ -686,6 +690,45 @@ test("datatable: a date range works from either end, turns round when reversed a
   await expect(page).not.toHaveURL(/products_added/);
   await expect(dt.getByLabel("Added from")).toHaveValue("");
   await expect(bodyRows(dt)).toHaveCount(10);
+});
+
+for (const path of ["/app/recipe-products.html", "/datatable.html"]) {
+  test(`${path}: a table wider than a phone scrolls in its own box, not the page`, async ({ page }) => {
+    await page.setViewportSize({ width: 375, height: 700 });
+    await page.goto(path);
+    await expect(page.locator(".datatable").first().locator("tbody tr").first()).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(375);
+  });
+}
+
+test("datatable: dates typed a digit at a time land as typed, in a browser that commits each digit", async ({ page, browserName }) => {
+  test.skip(browserName === "webkit", "Linux WebKit's date control isn't Safari's");
+  await page.goto("/datatable.html");
+  const dt = datatable(page, "Products"), from = dt.getByLabel("Added from"), to = dt.getByLabel("Added to");
+  // a date field's order comes from the machine, not the page, so learn it and type in that order
+  await from.focus();
+  await page.keyboard.type("02012026");
+  const dayFirst = (await from.inputValue()) === "2026-01-02";
+  await page.goto("/datatable.html");
+  const keys = (day, month, year) => (dayFirst ? `${day}${month}${year}` : `${month}${day}${year}`);
+  await from.focus();
+  await page.keyboard.type(keys("01", "02", "2026"));
+  await to.focus();
+  await page.keyboard.type(keys("15", "03", "2026"));
+  await to.blur();
+  await expect(page).toHaveURL(/products_added_from=2026-02-01&products_added_to=2026-03-15/);
+  await expect(from).toHaveValue("2026-02-01");
+  await expect(to).toHaveValue("2026-03-15");
+
+  // editing one part of a date passes through others on the way, earlier than the start among them
+  await to.focus();
+  await page.keyboard.type(keys("10", "01", "2026"));
+  await expect(to).toHaveValue("2026-01-10");
+  await expect(from).toHaveValue("2026-02-01");
+  await to.blur();
+  await expect(page).toHaveURL(/products_added_from=2026-01-10&products_added_to=2026-02-01|products_added_from=2026-02-01&products_added_to=2026-01-10/);
+  await expect(from).toHaveValue("2026-01-10");
+  await expect(to).toHaveValue("2026-02-01");
 });
 
 test("datatable: a date preset fills in both dates, and the select names it only while they match", async ({ page }) => {
@@ -1223,6 +1266,40 @@ test("combobox: Enter while a search runs picks nothing, not the last query's fi
   await expect(trigger).toHaveText("Beta");
 });
 
+test("combobox: an Add answered after the reader picked something else leaves their choice alone", async ({ page }) => {
+  let answer;
+  await page.route("**/api/suppliers**", async (route) => {
+    const q = new URL(route.request().url()).searchParams.get("q");
+    if (route.request().method() !== "POST") return route.fulfill({ json: q ? [] : [{ value: 1, label: "Alpha" }, { value: 2, label: "Beta" }] });
+    await new Promise((r) => (answer = r));
+    route.fulfill({ status: 201, json: { value: 77, label: "New Co" } });
+  });
+  await page.goto("/combobox.html");
+  const box = combobox(page, "urls"), trigger = box.getByRole("combobox", { name: "Supplier", exact: true });
+  await trigger.click();
+  // the search box takes focus on toggle, after the click: typing sooner can land on the trigger
+  await expect(box.getByRole("combobox", { name: "Search Supplier" })).toBeFocused();
+  await page.keyboard.type("New Co");
+  await expect(box.getByRole("option", { name: "Add “New Co”" })).toBeVisible();
+  await page.keyboard.press("Enter");
+  await expect.poll(() => Boolean(answer)).toBe(true);
+  // the reader gives up waiting and picks Beta
+  await page.keyboard.press("Escape");
+  await trigger.click();
+  // reopening searches again: click once the answer has drawn the list
+  await expect(box.getByRole("combobox", { name: "Search Supplier" })).toBeFocused();
+  await expect(box.getByRole("option")).toHaveText(["Alpha", "Beta"]);
+  await expect(box.getByRole("status")).not.toHaveText("Searching…");
+  await box.getByRole("option", { name: "Beta" }).click();
+  await expect(trigger).toHaveText("Beta");
+  const created = page.waitForResponse((response) => response.request().method() === "POST");
+  answer();
+  await created;
+  await page.waitForTimeout(100);
+  await expect(trigger).toHaveText("Beta");
+  expect(await submitted(box)).toEqual(["2"]);
+});
+
 test("combobox: create sends one request for a double Enter, and none once multiple is at max", async ({ page }) => {
   let posts = 0;
   await page.route("**/api/suppliers**", async (route) => {
@@ -1645,6 +1722,18 @@ test("several lists: another list's partial reload does not dim a list held in t
   await choose(one.getByLabel("Type"), "x");
   await expect(one.locator("> ul")).toHaveAttribute("aria-busy", "true");
   await expect(browser.locator("> ul")).not.toHaveAttribute("aria-busy", "true");
+});
+
+// a file input's button and file name give it a wide intrinsic size; it must still shrink to a phone's column (WCAG 1.4.10)
+for (const width of [320, 360]) test(`a file input fits a ${width}px phone`, async ({ page }) => {
+  await page.setViewportSize({ width, height: 700 });
+  await page.goto("/file.html");
+  const overflow = await page.evaluate(() => [...document.querySelectorAll(".input[type=file]")]
+    .map((el) => ({ el, input: el.getBoundingClientRect(), parent: el.parentElement.getBoundingClientRect() }))
+    .filter(({ input, parent }) => input.left < parent.left - 0.5 || input.right > parent.right + 0.5)
+    .map(({ el }) => el.id || el.getAttribute("aria-label")));
+  expect(overflow).toEqual([]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth)).toBe(true);
 });
 
 test("list frame: a long pager fits a phone, and a list with no search box ignores one in the URL", async ({ page }) => {

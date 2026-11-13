@@ -154,11 +154,22 @@
       line-height: 1.5;
     }
 
-    /* file: the picker button is a muted .btn inset in the border; the file name follows it */
+    /* file: the picker button is a muted .btn inset in the border; the file name follows it.
+       Its natural width (the button plus room for a name) is wider than a phone's column, so
+       it shrinks to its container; every engine then cuts the name short and keeps the button.
+       In a field it fills the column anyway, and a percentage width there also drops its
+       min-content contribution (an input is a compressible replaced element), so a grid or
+       flex track holding the field can shrink too; Chromium does that for width, not max-width */
     &[type="file"] {
+      min-width: 0;
+      max-width: 100%;
       padding-block: 0.25rem;
       padding-inline-start: 0.25rem;
       cursor: pointer;
+
+      .field > & {
+        width: 100%;
+      }
 
       &::file-selector-button {
         height: calc(var(--input-h) - 0.5rem - 2px);

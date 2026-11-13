@@ -3,7 +3,7 @@
 // HTTP client and the Combobox's fetch() calls through a stand-in fetch, and boots the Inertia app
 // as an app's app.js would. The page components in pages/ are the code the recipes show.
 import { createInertiaApp, http, router } from "@inertiajs/vue3";
-import { HttpCancelledError, HttpResponseError } from "@inertiajs/core";
+import { HttpCancelledError, HttpNetworkError, HttpResponseError } from "@inertiajs/core";
 import { readView } from "@ui/dataTable";
 import { toast } from "./toast.js";
 
@@ -298,6 +298,8 @@ http.setClient({
         config.onUploadProgress({ progress: p / 10, percentage: p * 10, loaded: p, total: 10 });
       }
     } else await wait(200, config.signal);
+    // offline (Playwright's setOffline), a request fails as XHR's would
+    if (!navigator.onLine) throw new HttpNetworkError("Network error", config.url);
     const handler = route(method, url);
     // not one of these routes (the menu's other links), or a redirect away from them: answer as Laravel does for a
     // non-Inertia page, with a full page load. The demo's Overview stands in for the dashboard.

@@ -16,6 +16,8 @@ Rule of thumb when writing markup:
 
 Building or reworking a whole screen (a page, dashboard, list, record page or dialog) or a user-facing feature: load the `altpro-ui-design` skill as well. It has the rules that get a screen and its behaviour right on the first build.
 
+Browsers: Chrome and Edge 135, Firefox 147, Safari 26.2 (iOS 26.2) and later. Below these, `command`/`commandfor` buttons and anchored dropdowns do nothing, and the library ships no polyfill, so don't add one or a JavaScript fallback for them. `.inverse` regions need Firefox 151; earlier ones keep the surrounding scheme.
+
 ## Setup (already done if the project uses altpro/ui)
 
 An app made from the altpro Vue starter kit has all of this. Laravel installs it with Composer from the GitHub repository (`"repositories": [{ "type": "vcs", "url": "https://github.com/altpro/ui.git" }]` in `composer.json`), with Lucide for icons:
@@ -45,6 +47,8 @@ Set `build.cssTarget` in `vite.config.js`. Without it, Vite 8 and vite-plus brea
 ```js
 build: { cssTarget: ["chrome123", "firefox120", "safari17.5"] },
 ```
+
+These are where Lightning CSS stops rewriting `light-dark()`, not the supported browsers, which are newer (above).
 
 Vue components bring their own JavaScript; Blade components need none. Import Vue components through a `@ui` alias in the app's `vite.config.js`, so the import does not depend on where the importing file lives. Every example in this skill uses it:
 
@@ -145,9 +149,9 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Component | For | Ships as | Reference |
 |-----------|-----|----------|-----------|
 | App shell | The page frame: sidebar nav, header with breadcrumb and user menu, main, toaster; the sign-in layout; the colour scheme setting | pattern | [app-shell.md](references/app-shell.md) |
-| Page recipes | Whole Inertia screens: list page, edit page, tags and photo uploads, with controllers and endpoint responses | pattern | [recipes.md](references/recipes.md) |
+| Page recipes | Whole Inertia screens: list page, edit page, tags and photo uploads, with what each endpoint must return | pattern | [recipes.md](references/recipes.md) |
 | Validation failure | A failed save: an error summary that is announced and takes focus; where focus goes after a visit | pattern | [validation-failure.md](references/validation-failure.md) |
-| Destructive action | A delete confirmed in a `ConfirmDialog`: pending state, a 422 shown in it, focus back to the trigger, with the controller | pattern | [destructive-action.md](references/destructive-action.md) |
+| Destructive action | A delete confirmed in a `ConfirmDialog`: pending state, a 422 shown in it, focus back to the trigger, with what the server must return | pattern | [destructive-action.md](references/destructive-action.md) |
 | Unsaved changes `useUnsavedChanges` | Ask before leaving a form with unsaved changes, in the app and in the browser | Vue (Inertia) | [unsaved-changes.md](references/unsaved-changes.md) |
 | Button `.btn` | Actions and links that look like buttons | CSS | [button.md](references/button.md) |
 | Join `.join` | Buttons and inputs fused into one bar | CSS | [join.md](references/join.md) |

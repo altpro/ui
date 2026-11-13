@@ -75,7 +75,7 @@ const discard = () => {
 </template>
 ```
 
-The controller and form request follow the edit page in [recipes.md](recipes.md). A Blade form has the same sections with `<x-ui::field>` inside:
+The server follows the edit page in [recipes.md](recipes.md): validate, save, flash a toast, redirect back. A Blade form has the same sections with `<x-ui::field>` inside:
 
 ```blade
 <fieldset class="min-w-0">

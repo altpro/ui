@@ -25,6 +25,8 @@ const name = (entry: Entry): string => entry.name;
 const form = useForm({ name: "" });
 useUnsavedChanges(form);
 const { allowLeaving } = useUnsavedChanges(() => form.isDirty, "Leave without saving?");
+useUnsavedChanges(form, { message: "Leave without saving the order?", remember: "order" });
+useUnsavedChanges(form, { remember: false });
 allowLeaving();
 leaveWithoutAsking();
 // @ts-expect-error a form or a function, not a boolean

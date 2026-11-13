@@ -12,7 +12,7 @@ The components the first CMS, CRM and order-management apps need are built, and 
 ## When an app asks
 
 - [ ] **Kanban**: CRM pipeline. Expensive, because drag-and-drop has to work from the keyboard too. Only if a CRM needs it.
-- [ ] **Repeater drag reordering**: beside the move buttons, never instead of them.
+- [x] **Repeater drag reordering** (13 November 2026): a grip beside the move buttons, never instead of them.
 
 ## Considered and left out
 

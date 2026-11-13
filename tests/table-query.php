@@ -9,10 +9,16 @@
 use Altpro\Ui\TableQuery;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Orchestra\Testbench\Foundation\Application;
 
 $app = Application::create();
+// Laravel's handler renders an uncaught exception and exits 0, which would pass a check that threw
+set_exception_handler(function (Throwable $e): void {
+    fwrite(STDERR, 'FAIL: '.$e::class.': '.$e->getMessage()."\n  at ".$e->getFile().':'.$e->getLine()."\n");
+    exit(1);
+});
 $app['config']->set('database.default', 'sqlite');
 $app['config']->set('database.connections.sqlite', ['driver' => 'sqlite', 'database' => ':memory:', 'prefix' => '']);
 
@@ -90,6 +96,34 @@ $check($page('/?page=2'), [2, ['Calpol']], 'reads the page from the request it w
 $check($page('/?page=9'), [2, ['Calpol']], 'shows the last page for a page past the end');
 $check($page('/?page=9223372036854775807'), [2, ['Calpol']], 'shows the last page for a page too big for an offset');
 
+// Postgres refuses a NUL byte and invalid UTF-8 even as bound values (SQLSTATE 22021), and SQLite takes both, so the
+// queries are checked for them rather than run: every binding is UTF-8 without a NUL, and the view goes to the page as JSON
+$unreadable = fn (array $bindings): array => array_values(array_filter($bindings, fn ($b): bool => is_string($b) && (! mb_check_encoding($b, 'UTF-8') || str_contains($b, "\0"))));
+$bad = '/?search=a%00b&sort=name%FF&dir=desc%00&page=2%00&per_page=10%FF&brand%5B%5D=acme&brand%5B%5D=b%00lt&brand%5B%5D=%FF&tags%5B%5D=%00&status=%FF&placed_from=%FF&placed_to=2026-03-31%00';
+$check($names('/?search=a%00b'), ['Anadin', 'Boots', 'Calpol'], 'a search with a null byte is no search');
+$check($names('/?search=%FF'), ['Anadin', 'Boots', 'Calpol'], 'a search that is not UTF-8 is no search');
+DB::enableQueryLog();
+TableQuery::paginate(Brand::query(), Request::create($bad), searchable: ['name'], sortable: ['name']);
+$check(count(DB::getQueryLog()) > 0 ? $unreadable(array_merge(...array_column(DB::getQueryLog(), 'bindings'))) : null, [], 'paginate binds nothing Postgres refuses');
+DB::disableQueryLog();
+$filters = [
+    ['key' => 'brand', 'type' => 'multiple'],
+    ['key' => 'tags', 'type' => 'multiple', 'default' => ['new']],
+    ['key' => 'status', 'type' => 'select', 'default' => ['live']],
+    ['key' => 'placed', 'type' => 'daterange', 'default' => ['2026-01-01', '']],
+];
+$values = TableQuery::filters(Request::create($bad), $filters);
+$check($values, ['brand' => ['acme'], 'tags' => ['new'], 'status' => ['live'], 'placed' => ['2026-01-01', '']], 'filters drop a value Postgres refuses, and a filter of nothing else takes its default');
+$check(TableQuery::filters(Request::create('/?tags%5B%5D=&tags%5B%5D=%FF'), $filters)['tags'], [], 'an empty value beside one Postgres refuses still says none');
+$pg = Brand::on('pgsql')->whereIn('brand', $values['brand'])->whereIn('status', $values['status']);
+TableQuery::search($pg, ['name'], TableQuery::view(Request::create($bad), ['name'])['search']);
+$check([$pg->toSql(), $pg->getBindings()], ['select * from "brands" where "brand" in (?) and "status" in (?)', ['acme', 'live']], 'what the filters and search build on Postgres binds no NUL or invalid UTF-8');
+foreach (["a\0b", "\xFF", "caf\xC3"] as $term) {
+    TableQuery::search($pg = Brand::on('pgsql'), ['name'], $term);
+    $check([$pg->toSql(), $pg->getBindings()], ['select * from "brands"', []], 'search() called directly ignores '.json_encode(bin2hex($term)));
+}
+$check(json_encode(TableQuery::view(Request::create($bad), ['name']) + ['filters' => $values]) !== false, true, 'the view goes back to the page as JSON');
+
 // the URL format, case by case, from the fixture tests/table-view.ts reads too
 $fixture = json_decode((string) file_get_contents(__DIR__.'/table-urls.json'), true, flags: JSON_THROW_ON_ERROR);
 $table = $fixture['table'];
@@ -108,5 +142,55 @@ foreach ($fixture['cases'] as $case) {
     $expected = [...$fixture['view'], ...$case['view'], 'filters' => [...$fixture['view']['filters'], ...$case['view']['filters'] ?? []]];
     $check($sorted($actual), $sorted($expected), 'URL: '.$case['what']);
 }
+
+// a bulk action over everything matching: DataTable posts the search and filters it showed, and selection() reads them
+// back with the URL's checks. ConvertEmptyStringsToNull turns every "" in a JSON body into null, so both are sent
+$post = fn (mixed $selection): Request => Request::create('/bulk', 'POST', server: ['CONTENT_TYPE' => 'application/json'], content: json_encode(['action' => 'archive', 'selection' => $selection], JSON_THROW_ON_ERROR));
+$form = fn (array $selection): Request => Request::create('/bulk', 'POST', ['action' => 'archive', 'selection' => $selection]);
+$selected = fn (Request $request): array => TableQuery::selection($request, $table['filters']);
+$none = $fixture['view']['filters'];
+$matching = fn (mixed $filters, mixed $search = ''): array => ['mode' => 'matching', 'search' => $search, 'filters' => $filters, 'count' => 3];
+$nulls = fn (array $filters): array => array_map(fn (array $values): array => array_map(fn (string $v): ?string => $v === '' ? null : $v, $values), $filters);
+
+foreach ($fixture['cases'] as $case) {
+    $expected = [...$none, ...$case['view']['filters'] ?? []];
+    $check($selected($post($matching($expected)))['filters'], $expected, 'body: the filters the browser read from '.$case['what']);
+    $check($selected($post($matching($nulls($expected))))['filters'], $expected, 'body, "" as null: the filters the browser read from '.$case['what']);
+}
+
+$check($selected($post($matching([], null))), ['search' => '', 'filters' => $none], 'body: a null search, as an empty one arrives, is no search');
+TableQuery::search($q = Brand::query(), ['name'], null);
+$check($q->pluck('name')->all(), ['Calpol', 'Anadin', 'Boots'], 'search() takes null as no search');
+$check($selected($post($matching([
+    'brand' => ['acme', 'boots'], 'status' => ['draft'], 'featured' => ['1'], 'placed' => ['2026-03-01', '2026-02-01'],
+], ' anad '))), ['search' => 'anad', 'filters' => [
+    'brand' => ['acme', 'boots'], 'status' => ['draft'], 'featured' => ['1'], 'placed' => ['2026-02-01', '2026-03-01'],
+]], 'body: reads the search trimmed and each filter, a reversed range turned round');
+$check($selected($post($matching(['brand' => [], 'status' => [], 'featured' => [], 'placed' => []]))), ['search' => '', 'filters' => [
+    'brand' => [], 'status' => [], 'featured' => [], 'placed' => [],
+]], 'body: a filter sent empty is none, not its default');
+$check($selected($post($matching(['status' => [null], 'featured' => [null], 'placed' => [null, null]])))['filters'], [...$none, 'status' => [], 'featured' => [], 'placed' => []], 'body: a null value is empty');
+$check($selected($post($matching(['brand' => [['acme'], 'boots'], 'status' => [['draft']], 'featured' => [['1']], 'placed' => [['2026-01-01'], '2026-02-01']], ['anad']))), ['search' => '', 'filters' => [
+    'brand' => ['boots'], 'status' => ['live'], 'featured' => [], 'placed' => ['', '2026-02-01'],
+]], 'body: a nested array is dropped from a list, and is absent anywhere else');
+$check($selected($post($matching(['brand' => ["b\0lt", 'acme'], 'status' => ["dr\0aft"], 'featured' => ["1\0"], 'placed' => ["2026-01-01\0", '2026-02-01']], "a\0b"))), ['search' => '', 'filters' => [
+    'brand' => ['acme'], 'status' => ['live'], 'featured' => [], 'placed' => ['', '2026-02-01'],
+]], 'body: a value with a NUL byte is absent, as in the URL');
+$check($selected($post($matching(['brand' => ["\u{FFFD}"], 'status' => ["a\u{FFFD}"]], "\u{FFFD}"))), ['search' => '', 'filters' => $none], 'body: the replacement character is absent too, and a list of nothing else takes its default');
+// JSON cannot carry invalid UTF-8, but a form body can
+$check($selected($form($matching(['brand' => ["\xFF", 'acme'], 'status' => ["caf\xC3"], 'placed' => ["\xFF", '2026-02-01']], "\xFF"))), ['search' => '', 'filters' => [
+    ...$none, 'brand' => ['acme'], 'placed' => ['', '2026-02-01'],
+]], 'body: a value that is not UTF-8 is absent');
+$check($selected($post($matching(['brand' => 'acme', 'status' => 'draft', 'featured' => true, 'placed' => '2026-02-01'])))['filters'], $none, 'body: a value that is not a list is absent, so takes its default');
+$check($selected($post($matching(['status' => ['draft', 'sold'], 'featured' => ['1', '1'], 'placed' => ['2026-02-01']])))['filters'], $none, 'body: a select or boolean of two values, or a range of one end, is absent');
+$check($selected($post($matching(['placed' => ['2026-02-30', 'soon']])))['filters'], [...$none, 'placed' => []], 'body: a range of impossible dates is no range');
+foreach (['a string' => $matching('status'), 'a list' => $matching([['draft']]), 'no filters' => ['mode' => 'matching'], 'a string selection' => 'everything', 'no selection' => null] as $what => $selection) {
+    $check($selected($post($selection)), ['search' => '', 'filters' => $none], "body: filters as $what are the defaults");
+}
+$check(TableQuery::selection($post(['products' => $matching(['status' => ['draft']], 'anad')]), $table['filters'], key: 'selection.products'), ['search' => 'anad', 'filters' => [...$none, 'status' => ['draft']]], 'body: reads the selection under another key');
+$sent = $selected($post($matching(['brand' => ["b\0lt", 'acme', ['x']], 'status' => ["dr\0aft"]], "a\0b")));
+$pg = Brand::on('pgsql')->whereIn('brand', $sent['filters']['brand'])->whereIn('status', $sent['filters']['status']);
+TableQuery::search($pg, ['name'], $sent['search']);
+$check([$pg->toSql(), $pg->getBindings()], ['select * from "brands" where "brand" in (?) and "status" in (?)', ['acme', 'live']], 'what a bulk selection builds on Postgres binds no NUL or nested array');
 
 echo "TableQuery: all checks passed\n";

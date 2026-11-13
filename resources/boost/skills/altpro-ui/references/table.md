@@ -37,7 +37,7 @@ A data table on a native `<table>`. Children are styled by element, so no cell c
 
 - Alignment is a utility on the cell: `text-right tabular-nums` for numbers. `w-px` on a header shrinks its column to the content, for a checkbox or action column.
 - A checkbox column is a `label class="checkbox"` in every first cell with an `aria-label`. An action column is a `btn ghost sm` opening a `.dropdown right`.
-- A table never wraps its width. Put it in an `overflow-x-auto` wrapper with `tabindex="0"` to scroll sideways; the tabindex lets keyboard users scroll it.
+- A table never wraps its width. Put it in a `relative overflow-x-auto` wrapper with `tabindex="0"` to scroll sideways; the tabindex lets keyboard users scroll it. `relative` keeps an `sr-only` span in a cell ("Edit <span class="sr-only">Arc headphones</span>") inside the scroll box; without it the span sits where the last column would be and the whole page scrolls sideways on a phone.
 - As a direct child of a `.card` (or a scroll wrapper that is), it runs edge to edge and its cell padding becomes the card inset. The last row takes the card's bottom corners.
 - Row backgrounds are on the cells, so `bg-*` goes on `td`, not `tr`.
 
