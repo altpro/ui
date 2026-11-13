@@ -1,12 +1,12 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.4` (npm `github:altpro/ui#v0.4.1`). On 0.x a breaking change bumps the minor version (0.4 to 0.5), which `^0.4` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.5` (npm `github:altpro/ui#v0.5.0`). On 0.x a breaking change bumps the minor version (0.5 to 0.6), which `^0.5` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## Unreleased
+## 0.5.0 (13 November 2026)
 
 Fixes from a council review before production use. Run `php artisan boost:update` for the references.
 
-**Breaking** (a minor version, 0.5.0):
+**Breaking**:
 
 - `useUnsavedChanges` asks before a `put`, `post` or `delete` that may leave the page, such as Log out (`<Link method="post">`); in 0.4 none asked, so edits were dropped without a question. Not asked: a guarded form's own save, a partial reload (`only`/`except`) and a request in the background (`async`). What to change: an action of your own that comes back to the page with a guarded form on it (a row's Delete, Send test email) gets `only: [...]` or `async: true`, or it now asks "Leave this page?". A page that guards two forms through one function (`() => a.isDirty || b.isDirty`) guards each form instead, as a function lets every `put`, `post` and `delete` go.
 - `allowLeaving` goes in the visit's `onBefore`, not `onStart`: the guard now asks before `onStart` runs, so `onStart: allowLeaving` asks a second question after your confirm dialog, and its Cancel stops the delete.
