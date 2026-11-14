@@ -52,7 +52,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `caption` | Required. Names the table (sr-only caption), the search box and the pagination. |
 | `name` | Prefixes the query parameters (`brands_sort`) and the stored preferences. Required when two tables share a page. |
 | `searchable` | Keys to search. Defaults to every data column. Client mode only; the server searches what `TableQuery` is given. |
-| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match?, presets?, clearLabel? }`. `default` applies when the URL says nothing. A select always offers "All", and an empty multiple reads "All". `match(row, values)` covers what a field comparison cannot. |
+| `filters` | `{ key, label, type: "select" \| "multiple" \| "boolean" \| "daterange", options?: [{ value, label }], default?, field?, match?, presets?, clearLabel?, control? }`. `default` applies when the URL says nothing. `control: false` is a filter something else on the page sets, such as the status that `ListHeader`'s cards set: it has no control in the toolbar or the drawer and is not counted on the Filters button, but the URL, `narrowed` and Clear treat it as any other. A select always offers "All", and an empty multiple reads "All". `match(row, values)` covers what a field comparison cannot. |
 | `sort`, `direction` | Default sort. Without `sort`, the first sortable column, ascending. |
 | `per-page` | Rows per page until the user picks another (10, 25, 50, 100). Default 25. The same as `TableQuery`'s `perPage:`; the URL calls it `per_page`. |
 | `selectable` | Adds the checkbox column and the bulk bar. |

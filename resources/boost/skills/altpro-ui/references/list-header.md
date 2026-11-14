@@ -39,7 +39,7 @@ const stats = computed(() => [
 | `qualifier` | After the count while nothing narrows the list, saying what the base includes: `", including suspended"`. |
 | `breadcrumb` | Only on a list that is not a nav item of its own, such as a record's sub-list. |
 | `stats` | `[{ value, label?, count, icon?, hue? }]`: one [`StatLink`](stat.md#a-stat-that-filters-a-list) per value of the `stat-key` filter. `count` is the rows its link would show (below). `icon` is a Lucide component, drawn in an `.avatar` of the `hue` word, hidden on a phone. |
-| `stat-key`, `stats-label` | The filter the cards set, `status`; the cards' nav name, "Filter by status". |
+| `stat-key`, `stats-label` | The filter the cards set, `status`; the cards' nav name, "Filter by status". Declare it as any filter; give it `control: false` when the cards are the only way to set it, as a toolbar select beside them would be the same choice twice. |
 | `#actions` | The primary action, "Add {thing}" with a `Plus` icon, a `btn primary`. It fills the row on a phone. |
 | `#count` | `{ total, all, narrowed }`: other words for the count line. Clear stays beside them. |
 | default | After the cards, inside the header. |

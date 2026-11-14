@@ -13,7 +13,8 @@ const lastLogin = new Date(Date.now() - 3 * 60 * 60 * 1000).toISOString();
 // client mode, with no search box: each card counts the rows of its status, which is what its link shows
 const statuses = ["Active", "Draft", "Archived"];
 const products = Array.from({ length: 14 }, (_, i) => ({ id: i + 1, name: `Sample ${String.fromCharCode(65 + i)}`, status: statuses[[0, 0, 1, 0, 2][i % 5]] }));
-const filters = [{ key: "status", label: "Status", type: "select", options: statuses.map((value) => ({ value, label: value })) }];
+// the cards are the status filter's only control, so it has none in the toolbar
+const filters = [{ key: "status", label: "Status", type: "select", options: statuses.map((value) => ({ value, label: value })), control: false }];
 const columns = [
   { key: "name", label: "Name", sortable: true, hideable: false },
   { key: "status", label: "Status", hideable: false, thClass: "w-32" },

@@ -60,6 +60,11 @@ export interface DataTableFilter<TRow> {
   presets?: boolean;
   /** A daterange only: the words on its clear button, for when "Clear" alone says too little. It is the button's accessible name too. */
   clearLabel?: string;
+  /**
+   * False when something else on the page sets it, such as `ListHeader`'s status cards: no control in the toolbar or
+   * the drawer, and not counted on the Filters button. It is still read from the URL, narrows the list and goes with Clear.
+   */
+  control?: boolean;
 }
 
 export interface DataTablePaginationMeta {

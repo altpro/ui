@@ -46,6 +46,8 @@ test("ListHeader: the count says its base once a card narrows the list, Clear ta
   await expect(card("Active")).toContainText("9");
   await expect(card("Draft")).toContainText("3");
   await expect(card("Archived")).toContainText("2");
+  // the status filter is the cards' (control: false): no select beside them says the same
+  await expect(page.locator(".datatable .controls select, .datatable .controls .field")).toHaveCount(0);
 
   await card("Draft").click();
   await expect(page).toHaveURL(/heading_status=Draft/);

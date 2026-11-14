@@ -53,11 +53,13 @@ const filterButton = ref<HTMLButtonElement>();
 const filterDialog = ref<HTMLDialogElement>();
 const summary = ref<HTMLElement>();
 
-const inDrawer = computed(() => props.filterDisplay === "drawer" && filters.value.length > 0);
+// a filter set by something else on the page (ListHeader's status cards) has no control of its own here
+const controlled = computed(() => filters.value.filter((filter) => filter.control !== false));
+const inDrawer = computed(() => props.filterDisplay === "drawer" && controlled.value.length > 0);
 // the rows as they are, not the draft: the badge says what the list is showing
 // a list with nothing else to hand focus to has to be able to take it itself, under a name
 const focusable = computed(() => props.scrollOnPage || (!list.searchable.value && !inDrawer.value && !!slots.foot));
-const badge = computed(() => countFilters(filters.value, state.filters.value, props.filterCount));
+const badge = computed(() => countFilters(controlled.value, state.filters.value, props.filterCount));
 
 type Target = () => HTMLElement | null | undefined;
 // a page change or a cleared search redraws when the URL changes, which in server mode is after the response
@@ -166,7 +168,7 @@ const filterSlots = (slots: Record<string, unknown>) => Object.keys(slots).filte
             </button>
           </header>
           <form :id="`${id}-filters-form`" method="dialog" class="contents" @submit="applyDraft">
-            <DataFilters :filters="filters" :values="draft" focus-first :sort-options="sortOptions" :sort="draftSort" :sort-label="sortLabel" @change="setDraft" @sort="draftSort = $event">
+            <DataFilters :filters="controlled" :values="draft" focus-first :sort-options="sortOptions" :sort="draftSort" :sort-label="sortLabel" @change="setDraft" @sort="draftSort = $event">
               <template v-for="name in filterSlots($slots)" :key="name" #[name]="scope">
                 <slot :name="name" v-bind="scope" />
               </template>
@@ -178,7 +180,7 @@ const filterSlots = (slots: Record<string, unknown>) => Object.keys(slots).filte
           </footer>
         </dialog>
       </template>
-      <DataFilters v-else :filters="filters" :values="state.latestFilters.value" :sort-options="sortOptions" :sort="sortChoice" :sort-label="sortLabel" @change="list.setFilter" @sort="setSort">
+      <DataFilters v-else :filters="controlled" :values="state.latestFilters.value" :sort-options="sortOptions" :sort="sortChoice" :sort-label="sortLabel" @change="list.setFilter" @sort="setSort">
         <template v-for="name in filterSlots($slots)" :key="name" #[name]="scope">
           <slot :name="name" v-bind="scope" />
         </template>

@@ -22,6 +22,7 @@ New:
 - `UserAvatar.vue`: a person's photo, or their initials on a hue picked from their name, so the same person has the same colour on every screen; `user` is `{ name, avatar }`. `@ui/avatar` exports `getInitials(name)` and `avatarHue(name)`.
 - `EmailAddress.vue`: an address that breaks at the `@`, never inside the domain. Punctuation after it goes in its slot, so a full stop never wraps alone.
 - `useSaveStatus(form)` (`@ui/useSaveStatus`): the save bar's status line, "Unsaved changes", "No changes to save." after a Save with nothing changed (call `noteNothingToSave()` instead of sending), and "Saved.".
+- A filter with `control: false` is set by something else on the page, such as `ListHeader`'s status cards: `DataTable`, `DataList` and `DataTimeline` draw no control for it in the toolbar or the drawer and leave it off the Filters button's count, while the URL, `narrowed` and Clear treat it as any other. Give the cards' status filter `control: false` when the cards are its only control, as a select beside them is the same choice twice. `TableQuery` reads it as before.
 - npm: `@altpro/ui/js/useSaveStatus`, `@altpro/ui/js/useToday` and `@altpro/ui/js/avatar` resolve to their `.ts` files.
 
 Skills:
