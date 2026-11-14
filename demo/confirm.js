@@ -79,6 +79,25 @@ mount("#confirm-form", () => {
   ];
 });
 
+// the server says no: the reason shows in the body and only Close is left
+mount("#confirm-refused", () => {
+  const busy = ref(false), refusal = ref("");
+  const destroy = async () => {
+    busy.value = true;
+    await wait(800);
+    busy.value = false;
+    refusal.value = "Invoices still holds 12 files. Move or delete them first.";
+  };
+  return () => [
+    h("button", { type: "button", class: "btn outlined danger", command: "show-modal", commandfor: "delete-folder" }, "Delete folder"),
+    h(ConfirmDialog, {
+      id: "delete-folder", title: "Delete Invoices?", description: "It goes at once. This can't be undone.",
+      confirmLabel: "Delete folder", tone: "danger", busy: busy.value, blocked: !!refusal.value, onConfirm: destroy,
+      onClose: () => (refusal.value = ""),
+    }, refusal.value ? () => h("p", { class: "text-danger", role: "alert" }, refusal.value) : undefined),
+  ];
+});
+
 mount("#confirm-send", () => {
   const dialog = ref(), busy = ref(false);
   const send = async () => {

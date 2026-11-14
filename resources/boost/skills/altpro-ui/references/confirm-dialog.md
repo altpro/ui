@@ -31,6 +31,7 @@ const destroy = () => form.delete(`/products/${props.product.id}`, { onSuccess: 
 | `cancel-label` | Default "Cancel". "Keep editing" and the like where Cancel would be unclear. |
 | `busy` | True while the request runs: `form.processing`. |
 | `form` | The id of a form the body brings itself, such as Inertia's `<Form>`. The confirm button submits it, and `@confirm` is not sent. See below. |
+| `blocked` | True when the action can't go ahead and the body says why, as after the server refused it ("Invoices still holds 12 files."). The confirm button goes, since pressing it again would get the same answer, and Cancel reads "Close". |
 
 | Slot, event, method | |
 |------|---|
@@ -43,6 +44,7 @@ const destroy = () => form.delete(`/products/${props.product.id}`, { onSuccess: 
 - Focus starts on Cancel, so a stray Enter does not confirm; a body field with `autofocus` takes it instead. The browser returns focus to the button that opened the dialog.
 - While busy, the cross and Cancel are `disabled`, the dialog is `closedby="none"`, the first Esc is cancelled, and a close that still gets through (a Safari without `closedby`, a repeated Esc that fires no `cancel`) opens it again. The confirm button is `loading`, `aria-busy` and `aria-disabled` rather than `disabled`, so it keeps focus and a second press does nothing.
 - A 422 keeps it open: show the error in the body (a `Field` with `:errors`), and put focus back in the field in `onError`, as [destructive-action.md](destructive-action.md) does.
+- A refusal there is nothing to change in the dialog for (a folder that still holds files, a role someone still has) shows in the body as `<p class="text-danger" role="alert" tabindex="-1">` with `blocked` set, and takes focus in `onError`; `@close` clears it, so the dialog asks again next time. When the page knows beforehand that the action can't go ahead, it says so where the trigger would be and leaves the trigger out, rather than opening a dialog that can only refuse.
 - When the trigger goes with the action (a row's Delete in a list), the browser has nowhere to return focus: focus the list's heading (`tabindex="-1"`) in `onSuccess` after `close()`.
 - A dialog that edits rather than confirms is a plain `.dialog` with its own footer ([dialog.md](dialog.md)). Asking before leaving a page uses `confirm()`, not this ([unsaved-changes.md](unsaved-changes.md)).
 

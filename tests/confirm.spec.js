@@ -87,3 +87,22 @@ test("with form, the confirm button submits the body's own form, once while busy
   await expect(dialog).toBeHidden({ timeout: 4000 });
   await expect(status).toHaveText("Sent 1 request.");
 });
+
+test("blocked takes the confirm button away and Cancel reads Close, once the server has refused", async ({ page }) => {
+  await page.goto("/confirm.html");
+  const open = page.getByRole("button", { name: "Delete folder" }).first();
+  const dialog = page.getByRole("dialog", { name: "Delete Invoices?" });
+
+  await open.click();
+  await dialog.getByRole("button", { name: "Delete folder" }).click();
+  await expect(dialog.getByRole("alert")).toHaveText("Invoices still holds 12 files. Move or delete them first.");
+  await expect(dialog.getByRole("button", { name: "Delete folder" })).toHaveCount(0);
+  await dialog.getByRole("button", { name: "Close", exact: true }).last().click();
+  await expect(dialog).toBeHidden();
+  await expect(open).toBeFocused();
+
+  // closing forgot the refusal, so it asks again
+  await open.click();
+  await expect(dialog.getByRole("button", { name: "Delete folder" })).toBeVisible();
+  await expect(dialog.getByRole("alert")).toHaveCount(0);
+});

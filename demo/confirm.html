@@ -54,6 +54,17 @@
   </section>
 
   <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Refused</h2>
+    <p class="text-sm muted">When the server refuses (here, a folder that still holds files), the body says why and <code>blocked</code> takes the confirm button away: pressing it again would get the same answer. Cancel reads Close.</p>
+    <div id="confirm-refused"></div>
+<pre>&lt;ConfirmDialog id="delete-folder" title="Delete Invoices?" description="It goes at once. This can't be undone."
+    confirm-label="Delete folder" tone="danger" :busy="form.processing" :blocked="!!form.errors.folder"
+    @confirm="destroy" @close="form.clearErrors()"&gt;
+  &lt;p v-if="form.errors.folder" class="text-danger" role="alert"&gt;{{ form.errors.folder }}&lt;/p&gt;
+&lt;/ConfirmDialog&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
     <h2 class="text-xl font-semibold">Not destructive</h2>
     <p class="text-sm muted">The default tone is <code>primary</code>. The <code>#description</code> slot takes markup where the prop takes text.</p>
     <div id="confirm-send"></div>

@@ -9,7 +9,8 @@
   confirm button keeps focus as `loading` and aria-disabled. Focus starts on Cancel, or on a body field with autofocus.
   Enter in a body field confirms. `close()` closes it from code, busy or not, as after a success.
   With `form`, the body brings its own form (Inertia's <Form id="…">) and the confirm button submits it instead of
-  sending `confirm`.
+  sending `confirm`. `blocked` is for an action that can't go ahead, as when the server has refused it and the body says
+  why: the confirm button goes and Cancel reads Close.
 -->
 <script setup lang="ts">
 import { computed, ref, useSlots } from "vue";
@@ -24,8 +25,9 @@ const props = withDefaults(
     tone?: "primary" | "danger";
     busy?: boolean;
     form?: string;
+    blocked?: boolean;
   }>(),
-  { description: undefined, cancelLabel: "Cancel", tone: "primary", busy: false, form: undefined },
+  { description: undefined, cancelLabel: "Cancel", tone: "primary", busy: false, form: undefined, blocked: false },
 );
 const emit = defineEmits<{ confirm: []; close: [] }>();
 defineSlots<{ default?: () => unknown; description?: () => unknown }>();
@@ -49,11 +51,11 @@ const closed = () => {
 // the confirm button is aria-disabled, not disabled, so it keeps focus while busy; a second press does nothing, not even
 // submit the app's form
 const press = (event: MouseEvent) => {
-  if (props.busy) event.preventDefault();
+  if (props.busy || props.blocked) event.preventDefault();
   else if (!formId.value) emit("confirm");
 };
 const submit = () => {
-  if (!props.busy) emit("confirm");
+  if (!props.busy && !props.blocked) emit("confirm");
 };
 
 defineExpose({
@@ -89,8 +91,9 @@ defineExpose({
     <slot v-if="form" />
     <form v-else-if="$slots.default" :id="formId" class="contents" novalidate @submit.prevent="submit"><slot /></form>
     <footer class="justify-end">
-      <button type="button" class="btn outlined" command="close" :commandfor="id" :disabled="busy" autofocus>{{ cancelLabel }}</button>
+      <button type="button" class="btn outlined" command="close" :commandfor="id" :disabled="busy" autofocus>{{ blocked ? "Close" : cancelLabel }}</button>
       <button
+        v-if="!blocked"
         :type="formId ? 'submit' : 'button'"
         :form="formId"
         class="btn"
