@@ -102,25 +102,20 @@ The list page in [recipes.md](recipes.md#2-list-page) puts these together: the t
 | `values` | Each filter's values as last asked for, to mark the current card with `aria-current="true"`. |
 | `filterLink(key, values)` | `{ href, onClick }` for `v-bind` on an `<a>`: the URL of the list with that filter set, for a new tab or a copied link, and a plain click that changes the filter as a control would, building on a change still on its way. A link of your own to `?status=Draft` would lose a search typed just before it. |
 
+[`ListHeader`](list-header.md) draws the title row from these: bind them with `v-bind` and it has the count line, Clear, the primary action and a [`StatLink`](stat.md#a-stat-that-filters-a-list) per status.
+
 ```vue
-<template #header="{ total, unfilteredTotal, narrowed, clear, values, filterLink }">
-  <div class="flex flex-wrap items-start justify-between gap-4">
-    <div class="min-w-0">
-      <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
-      <div class="mt-1 flex min-h-8 items-center gap-2 text-sm muted">
-        <p>{{ narrowed ? `${total} of ${unfilteredTotal}` : unfilteredTotal }} products</p>
-        <button v-if="narrowed" type="button" class="btn ghost sm" @click="clear">Clear</button>
-      </div>
-    </div>
-  </div>
-  <nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status">
-    <a v-for="status in ['Active', 'Draft']" :key="status" v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
-        :aria-current="values.status?.[0] === status ? 'true' : undefined" class="card aria-[current=true]:bg-secondary">…</a>
-  </nav>
+<template #header="list">
+  <ListHeader v-bind="list" title="Products" noun="product" :stats="[
+    { value: 'Active', count: statusCounts.Active, icon: CircleCheck, hue: 'green' },
+    { value: 'Draft', count: statusCounts.Draft, icon: PencilLine },
+  ]">
+    <template #actions><Link href="/products/create" class="btn primary"><Plus class="size-4" aria-hidden="true" /> Add product</Link></template>
+  </ListHeader>
 </template>
 ```
 
-Each card's count comes from the server, counting the rows its link would show: the search and the other filters, with no status. `recipes.md` has the controller.
+Each card's count comes from the server, counting the rows its link would show: the search and the other filters, with no status. [list-header.md](list-header.md#status-counts-from-the-server) has the shape and `recipes.md` the controller.
 
 Server mode, in the controller:
 

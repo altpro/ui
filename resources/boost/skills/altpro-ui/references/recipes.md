@@ -6,8 +6,8 @@ The server side is the app's: its routes, controllers, models and policies follo
 
 | Recipe | Chains | Demo page, in the altpro/ui repository |
 |--------|--------|-----------|
-| [1. Edit page](#1-edit-page) | breadcrumb, record header, `Field`s, save bar; defaults, server errors, save, discard | `demo/app/recipe-product.html` |
-| [2. List page](#2-list-page) | title row with count and Clear, status cards that filter, server-mode `DataTable` in a frame with title-link rows, columns that fit, filters in a drawer, `only` and a bulk action | `demo/app/recipe-products.html` |
+| [1. Edit page](#1-edit-page) | `PageHeading` with the breadcrumb above the `h1`, the record layout (`card divided` sections beside a labelled aside), `Field`s, save bar with `useSaveStatus`, a danger card with `ConfirmDialog`; defaults, server errors, save, discard, delete | `demo/app/recipe-product.html` |
+| [2. List page](#2-list-page) | `ListHeader`: title row with count and Clear, status cards that filter; server-mode `DataTable` in a frame with title-link rows, columns that fit, filters in a drawer, `only` and a bulk action | `demo/app/recipe-products.html` |
 | [3. Tags and photos](#3-tags-and-photos) | `Combobox` with `src` and `create` endpoints; `FileInput` uploading each file with progress | `demo/app/recipe-media.html` |
 
 The demo pages run this Vue code as written against a stand-in for the server, and `tests/recipes.spec.js` drives them; both are in the altpro/ui repository, not in the installed package. Run `npm run dev` there and open them under Application.
@@ -16,7 +16,7 @@ The demo pages run this Vue code as written against a stand-in for the server, a
 
 - Inertia 3 with `@inertiajs/vue3`, Laravel with `inertiajs/inertia-laravel`, and the `@ui` alias from SKILL.md's setup.
 - Pages resolve from `resources/js/pages/`, so `Inertia::render('products/Edit')` is `resources/js/pages/products/Edit.vue`: lowercase folders, as Laravel's starter kit has them.
-- The app shell from [app-shell.md](app-shell.md): its root view (`scroll-pb-28` on `<html>`, the toaster at the top) and `resources/js/layouts/AppLayout.vue`, which each page wraps itself in with its breadcrumb. The layout's `<main>` is the page frame: `p-gap`, which the save bar's `-mx-gap px-gap` matches, `@container/page` for the page's container queries, and a column with `gap-gap` between the page's sections, so a page puts its content straight inside `<AppLayout>`. It draws the only breadcrumb.
+- The app shell from [app-shell.md](app-shell.md): its root view (`scroll-pb-28` on `<html>`, the toaster at the top) and `resources/js/layouts/AppLayout.vue`, which each page wraps itself in. The layout's `<main>` is the page frame: `p-gap`, `@container/page` for the page's container queries, and a column with `gap-gap` between the page's sections, so a page puts its content straight inside `<AppLayout>`. After a visit it moves focus to the page's `h1`. The header has no breadcrumb: a page reached from another draws its own above its `h1`, with [`PageHeading`](page-heading.md).
 - Saves confirm with a toast: the controller calls `Inertia::flash('toast', ['type' => 'success', 'message' => '…'])` and redirects, and `app.js` shows it, as [toast.md](toast.md) sets up.
 - Icons are Lucide, from `@lucide/vue`: `<Pencil class="size-4" aria-hidden="true" />`.
 - Laravel's default validation messages; the browser tests read them.
@@ -28,7 +28,7 @@ The endpoints behind all three, every one behind `auth`:
 | `GET /products` | the list page |
 | `GET /products/create` | Add product, the app's own create page |
 | `POST /products/bulk` | the list's bulk action |
-| `GET /products/{id}/edit`, `PUT /products/{id}` | the edit page |
+| `GET /products/{id}/edit`, `PUT /products/{id}`, `DELETE /products/{id}` | the edit page |
 | `GET /products/{id}/media`, `PUT /products/{id}/tags` | the tags-and-photos page |
 | `POST /products/{id}/photos`, `DELETE /photos/{id}` | each photo, as it is added or removed |
 | `GET /tags`, `POST /tags` | the tags combobox |
@@ -37,15 +37,19 @@ A product has `id`, `name`, `sku`, `category`, `price`, `stock`, `status`, `desc
 
 ## 1. Edit page
 
-Record header, a grid of `Field`s bound to `useForm`, and the save bar, in the layout with its breadcrumb. The form's defaults are the saved record: Discard puts them back, and Inertia makes the saved data the new defaults after a successful save, so `isDirty` goes false by itself. A failed save shows and focuses an error summary ([validation-failure.md](validation-failure.md)), and leaving with unsaved changes asks first ([unsaved-changes.md](unsaved-changes.md)).
+The record layout: [`PageHeading`](page-heading.md), with the breadcrumb back to the list above the `h1`, then a grid of three columns from `@4xl/page` with the form in two and a labelled `<aside>` in the third. The form is `card divided` sections of `Field`s bound to `useForm`, and the save bar, its last child. The aside holds a fact card and the danger card, whose Delete product opens a [`ConfirmDialog`](confirm-dialog.md). The form's defaults are the saved record: Discard puts them back, and Inertia makes the saved data the new defaults after a successful save, so `isDirty` goes false by itself. A failed save shows and focuses an error summary ([validation-failure.md](validation-failure.md)), and leaving with unsaved changes asks first ([unsaved-changes.md](unsaved-changes.md)).
 
 ```vue
 <!-- resources/js/pages/products/Edit.vue -->
 <script setup>
-import { computed, nextTick, onMounted, ref, watch } from "vue";
+import { nextTick, onMounted, ref } from "vue";
 import { Head, Link, useForm } from "@inertiajs/vue3";
-import { CircleAlert, Upload } from "@lucide/vue";
+import { CircleAlert, Trash2, Upload } from "@lucide/vue";
+import ConfirmDialog from "@ui/ConfirmDialog.vue";
 import Field from "@ui/Field.vue";
+import LocalDate from "@ui/LocalDate.vue";
+import PageHeading from "@ui/PageHeading.vue";
+import { useSaveStatus } from "@ui/useSaveStatus";
 import { useUnsavedChanges } from "@ui/useUnsavedChanges";
 import AppLayout from "@/layouts/AppLayout.vue";
 
@@ -65,7 +69,7 @@ const form = useForm({
   status: props.product.status,
   description: props.product.description,
 });
-useUnsavedChanges(form);
+const { allowLeaving } = useUnsavedChanges(form);
 
 // the way back is the list as it was left: its search, filters, sort and page, which the list page keeps for the tab
 const listHref = ref("/products");
@@ -80,10 +84,9 @@ onMounted(() => {
 // a failed save focuses the error summary: it is read out, and Tab goes on to the first field
 const summary = ref();
 // Save on an unchanged form sends nothing and says so, as Save stays enabled
-const unchanged = ref(false);
-watch(() => form.isDirty, () => (unchanged.value = false));
+const { saveStatus, noteNothingToSave } = useSaveStatus(form);
 const save = () => {
-  if (!form.isDirty) return (unchanged.value = true);
+  if (!form.isDirty) return noteNothingToSave();
   const sent = form.data();
   form.put(`/products/${props.product.id}`, {
     preserveScroll: true,
@@ -92,53 +95,80 @@ const save = () => {
     onError: () => nextTick(() => summary.value.focus()),
   });
 };
-const status = computed(() => (form.isDirty ? "Unsaved changes" : unchanged.value ? "No changes to save." : form.recentlySuccessful ? "Saved." : ""));
 const discard = () => {
   form.reset();
   form.clearErrors();
 };
+
+// deleting the record ends the form's need: the guard lets that visit go, and the server lands on the list
+const deleting = useForm({});
+const destroy = () => deleting.delete(`/products/${props.product.id}`, { onBefore: allowLeaving });
+
 const statusClass = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
-const updated = (timestamp) => new Date(timestamp).toLocaleDateString(document.documentElement.lang, { day: "numeric", month: "short", year: "numeric" });
 </script>
 
 <template>
   <Head :title="product.name" />
-  <AppLayout :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name }]">
-    <div class="flex flex-wrap items-start justify-between gap-4">
-      <div class="min-w-0">
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <h1 class="text-2xl font-semibold tracking-tight break-words">{{ product.name }}</h1>
-          <span class="badge" :class="statusClass[product.status]">{{ product.status }}</span>
-        </div>
-        <p class="mt-1 text-sm muted">SKU {{ product.sku }} · {{ product.category }} · Updated <time :datetime="product.updated_at">{{ updated(product.updated_at) }}</time></p>
-      </div>
-      <div class="flex flex-wrap gap-2">
+  <AppLayout>
+    <PageHeading :title="product.name" :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name }]">
+      <template #badges><span class="badge" :class="statusClass[product.status]">{{ product.status }}</span></template>
+      <p class="mt-1 text-sm muted">SKU {{ product.sku }} · {{ product.category }} · Updated <LocalDate :value="product.updated_at" in-sentence /></p>
+      <template #actions>
         <Link :href="`/products/${product.id}/media`" class="btn outlined"><Upload class="size-4" aria-hidden="true" /> Tags and photos</Link>
-      </div>
+      </template>
+    </PageHeading>
+
+    <div class="grid items-start gap-gap @4xl/page:grid-cols-3">
+      <form class="flex min-w-0 flex-col gap-gap @4xl/page:col-span-2" novalidate @submit.prevent="save">
+        <div v-if="form.hasErrors" ref="summary" class="alert danger" role="alert" tabindex="-1">
+          <CircleAlert class="size-4" aria-hidden="true" />
+          <h2>The product was not saved</h2>
+          <ul class="list-disc ps-5">
+            <li v-for="(message, field) in form.errors" :key="field">{{ message }}</li>
+          </ul>
+        </div>
+
+        <section class="card divided" aria-labelledby="product-heading">
+          <header>
+            <h2 id="product-heading">Product</h2>
+            <p>What the shop shows, and what it sells it for.</p>
+          </header>
+          <div class="grid gap-x-gap gap-y-4 @3xl/page:grid-cols-2">
+            <Field v-model="form.name" name="name" :errors="form.errors" required class="@3xl/page:col-span-2" />
+            <Field v-model="form.sku" name="sku" label="SKU" :errors="form.errors" required />
+            <Field v-model="form.category" name="category" type="select" :options="categories" :errors="form.errors" required />
+            <Field v-model="form.price" name="price" inputmode="decimal" prepend="£" :errors="form.errors" required />
+            <Field v-model="form.stock" name="stock" type="number" step="1" min="0" hint="Units on the shelf." :errors="form.errors" required />
+            <Field v-model="form.status" name="status" type="select" :options="statuses" :errors="form.errors" />
+            <Field v-model="form.description" name="description" type="textarea" rows="4" :errors="form.errors" class="@3xl/page:col-span-2" />
+          </div>
+        </section>
+
+        <div class="save-bar">
+          <p role="status">{{ saveStatus }}</p>
+          <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="discard">Discard</button>
+          <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save changes</button>
+        </div>
+      </form>
+
+      <aside aria-label="About this product" class="flex min-w-0 flex-col gap-gap @4xl/page:sticky @4xl/page:top-gap">
+        <section class="card divided" aria-labelledby="stock-heading">
+          <header><h2 id="stock-heading">Stock</h2></header>
+          <p class="text-3xl font-semibold tracking-tight tabular-nums">
+            {{ product.stock }} <span class="text-sm font-normal tracking-normal muted">{{ product.stock === 1 ? "unit" : "units" }} on the shelf</span>
+          </p>
+        </section>
+
+        <section class="card divided" aria-labelledby="delete-heading">
+          <header><h2 id="delete-heading">Delete product</h2></header>
+          <p class="text-sm muted">It goes from the shop and the list at once, with its tags and photos. This can't be undone.</p>
+          <button type="button" class="btn outlined danger justify-center" command="show-modal" commandfor="delete-product"><Trash2 class="size-4" aria-hidden="true" /> Delete product</button>
+        </section>
+      </aside>
     </div>
 
-    <form class="grid max-w-3xl gap-x-gap gap-y-4 sm:grid-cols-2" novalidate @submit.prevent="save">
-      <div v-if="form.hasErrors" ref="summary" class="alert danger col-span-full" role="alert" tabindex="-1">
-        <CircleAlert class="size-4" aria-hidden="true" />
-        <h2>The product was not saved</h2>
-        <ul class="list-disc ps-5">
-          <li v-for="(message, field) in form.errors" :key="field">{{ message }}</li>
-        </ul>
-      </div>
-      <Field v-model="form.name" name="name" :errors="form.errors" required class="sm:col-span-2" />
-      <Field v-model="form.sku" name="sku" label="SKU" :errors="form.errors" required />
-      <Field v-model="form.category" name="category" type="select" :options="categories" :errors="form.errors" required />
-      <Field v-model="form.price" name="price" inputmode="decimal" prepend="£" :errors="form.errors" required />
-      <Field v-model="form.stock" name="stock" type="number" step="1" min="0" hint="Units on the shelf." :errors="form.errors" required />
-      <Field v-model="form.status" name="status" type="select" :options="statuses" :errors="form.errors" />
-      <Field v-model="form.description" name="description" type="textarea" rows="4" :errors="form.errors" class="sm:col-span-2" />
-
-      <div class="save-bar col-span-full -mx-gap px-gap">
-        <p role="status">{{ status }}</p>
-        <button type="button" class="btn outlined" :disabled="!form.isDirty || form.processing" @click="discard">Discard</button>
-        <button class="btn primary" :class="{ loading: form.processing }" :disabled="form.processing" :aria-busy="form.processing">Save</button>
-      </div>
-    </form>
+    <ConfirmDialog id="delete-product" class="[&_h2]:wrap-anywhere" :title="`Delete ${product.name}?`" description="It goes from the shop at once. This can't be undone."
+        confirm-label="Delete product" tone="danger" :busy="deleting.processing" @confirm="destroy" />
   </AppLayout>
 </template>
 ```
@@ -147,6 +177,7 @@ What the server does:
 
 - `edit` authorises `update` on the product and renders `products/Edit` with `product` (the fields above), `categories` and `statuses`.
 - `update` authorises the same, validates, saves, flashes `toast` ("Product saved.") and redirects to the edit page. The rules: `name` required, at most 120; `sku` required, at most 20, unique but for this product; `category` and `status` one of their lists; `price` at least 0 with at most two decimals; `stock` a whole number, at least 0; `description` optional, at most 2000.
+- `destroy` authorises `delete`, deletes the product with its tags and photos, flashes `toast` ("Product deleted.") and redirects to the list.
 
 What comes back:
 
@@ -155,10 +186,14 @@ What comes back:
 | `GET /products/{id}/edit` | Inertia page `products/Edit` with `product`, `categories`, `statuses` | The form, clean. |
 | `PUT /products/{id}`, invalid | Laravel redirects back with the errors; Inertia receives the edit page with `errors: { name: "The name field is required.", price: "The price field must be at least 0." }` | The summary lists them and takes focus; each `Field` shows its message and sets `aria-invalid`. The form keeps what was typed (`put` preserves state) and stays dirty. |
 | `PUT /products/{id}`, valid | Redirect to the edit page, `errors: {}`, flash `toast` | Errors clear, the header shows the saved name, the status line says "Saved.", the toast shows, Discard disables. |
+| `DELETE /products/{id}` | Redirect to `/products`, flash `toast` "Product deleted." | The list, with the toast; focus on its `h1`. Unsaved edits go without a question, as `allowLeaving` let the visit go. |
 
 - `novalidate` lets the server answer every field in one round trip, so the browser's own bubbles never disagree with Laravel's messages. Drop it to get the browser's checks first as well.
 - Errors stay until the next response. To clear a field's error as it is fixed, add `@input="form.clearErrors('name')"` to that `Field`.
 - Discard is `reset()` then `clearErrors()`: errors belong to values that are no longer there.
+- The layout: `grid items-start gap-gap @4xl/page:grid-cols-3`, the form `@4xl/page:col-span-2`, the aside `@4xl/page:sticky @4xl/page:top-gap`. Below `@4xl` the aside follows the form. Each section is `<section class="card divided" aria-labelledby>`, its `h2` naming what it holds and a one-line `<p>` saying what it governs; fields sit two across from `@3xl/page`. Every `<aside>` has an `aria-label`, as an unnamed complementary landmark fails axe. A record with history puts it in the main column under the form (`@4xl/page:col-span-2`).
+- The danger card: an `h2` naming the action, a muted sentence of the consequence, then a full-width `btn outlined danger justify-center` that opens the dialog with `command="show-modal"`. When the action is not possible yet, the card says why and links to the fix instead of a disabled button. The dialog's title is a question naming the record, its confirm label repeats the trigger's words, and focus starts on Cancel ([destructive-action.md](destructive-action.md)). `allowLeaving` in the delete's `onBefore` lets that visit past the unsaved-changes guard.
+- Save on an unchanged form sends nothing and says "No changes to save.", through [`useSaveStatus`](save-bar.md); the primary is "Save changes".
 - After a valid save the props change under the form. `useForm` ignores that (its defaults came from the save itself), which is why the form is not rebuilt from `product`.
 
 ## 2. List page
@@ -168,9 +203,12 @@ A list that does more than list: the title row with its count and Clear, a card 
 ```vue
 <!-- resources/js/pages/products/Index.vue -->
 <script setup lang="ts">
+import { computed } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
-import { Archive, ChevronRight, CircleCheck, PencilLine, Plus, X } from "@lucide/vue";
+import { Archive, ChevronRight, CircleCheck, PencilLine, Plus } from "@lucide/vue";
 import DataTable from "@ui/DataTable.vue";
+import ListHeader from "@ui/ListHeader.vue";
+import LocalDate from "@ui/LocalDate.vue";
 import { formatCellValue } from "@ui/dataTable";
 import type { DataListSortOption, DataTableColumn, DataTableFilter, DataTablePaginated, DataTableSelection } from "@ui/dataTable";
 import AppLayout from "@/layouts/AppLayout.vue";
@@ -188,7 +226,7 @@ interface Product {
   updated_at: string;
 }
 
-defineProps<{
+const props = defineProps<{
   products: DataTablePaginated<Product>;
   filters: DataTableFilter<Product>[];
   unfilteredTotal: number;
@@ -205,7 +243,7 @@ const columns: DataTableColumn<Product>[] = [
   { key: "status", label: "Status", hideable: false, thClass: `${wide} @4xl/page:w-30`, tdClass: wide },
   { key: "stock", label: "Stock", sortable: true, hideable: false, thClass: `${wide} @4xl/page:w-32 text-right`, tdClass: `${wide} text-right tabular-nums` },
   { key: "price", label: "Price", sortable: true, hideable: false, format: "currency", thClass: `${wide} @4xl/page:w-26 text-right`, tdClass: `${wide} text-right tabular-nums` },
-  { key: "updated_at", label: "Updated", sortable: true, hideable: false, format: "date", thClass: `${widest} @5xl/page:w-34`, tdClass: `${widest} whitespace-nowrap` },
+  { key: "updated_at", label: "Updated", sortable: true, hideable: false, thClass: `${widest} @5xl/page:w-34`, tdClass: `${widest} whitespace-nowrap` },
   { key: "open", label: "Open", srOnlyLabel: true, virtual: true, thClass: "w-10" },
 ];
 
@@ -222,7 +260,9 @@ const sortOptions: DataListSortOption[] = [
 const statuses: Status[] = ["Active", "Draft", "Archived"];
 const statusClass: Record<Status, string> = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
 const statusIcon = { Active: CircleCheck, Draft: PencilLine, Archived: Archive };
-const statusHue: Record<Status, string> = { Active: "green", Draft: "", Archived: "" };
+const statusHue: Partial<Record<Status, string>> = { Active: "green" };
+// a card per status, counting the rows its link shows: the search and category apply, its own status replaces any other
+const stats = computed(() => statuses.map((status) => ({ value: status, count: props.statusCounts[status], icon: statusIcon[status], hue: statusHue[status] })));
 const only = ["products", "statusCounts"];
 
 // the edit page's way back returns to the list as it was left: its search, filters, sort and page
@@ -241,38 +281,17 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 
 <template>
   <Head title="Products" />
-  <AppLayout :breadcrumb="[{ label: 'Products' }]">
+  <AppLayout>
     <DataTable caption="Products" class="framed" table-class="table-fixed" :columns="columns" :rows="products" :filters="filters"
         :unfiltered-total="unfilteredTotal" :only="only" sort="name" :per-page="10" selectable filter-display="drawer"
         :sort-options="sortOptions" sort-select-class="@5xl/page:hidden" search-placeholder="Search name or SKU"
         empty-message="No products yet." no-matches-message="No products match.">
-      <template #header="{ total, unfilteredTotal: all, narrowed, clear, values, filterLink }">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
-            <div class="mt-1 flex min-h-8 items-center gap-2 text-sm muted">
-              <p>{{ narrowed ? `${total} of ${all}` : all }} {{ all === 1 ? "product" : "products" }}</p>
-              <button v-if="narrowed" type="button" class="btn ghost sm" @click="clear">Clear</button>
-            </div>
-          </div>
-          <Link href="/products/create" class="btn primary max-md:w-full" @click="rememberList"><Plus class="size-4" aria-hidden="true" /> Add product</Link>
-        </div>
-
-        <!-- each card counts the rows its link shows: the search and category apply, its own status replaces any other -->
-        <nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status">
-          <a v-for="status in statuses" :key="status" v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
-              :aria-current="values.status?.[0] === status ? 'true' : undefined"
-              class="card group flex-row items-center gap-3 transition-colors hover:border-input focus-visible:outline-3 focus-visible:outline-ring/50 aria-[current=true]:bg-secondary aria-[current=true]:text-secondary-foreground">
-            <span class="avatar max-md:hidden" :class="statusHue[status]" aria-hidden="true"><component :is="statusIcon[status]" class="size-4" /></span>
-            <span class="min-w-0 flex-1">
-              <span class="block text-sm muted group-aria-[current=true]:text-secondary-foreground">{{ status }}</span>
-              <span class="block text-2xl font-semibold tracking-tight tabular-nums">{{ statusCounts[status] }}</span>
-            </span>
-            <!-- the current card takes its status off again, without opening the filters -->
-            <span v-if="values.status?.[0] === status" class="sr-only">, remove this filter</span>
-            <component :is="values.status?.[0] === status ? X : ChevronRight" class="size-4 shrink-0 muted group-aria-[current=true]:text-secondary-foreground" aria-hidden="true" />
-          </a>
-        </nav>
+      <template #header="list">
+        <ListHeader v-bind="list" title="Products" noun="product" :stats="stats">
+          <template #actions>
+            <Link href="/products/create" class="btn primary" @click="rememberList"><Plus class="size-4" aria-hidden="true" /> Add product</Link>
+          </template>
+        </ListHeader>
       </template>
 
       <template #cell-name="{ row }">
@@ -292,6 +311,9 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
       <template #cell-stock="{ row }">
         <span v-if="row.stock === 0" class="badge sm soft danger">Out of stock</span>
         <template v-else>{{ row.stock }}</template>
+      </template>
+      <template #cell-updated_at="{ row }">
+        <LocalDate :value="row.updated_at" />
       </template>
       <template #cell-open>
         <ChevronRight class="ms-auto block size-4 muted" aria-hidden="true" />
@@ -402,7 +424,8 @@ What comes back:
 
 - `defaultSort` and `perPage` match the component's `sort` and `:per-page`, so a bare URL and the header agree. `sortable` is the allow-list for `order by`, and holds every key the column headers and `sortOptions` sort by.
 - `statusCounts` starts from the same `Product::visibleTo()`, `filter()` and search as the rows, with the status filter left out, so each card counts the rows its link would show. A search for "loop" makes the cards count loop products.
-- The `#header` slot holds the title row and the cards, above the toolbar. It gets the count (`total` of `unfilteredTotal`), whether anything narrows the list, `clear`, the filters as last asked for (`values`), and `filterLink(key, values)`, which a card binds with `v-bind` on its `<a>`: the link is the list with that status, for a new tab, and a plain click changes the filter as the drawer would. With a header the empty table drops its own Clear filters, as the one under the title does the job. The current card takes its status off again, so the filter needs no trip to the drawer.
+- The `#header` slot holds [`ListHeader`](list-header.md), above the toolbar, given the slot's props with `v-bind`: the count (`total` of `unfilteredTotal`), whether anything narrows the list, `clear`, the filters as last asked for (`values`), and `filterLink(key, values)`, which each status card binds on its `<a>`: the link is the list with that status, for a new tab, and a plain click changes the filter as the drawer would. With a header the empty table drops its own Clear filters, as the one under the title does the job. The current card takes its status off again, so the filter needs no trip to the drawer.
+- Dates in the list are [`LocalDate`](local-date.md), the day only: "Today", "Yesterday", "4 Nov".
 - A column takes the same container query on its `thClass` and `tdClass`, and the name cell shows what the hidden columns would with the opposite one (`@4xl/page:hidden`). `table-class="table-fixed"` with a width on each `th` keeps the columns still as the rows change, and `hideable: false` leaves out the Columns menu, as the page decides what fits. Until the last sortable header appears, `sort-options` puts a sort select in the toolbar, and `sort-select-class` hides it from there on.
 - The row's name is its link, stretched over the row with `after:absolute after:inset-0`; DataTable positions each row and keeps the checkbox above the link. The chevron says the row opens. A click stores the list's query for the tab, which the edit and tags-and-photos pages read for their breadcrumb, so the way back is the list as it was left.
 - `framed` draws the table in a card. On a phone the search takes the toolbar's first row, and the Filters button and the sort select share the next.
@@ -424,6 +447,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
+import PageHeading from "@ui/PageHeading.vue";
 import { useUnsavedChanges } from "@ui/useUnsavedChanges";
 import AppLayout from "@/layouts/AppLayout.vue";
 
@@ -516,11 +540,10 @@ useUnsavedChanges({ get isDirty() { return uploading.value > 0; } });
 
 <template>
   <Head :title="`Tags and photos · ${product.name}`" />
-  <AppLayout :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
-    <div class="min-w-0">
-      <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
+  <AppLayout>
+    <PageHeading title="Tags and photos" :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
       <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
-    </div>
+    </PageHeading>
 
     <div class="grid items-start gap-gap lg:grid-cols-2">
       <form class="card" @submit.prevent="saveTags">

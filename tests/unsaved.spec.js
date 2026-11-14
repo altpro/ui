@@ -140,7 +140,7 @@ test("Log out, a post that lands on another page, asks first; the form's own sav
 
   // the form's own save goes unasked
   await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save changes" }).click();
   await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible();
   expect(asked).toHaveLength(1);
 
@@ -172,7 +172,7 @@ test("another guarded form's save that comes back goes unasked and keeps this fo
   });
   await page.getByLabel("Name", { exact: true }).fill("Arc studio mk2");
   await page.evaluate(() => (window.forms.other.note = "not saved"));
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.getByRole("status").filter({ hasText: "Saved." })).toBeVisible();
   expect(await page.evaluate(() => window.forms.other.note)).toBe("not saved");
   expect(asked).toEqual([]);
@@ -197,7 +197,7 @@ test("another guarded form's save that lands on another page leaves this form's 
   await page.getByLabel("Name", { exact: true }).fill("Arc studio mk2");
   await page.evaluate(() => (window.forms.other.note = "not saved"));
   await page.waitForTimeout(300);
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   // the stand-in answers at the request's URL: the list, at /products/2
   await expect(page.getByRole("link", { name: "Arc studio mk2", exact: true })).toBeVisible();
   expect(asked).toEqual([]);
@@ -210,9 +210,9 @@ test("allowLeaving in onBefore lets a visit that ends the form's need go unasked
   await logoutInApp(page);
   await page.route("**/app/pages/products/Edit.vue*", async (route) => {
     const response = await route.fetch();
-    const from = "useUnsavedChanges(form);";
+    const from = "const { allowLeaving } = useUnsavedChanges(form);";
     const body = (await response.text()).replace(from,
-      `const { allowLeaving } = useUnsavedChanges(form); window.leave = () => useForm({}).post("/logout", { onBefore: allowLeaving });`);
+      `${from} window.leave = () => useForm({}).post("/logout", { onBefore: allowLeaving });`);
     expect(body).toContain("window.leave");
     await route.fulfill({ response, body });
   });
@@ -259,8 +259,8 @@ test("a visit allowLeaving let go, stopped by another guard's Cancel, puts the g
   await logoutInApp(page);
   await page.route("**/app/pages/products/Edit.vue*", async (route) => {
     const response = await route.fetch();
-    const from = "useUnsavedChanges(form);";
-    const body = (await response.text()).replace(from, `const { allowLeaving } = useUnsavedChanges(form);
+    const from = "const { allowLeaving } = useUnsavedChanges(form);";
+    const body = (await response.text()).replace(from, `${from}
       const other = useForm({ note: "" }); useUnsavedChanges(other, { remember: "other" }); window.forms = { form, other };
       window.leave = () => useForm({}).post("/logout", { onBefore: allowLeaving });`);
     expect(body).toContain("window.leave");
@@ -308,8 +308,8 @@ test("a visit allowLeaving let go, then stopped, keeps the form's draft for Back
   await logoutInApp(page);
   await page.route("**/app/pages/products/Edit.vue*", async (route) => {
     const response = await route.fetch();
-    const from = "useUnsavedChanges(form);";
-    const body = (await response.text()).replace(from, `const { allowLeaving } = useUnsavedChanges(form);
+    const from = "const { allowLeaving } = useUnsavedChanges(form);";
+    const body = (await response.text()).replace(from, `${from}
       const other = useForm({ note: "" }); useUnsavedChanges(other, { remember: "other" }); window.forms = { form, other };
       window.leave = () => useForm({}).post("/logout", { onBefore: allowLeaving });`);
     await route.fulfill({ response, body });

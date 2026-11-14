@@ -128,6 +128,14 @@
   </section>
 
   <section class="space-y-3">
+    <h2 class="text-xl font-semibold">A person: UserAvatar and EmailAddress</h2>
+    <p class="text-sm muted"><code>UserAvatar.vue</code> draws a person's photo, or their initials on a hue picked from their name, so the same person has the same colour on every screen. It is decorative: the name sits beside it. <code>EmailAddress.vue</code> breaks an address at the <code>@</code> when it must, never inside the domain.</p>
+    <div id="user-avatar"></div>
+<pre>&lt;UserAvatar :user="user" /&gt;   &lt;!-- { name, avatar }: avatar is a photo URL or null --&gt;
+&lt;p class="text-sm wrap-anywhere muted"&gt;&lt;EmailAddress :email="user.email" /&gt;&lt;/p&gt;</pre>
+  </section>
+
+  <section class="space-y-3">
     <h2 class="text-xl font-semibold">Scheme regions</h2>
     <div class="grid gap-4 md:grid-cols-3">
       <div class="light panel"><div class="join"><span class="avatar blue">A</span><span class="avatar green">B</span><span class="avatar">+2</span></div></div>
@@ -138,5 +146,6 @@
 </main>
 </div>
 <script type="module" src="demo.js"></script>
+<script type="module" src="avatar.js"></script>
 </body>
 </html>

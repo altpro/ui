@@ -1,7 +1,10 @@
 <script setup lang="ts">
+import { computed } from "vue";
 import { Head, Link, router } from "@inertiajs/vue3";
-import { Archive, ChevronRight, CircleCheck, PencilLine, Plus, X } from "@lucide/vue";
+import { Archive, ChevronRight, CircleCheck, PencilLine, Plus } from "@lucide/vue";
 import DataTable from "@ui/DataTable.vue";
+import ListHeader from "@ui/ListHeader.vue";
+import LocalDate from "@ui/LocalDate.vue";
 import { formatCellValue } from "@ui/dataTable";
 import type { DataListSortOption, DataTableColumn, DataTableFilter, DataTablePaginated, DataTableSelection } from "@ui/dataTable";
 import AppLayout from "@/layouts/AppLayout.vue";
@@ -19,7 +22,7 @@ interface Product {
   updated_at: string;
 }
 
-defineProps<{
+const props = defineProps<{
   products: DataTablePaginated<Product>;
   filters: DataTableFilter<Product>[];
   unfilteredTotal: number;
@@ -36,7 +39,7 @@ const columns: DataTableColumn<Product>[] = [
   { key: "status", label: "Status", hideable: false, thClass: `${wide} @4xl/page:w-30`, tdClass: wide },
   { key: "stock", label: "Stock", sortable: true, hideable: false, thClass: `${wide} @4xl/page:w-32 text-right`, tdClass: `${wide} text-right tabular-nums` },
   { key: "price", label: "Price", sortable: true, hideable: false, format: "currency", thClass: `${wide} @4xl/page:w-26 text-right`, tdClass: `${wide} text-right tabular-nums` },
-  { key: "updated_at", label: "Updated", sortable: true, hideable: false, format: "date", thClass: `${widest} @5xl/page:w-34`, tdClass: `${widest} whitespace-nowrap` },
+  { key: "updated_at", label: "Updated", sortable: true, hideable: false, thClass: `${widest} @5xl/page:w-34`, tdClass: `${widest} whitespace-nowrap` },
   { key: "open", label: "Open", srOnlyLabel: true, virtual: true, thClass: "w-10" },
 ];
 
@@ -53,7 +56,9 @@ const sortOptions: DataListSortOption[] = [
 const statuses: Status[] = ["Active", "Draft", "Archived"];
 const statusClass: Record<Status, string> = { Active: "soft success dot", Draft: "soft dot", Archived: "outlined dot" };
 const statusIcon = { Active: CircleCheck, Draft: PencilLine, Archived: Archive };
-const statusHue: Record<Status, string> = { Active: "green", Draft: "", Archived: "" };
+const statusHue: Partial<Record<Status, string>> = { Active: "green" };
+// a card per status, counting the rows its link shows: the search and category apply, its own status replaces any other
+const stats = computed(() => statuses.map((status) => ({ value: status, count: props.statusCounts[status], icon: statusIcon[status], hue: statusHue[status] })));
 const only = ["products", "statusCounts"];
 
 // the edit page's way back returns to the list as it was left: its search, filters, sort and page
@@ -72,38 +77,17 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
 
 <template>
   <Head title="Products" />
-  <AppLayout :breadcrumb="[{ label: 'Products' }]">
+  <AppLayout>
     <DataTable caption="Products" class="framed" table-class="table-fixed" :columns="columns" :rows="products" :filters="filters"
         :unfiltered-total="unfilteredTotal" :only="only" sort="name" :per-page="10" selectable filter-display="drawer"
         :sort-options="sortOptions" sort-select-class="@5xl/page:hidden" search-placeholder="Search name or SKU"
         empty-message="No products yet." no-matches-message="No products match.">
-      <template #header="{ total, unfilteredTotal: all, narrowed, clear, values, filterLink }">
-        <div class="flex flex-wrap items-start justify-between gap-4">
-          <div class="min-w-0">
-            <h1 class="text-2xl font-semibold tracking-tight">Products</h1>
-            <div class="mt-1 flex min-h-8 items-center gap-2 text-sm muted">
-              <p>{{ narrowed ? `${total} of ${all}` : all }} {{ all === 1 ? "product" : "products" }}</p>
-              <button v-if="narrowed" type="button" class="btn ghost sm" @click="clear">Clear</button>
-            </div>
-          </div>
-          <Link href="/products/create" class="btn primary max-md:w-full" @click="rememberList"><Plus class="size-4" aria-hidden="true" /> Add product</Link>
-        </div>
-
-        <!-- each card counts the rows its link shows: the search and category apply, its own status replaces any other -->
-        <nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status">
-          <a v-for="status in statuses" :key="status" v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
-              :aria-current="values.status?.[0] === status ? 'true' : undefined"
-              class="card group flex-row items-center gap-3 transition-colors hover:border-input focus-visible:outline-3 focus-visible:outline-ring/50 aria-[current=true]:bg-secondary aria-[current=true]:text-secondary-foreground">
-            <span class="avatar max-md:hidden" :class="statusHue[status]" aria-hidden="true"><component :is="statusIcon[status]" class="size-4" /></span>
-            <span class="min-w-0 flex-1">
-              <span class="block text-sm muted group-aria-[current=true]:text-secondary-foreground">{{ status }}</span>
-              <span class="block text-2xl font-semibold tracking-tight tabular-nums">{{ statusCounts[status] }}</span>
-            </span>
-            <!-- the current card takes its status off again, without opening the filters -->
-            <span v-if="values.status?.[0] === status" class="sr-only">, remove this filter</span>
-            <component :is="values.status?.[0] === status ? X : ChevronRight" class="size-4 shrink-0 muted group-aria-[current=true]:text-secondary-foreground" aria-hidden="true" />
-          </a>
-        </nav>
+      <template #header="list">
+        <ListHeader v-bind="list" title="Products" noun="product" :stats="stats">
+          <template #actions>
+            <Link href="/products/create" class="btn primary" @click="rememberList"><Plus class="size-4" aria-hidden="true" /> Add product</Link>
+          </template>
+        </ListHeader>
       </template>
 
       <template #cell-name="{ row }">
@@ -123,6 +107,9 @@ const archive = (selection: DataTableSelection, clear: () => void) =>
       <template #cell-stock="{ row }">
         <span v-if="row.stock === 0" class="badge sm soft danger">Out of stock</span>
         <template v-else>{{ row.stock }}</template>
+      </template>
+      <template #cell-updated_at="{ row }">
+        <LocalDate :value="row.updated_at" />
       </template>
       <template #cell-open>
         <ChevronRight class="ms-auto block size-4 muted" aria-hidden="true" />

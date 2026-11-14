@@ -14,7 +14,7 @@
   <a href="#main" class="btn primary sr-only focus:not-sr-only focus:fixed focus:start-2 focus:top-2 focus:z-50">Skip to content</a>
 
   <div class="flex min-h-dvh">
-    <aside class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex print:hidden">
+    <aside aria-label="Sidebar" class="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-2 overflow-y-auto border-e border-border bg-card p-3 lg:flex print:hidden">
       <a href="../index.html" class="flex h-11 items-center px-3 font-semibold">Forma</a>
       <nav class="nav" aria-label="Main">
         <a href="shell.html" aria-current="page"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"/><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> Dashboard</a>
@@ -27,10 +27,6 @@
     <div class="flex min-w-0 flex-1 flex-col">
       <header class="flex h-14 shrink-0 items-center gap-2 border-b border-border px-gap print:hidden">
         <button class="btn ghost sm -ms-2 px-2 lg:hidden" command="show-modal" commandfor="sidebar" aria-label="Open menu"><svg class="size-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5h16"/><path d="M4 12h16"/><path d="M4 19h16"/></svg></button>
-        <nav class="breadcrumb min-w-0" aria-label="Breadcrumb">
-          <a href="dashboard.html">Application</a>
-          <span aria-current="page">App shell</span>
-        </nav>
         <div class="ms-auto">
           <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" aria-label="ST, user menu">
             <span class="avatar sm" aria-hidden="true">ST</span>
@@ -53,8 +49,14 @@
 
       <main id="main" class="@container/page flex flex-1 flex-col gap-gap p-gap">
         <div class="max-w-2xl space-y-4">
-          <h1 class="text-2xl font-semibold tracking-tight">App shell</h1>
-          <p class="muted">The app-shell recipe as a plain page: a sidebar <code>.nav</code>, a header with the breadcrumb and the user menu, this <code>main</code> and a toaster. Below the <code>lg</code> breakpoint the sidebar moves into a drawer behind the menu button.</p>
+          <div class="flex flex-col gap-1">
+            <nav class="breadcrumb min-w-0 print:hidden" aria-label="Breadcrumb">
+              <a href="dashboard.html">Application</a>
+              <span aria-current="page">App shell</span>
+            </nav>
+            <h1 class="text-2xl font-semibold tracking-tight">App shell</h1>
+          </div>
+          <p class="muted">The app-shell recipe as a plain page: a sidebar <code>.nav</code>, a header with the menu button and the user menu, this <code>main</code> and a toaster. Below the <code>lg</code> breakpoint the sidebar moves into a drawer behind the menu button. A page reached from another has its breadcrumb above its <code>h1</code>, as here; the header has none.</p>
           <section class="space-y-2" aria-labelledby="scheme-heading">
             <h2 id="scheme-heading" class="text-lg font-semibold">Colour scheme</h2>
             <p class="text-sm muted">The setting an app puts on its appearance page.</p>

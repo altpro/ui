@@ -84,7 +84,7 @@ To export or re-run what is on screen, send `state.search.value` and `state.filt
 
 **`<DataList>` props:** `list`, `caption` (required; names the search box and pagination), `search-placeholder`, `sort-label` (default "Sort"), `filter-display`, `filter-count`, `scroll-on-page`, which goes back to the top of the list on a page change, for rows tall enough that the next page would start out of sight.
 
-**Slots:** the default slot gets `{ rows, busy, empty, clearFilters }`. `header` goes above the toolbar, for the page's title row and stat cards that filter the list, and gets `{ total, unfilteredTotal, narrowed, clear, values, filterLink }`, as [datatable.md](datatable.md#a-list-page) shows. `filters` and `controls` add to the toolbar. `filter-<key>` draws a declared filter. `foot` replaces the count, page size and pagination, for a list that loads more as it scrolls.
+**Slots:** the default slot gets `{ rows, busy, empty, clearFilters }`. `header` goes above the toolbar, for the page's title row and stat cards that filter the list, and gets `{ total, unfilteredTotal, narrowed, clear, values, filterLink }`, as [datatable.md](datatable.md#a-list-page) shows; [`ListHeader`](list-header.md) draws the usual title row from them. `filters` and `controls` add to the toolbar. `filter-<key>` draws a declared filter. `foot` replaces the count, page size and pagination, for a list that loads more as it scrolls.
 
 ## Filters in a drawer
 

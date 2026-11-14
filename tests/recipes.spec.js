@@ -12,8 +12,10 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
   const summary = page.locator("form").getByRole("alert"), fieldErrors = page.locator("form .field .error:visible");
   await expect(name).toHaveValue("Arc studio");
   await expect(discard).toBeDisabled();
-  // one shell: AppLayout draws the only breadcrumb, from the page's prop; on the page load the skip link is the first Tab
+  // one breadcrumb, the first line of the page's heading in main, and none in the header; on the page load the skip link is the first Tab
   await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toHaveCount(1);
+  await expect(page.locator("main nav.breadcrumb + div h1")).toHaveText("Arc studio");
+  await expect(page.getByRole("banner").getByRole("navigation")).toHaveCount(0);
   await page.keyboard.press("Tab");
   await expect(page.getByRole("link", { name: "Skip to content" })).toBeFocused();
 
@@ -24,7 +26,7 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
   // Name has just lost focus, so poll until its border's transition back from the ring colour ends.
   const border = (input) => input.evaluate((el) => getComputedStyle(el.closest(".input")).borderTopColor);
   await expect.poll(() => border(name)).toBe(await border(page.getByLabel("SKU", { exact: true })));
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   // the summary lists every error and takes focus; Tab goes on to the first field
   await expect(summary).toBeFocused();
   await expect(summary.getByRole("heading")).toHaveText("The product was not saved");
@@ -37,12 +39,12 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
 
   // money is a text field, so the server refuses what a number field would pass as 10
   await price.fill("1e1");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(summary.getByRole("listitem")).toHaveText(["The name field is required.", "The price field must have 0-2 decimal places."]);
 
   await name.fill("Arc studio pro");
   await price.fill("399");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(toast(page)).toHaveText("Product saved.");
   await expect(summary).toHaveCount(0);
   await expect(fieldErrors).toHaveCount(0);
@@ -53,7 +55,7 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
 
   // Discard puts back the saved values, not the ones the page loaded with, and clears errors
   await name.fill("");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(summary).toBeFocused();
   await discard.click();
   await expect(name).toHaveValue("Arc studio pro");
@@ -63,7 +65,7 @@ test("edit page: a failed save focuses the error summary, a save becomes the new
   await expect(discard).toBeDisabled();
 
   // Save on a clean form sends nothing and says so; the next change takes the message away
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(status).toHaveText("No changes to save.");
   await name.fill("Arc studio pro!");
   await expect(status).toHaveText("Unsaved changes");
@@ -103,18 +105,41 @@ test("edit page: leaving with unsaved changes asks first, in the app and through
   await expect(name).toHaveValue("Arc studio mk2");
 
   // a save is not leaving, and leaves nothing unsaved
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.locator("form [role=status]")).toHaveText("Saved.");
   expect(await unloadBlocked()).toBe(false);
   expect(asked).toHaveLength(1);
 
-  // dirty again, and OK leaves; the new page puts focus on its main
+  // dirty again, and OK leaves; the new page puts focus on its h1
   await name.fill("Arc studio mk3");
   await page.getByRole("link", { name: "Tags and photos" }).click();
   await expect(page).toHaveURL(/recipe-media\.html\?id=2$/);
   expect(asked).toHaveLength(2);
-  await expect(page.locator("#main")).toBeFocused();
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
   expect(await unloadBlocked()).toBe(false);
+});
+
+test("edit page: Delete product asks in a dialog, goes unasked by the unsaved-changes guard, and lands on the list", async ({ page }) => {
+  await page.goto("/app/recipe-product.html?id=3");
+  const asked = [];
+  page.on("dialog", (dialog) => {
+    asked.push(dialog.message());
+    return dialog.dismiss();
+  });
+  // the danger card in the aside explains, and its button opens the dialog; the record layout names the aside
+  const aside = page.getByRole("complementary", { name: "About this product" });
+  await expect(aside.getByRole("heading", { name: "Delete product" })).toBeVisible();
+  await page.getByLabel("Name", { exact: true }).fill("Dot earbuds, unsaved");
+  await aside.getByRole("button", { name: "Delete product" }).click();
+  const dialog = page.getByRole("dialog", { name: "Delete Dot earbuds?" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Cancel" })).toBeFocused();
+  await dialog.getByRole("button", { name: "Delete product" }).click();
+  await expect(page).toHaveURL(/recipe-products\.html$/);
+  await expect(toast(page)).toHaveText("Product deleted.");
+  await expect(page.getByRole("link", { name: "Dot earbuds", exact: true })).toHaveCount(0);
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
+  expect(asked).toEqual([]);
 });
 
 test("edit page: Back and Forward keep an unsaved draft, still unsaved, and a reload starts from the server", async ({ page }) => {
@@ -149,7 +174,7 @@ test("edit page: Back and Forward keep an unsaved draft, still unsaved, and a re
   await page.goForward();
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
   await expect(name).toHaveValue("Arc studio mk3");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(status).toHaveText("Saved.");
   await page.goBack();
   await expect(page).toHaveURL(/recipe-products\.html$/);
@@ -184,7 +209,7 @@ test("edit page: the draft Back brings is the latest, never one the reader disca
 
   // a failed save keeps the draft
   await name.fill("");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(page.locator("form").getByRole("alert")).toBeFocused();
   await backAndForth();
   await expect(name).toHaveValue("");
@@ -198,7 +223,7 @@ test("edit page: the draft Back brings is the latest, never one the reader disca
   }, on);
   await name.fill("kept");
   await cancelVisits(true);
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await page.getByRole("navigation", { name: "Breadcrumb" }).getByRole("link", { name: "Products" }).click();
   await cancelVisits(false);
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
@@ -230,7 +255,7 @@ test("edit page: Back while a save is under way leaves the page Back went to as 
   await expect(page).toHaveURL(/recipe-product\.html\?id=2$/);
   await page.getByLabel("Name", { exact: true }).fill("Arc studio mk2");
   await page.waitForTimeout(300);
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await page.waitForTimeout(400);
   // Back cancels the save, whose end must not write the edit page into the list's history entry
   await page.goBack();
@@ -250,9 +275,9 @@ test("edit page: text typed while a save is under way stays unsaved", async ({ p
   await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
   await name.fill("Arc studio mk2");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await name.fill("Arc studio mk3");
-  await expect(page.getByRole("button", { name: "Save", exact: true })).not.toHaveClass(/loading/);
+  await expect(page.getByRole("button", { name: "Save changes", exact: true })).not.toHaveClass(/loading/);
   await expect(status).toHaveText("Unsaved changes");
   // the draft Back and Forward bring differs from what was saved, not from what was there before
   await page.goBack();
@@ -297,7 +322,7 @@ test("edit page: one draft serves the entries a list beside the form makes, and 
   await expect(name).toHaveValue("after the search");
 
   // a save leaves no entry a draft to bring back
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(status).toHaveText("Saved.");
   await page.goBack();
   await expect(page).toHaveURL(/id=2$/);
@@ -370,7 +395,7 @@ test("edit page: a save that lands on another record's page keeps each record's 
   await page.getByRole("link", { name: "Arc studio", exact: true }).click();
   const name = page.getByLabel("Name", { exact: true }), status = page.locator("form [role=status]");
   await name.fill("Arc studio mk2");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await page.getByRole("button", { name: "Save changes", exact: true }).click();
   await expect(name).toHaveValue("Arc studio mk2");
   await expect(page).not.toHaveURL(/recipe-product\.html\?id=2$/);
   // the record the save landed on, edited
@@ -681,12 +706,29 @@ test("list page: a visit that reloads the rows dims the table, and a save does n
   expect(await page.evaluate(() => window.dims)).toBe(0);
 });
 
-test("app shell: focus on main shows after a keyboard visit, inside the window", async ({ page }) => {
+test("app shell: focus on the h1 shows after a keyboard visit, and main takes it on a page with no h1 to take", async ({ page }) => {
   await page.goto("/app/recipe-products.html");
-  const link = page.getByRole("link", { name: "Arc headphones", exact: true }), main = page.locator("#main");
+  const link = page.getByRole("link", { name: "Arc headphones", exact: true }), h1 = page.getByRole("heading", { level: 1 });
   await link.focus();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(/recipe-product\.html\?id=1$/);
+  await expect(h1).toBeFocused();
+  expect(await h1.evaluate((el) => { const s = getComputedStyle(el); return [s.outlineStyle, s.outlineWidth, s.outlineOffset]; })).toEqual(["solid", "3px", "2px"]);
+  // Tab goes on into the page, not back to the top of the document
+  await page.keyboard.press("Tab");
+  expect(await page.evaluate(() => document.activeElement.closest("main") !== null)).toBe(true);
+
+  // the edit page's h1 without its tabindex: main takes focus, with its own ring
+  await page.route("**/resources/js/PageHeading.vue*", async (route) => {
+    const response = await route.fetch();
+    const body = (await response.text()).replace('tabindex: "-1",', "");
+    await route.fulfill({ response, body });
+  });
+  await page.goto("/app/recipe-products.html");
+  await link.focus();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(/recipe-product\.html\?id=1$/);
+  const main = page.locator("#main");
   await expect(main).toBeFocused();
   expect(await main.evaluate((el) => { const s = getComputedStyle(el); return [s.outlineStyle, s.outlineWidth, s.outlineOffset]; })).toEqual(["solid", "3px", "-3px"]);
 });
@@ -735,8 +777,8 @@ test("list page: the server searches, filters and pages, and a bulk action runs 
   await dt.getByRole("link", { name: "Arc headphones", exact: true }).click();
   await expect(page).toHaveURL(/recipe-product\.html\?id=1$/);
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Arc headphones");
-  // a visit to a new page puts focus on its main, not on <body> where the clicked link left it
-  await expect(page.locator("#main")).toBeFocused();
+  // a visit to a new page puts focus on its h1, not on <body> where the clicked link left it
+  await expect(page.getByRole("heading", { level: 1 })).toBeFocused();
 });
 
 test("list page: a table visit another listener cancels is forgotten, not carried into the next change", async ({ page }) => {
@@ -912,7 +954,7 @@ const $Release = { setup() {
   const form = $useForm({ name: "", released: "", shipped: "2026-10-13T09:30:00.000000Z" });
   $onMounted(() => form.defaults());
   const field = (key, attrs) => $h($Field, { modelValue: form[key], "onUpdate:modelValue": (v) => (form[key] = v), name: key, ...attrs });
-  return () => $h($AppLayout, { breadcrumb: [{ label: "Release" }] }, () => $h("form", [
+  return () => $h($AppLayout, null, () => $h("form", [
     field("name"), field("released", { type: "date", now: true }), field("shipped", { type: "date" }),
     $h("output", JSON.stringify({ released: form.released, shipped: form.shipped, isDirty: form.isDirty })),
   ]));

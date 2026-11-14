@@ -7,8 +7,8 @@ An HTML and CSS component layer for Tailwind v4. Tailwind does layout; altpro/ui
 | Using | Packages | Vite plugins | Supported |
 |-------|----------|--------------|-----------|
 | CSS only (any HTML, Blade) | `tailwindcss` | `@tailwindcss/vite` | Tailwind 4.1+, Vite 7+. Blade components: PHP 8.3+, Laravel 13 |
-| Vue components (Field, FileInput, Combobox, Repeater, CopyButton) | the above, plus `vue` | the above, plus `@vitejs/plugin-vue` | Vue 3.5+, plugin-vue 6+ |
-| DataTable | the above, plus `@inertiajs/vue3`; `TableQuery` on the server | the above | Inertia 3+ (client and `inertiajs/inertia-laravel`), Laravel 13. Written in TypeScript, which Vite compiles without extra setup |
+| Vue components (Field, FileInput, Combobox, Repeater, CopyButton, StatLink, LocalDate, UserAvatar, EmailAddress) | the above, plus `vue` | the above, plus `@vitejs/plugin-vue` | Vue 3.5+, plugin-vue 6+ |
+| DataTable, DataList, DataTimeline, PageHeading, PageBreadcrumb, ListHeader | the above, plus `@inertiajs/vue3`; `TableQuery` on the server | the above | Inertia 3+ (client and `inertiajs/inertia-laravel`), Laravel 13. Written in TypeScript, which Vite compiles without extra setup |
 
 ### Browsers
 
@@ -33,12 +33,12 @@ Add the repository to the app's `composer.json`, then require it, with Lucide fo
 ```
 
 ```
-composer require altpro/ui:^0.5
+composer require altpro/ui:^0.6
 composer require mallardduck/blade-lucide-icons   # icons in Blade: <x-lucide-plus />
 npm install @lucide/vue                           # icons in Vue: <Plus />
 ```
 
-On 0.x a breaking change bumps the minor version, so `^0.5` never installs one; read [CHANGELOG.md](CHANGELOG.md) before raising the constraint.
+On 0.x a breaking change bumps the minor version, so `^0.6` never installs one; read [CHANGELOG.md](CHANGELOG.md) before raising the constraint.
 
 The service provider is discovered automatically, so `<x-ui::field>` works straight away. In `resources/css/app.css`:
 
@@ -46,13 +46,22 @@ The service provider is discovered automatically, so `<x-ui::field>` works strai
 @import "tailwindcss";
 @import "../../vendor/altpro/ui/resources/css/ui.css";
 
-/* optional */
+/* optional: the app's brand */
 @theme {
-  --color-primary: light-dark(oklch(0.55 0.2 30), oklch(0.72 0.15 30));
-  --color-primary-foreground: light-dark(white, oklch(0.145 0 0));
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  --color-primary: light-dark(oklch(0.44 0.15 253), oklch(0.7 0.13 250));
+  --color-primary-foreground: light-dark(white, oklch(0.18 0.03 253));
 }
-:root { --radius: 9999px; }
+:root { --radius: 9999px; }   /* optional: pill corners */
 ```
+
+### Brand an app
+
+An app brands altpro/ui with two things: its primary colour and its font, both in its own `@theme` as above. The library's tokens are `@theme default`, so the app's win whatever the import order.
+
+- `--color-primary` reaches the primary button, links, checked boxes and switches, the current tab, progress bars and, through `--color-ring`, every focus ring. Give it a light and a dark value, each 4.5:1 as text on that scheme's background (so in dark it is usually lifted), and a `--color-primary-foreground` 4.5:1 on the fill in both.
+- `--font-sans` is the app's typeface; the library sets none. Laravel's Vite `fonts` option with `alias: 'sans'` and `@fonts` in the root view sets it too.
+- Nothing else needs changing, and no component needs restyling: a shared admin (the altpro starter kit's screens, altpro/cms) looks like one app wherever it runs, in each site's colour and type. Run axe on the app in both schemes, as a brand colour's contrast is the app's to check. The skill's SKILL.md has the same, under "Branding an app".
 
 Vue components are imported from the package and bring their own JavaScript. Add a `@ui` alias to `vite.config.js` so the import does not depend on where the importing file lives:
 
@@ -92,7 +101,7 @@ The skills land in the agents' skills directory (`.claude/skills/altpro-ui/`, `a
 ## Install anywhere else
 
 ```
-npm install github:altpro/ui#v0.5.0
+npm install github:altpro/ui#v0.6.0
 npm install @lucide/vue   # icons
 ```
 

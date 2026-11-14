@@ -3,6 +3,7 @@ import { computed, onMounted, reactive, ref, watch } from "vue";
 import { Head, useForm, useHttp } from "@inertiajs/vue3";
 import Field from "@ui/Field.vue";
 import FileInput from "@ui/FileInput.vue";
+import PageHeading from "@ui/PageHeading.vue";
 import { useUnsavedChanges } from "@ui/useUnsavedChanges";
 import AppLayout from "@/layouts/AppLayout.vue";
 
@@ -95,11 +96,10 @@ useUnsavedChanges({ get isDirty() { return uploading.value > 0; } });
 
 <template>
   <Head :title="`Tags and photos · ${product.name}`" />
-  <AppLayout :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
-    <div class="min-w-0">
-      <h1 class="text-2xl font-semibold tracking-tight break-words">Tags and photos</h1>
+  <AppLayout>
+    <PageHeading title="Tags and photos" :breadcrumb="[{ label: 'Products', href: listHref }, { label: product.name, href: `/products/${product.id}/edit` }, { label: 'Tags and photos' }]">
       <p class="mt-1 text-sm muted">{{ product.name }} · SKU {{ product.sku }}</p>
-    </div>
+    </PageHeading>
 
     <div class="grid items-start gap-gap lg:grid-cols-2">
       <form class="card" @submit.prevent="saveTags">

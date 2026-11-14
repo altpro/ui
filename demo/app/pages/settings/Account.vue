@@ -4,6 +4,7 @@ import { Head, useForm } from "@inertiajs/vue3";
 import { Trash2 } from "@lucide/vue";
 import ConfirmDialog from "@ui/ConfirmDialog.vue";
 import Field from "@ui/Field.vue";
+import PageHeading from "@ui/PageHeading.vue";
 import AppLayout from "@/layouts/AppLayout.vue";
 
 const dialog = ref();
@@ -25,12 +26,12 @@ const forget = () => {
 
 <template>
   <Head title="Settings" />
-  <AppLayout :breadcrumb="[{ label: 'Settings' }]">
-    <h1 class="text-2xl font-semibold tracking-tight">Settings</h1>
+  <AppLayout>
+    <PageHeading title="Settings" />
 
     <section class="card max-w-2xl" aria-labelledby="delete-account-heading">
       <h2 id="delete-account-heading" class="text-lg font-semibold">Delete account</h2>
-      <p class="muted">Your account and everything in it are deleted straight away. This cannot be undone.</p>
+      <p class="muted">Your account and everything in it are deleted straight away. This can't be undone.</p>
       <div>
         <button type="button" class="btn outlined danger" command="show-modal" commandfor="delete-account"><Trash2 class="size-4" aria-hidden="true" /> Delete account</button>
       </div>

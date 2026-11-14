@@ -93,8 +93,20 @@
       </div>
     </div>
   </section>
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">A stat that filters a list</h2>
+    <p class="text-sm muted"><code>StatLink.vue</code>: the whole card is a link to the list with that filter, and its figure counts the rows the link would show. The current card has the secondary fill and a cross, as a second click takes its filter off. On a list page, <code>ListHeader.vue</code> draws a row of them (<a class="link" href="heading.html">Page heading</a>).</p>
+    <div id="stat-link" class="@container/page"></div>
+<pre>&lt;nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status"&gt;
+  &lt;StatLink v-for="status in statuses" :key="status"
+      v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
+      :label="status" :count="statusCounts[status]" :icon="icons[status]" :hue="hues[status]"
+      :current="values.status?.[0] === status" /&gt;
+&lt;/nav&gt;</pre>
+  </section>
 </main>
 </div>
 <script type="module" src="demo.js"></script>
+<script type="module" src="stat.js"></script>
 </body>
 </html>

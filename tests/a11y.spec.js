@@ -397,11 +397,11 @@ for (const colorScheme of ["light", "dark"]) {
     test("recipe pages: the error summary, a flash toast, uploading files and the delete dialog pass axe", async ({ page }) => {
       await page.goto("/app/recipe-product.html?id=1");
       await page.getByLabel("Name", { exact: true }).fill("");
-      await page.getByRole("button", { name: "Save", exact: true }).click();
+      await page.getByRole("button", { name: "Save changes", exact: true }).click();
       await expect(page.locator("form").getByRole("alert")).toBeFocused();
       expect(summary((await axe(page).analyze()).violations)).toEqual([]);
       await page.getByLabel("Name", { exact: true }).fill("Arc");
-      await page.getByRole("button", { name: "Save", exact: true }).click();
+      await page.getByRole("button", { name: "Save changes", exact: true }).click();
       await expect(page.locator("#toaster .alert")).toBeVisible();
       await page.locator("#toaster .alert").evaluate((el) => el.getAnimations().forEach((a) => a.pause()));
       expect(summary((await axe(page).include("#toaster").analyze()).violations)).toEqual([]);

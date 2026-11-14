@@ -1,6 +1,6 @@
 ---
 name: altpro-ui
-description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, tile, segmented control, badge, description list, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, confirm dialog, accordion, table, DataTable, DataList, DataTimeline, repeater, save bar, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
+description: Use altpro/ui component classes (btn, join, input, field, file input, drop zone, checkbox, radio, switch, tile, segmented control, badge, description list, avatar, user avatar, email address, local date, nav, breadcrumb, page heading, list header, stat link, dropdown, combobox, tooltip, card, dialog, confirm dialog, accordion, table, DataTable, DataList, DataTimeline, repeater, save bar, alert, tabs, progress, meter, range, skeleton, spinner, steps, toast, drawer, and more as they land) and its Blade (<x-ui::…>) and Vue components when writing markup in a project that uses altpro/ui (Composer altpro/ui or npm @altpro/ui). Covers class composition, colour and size modifiers, theme tokens, and light/dark scheme regions.
 ---
 
 # altpro/ui
@@ -23,7 +23,7 @@ Browsers: Chrome and Edge 135, Firefox 147, Safari 26.2 (iOS 26.2) and later. Be
 An app made from the altpro Vue starter kit has all of this. Laravel installs it with Composer from the GitHub repository (`"repositories": [{ "type": "vcs", "url": "https://github.com/altpro/ui.git" }]` in `composer.json`), with Lucide for icons:
 
 ```
-composer require altpro/ui:^0.5
+composer require altpro/ui:^0.6
 composer require mallardduck/blade-lucide-icons
 npm install @lucide/vue
 ```
@@ -35,7 +35,7 @@ The Blade components register themselves. In `resources/css/app.css`:
 @import "../../vendor/altpro/ui/resources/css/ui.css";
 ```
 
-Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.5.0 @lucide/vue`):
+Elsewhere it is the npm package `@altpro/ui` (`npm install github:altpro/ui#v0.6.0 @lucide/vue`):
 
 ```css
 @import "tailwindcss";
@@ -136,7 +136,7 @@ One scale for page content, the same on every page. Pick the level from the page
 
 | Heading | Classes | For |
 |---------|---------|-----|
-| `h1` | `text-2xl font-semibold tracking-tight`, plus `break-words` when it shows a record's name | The page title, one per page, in the [record header](references/record-header.md) |
+| `h1` | `text-2xl font-semibold tracking-tight wrap-anywhere`, with `tabindex="-1"` and a focus ring: [`PageHeading`](references/page-heading.md) draws it | The page title, one per page, with the breadcrumb above it on a page reached from another |
 | `h2` | `text-lg font-semibold` | A section of the page, or of a [long form](references/long-form.md) |
 | `h3` | `font-semibold` | A group inside a section |
 
@@ -148,7 +148,9 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 
 | Component | For | Ships as | Reference |
 |-----------|-----|----------|-----------|
-| App shell | The page frame: sidebar nav, header with breadcrumb and user menu, main, toaster; the sign-in layout; the colour scheme setting | pattern | [app-shell.md](references/app-shell.md) |
+| App shell | The page frame: sidebar nav, header with the user menu, main, toaster; focus to the `h1` after a visit; the sign-in layout; the colour scheme setting | pattern | [app-shell.md](references/app-shell.md) |
+| Page heading `PageHeading` | The top of a page: the breadcrumb (deeper pages only) above the `h1`, badges, a facts line, actions | Vue (Inertia) | [page-heading.md](references/page-heading.md) |
+| List header `ListHeader` | A list page's title row in a list's `#header`: count line, Clear, primary action, status cards that filter | Vue (Inertia) | [list-header.md](references/list-header.md) |
 | Page recipes | Whole Inertia screens: list page, edit page, tags and photo uploads, with what each endpoint must return | pattern | [recipes.md](references/recipes.md) |
 | Validation failure | A failed save: an error summary that is announced and takes focus; where focus goes after a visit | pattern | [validation-failure.md](references/validation-failure.md) |
 | Destructive action | A delete confirmed in a `ConfirmDialog`: pending state, a 422 shown in it, focus back to the trigger, with what the server must return | pattern | [destructive-action.md](references/destructive-action.md) |
@@ -163,9 +165,11 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Tile `.tile` | A checkbox or radio drawn as a card, for a choice with a description or a picture | CSS | [tile.md](references/tile.md) |
 | Badge `.badge` | Status, counts, tags | CSS | [badge.md](references/badge.md) |
 | Link `.link` | A link in a sentence, a `.dl` value, an `.alert` or a table cell | CSS | [link.md](references/link.md) |
-| Avatar `.avatar` | A person's photo or initials | CSS | [avatar.md](references/avatar.md) |
+| Avatar `.avatar`, `UserAvatar` | A person's photo or initials, on a hue that is theirs on every screen | CSS, Vue | [avatar.md](references/avatar.md) |
+| Email address `EmailAddress` | An address that breaks at the `@`, never inside the domain | Vue | [email-address.md](references/email-address.md) |
+| Local date `LocalDate` | "Today", "Yesterday", "4 Nov", with the time where it matters | Vue | [local-date.md](references/local-date.md) |
 | Nav `.nav` | Vertical sidebar or settings menu | CSS | [nav.md](references/nav.md) |
-| Breadcrumb `.breadcrumb` | The path to the current page | CSS | [breadcrumb.md](references/breadcrumb.md) |
+| Breadcrumb `.breadcrumb`, `PageBreadcrumb` | The way back from a deeper page, above its `h1` | CSS, Vue (Inertia) | [breadcrumb.md](references/breadcrumb.md) |
 | Dropdown `.dropdown` | A menu or panel anchored to a button | CSS | [dropdown.md](references/dropdown.md) |
 | Combobox | Searchable, server-backed or multiple select | Vue | [combobox.md](references/combobox.md) |
 | Tooltip `data-tooltip` | One line of help on hover and focus | CSS | [tooltip.md](references/tooltip.md) |
@@ -191,10 +195,10 @@ One line each: what it is for, and what it ships as. **CSS** is classes on nativ
 | Steps `.steps` | Numbered progress through a process | CSS | [steps.md](references/steps.md) |
 | Timeline `.timeline` | Audit history and activity feeds | CSS | [timeline.md](references/timeline.md) |
 | Toast `.toaster` | Short notices in a corner, and flash messages | CSS | [toast.md](references/toast.md) |
-| Stat | A big number in a card | pattern | [stat.md](references/stat.md) |
+| Stat, `StatLink` | A big number in a card; a card that filters a list by status | pattern, Vue | [stat.md](references/stat.md) |
 | Empty state | What an empty list or panel says | pattern | [empty-state.md](references/empty-state.md) |
-| Record header | The top of a record page | pattern | [record-header.md](references/record-header.md) |
-| Save bar `.save-bar` | Sticky status, Save and Discard on a long form | CSS | [save-bar.md](references/save-bar.md) |
+| Record header | The top of a record page, and the record layout under it | pattern | [record-header.md](references/record-header.md) |
+| Save bar `.save-bar`, `useSaveStatus` | Sticky status, Save and Discard on a long form, and the status line's words | CSS, Vue | [save-bar.md](references/save-bar.md) |
 | Long form | A form split into `<fieldset>` sections with headings | pattern | [long-form.md](references/long-form.md) |
 
 ## Theme tokens
@@ -220,6 +224,30 @@ Every token is `light-dark()`, so the same class is correct in both schemes. Do 
 Spacing: `--spacing-gap` is one responsive unit, 1rem, then 1.5rem from `md` and 2rem from `lg`. It gives `p-gap`, `m-gap`, `gap-gap`, `size-gap` and the rest, plus `2gap` and `3gap` multiples (`p-2gap`, `mt-3gap`). Use it for the padding of panels and the gutters between them so the whole page loosens together on wider screens.
 
 Motion: `--duration-fast` (150ms: hover, focus, anything closing) and `--duration-slow` (250ms: a panel opening or changing size), with `--ease-smooth` for anything that opens, closes or resizes (also an `ease-smooth` utility). Use them in an app's own transitions rather than literal times, open slow and close fast, and wrap each in a `prefers-reduced-motion: reduce` guard that sets the duration to 0s.
+
+### Branding an app: the primary colour and the font
+
+An app, or one site's copy of a shared admin, brands itself with two things and nothing else: the primary colour and the font. Everything else (neutrals, status colours, radius, spacing) stays the library's, so every app's screens read the same.
+
+```css
+@import "tailwindcss";
+@import "../../vendor/altpro/ui/resources/css/ui.css";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  /* the brand colour in light; lifted in dark, where it must hold 4.5:1 on the dark background */
+  --color-primary: light-dark(oklch(0.44 0.15 253), oklch(0.7 0.13 250));
+  /* text on a primary fill: 4.5:1 against it in both schemes */
+  --color-primary-foreground: light-dark(white, oklch(0.18 0.03 253));
+}
+```
+
+- `--color-primary` is the primary button, a link, a checked box, the current tab, the progress bar and, through `--color-ring`, every focus ring. Give it a light and a dark value: the light one 4.5:1 on white, the dark one 4.5:1 on the dark background, as text in an outlined or ghost button sits on the page. `--color-primary-foreground` is the text on a primary fill, 4.5:1 against both.
+- `--font-sans` is the app's one typeface. Load it the way the app loads fonts: Laravel's Vite plugin (`fonts: [google("Outfit", { alias: "sans", … })]` with `@fonts` in the root view) sets it for you, or self-host it and set it here. The library sets no font of its own.
+- Set both in the app's `@theme`, after the import: altpro/ui's tokens are `@theme default`, so the app's win whatever the order. Don't restyle components to brand them (`.btn.primary { … }`, a `.nav` override); a component that looks wrong with the brand colour is a library bug.
+- Check the build with axe in both schemes: a brand colour that fails contrast fails there, not in the library's tests.
+
+### Other overrides
 
 Override in the app's stylesheet, after the altpro/ui import:
 

@@ -34,12 +34,20 @@ for (const name of components) {
 }
 
 // A Vue component has no CSS file for the loop above to find. These have a demo page or reference under another name;
-// DataFilters is DataList's own, copy-button's page is copy.html and confirm-dialog's confirm.html.
+// DataFilters is DataList's own, copy-button's page is copy.html and confirm-dialog's confirm.html. The admin pieces
+// share pages with what they draw: StatLink is a stat, UserAvatar an avatar, PageBreadcrumb a breadcrumb.
 const vueAliases = {
   ConfirmDialog: { demo: "confirm", ref: "confirm-dialog" },
   CopyButton: { demo: "copy", ref: "copy-button" },
   FileInput: { demo: "file", ref: "file-input" },
   DataFilters: null,
+  EmailAddress: { demo: "avatar", ref: "email-address" },
+  ListHeader: { demo: "heading", ref: "list-header" },
+  LocalDate: { demo: "local-date", ref: "local-date" },
+  PageBreadcrumb: { demo: "heading", ref: "breadcrumb" },
+  PageHeading: { demo: "heading", ref: "page-heading" },
+  StatLink: { demo: "stat", ref: "stat" },
+  UserAvatar: { demo: "avatar", ref: "avatar" },
 };
 
 for (const file of readdirSync(new URL("resources/js/", root)).filter((f) => f.endsWith(".vue"))) {

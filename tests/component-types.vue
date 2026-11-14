@@ -10,7 +10,18 @@ import ConfirmDialog from "../resources/js/ConfirmDialog.vue";
 import DataList from "../resources/js/DataList.vue";
 import DataTable from "../resources/js/DataTable.vue";
 import DataTimeline from "../resources/js/DataTimeline.vue";
+import EmailAddress from "../resources/js/EmailAddress.vue";
 import FileInput from "../resources/js/FileInput.vue";
+import ListHeader from "../resources/js/ListHeader.vue";
+import type { ListHeaderStat } from "../resources/js/ListHeader.vue";
+import LocalDate from "../resources/js/LocalDate.vue";
+import PageBreadcrumb from "../resources/js/PageBreadcrumb.vue";
+import PageHeading from "../resources/js/PageHeading.vue";
+import StatLink from "../resources/js/StatLink.vue";
+import UserAvatar from "../resources/js/UserAvatar.vue";
+import { avatarHue, getInitials, type AvatarHue } from "../resources/js/avatar";
+import { useSaveStatus } from "../resources/js/useSaveStatus";
+import { useToday } from "../resources/js/useToday";
 import { useDataList, type DataTableColumn, type DataTableFilter } from "../resources/js/dataTable";
 import { leaveWithoutAsking, useUnsavedChanges } from "../resources/js/useUnsavedChanges";
 
@@ -38,6 +49,15 @@ leaveWithoutAsking();
 useUnsavedChanges(true);
 const dialog = ref<InstanceType<typeof ConfirmDialog>>();
 dialog.value?.close();
+
+const { saveStatus, noteNothingToSave } = useSaveStatus(form);
+const status: string = saveStatus.value;
+noteNothingToSave();
+const today: string = useToday().value;
+const hue: AvatarHue = avatarHue("Sam Taylor");
+const initials: string = getInitials("Sam Taylor");
+const icon = { render: () => null };
+const stats: ListHeaderStat[] = [{ value: "a", count: 2, icon, hue: "green" }, { value: "b", label: "Bee", count: 0 }];
 </script>
 
 <template>
@@ -69,6 +89,35 @@ dialog.value?.close();
     </template>
     <template #cell-name="{ row }">{{ name(row) }}</template>
   </DataTable>
+  <DataTable caption="Entries" :columns="columns" :rows="entries" :filters="filters">
+    <template #header="list">
+      <ListHeader v-bind="list" title="Entries" noun="entry" plural="entries" qualifier=", including old ones" stat-key="kind" :stats="stats">
+        <template #actions><a href="/entries/create" class="btn primary">Add entry</a></template>
+        <template #count="{ total, all, narrowed: some }">{{ some ? total : all }}</template>
+      </ListHeader>
+    </template>
+  </DataTable>
+  <ListHeader title="Menus" noun="menu" :total="3" :breadcrumb="[{ label: 'Pages', href: '/pages' }, { label: 'Menus' }]" />
+  <!-- @vue-expect-error noun is required -->
+  <ListHeader title="Menus" />
+  <PageHeading title="Arc studio" :breadcrumb="[{ label: 'Products', href: '/products' }, { label: 'Arc studio' }]">
+    <template #before><UserAvatar :user="{ name: 'Sam Taylor', avatar: null }" size="lg" /></template>
+    <template #badges><span class="badge">Draft</span></template>
+    <p>Updated <LocalDate value="2026-11-14T09:30:00.000000Z" with-time in-sentence locale="en-GB" time-zone="Europe/London" /></p>
+    <template #actions><button class="btn" /></template>
+  </PageHeading>
+  <PageBreadcrumb :items="[{ label: 'Products', href: '/products' }, { label: 'Arc studio' }]" />
+  <!-- @vue-expect-error a crumb needs a label -->
+  <PageBreadcrumb :items="[{ href: '/products' }]" />
+  <StatLink href="/x" label="Active" :count="4" :icon="icon" hue="green" current />
+  <!-- @vue-expect-error the count is a number -->
+  <StatLink label="Active" count="4" />
+  <LocalDate :value="null">Never</LocalDate>
+  <UserAvatar :user="{ name: 'Sam Taylor' }" />
+  <!-- @vue-expect-error not an avatar size -->
+  <UserAvatar :user="{ name: 'Sam Taylor' }" size="md" />
+  <EmailAddress email="sam@forma.test">.</EmailAddress>
+  <p>{{ status }} {{ today }} {{ hue }} {{ initials }}</p>
   <!-- @vue-expect-error a sort option needs a direction -->
   <DataTable caption="Entries" :columns="columns" :rows="entries" :sort-options="[{ key: 'name', label: 'Name' }]" />
   <DataTimeline caption="Log" :rows="entries" date-key="at">

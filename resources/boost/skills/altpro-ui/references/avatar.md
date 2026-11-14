@@ -25,3 +25,22 @@ Groups: wrap avatars in `.join` and they overlap by a third with a 2px ring betw
 ```
 
 Custom properties: `--avatar-bg --avatar-fg --avatar-size --avatar-radius --avatar-ring`.
+
+## A person: `UserAvatar.vue`
+
+A person's photo, or their initials on a hue picked from their name, so the same person has the same colour on every screen.
+
+```vue
+<script setup>
+import UserAvatar from "@ui/UserAvatar.vue";
+</script>
+
+<template>
+  <UserAvatar :user="user" />
+  <UserAvatar :user="user" size="lg" />
+</template>
+```
+
+- `user` is `{ name, avatar }`, with `avatar` a photo URL or `null`. `size` is the class's (`xs sm lg xl`).
+- It is decorative: the photo's `alt` is empty and the initials are `aria-hidden`, so put the name beside it in text. As a button's only content, name the button with the initials first: `:aria-label="`${getInitials(user.name)}, user menu`"`.
+- `@ui/avatar` exports the two halves for anything else: `getInitials(name)` ("Sam Taylor" is "ST", "Cher" is "C") and `avatarHue(name)`, one of twelve hue words.

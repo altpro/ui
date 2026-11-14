@@ -46,6 +46,8 @@ const page = (component, props) => ({ component, props });
 const json = (body, status = 200) => ({ json: body, status });
 // redirect()->back(): the page the request came from, with the session's errors and flash
 const back = (extra = {}) => new Back(extra);
+// redirect('/products') and the like, to another of these routes, with the session's flash
+class Redirect { constructor(path, extra) { this.path = path; Object.assign(this, extra); } }
 // redirect('/') and the like: a URL outside these routes, which the browser loads in full
 class Away { constructor(url) { this.url = url; } }
 const lower = (s) => s.toLowerCase();
@@ -143,6 +145,14 @@ function update(id, data) {
   return back({ flash: { toast: { type: "success", message: "Product saved." } } });
 }
 
+// destroy(): the edit page's Delete product. It lands on the list, as the record has gone.
+function destroy(id) {
+  db.products = db.products.filter((p) => p.id !== Number(id));
+  db.photos = db.photos.filter((p) => p.product_id !== Number(id));
+  commit();
+  return new Redirect("/products", { flash: { toast: { type: "success", message: "Product deleted." } } });
+}
+
 // ---- tags and photos ----
 const tagOption = (t) => ({ value: t.id, label: t.name });
 function media(id) {
@@ -208,6 +218,7 @@ const routes = [
   ["POST", /^\/products\/bulk$/, (m, q, body) => bulk(body)],
   ["GET", /^\/products\/(\d+)\/edit$/, ([, id]) => edit(id)],
   ["PUT", /^\/products\/(\d+)$/, ([, id], q, body) => update(id, body)],
+  ["DELETE", /^\/products\/(\d+)$/, ([, id]) => destroy(id)],
   ["GET", /^\/products\/(\d+)\/media$/, ([, id]) => media(id)],
   ["PUT", /^\/products\/(\d+)\/tags$/, ([, id], q, body) => updateTags(id, body)],
   ["POST", /^\/products\/(\d+)\/photos$/, ([, id], q, body) => storePhoto(id, body)],
@@ -272,12 +283,13 @@ const fullUrl = (url) => {
 // as Laravel skips the closures for the rest.
 function visit(result, url, only) {
   const here = new URL(location.href);
-  const res = result instanceof Back ? route("GET", toApp(here))() : result;
+  const to = result instanceof Redirect ? new URL(result.path, location.origin) : null;
+  const res = result instanceof Back ? route("GET", toApp(here))() : to ? route("GET", to)() : result;
   const props = { ...shared(), ...res.props, errors: result.errors ?? {} };
   if (only) for (const key of Object.keys(props)) if (key !== "errors" && !only.includes(key)) delete props[key];
   return {
     component: res.component, props, flash: result.flash ?? {},
-    url: result instanceof Back ? here.pathname + here.search : fullUrl(toDemo(url)),
+    url: result instanceof Back ? here.pathname + here.search : fullUrl(toDemo(to ?? url)),
     version: null, clearHistory: false, encryptHistory: false,
   };
 }

@@ -2,16 +2,17 @@
 import { computed } from "vue";
 import { Link, usePage } from "@inertiajs/vue3";
 import { LogOut, Settings } from "@lucide/vue";
+import { getInitials } from "@ui/avatar";
+import UserAvatar from "@ui/UserAvatar.vue";
 
-// auth.user is the signed-in user, which HandleInertiaRequests shares with every page
+// auth.user is the signed-in user ({ name, email, avatar }), which HandleInertiaRequests shares with every page
 const user = computed(() => usePage().props.auth.user);
-const initials = computed(() => user.value.name.split(" ").map((word) => word[0]).slice(0, 2).join("").toUpperCase());
 </script>
 
 <template>
   <div>
-    <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" :aria-label="`${initials}, user menu`">
-      <span class="avatar sm" aria-hidden="true">{{ initials }}</span>
+    <button type="button" class="btn ghost rounded-full p-0.5" popovertarget="user-menu" :aria-label="`${getInitials(user.name)}, user menu`">
+      <UserAvatar :user="user" size="sm" />
     </button>
     <div id="user-menu" popover class="dropdown right w-56">
       <div class="nav">

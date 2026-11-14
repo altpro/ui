@@ -1,6 +1,37 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.5` (npm `github:altpro/ui#v0.5.0`). On 0.x a breaking change bumps the minor version (0.5 to 0.6), which `^0.5` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.0`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+
+## 0.6.0 (unreleased)
+
+The admin screen pieces that lived only in the altpro starter kit's app code move into the library, so the starter, the apps made from it, altpro/cms and a site's own admin modules share one copy. Run `php artisan boost:update` for the references.
+
+**Breaking**: no class, prop or token is renamed or removed. What changes under an app:
+
+- A `.dialog`'s footer stays in view. A `<footer>` that is a dialog's last child now sticks to the bottom while a tall dialog scrolls, as a drawer's did, so Save and Cancel are on screen however long the form; it takes the card's background, and an undivided dialog's footer carries the gap above it as padding, so a short dialog looks as it did. What to change: CSS of the app's own that gives a dialog's footer a margin, padding or background, or puts something after the footer that should scroll with it.
+- `.nav`: in dark, the current link's fill is `secondary`, not `muted`, which was barely lighter than a sidebar's `card` and the only mark of the current page. An app that set `--nav-active-bg` for this can drop it.
+- Skills: the app shell's header no longer draws a breadcrumb. `AppLayout` takes no `breadcrumb` prop, and after a visit it focuses the page's `h1[tabindex]`, or `main` on a page without one. A page reached from another draws its breadcrumb above its `h1` with `PageHeading`; a page the nav links to has none. What to change, in an app that copied the old shell: remove the header's `<nav class="breadcrumb">` and the prop, change the `onMounted` focus as `app-shell.md` shows, and move each deeper page's trail into a `PageHeading` (or a `PageBreadcrumb` above its `h1`). The starter kit already works this way.
+
+New:
+
+- `PageHeading.vue`: the top of a page. The breadcrumb (deeper pages only) as the first line, then the page's one `h1`, with `tabindex="-1"`, a focus ring and `wrap-anywhere`, an optional avatar before it, badges beside it, the lines under it (a facts line, a count) and the page's actions, which fill a row of their own on a phone. See `page-heading.md`.
+- `PageBreadcrumb.vue`: the `.breadcrumb` nav of Inertia links from `[{ label, href }]`, the last item this page as `<span aria-current="page">`, `print:hidden`. `breadcrumb.md` now says where a breadcrumb goes in an app: above a deeper page's `h1`, never in the top bar.
+- `ListHeader.vue`: a list page's title row for the `#header` slot of `DataTable`, `DataList` and `DataTimeline`; `v-bind` the slot's props. The `h1`, a count line that is always there ("14 products", "4 of 14 products", with a `qualifier` such as ", including suspended"), a quiet Clear while the list is narrowed, an `#actions` slot for the primary action, and `stats`, a `StatLink` per value of a filter (`stat-key`, default `status`), each counting the rows its link would show and taking its filter off again when current. `list-header.md` has the server's per-status counts.
+- `StatLink.vue`: a stat card that filters a list, bound to a list's `filterLink`. `label`, `count` (formatted for `<html lang>`), an optional `icon` component in an `.avatar` of the `hue` word (hidden on a phone), and `current`: `aria-current="true"`, the secondary fill, a cross and ", remove this filter". It replaces the markup `stat.md` gave.
+- `LocalDate.vue`: a date as the reader's calendar has it, "Today", "Yesterday", "4 Nov", "4 Nov 2025", as `DataTimeline`'s headings say it; `with-time` adds ", 14:05", `in-sentence` lowercases the day words, the default slot shows for a missing value ("Never"). A `<time datetime>`, drawn after mount and again at the reader's midnight through `useToday()` (`@ui/useToday`), one clock for the page. `locale` defaults to `<html lang>`.
+- `UserAvatar.vue`: a person's photo, or their initials on a hue picked from their name, so the same person has the same colour on every screen; `user` is `{ name, avatar }`. `@ui/avatar` exports `getInitials(name)` and `avatarHue(name)`.
+- `EmailAddress.vue`: an address that breaks at the `@`, never inside the domain. Punctuation after it goes in its slot, so a full stop never wraps alone.
+- `useSaveStatus(form)` (`@ui/useSaveStatus`): the save bar's status line, "Unsaved changes", "No changes to save." after a Save with nothing changed (call `noteNothingToSave()` instead of sending), and "Saved.".
+- npm: `@altpro/ui/js/useSaveStatus`, `@altpro/ui/js/useToday` and `@altpro/ui/js/avatar` resolve to their `.ts` files.
+
+Skills:
+
+- The edit page (`recipes.md` §1) is the record layout: `PageHeading` with the breadcrumb, then three columns from `@4xl/page`, the form's `card divided` sections and its save bar in two, a labelled, sticky `<aside>` in the third with a fact card and a danger card whose Delete product opens a `ConfirmDialog` and lands on the list, past the unsaved-changes guard through `allowLeaving`. Save is "Save changes", with `useSaveStatus`.
+- The list page (`recipes.md` §2) is built on `ListHeader`, and shows its dates with `LocalDate`. The tags-and-photos and settings pages start with `PageHeading`. The shell's user menu shows a `UserAvatar`, and its sidebar `<aside>` is labelled.
+- `SKILL.md` has "Branding an app": an app, or one site's copy of a shared admin, sets its primary colour (light and dark, with its foreground) and its font in `@theme`, and nothing else. The README says the same under "Brand an app".
+- `record-header.md`, `datatable.md`, `save-bar.md`, `dialog.md`, `avatar.md`, `stat.md` and `validation-failure.md` follow these, and the design skill's list and record rules say where the breadcrumb, the count line and the danger card go.
+
+Moving an app made from the starter kit onto these: delete its `components/StatLink.vue`, `PageBreadcrumb.vue`, `LocalDate.vue`, `UserAvatar.vue` and `EmailAddress.vue`, `composables/useToday.ts` and `useSaveStatus.ts`, and `lib/avatarHue.ts`, and import them from `@ui/` instead; `getInitials` comes from `@ui/avatar` (keep `useInitials` only as a re-export, or import it directly). The props are the starter's, so the call sites stay. Two differences: `LocalDate` formats in `<html lang>`, so set `APP_LOCALE=en_GB` (or pass `locale="en-GB"`) to keep "4 Nov"; and `StatLink` formats its count ("1,204"), and its `icon` and `current` are optional. The users list's hand-written title row can become a `ListHeader` with `qualifier=", including suspended"`.
 
 ## 0.5.0 (13 November 2026)
 

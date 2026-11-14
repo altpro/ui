@@ -19,21 +19,28 @@ No class. A `.card` with a muted label, a big number and an optional change line
 
 ## A stat that filters a list
 
-The whole card is a link, with a chevron. The current one takes `aria-current="true"` and the `secondary` fill, and its chevron becomes a cross, as a second click takes its filter off. Its figure counts the rows its link would show. On a `DataTable`, `DataList` or `DataTimeline` page, build it in the `#header` slot and bind `filterLink` (see [datatable.md](datatable.md#a-list-page)):
+`StatLink.vue`: the whole card is a link, with a chevron. The current one takes `aria-current="true"` and the `secondary` fill, and its chevron becomes a cross, as a second click takes its filter off. Its figure counts the rows its link would show. On a `DataTable`, `DataList` or `DataTimeline` page, [`ListHeader`](list-header.md) draws a row of them from its `stats` prop, which is the usual way in. On its own, build it in the list's `#header` slot and bind `filterLink` (see [datatable.md](datatable.md#a-list-page)):
 
 ```vue
-<nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status">
-  <a v-for="status in statuses" :key="status" v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
-      :aria-current="values.status?.[0] === status ? 'true' : undefined"
-      class="card group flex-row items-center gap-3 transition-colors hover:border-input focus-visible:outline-3 focus-visible:outline-ring/50 aria-[current=true]:bg-secondary aria-[current=true]:text-secondary-foreground">
-    <span class="min-w-0 flex-1">
-      <span class="block text-sm muted group-aria-[current=true]:text-secondary-foreground">{{ status }}</span>
-      <span class="block text-2xl font-semibold tracking-tight tabular-nums">{{ counts[status] }}</span>
-    </span>
-    <span v-if="values.status?.[0] === status" class="sr-only">, remove this filter</span>
-    <component :is="values.status?.[0] === status ? X : ChevronRight" class="size-4 shrink-0 muted group-aria-[current=true]:text-secondary-foreground" aria-hidden="true" />
-  </a>
-</nav>
+<script setup>
+import StatLink from "@ui/StatLink.vue";
+</script>
+
+<template>
+  <nav class="grid grid-cols-3 gap-gap" aria-label="Filter by status">
+    <StatLink v-for="status in statuses" :key="status" v-bind="filterLink('status', values.status?.[0] === status ? [] : [status])"
+        :label="status" :count="counts[status]" :icon="icons[status]" :hue="hues[status]" :current="values.status?.[0] === status" />
+  </nav>
+</template>
 ```
 
-- An `.avatar` before the label, in the status's colour word (`green`), holds its icon: `<span class="avatar max-md:hidden" aria-hidden="true">`. It goes on a phone, where three cards share the row.
+| Prop | What |
+|------|------|
+| `label` | The status, muted, above the figure. |
+| `count` | A number, formatted for `<html lang>` (`locale` to set another): "1,204". |
+| `icon`, `hue` | A Lucide component in an `.avatar` before the label, in the status's colour word (`green`), the badge's colour; no hue is neutral. It goes on a phone, where the cards are narrow. |
+| `current` | The list's filter is this card's value: `aria-current="true"`, the fill, a cross and a screen reader's ", remove this filter". |
+
+- The `href` and click handler come from `filterLink`, bound with `v-bind`, so the link opens in a new tab as the filtered list and a plain click changes the filter in place, keeping a search on its way.
+- The nav names what the cards do: `aria-label="Filter by status"`.
+- The server counts each card as its link would show it: [list-header.md](list-header.md#status-counts-from-the-server).

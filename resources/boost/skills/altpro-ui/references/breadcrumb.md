@@ -22,3 +22,26 @@ The path to the current page. Put it on a `<nav>` with `aria-label="Breadcrumb"`
 - Text is `text-sm`; each link is at least 24px tall.
 
 Custom properties: `--breadcrumb-fg --breadcrumb-active-fg --breadcrumb-gap --breadcrumb-text`.
+
+## Where it goes in an app
+
+Only on a page reached from another (a record's edit page, a create page, a record's sub-page), as the first line of the page's heading block, directly above the `h1`. Never in the app's top bar, and not on a page the main nav links to (a list, the dashboard, a settings tab), which the nav already marks. The trail is the list, then any parent record, then this page, whose `<span aria-current="page">` repeats the `h1`'s words. The list's link is the list as it was left, with its search, filters and page ([recipes.md](recipes.md#1-edit-page)).
+
+### In an Inertia app: `PageBreadcrumb.vue`
+
+```vue
+<script setup>
+import PageBreadcrumb from "@ui/PageBreadcrumb.vue";
+</script>
+
+<template>
+  <div class="flex flex-col gap-1">
+    <PageBreadcrumb :items="[{ label: 'Products', href: listHref }, { label: product.name }]" />
+    <h1 tabindex="-1" class="text-2xl font-semibold tracking-tight wrap-anywhere">{{ product.name }}</h1>
+  </div>
+</template>
+```
+
+- `items` is `[{ label, href }]`; the last is this page and its `href` is not used. An earlier item with no `href` (a level with no page) shows as text. Links are Inertia's `Link`, so `href` takes a URL or a Wayfinder route.
+- [`PageHeading`](page-heading.md) draws it from its `breadcrumb` prop, with the `h1` under it; use that.
+- `print:hidden`: a printed page needs no way back.

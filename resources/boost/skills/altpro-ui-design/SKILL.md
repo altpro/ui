@@ -58,14 +58,14 @@ That is the whole check: the project's own build and tests, as they stand. A pas
 - **Typed text wraps.** A note, a reference or anything else a user typed takes `wrap-anywhere`, plus `whitespace-pre-line` where they can type line breaks. `break-words` doesn't lower the minimum width, so a pasted URL still widens the page. An email address keeps its domain whole, with `whitespace-nowrap` on `@example.com`, so it breaks at the `@`.
 - **`text-pretty` on paragraphs,** so no line ends on one word.
 - **One label style.** Sentence-case muted labels, as `.dl` draws them. An uppercase tracked eyebrow appears only where it carries information, such as a record's category above its name.
-- **One bundled typeface.** Install one (for example `@fontsource-variable/inter`) and set it as `--font-sans` in `@theme`, so the app looks the same on every OS. System stacks fall back to Arial lookalikes on Linux, and then the screenshots lie.
+- **One bundled typeface.** Install one (for example `@fontsource-variable/inter`) and set it as `--font-sans` in `@theme`, so the app looks the same on every OS. System stacks fall back to Arial lookalikes on Linux, and then the screenshots lie. An app's brand is that typeface and the primary colour, set in its `@theme` (`altpro-ui` SKILL.md, "Branding an app"), and nothing else.
 
 ### Copy
 
 Write **operational** copy, the words of a working tool, never brochure copy.
 
 - **Headings name what the card holds:** "Description", "Details", "Low stock", "Recent activity". Not "The details", "A little attention" or "Your space to try things".
-- **A page's `h1` matches its label** in the nav and the breadcrumb. A saved view or filter that is a nav item is a page: it sets both ("Jobs › Overdue"). A record is the exception: its `h1` is its full name, and its breadcrumb uses the code or a short name that fits a phone header.
+- **A page's `h1` matches its label** in the nav and its `<Head title>`. A saved view or filter that is a nav item is a page: it sets both ("Jobs › Overdue"). A record is the exception: its `h1` is its full name. A page reached from another (a record, a create page) has a breadcrumb as the first line of its heading, above the `h1`, ending in the `h1`'s words; a page the nav links to has none, and no page puts one in the top bar.
 - **A subtitle says what the page covers** ("Sales, stock and changes across your store") or is left out. Leave out taglines, motivational lines, reassurance notes ("Your collection is looking good"), decorative punctuation on headings, and eyebrows that restate the heading.
 - **Every figure reconciles, history included.** A count of 7 last week can't stand beside 8 sold since and 7 left today. Stats, the chart, the category split and the top products come from one set of rows for one period, so their totals match and their percentages add to 100. Margin is on the price without VAT, since a cost has none. A stock total is the sum of its variants, and a price that varies reads "From £249".
 - **Each fact once per screen,** except a figure labelling its own mark, such as a bar on a one-day chart, and a record's latest update, which leads the page and stays in its history. A percentage on a stat card is not repeated in the chart footer. A count on a tab is not repeated in a summary strip.

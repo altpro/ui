@@ -92,6 +92,18 @@
       <div class="inverse panel"><nav class="breadcrumb" aria-label="Breadcrumb, inverse"><a href="#">Home</a><a href="#">Docs</a><span aria-current="page">Page</span></nav></div>
     </div>
   </section>
+  <section class="space-y-3">
+    <h2 class="text-xl font-semibold">Above the page's heading</h2>
+    <p class="text-sm muted">In an app, the breadcrumb is the first line of a deeper page's heading block, directly above the <code>h1</code>, and never in the top bar; a page the main nav links to has none. In Vue, <code>PageBreadcrumb.vue</code> draws it with Inertia links, and <code>PageHeading.vue</code> draws that from its <code>breadcrumb</code> prop (<a class="link" href="heading.html">Page heading</a>).</p>
+    <div class="card flex-col gap-1">
+      <nav class="breadcrumb min-w-0" aria-label="Breadcrumb">
+        <a href="#">Products</a>
+        <span aria-current="page">Arc studio</span>
+      </nav>
+      <p class="text-2xl font-semibold tracking-tight">Arc studio</p>
+    </div>
+<pre>&lt;PageBreadcrumb :items="[{ label: 'Products', href: listHref }, { label: product.name }]" /&gt;</pre>
+  </section>
 </main>
 </div>
 <script type="module" src="demo.js"></script>

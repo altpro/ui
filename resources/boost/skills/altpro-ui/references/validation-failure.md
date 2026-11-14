@@ -79,7 +79,7 @@ const focusFirstInvalid = () => nextTick(() => document.querySelector('[aria-inv
 
 | After | Focus goes to | Done by |
 |-------|---------------|---------|
-| A visit to a new page: a link, a redirect to another URL, Back | The new page's `<main>` | `AppLayout`, which every page wraps itself in, so it mounts again on each new page ([app-shell.md](app-shell.md)) |
+| A visit to a new page: a link, a redirect to another URL, Back | The new page's `h1` (`tabindex="-1"`, as [`PageHeading`](page-heading.md) draws it), or its `<main>` | `AppLayout`, which every page wraps itself in, so it mounts again on each new page ([app-shell.md](app-shell.md)) |
 | The first page load | Nowhere: the first Tab reaches the skip link | The browser |
 | A failed save | The error summary | The page's `onError`, above |
 | A save, a DataTable change, any visit that keeps the page (`preserveState`) | Not moved by the layout | The page, if anything |
