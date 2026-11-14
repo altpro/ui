@@ -28,7 +28,7 @@ const save = () => {
 </template>
 ```
 
-`useSaveStatus(form)` from `@ui/useSaveStatus` gives the status line's words and `noteNothingToSave()` for a Save with nothing changed. It takes any `{ isDirty, recentlySuccessful }`, such as Inertia's `useForm`.
+`useSaveStatus(form)` from `@ui/useSaveStatus` gives the status line's words and `noteNothingToSave()` for a Save with nothing changed. It takes any `{ isDirty, recentlySuccessful }`, such as Inertia's `useForm`. A form saved by more than one button, such as Save draft and Publish, names what the last save did with `useSaveStatus(form, { saved: () => (published.value ? "Published." : "Draft saved.") })`, and a second button with nothing to send gives its own reason, `noteNothingToSave("No changes to publish.")`; the note goes once the form changes again or a save starts.
 
 | Child | Role |
 |-------|------|

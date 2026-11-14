@@ -23,6 +23,8 @@ New:
 - `EmailAddress.vue`: an address that breaks at the `@`, never inside the domain. Punctuation after it goes in its slot, so a full stop never wraps alone.
 - `useSaveStatus(form)` (`@ui/useSaveStatus`): the save bar's status line, "Unsaved changes", "No changes to save." after a Save with nothing changed (call `noteNothingToSave()` instead of sending), and "Saved.".
 - A filter with `control: false` is set by something else on the page, such as `ListHeader`'s status cards: `DataTable`, `DataList` and `DataTimeline` draw no control for it in the toolbar or the drawer and leave it off the Filters button's count, while the URL, `narrowed` and Clear treat it as any other. Give the cards' status filter `control: false` when the cards are its only control, as a select beside them is the same choice twice. `TableQuery` reads it as before.
+- `ConfirmDialog`: `blocked`, for an action that can't go ahead once the server has refused it and the body says why. The confirm button goes, as pressing it again would get the same answer, and Cancel reads Close. `confirm.html` has an example.
+- `useSaveStatus(form, { saved })` names what a save that worked did, for a form saved by more than one button ("Draft saved.", "Published."), and `noteNothingToSave(message)` gives a second button's reason ("No changes to publish."). The note now also goes when a save starts, so a Publish after a Save with nothing changed no longer leaves "No changes to save." on the line.
 - npm: `@altpro/ui/js/useSaveStatus`, `@altpro/ui/js/useToday` and `@altpro/ui/js/avatar` resolve to their `.ts` files.
 
 Skills:
