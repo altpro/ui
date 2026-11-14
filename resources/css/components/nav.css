@@ -17,7 +17,9 @@
     --nav-fg: var(--color-muted-foreground);
     --nav-active-fg: var(--color-foreground);
     --nav-hover: color-mix(in oklab, var(--color-muted) 60%, transparent);
-    --nav-active-bg: var(--color-muted);
+    /* in dark, muted is barely lighter than the card a sidebar sits on, and the fill is
+       all that marks the current page, so dark takes the stronger secondary */
+    --nav-active-bg: light-dark(var(--color-muted), var(--color-secondary));
     /* a sidebar nav usually scrolls */
     scrollbar-width: thin;
     --nav-radius: var(--radius);

@@ -16,7 +16,7 @@
    `drawer start` from the start edge. Same markup, same commands.
    The box, header, footer, media bleed and `divided` come from card.css.
    Sized to the viewport minus a gap on each side and scrolls inside when
-   the content is taller. Layered so Tailwind utilities (w-*, max-w-*) win. */
+   the content is taller, with a last-child footer kept in view. Layered so Tailwind utilities (w-*, max-w-*) win. */
 @layer components {
   .dialog {
     --dialog-w: 32rem;
@@ -46,6 +46,25 @@
       margin-inline-end: calc(-1 * var(--btn-px, 0.75rem));
     }
 
+    /* However long the content, the actions stay on screen: the footer sticks to the bottom
+       as the dialog scrolls. It takes over the dialog's bottom padding, or a strip of the
+       scrolled content would show under it. `.dialog.dialog` outranks card.css's divided
+       footer, whose negative margin would push it out of the box. */
+    &:has(> footer:last-child) { padding-block-end: 0; }
+    &.dialog > footer:last-child {
+      position: sticky;
+      inset-block-end: 0;
+      margin-block-end: 0;
+      padding-block-end: var(--card-p);
+      background: var(--card-bg);
+    }
+    /* undivided, the gap above the footer becomes its padding, so the content scrolling
+       under it stops short of the buttons; at rest nothing moves */
+    &:not(.divided, .drawer) > footer:last-child {
+      margin-block-start: calc(-1 * var(--card-p));
+      padding-block-start: var(--card-p);
+    }
+
     /* the backdrop inherits --dialog-duration from the dialog */
     &::backdrop {
       transition: opacity, display allow-discrete, overlay allow-discrete;
@@ -66,16 +85,8 @@
       border-inline-end: 0;
       /* the drawer scrolls as a whole rather than squashing its children */
       > * { flex-shrink: 0; }
-      /* however long the form, its actions stay on screen. The footer takes over the
-         dialog's bottom padding, or a strip of the scrolled form would show under it */
-      &:has(> footer:last-child) { padding-block-end: 0; }
-      > footer:last-child {
-        position: sticky;
-        inset-block-end: 0;
-        margin-block: auto 0;
-        padding-block-end: var(--card-p);
-        background: var(--card-bg);
-      }
+      /* the sticky footer (above) sits at the bottom of a short drawer too */
+      > footer:last-child { margin-block-start: auto; }
       /* translate takes scale's place, so the allow-discrete pair keeps its position in the list */
       transition-property: opacity, translate, display, overlay;
       &.start {
