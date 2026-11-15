@@ -12,11 +12,19 @@
     border-radius: var(--join-radius);
     isolation: isolate;
 
+    /* a group that starts and ends with a button (a segmented control, a pager
+       with its ellipsis) takes the buttons' shape; one with an input keeps --radius */
+    &:has(> .btn:first-child):has(> .btn:last-child) {
+      --join-radius: var(--button-radius, var(--radius));
+    }
+
     > * {
-      /* Every altpro/ui component derives its radius from --radius, so zeroing
-         the var here beats it whatever the import order. The plain
-         property covers children that are not altpro/ui components. */
+      /* Every altpro/ui component derives its radius from --radius (a button
+         from --button-radius first), so zeroing the vars here beats it
+         whatever the import order. The plain property covers children that
+         are not altpro/ui components. */
       --radius: 0;
+      --button-radius: 0;
       border-radius: 0;
 
       &:not(:first-child) {

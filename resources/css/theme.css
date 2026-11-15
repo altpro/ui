@@ -84,7 +84,11 @@
 
 /* Radius is outside @theme on purpose: it is one project-wide knob, not a
    scale, and must not collide with Tailwind's --radius-* utilities.
-   Pill buttons: `:root { --radius: 9999px }`. Square: `0`. */
+   Pill corners everywhere: `:root { --radius: 9999px }`. Square: `0`.
+   --button-radius, unset here, gives buttons (and a .join of only buttons) a
+   radius of their own, so an app can brand its buttons as pills and keep
+   --radius on inputs, cards and badges: `:root { --button-radius: 9999px }`.
+   Unset, a button follows --radius, including a --radius set on a region. */
 :root {
   --radius: 0.5rem;
 }

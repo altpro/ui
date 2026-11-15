@@ -225,9 +225,9 @@ Spacing: `--spacing-gap` is one responsive unit, 1rem, then 1.5rem from `md` and
 
 Motion: `--duration-fast` (150ms: hover, focus, anything closing) and `--duration-slow` (250ms: a panel opening or changing size), with `--ease-smooth` for anything that opens, closes or resizes (also an `ease-smooth` utility). Use them in an app's own transitions rather than literal times, open slow and close fast, and wrap each in a `prefers-reduced-motion: reduce` guard that sets the duration to 0s.
 
-### Branding an app: the primary colour and the font
+### Branding an app: the primary colour, the font and the buttons' shape
 
-An app, or one site's copy of a shared admin, brands itself with two things and nothing else: the primary colour and the font. Everything else (neutrals, status colours, radius, spacing) stays the library's, so every app's screens read the same.
+An app, or one site's copy of a shared admin, brands itself with three things and nothing else: the primary colour, the font and, if its own site's buttons are pills (or square), the buttons' corners. Everything else (neutrals, status colours, the radius of inputs, cards and badges, spacing) stays the library's, so every app's screens read the same.
 
 ```css
 @import "tailwindcss";
@@ -240,11 +240,14 @@ An app, or one site's copy of a shared admin, brands itself with two things and 
   /* text on a primary fill: 4.5:1 against it in both schemes */
   --color-primary-foreground: light-dark(white, oklch(0.18 0.03 253));
 }
+/* optional: pill buttons, as on the site's own pages */
+:root { --button-radius: 9999px; }
 ```
 
 - `--color-primary` is the primary button, a link, a checked box, the current tab, the progress bar and, through `--color-ring`, every focus ring. Give it a light and a dark value: the light one 4.5:1 on white, the dark one 4.5:1 on the dark background, as text in an outlined or ghost button sits on the page. `--color-primary-foreground` is the text on a primary fill, 4.5:1 against both.
 - `--font-sans` is the app's one typeface. Load it the way the app loads fonts: Laravel's Vite plugin (`fonts: [google("Outfit", { alias: "sans", … })]` with `@fonts` in the root view) sets it for you, or self-host it and set it here. The library sets no font of its own.
-- Set both in the app's `@theme`, after the import: altpro/ui's tokens are `@theme default`, so the app's win whatever the order. Don't restyle components to brand them (`.btn.primary { … }`, a `.nav` override); a component that looks wrong with the brand colour is a library bug.
+- `--button-radius` is every `.btn`'s corner radius, and a `.join` that starts and ends with a button takes it too (a segmented control, the pager); a join with an input in it keeps `--radius`. Unset, a button follows `--radius`. It goes on `:root`, not in `@theme`, as `--radius` does. `9999px` gives pills, and an icon-only button becomes a circle. Use it rather than `--radius: 9999px`, which rounds inputs, badges and the nav's links too.
+- Set the colour and font in the app's `@theme`, after the import: altpro/ui's tokens are `@theme default`, so the app's win whatever the order. Don't restyle components to brand them (`.btn.primary { … }`, a `.nav` override); a component that looks wrong with the brand colour is a library bug.
 - Check the build with axe in both schemes: a brand colour that fails contrast fails there, not in the library's tests.
 
 ### Other overrides
@@ -257,6 +260,7 @@ Override in the app's stylesheet, after the altpro/ui import:
   --color-primary-foreground: light-dark(white, oklch(0.145 0 0));
 }
 :root { --radius: 9999px; }   /* one knob for corner radius: 0 = square, 9999px = pill */
+:root { --button-radius: 9999px; }   /* buttons alone: see Branding an app */
 :root { --duration-fast: 100ms; --duration-slow: 200ms; }   /* quicker motion everywhere */
 ```
 

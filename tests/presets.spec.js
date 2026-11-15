@@ -80,12 +80,12 @@ test('presets persist, remain editable, export styles and reset completely', asy
   await page.getByRole('button', { name: 'Copy CSS' }).click();
   expect(await page.evaluate(() => navigator.clipboard.readText())).toContain('linear-gradient');
   await page.getByLabel('primary, light', { exact: true }).fill('#503080');
-  await page.getByLabel('Square', { exact: true }).check();
+  await page.getByRole('radiogroup', { name: 'Radius' }).getByLabel('Square', { exact: true }).check();
   await page.goto('/app/product.html');
   await page.getByRole('button', { name: 'Theme', exact: true }).click();
   await expect(page.getByLabel('Preset', { exact: true })).toHaveValue('aurora');
   await expect(page.getByLabel('primary, light', { exact: true })).toHaveValue('#503080');
-  await expect(page.getByLabel('Square', { exact: true })).toBeChecked();
+  await expect(page.getByRole('radiogroup', { name: 'Radius' }).getByLabel('Square', { exact: true })).toBeChecked();
   await page.getByLabel('Preset', { exact: true }).selectOption('grove');
   expect(await page.evaluate(() => document.documentElement.style.getPropertyValue('--demo-primary-gradient'))).toBe('');
   await page.getByRole('button', { name: 'Reset', exact: true }).click();

@@ -201,7 +201,7 @@ for (const [property, previous] of Object.entries(presetMigrations[activePreset]
   }
 }
 
-// theme drawer: every colour token as a light and a dark picker, plus the radius; overrides live in <html style> and localStorage.tokens
+// theme drawer: every colour token as a light and a dark picker, plus the radius and the buttons' radius; overrides live in <html style> and localStorage.tokens
 export const tokens = {
   Base: ["background", "foreground", "card", "card-foreground", "muted", "muted-foreground", "border", "input", "ring"],
   Intent: ["primary", "primary-foreground", "secondary", "secondary-foreground", "info", "info-foreground",
@@ -225,6 +225,13 @@ document.body.insertAdjacentHTML("beforeend", `
       <div class="join" role="radiogroup" aria-labelledby="radius-label">
         ${[["0", "Square"], ["", "Preset radius"], ["9999px", "Pill"]]
           .map(([v, l]) => `<label class="btn outlined sm"><input type="radio" name="radius" value="${v}"> ${l}</label>`).join("")}
+      </div>
+    </div>
+    <div class="space-y-2">
+      <p id="button-radius-label" class="text-sm font-medium">Buttons</p>
+      <div class="join" role="radiogroup" aria-labelledby="button-radius-label">
+        ${[["", "Same as radius"], ["9999px", "Pill"], ["0", "Square"]]
+          .map(([v, l]) => `<label class="btn outlined sm"><input type="radio" name="button-radius" value="${v}"> ${l}</label>`).join("")}
       </div>
     </div>
     ${Object.entries(tokens).map(([group, names]) => `
@@ -257,6 +264,7 @@ const sync = () => {
   drawer.querySelector("#preset-description").textContent = presets[activePreset].description;
   drawer.querySelectorAll("[data-token]").forEach((c, i) => (c.value = read(c.dataset.token, i % 2 ? "dark" : "light")));
   drawer.querySelectorAll("[name=radius]").forEach((r) => (r.checked = r.value === (["0", "9999px"].includes(html.style.getPropertyValue("--radius")) ? html.style.getPropertyValue("--radius") : "")));
+  drawer.querySelectorAll("[name=button-radius]").forEach((r) => (r.checked = r.value === html.style.getPropertyValue("--button-radius")));
 };
 drawer.oninput = ({ target: t }) => {
   if (t.id === "theme-preset") {
@@ -267,6 +275,7 @@ drawer.oninput = ({ target: t }) => {
     sync();
   }
   else if (t.name === "radius") html.style.setProperty("--radius", t.value || presets[activePreset].values["--radius"] || null);
+  else if (t.name === "button-radius") html.style.setProperty("--button-radius", t.value || null);
   else if (t.dataset.token) {
     const [light, dark] = drawer.querySelectorAll(`[data-token="${t.dataset.token}"]`);
     html.style.setProperty(`--color-${t.dataset.token}`, `light-dark(${light.value}, ${dark.value})`);

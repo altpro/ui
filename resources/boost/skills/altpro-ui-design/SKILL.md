@@ -58,7 +58,7 @@ That is the whole check: the project's own build and tests, as they stand. A pas
 - **Typed text wraps.** A note, a reference or anything else a user typed takes `wrap-anywhere`, plus `whitespace-pre-line` where they can type line breaks. `break-words` doesn't lower the minimum width, so a pasted URL still widens the page. An email address keeps its domain whole, with `whitespace-nowrap` on `@example.com`, so it breaks at the `@`.
 - **`text-pretty` on paragraphs,** so no line ends on one word.
 - **One label style.** Sentence-case muted labels, as `.dl` draws them. An uppercase tracked eyebrow appears only where it carries information, such as a record's category above its name.
-- **One bundled typeface.** Install one (for example `@fontsource-variable/inter`) and set it as `--font-sans` in `@theme`, so the app looks the same on every OS. System stacks fall back to Arial lookalikes on Linux, and then the screenshots lie. An app's brand is that typeface and the primary colour, set in its `@theme` (`altpro-ui` SKILL.md, "Branding an app"), and nothing else.
+- **One bundled typeface.** Install one (for example `@fontsource-variable/inter`) and set it as `--font-sans` in `@theme`, so the app looks the same on every OS. System stacks fall back to Arial lookalikes on Linux, and then the screenshots lie. An app's brand is that typeface, the primary colour and, optionally, the buttons' corners (`--button-radius`) (`altpro-ui` SKILL.md, "Branding an app"), and nothing else.
 
 ### Copy
 

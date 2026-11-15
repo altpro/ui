@@ -6,7 +6,7 @@ CSS component layer for Tailwind v4, with Vue components for anything that needs
 
 ```
 resources/css/ui.css         entry, imports everything below; @source points Tailwind at the Blade and Vue templates
-resources/css/theme.css      @theme default tokens, all light-dark(); --radius knob and responsive --spacing-gap on :root
+resources/css/theme.css      @theme default tokens, all light-dark(); --radius knob (and --button-radius, unset, for buttons alone) and responsive --spacing-gap on :root
 resources/css/scheme.css     color-scheme regions: .light .dark .inverse
 resources/css/components/    one file per component (button, join, input, field, dropzone, check, tile, badge, dl, avatar, nav, breadcrumb, dropdown, combobox, tooltip, card, dialog, accordion, tree, table, datatable, alert, tabs, progress, range, loading, steps, timeline, toast, repeater, save-bar)
 resources/views/components/  Blade components, rendered as <x-ui::name>

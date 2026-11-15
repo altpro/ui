@@ -1,6 +1,6 @@
 // The pieces an admin screen is built from, moved here from the altpro starter kit in 0.6: PageHeading, PageBreadcrumb,
 // ListHeader and StatLink (heading.html, stat.html), LocalDate (local-date.html), UserAvatar and EmailAddress
-// (avatar.html); a dialog's footer kept in view (dialog.html); and the two things a host brands, the primary colour and the font.
+// (avatar.html); a dialog's footer kept in view (dialog.html); and what a host brands: the primary colour, the font and the buttons' corners.
 import { test, expect } from "./fixtures.js";
 
 test("PageHeading: the breadcrumb is the first line above the h1, which can take focus, with badges beside and actions after", async ({ page }) => {
@@ -195,4 +195,42 @@ test("theme: a host's primary colour and font reach the components, the focus ri
   await page.keyboard.press("Tab");
   // rgb(0, 81, 154) at half opacity
   expect(await add.evaluate((el) => getComputedStyle(el).outlineColor)).toMatch(/^oklab\(0\.436\d* -0\.038\d* -0\.131\d* \/ 0\.5\)$/);
+});
+
+test("theme: a host's --button-radius shapes buttons and a group of buttons, and leaves inputs and cards on --radius", async ({ page }) => {
+  await page.goto("/join.html");
+  await page.addStyleTag({ content: ":root { --button-radius: 9999px; --radius: 0.5rem; }" });
+  await page.locator("main").evaluate((main) => main.insertAdjacentHTML("beforeend", `
+    <div id="fixture">
+      <button class="btn" id="lone">Save</button>
+      <input class="input" id="field">
+      <div class="card" id="card">Card</div>
+      <div class="join" id="buttons"><button class="btn">A</button><button class="btn">B</button><button class="btn">C</button></div>
+      <nav class="join" id="pager"><a class="btn">1</a><span>…</span><a class="btn">9</a></nav>
+      <div class="join" id="search"><input class="input"><button class="btn">Go</button></div>
+      <div style="--radius: 0"><button class="btn" id="region">Region</button></div>
+    </div>`));
+  const radius = (selector, corner = "border-top-left-radius") => page.locator(selector).evaluate((el, c) => getComputedStyle(el)[c.replace(/-./g, (m) => m[1].toUpperCase())], corner);
+
+  expect(await radius("#lone")).toBe("9999px");
+  // the host's own --button-radius beats a region's --radius
+  expect(await radius("#region")).toBe("9999px");
+  expect(await radius("#field")).toBe("8px");
+  expect(await radius("#card")).toBe("8px");
+  // a group of buttons is one pill: rounded ends, square seams
+  expect(await radius("#buttons > :first-child")).toBe("9999px");
+  expect(await radius("#buttons > :first-child", "border-top-right-radius")).toBe("0px");
+  expect(await radius("#buttons > :nth-child(2)")).toBe("0px");
+  expect(await radius("#buttons > :last-child", "border-top-right-radius")).toBe("9999px");
+  expect(await radius("#pager > :last-child", "border-bottom-right-radius")).toBe("9999px");
+  // a group holding an input keeps --radius at both ends
+  expect(await radius("#search > :first-child")).toBe("8px");
+  expect(await radius("#search > :last-child", "border-top-right-radius")).toBe("8px");
+  expect(await radius("#search > :last-child")).toBe("0px");
+
+  // unset, buttons follow --radius, a region's included
+  await page.addStyleTag({ content: ":root { --button-radius: initial; }" });
+  expect(await radius("#lone")).toBe("8px");
+  expect(await radius("#region")).toBe("0px");
+  expect(await radius("#buttons > :first-child")).toBe("8px");
 });

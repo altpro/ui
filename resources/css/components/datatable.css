@@ -71,6 +71,7 @@
             gap: 0.5rem;
             > * {
               --radius: var(--join-radius);
+              --button-radius: var(--join-radius);
               border-radius: var(--join-radius);
               margin-inline-start: 0;
             }

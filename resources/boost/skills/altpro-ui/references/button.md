@@ -19,7 +19,9 @@ Icons: put a Lucide icon inside the button, `size-4` and `aria-hidden="true"`. T
 </button>
 ```
 
-Custom properties every button reads. Set them on `.btn` in the app stylesheet for a global change, or inline for one element.
+Corners: a button's radius is `--button-radius` when the app sets it on `:root` (`9999px` for pills, an app's brand: SKILL.md, "Branding an app"), else `--radius`. Inside a `.join` the group takes the corners.
+
+Custom properties every button reads. Set them inline for one element; for every button, use the root tokens (`--color-primary`, `--button-radius`) rather than restyling `.btn`.
 
 ```
 --btn-bg  --btn-fg  --btn-accent  --btn-outline  --btn-hover  --btn-radius  --btn-h  --btn-px  --btn-text

@@ -52,16 +52,18 @@ The service provider is discovered automatically, so `<x-ui::field>` works strai
   --color-primary: light-dark(oklch(0.44 0.15 253), oklch(0.7 0.13 250));
   --color-primary-foreground: light-dark(white, oklch(0.18 0.03 253));
 }
-:root { --radius: 9999px; }   /* optional: pill corners */
+:root { --button-radius: 9999px; }   /* optional: pill buttons */
+:root { --radius: 9999px; }   /* optional: pill corners on everything */
 ```
 
 ### Brand an app
 
-An app brands altpro/ui with two things: its primary colour and its font, both in its own `@theme` as above. The library's tokens are `@theme default`, so the app's win whatever the import order.
+An app brands altpro/ui with three things: its primary colour and its font, both in its own `@theme` as above, and, if it wants them, its buttons' corners on `:root`. The library's tokens are `@theme default`, so the app's win whatever the import order.
 
 - `--color-primary` reaches the primary button, links, checked boxes and switches, the current tab, progress bars and, through `--color-ring`, every focus ring. Give it a light and a dark value, each 4.5:1 as text on that scheme's background (so in dark it is usually lifted), and a `--color-primary-foreground` 4.5:1 on the fill in both.
 - `--font-sans` is the app's typeface; the library sets none. Laravel's Vite `fonts` option with `alias: 'sans'` and `@fonts` in the root view sets it too.
-- Nothing else needs changing, and no component needs restyling: a shared admin (the altpro starter kit's screens, altpro/cms) looks like one app wherever it runs, in each site's colour and type. Run axe on the app in both schemes, as a brand colour's contrast is the app's to check. The skill's SKILL.md has the same, under "Branding an app".
+- `--button-radius` is the corner radius of every `.btn`, and of a `.join` that starts and ends with one; `9999px` gives pills, matching a site whose own buttons are pills, while inputs, cards and badges keep `--radius`. Unset, buttons follow `--radius`.
+- Nothing else needs changing, and no component needs restyling: a shared admin (the altpro starter kit's screens, altpro/cms) looks like one app wherever it runs, in each site's colour, type and button shape. Run axe on the app in both schemes, as a brand colour's contrast is the app's to check. The skill's SKILL.md has the same, under "Branding an app".
 
 Vue components are imported from the package and bring their own JavaScript. Add a `@ui` alias to `vite.config.js` so the import does not depend on where the importing file lives:
 

@@ -64,11 +64,13 @@ for (const colorScheme of ["light", "dark"]) {
       const { violations } = await axe(page).include("#theme").analyze();
       expect(summary(violations)).toEqual([]);
       await page.getByLabel("primary, light").fill("#ff0000");
-      await page.getByLabel("Pill").check();
+      await page.getByRole("radiogroup", { name: "Radius" }).getByLabel("Pill").check();
+      await page.getByRole("radiogroup", { name: "Buttons" }).getByLabel("Square").check();
       await page.getByRole("button", { name: "Copy CSS" }).click();
-      expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^@theme \{\n  --color-primary: light-dark\(#ff0000, #[0-9a-f]{6}\);\n\}\n:root \{\n  --radius: 9999px;\n\}\n$/);
+      expect(await page.evaluate(() => navigator.clipboard.readText())).toMatch(/^@theme \{\n  --color-primary: light-dark\(#ff0000, #[0-9a-f]{6}\);\n\}\n:root \{\n  --radius: 9999px;\n  --button-radius: 0;\n\}\n$/);
       await page.reload();
       expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--radius"))).toBe("9999px");
+      expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--button-radius"))).toBe("0");
       expect(await page.evaluate(() => document.documentElement.style.getPropertyValue("--color-primary"))).toMatch(/^light-dark\(#ff0000, #[0-9a-f]{6}\)$/);
     });
 
