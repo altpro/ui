@@ -85,14 +85,17 @@ test("StatLink: a link with its count formatted, and the current card marked for
 });
 
 test("LocalDate: Today, Yesterday, then the day, with the year when it is not this one, and a time where asked", async ({ page }) => {
+  // midday, so the demo's "an hour ago" and "three hours ago" are today whenever the suite runs
+  const now = new Date();
+  now.setHours(12, 0, 0, 0);
+  await page.clock.setFixedTime(now);
   await page.goto("/local-date.html");
   const dd = page.locator("#local-date dd time");
-  const now = new Date();
-  const lastWeek = new Date(Date.now() - 6 * 86400000);
+  const lastWeek = new Date(now.getTime() - 6 * 86400000);
   const day = (d) => new Intl.DateTimeFormat("en-GB", { day: "numeric", month: "short" }).format(d);
   await expect(dd.nth(0)).toHaveText("Today");
   await expect(dd.nth(1)).toHaveText("Yesterday");
-  await expect(dd.nth(2)).toHaveText(day(new Date(Date.now() - 4 * 86400000)));
+  await expect(dd.nth(2)).toHaveText(day(new Date(now.getTime() - 4 * 86400000)));
   await expect(dd.nth(3)).toHaveText(`9 Mar ${now.getFullYear() - 1}`);
   await expect(dd.nth(4)).toHaveText("Today");
   await expect(dd.nth(5)).toHaveText(/^Today, \d\d:\d\d$/);
