@@ -941,12 +941,16 @@ test("user menu: the avatar in the header opens a menu with the shared user's na
 
 // A page with `now` and an Inertia date cast, standing in for Settings: the demo has no such form, so the served
 // server.js gains one, written with h() as the browser gets no template compiler. The imports reuse the URLs Vite
-// gave server.js's own, so the page shares its Vue and Inertia.
+// gave server.js's own, and AppLayout.vue's for Vue, so the page shares their Vue and Inertia. Vue's URL is read,
+// not made from Inertia's: on a cold dep cache Vite gives each optimized dep its own ?v= hash, and a second Vue
+// renders nothing.
 const routeDatePage = (page) => page.route("**/app/server.js*", async (route) => {
   const response = await route.fetch();
   const served = await response.text();
+  const layout = await (await page.request.get(new URL("/app/layouts/AppLayout.vue", route.request().url()).href)).text();
   const inertia = served.match(/from "([^"]*@inertiajs_vue3[^"]*)"/)[1], ui = served.match(/from "([^"]*)\/dataTable\.ts"/)[1];
-  const body = `import { h as $h, onMounted as $onMounted } from "${inertia.replace("@inertiajs_vue3", "vue")}";
+  const vue = layout.match(/from "([^"]*\/deps\/vue\.js[^"]*)"/)[1];
+  const body = `import { h as $h, onMounted as $onMounted } from "${vue}";
 import { useForm as $useForm } from "${inertia}";
 import $Field from "${ui}/Field.vue";
 import $AppLayout from "/app/layouts/AppLayout.vue";
