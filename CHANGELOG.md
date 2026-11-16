@@ -1,6 +1,14 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.2`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.3`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+
+## 0.6.3 (16 November 2026)
+
+- `TableQuery::search()` reads a typed `%` or `_` as the character itself, as the browser's search in client mode does. They were SQL wildcards, so a server-mode list searched for `%` showed every row. Each is escaped with `!` and the query names it in an `ESCAPE` clause, which SQLite, MySQL and Postgres all read the same way. Markup is unchanged; an app that escaped the term itself before calling `search()` must stop, or its escape characters are searched for too.
+
+### Breaking
+
+- None.
 
 ## 0.6.2 (16 November 2026)
 

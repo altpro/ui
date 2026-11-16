@@ -28,6 +28,13 @@ Schema::create('brands', function ($table) {
     $table->string('slug');
 });
 
+class Note extends Model
+{
+    public $timestamps = false;
+
+    protected $guarded = [];
+}
+
 class Brand extends Model
 {
     public $timestamps = false;
@@ -64,12 +71,26 @@ $check($names('/?search=y'), [], 'does not search columns it was not given');
 // SQLite and MySQL ignore case anyway; Postgres needs ilike. Compiled only, so no server is needed
 $app['config']->set('database.connections.pgsql', ['driver' => 'pgsql', 'database' => 'x', 'prefix' => '']);
 TableQuery::search($pg = Brand::on('pgsql'), ['name'], 'ANAD');
-$check($pg->toSql(), 'select * from "brands" where ("name"::text ilike ?)', 'searches without case on Postgres');
+$check($pg->toSql(), 'select * from "brands" where ("name"::text ilike ? escape \'!\')', 'searches without case on Postgres');
 // except a JSON path on MySQL, where json_unquote() is binary-collated, so both sides are lowered
 $app['config']->set('database.connections.mysql', ['driver' => 'mysql', 'database' => 'x', 'prefix' => '']);
 TableQuery::search($my = Brand::on('mysql'), ['name', 'data->postcode'], 'SW1A');
-$check($my->toSql(), 'select * from `brands` where (`name` like ? or lower(json_unquote(json_extract(`data`, \'$."postcode"\'))) like ?)', 'lowers a JSON path on MySQL');
+$check($my->toSql(), 'select * from `brands` where (`name` like ? escape \'!\' or lower(json_unquote(json_extract(`data`, \'$."postcode"\'))) like ? escape \'!\')', 'lowers a JSON path on MySQL');
 $check($my->getBindings(), ['%SW1A%', '%sw1a%'], 'lowers the term for a JSON path only');
+// a typed % or _ is the character itself, as the client-side search reads it, not a wildcard
+Schema::create('notes', fn ($table) => $table->string('body'));
+foreach (['50% off', '500 mg', 'a_b', 'axb', 'one!two'] as $body) {
+    DB::table('notes')->insert(['body' => $body]);
+}
+$found = function (string $term): array {
+    TableQuery::search($query = Note::query(), ['body'], $term);
+
+    return $query->orderBy('body')->pluck('body')->all();
+};
+$check($found('%'), ['50% off'], 'searches a typed % as the character itself');
+$check($found('_'), ['a_b'], 'searches a typed _ as the character itself');
+$check($found('!'), ['one!two'], 'searches the escape character as itself');
+$check($found('0 '), ['50% off', '500 mg'], 'still finds a plain substring');
 $check($names('/?brands_sort=name&brands_dir=desc', 'brands'), ['Calpol', 'Boots', 'Anadin'], 'reads parameters under the table name');
 $check($names('/?sort=name&dir=desc', 'brands'), ['Anadin', 'Boots', 'Calpol'], 'ignores another table\'s parameters');
 

@@ -248,17 +248,20 @@ final class TableQuery
             return;
         }
 
-        // ponytail: a typed % or _ stays a wildcard, as elsewhere in Laravel. Escaping
-        // needs an explicit ESCAPE clause to agree on MySQL and SQLite; add it if a literal matters.
-        $pattern = '%'.$term.'%';
+        // a typed % or _ is the character itself, as the browser's search reads it: each is escaped
+        // with !, which needs no quoting in any database, and the ESCAPE clause names it, as SQLite
+        // has no default escape and MySQL's backslash depends on the server's SQL mode
+        $pattern = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $term).'%';
+        $grammar = $query->getGrammar();
+        $like = $query->getConnection()->getDriverName() === 'pgsql' ? '::text ilike' : ' like';
 
-        $query->where(static function (Builder $query) use ($searchable, $pattern): void {
+        $query->where(static function (Builder $query) use ($searchable, $pattern, $grammar, $like): void {
             foreach ($searchable as $column) {
                 // MySQL's json_unquote() returns a binary-collated string, so a JSON path
                 // matches case-sensitively there; lowering both sides makes it agree with the rest
                 str_contains($column, '->')
-                    ? $query->orWhereLike(new Expression('lower('.$query->getGrammar()->wrap($column).')'), mb_strtolower($pattern))
-                    : $query->orWhereLike($column, $pattern);
+                    ? $query->orWhereRaw('lower('.$grammar->wrap($column).") like ? escape '!'", [mb_strtolower($pattern)])
+                    : $query->orWhereRaw($grammar->wrap($column).$like." ? escape '!'", [$pattern]);
             }
         });
     }
