@@ -2,7 +2,7 @@
 
 Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.0`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
-## 0.6.0 (unreleased)
+## 0.6.0 (16 November 2026)
 
 The admin screen pieces that lived only in the altpro starter kit's app code move into the library, so the starter, the apps made from it, altpro/cms and a site's own admin modules share one copy. Run `php artisan boost:update` for the references.
 
