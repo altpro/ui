@@ -103,7 +103,7 @@ The skills land in the agents' skills directory (`.claude/skills/altpro-ui/`, `a
 ## Install anywhere else
 
 ```
-npm install github:altpro/ui#v0.6.1
+npm install github:altpro/ui#v0.6.2
 npm install @lucide/vue   # icons
 ```
 

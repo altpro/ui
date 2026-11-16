@@ -1,6 +1,14 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.1`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.2`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+
+## 0.6.2 (16 November 2026)
+
+- `DataTable`: a column hidden in an earlier visit shows again once it is a column that cannot be hidden (`hideable: false`, or a virtual column). The stored preference used to keep it hidden, with no Columns control to bring it back, so a table could lose its Name column and every row's link. Markup is unchanged.
+
+### Breaking
+
+- None.
 
 ## 0.6.1 (16 November 2026)
 
