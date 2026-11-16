@@ -86,7 +86,8 @@ onMounted(() => {
 });
 
 const hideableColumns = computed(() => props.columns.filter((c) => c.hideable ?? c.virtual !== true));
-const visibleColumns = computed(() => props.columns.filter((c) => !hiddenColumns.value.includes(c.key)));
+// only a column that can be hidden is: a preference stored before a column became one that cannot be hidden keeps nothing from view
+const visibleColumns = computed(() => props.columns.filter((c) => !(hiddenColumns.value.includes(c.key) && hideableColumns.value.includes(c))));
 // with every data column hidden, nothing tells one row from another
 const lastDataColumn = computed(() => {
   const shown = visibleColumns.value.filter((c) => !c.virtual);

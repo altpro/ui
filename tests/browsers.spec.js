@@ -880,6 +880,22 @@ test("datatable: hiding a column removes it from every row and survives a reload
   await expect(group.getByRole("checkbox", { name: "Name" })).toBeDisabled();
 });
 
+test("datatable: a stored preference never hides a column that cannot be hidden", async ({ page }) => {
+  await page.goto("/datatable.html");
+  // a preference stored before the column was made one that cannot be hidden
+  await page.evaluate(() => {
+    for (const key of Object.keys(localStorage)) if (key.endsWith(":hidden-columns")) localStorage.removeItem(key);
+  });
+  await datatable(page, "Team members").getByRole("button", { name: "Columns" }).click();
+  await datatable(page, "Team members").getByRole("group", { name: "Team members columns" }).getByRole("checkbox", { name: "Email" }).uncheck();
+  await page.evaluate(() => {
+    const key = Object.keys(localStorage).find((k) => k.endsWith(":hidden-columns"));
+    localStorage.setItem(key, JSON.stringify([...JSON.parse(localStorage.getItem(key)), "open"]));
+  });
+  await page.reload();
+  await expect(datatable(page, "Team members").locator("thead th")).toHaveText(["Name", "Role", "Open"]);
+});
+
 test("file input: choose, list, remove, drop, reset, and accept filters dropped files", async ({ page }) => {
   const warnings = [];
   page.on("console", (m) => ["warning", "error"].includes(m.type()) && warnings.push(m.text()));
