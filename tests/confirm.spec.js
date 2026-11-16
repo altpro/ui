@@ -29,6 +29,21 @@ test("focus starts on Cancel, nothing closes it while busy, and it closes from c
   await expect(page.locator("#confirm-delete [role=status]")).toHaveText("Arc studio deleted.");
 });
 
+test("close() on a dialog that is not open does not let a later close get through while busy", async ({ page }) => {
+  await page.goto("/confirm.html");
+  const open = page.getByRole("button", { name: "Delete product" }).first();
+  const dialog = page.getByRole("dialog", { name: "Delete Arc studio?" });
+  // an app that closes a dialog that is not open, as a page does after a visit lands
+  await page.evaluate(() => document.getElementById("delete-product").__vueParentComponent.exposed.close());
+
+  await open.click();
+  await dialog.getByRole("button", { name: "Delete product" }).click();
+  await expect(dialog.getByRole("button", { name: "Delete product" })).toHaveAttribute("aria-busy", "true");
+  // a close that gets past the busy guards, as a Safari without closedby lets through
+  await page.evaluate(() => document.getElementById("delete-product").close());
+  await expect(dialog).toBeVisible();
+});
+
 test("a body field takes focus, Enter confirms, an error keeps it open, and closing forgets it", async ({ page }) => {
   await page.goto("/confirm.html");
   const open = page.getByRole("button", { name: "Delete account" }).first();

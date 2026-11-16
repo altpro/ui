@@ -1,6 +1,14 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.0`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.1`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+
+## 0.6.1 (16 November 2026)
+
+- `ConfirmDialog`: `close()` on a dialog that is not open does nothing. It used to leave the dialog's closing flag set, as a dialog that is not open fires no `close` event, so the next close that got past the busy guards (a Safari or Firefox without `closedby`, a repeated Esc) was let through instead of opening the dialog again. Markup is unchanged.
+
+### Breaking
+
+- None.
 
 ## 0.6.0 (16 November 2026)
 

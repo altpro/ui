@@ -60,9 +60,11 @@ const submit = () => {
 
 defineExpose({
   showModal: () => dialog.value?.showModal(),
+  // a dialog that is not open fires no close event, so the flag would stay set and let a later close through while busy
   close: () => {
+    if (!dialog.value?.open) return;
     closing = true;
-    dialog.value?.close();
+    dialog.value.close();
   },
 });
 </script>
