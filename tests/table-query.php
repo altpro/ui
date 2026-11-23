@@ -72,16 +72,20 @@ $check($names('/?search=y'), [], 'does not search columns it was not given');
 $headed = fn (string $url, string $header, ?string $name = null): array => TableQuery::paginate(
     Brand::query(), Request::create($url, server: ['HTTP_X_TABLE_SEARCH' => $header]), searchable: ['name'], sortable: ['name'], name: $name,
 )->pluck('name')->all();
-$check($headed('/', 'search=anad'), ['Anadin'], 'header: searches what the header holds');
-$check($headed('/', 'other_search=anad&brands_search=CAL', 'brands'), ['Calpol'], 'header: reads its own list\'s parameter');
-$check($headed('/?search=boots', 'brands_search=cal'), ['Boots'], 'header: another list\'s search leaves the URL\'s');
-$check($headed('/?search=boots', 'search=cal'), ['Calpol'], 'header: wins over a search in the URL');
-$check($headed('/', 'search=b&search=ana%64'), ['Anadin'], 'header: the last of a repeated one counts, percent-decoded');
-$check($headed('/', 'search=b+o'), [], 'header: a plus is a space, as a form encodes it');
-$check($headed('/?search=boots', 'search=a%00b'), ['Anadin', 'Boots', 'Calpol'], 'header: a search with a null byte is no search, not the URL\'s');
-$check($headed('/', 'search=%FF'), ['Anadin', 'Boots', 'Calpol'], 'header: a search that is not UTF-8 is no search');
-$check($headed('/?search=boots', 'search='), ['Anadin', 'Boots', 'Calpol'], 'header: an empty search says there is none, over one in the URL');
-$check(TableQuery::view(Request::create('/', server: ['HTTP_X_TABLE_SEARCH' => 'search=%20cal%20']))['search'], 'cal', 'header: view() trims it');
+$check($headed('/', 'path=%2F&search=anad'), ['Anadin'], 'header: searches what the header holds');
+$check($headed('/', 'path=%2F&other_search=anad&brands_search=CAL', 'brands'), ['Calpol'], 'header: reads its own list\'s parameter');
+$check($headed('/?search=boots', 'path=%2F&brands_search=cal'), ['Boots'], 'header: another list\'s search leaves the URL\'s');
+$check($headed('/?search=boots', 'path=%2F&search=cal'), ['Calpol'], 'header: wins over a search in the URL');
+$check($headed('/', 'path=%2F&search=b&search=ana%64'), ['Anadin'], 'header: the last of a repeated one counts, percent-decoded');
+$check($headed('/', 'path=%2F&search=b+o'), [], 'header: a plus is a space, as a form encodes it');
+$check($headed('/?search=boots', 'path=%2F&search=a%00b'), ['Anadin', 'Boots', 'Calpol'], 'header: a search with a null byte is no search, not the URL\'s');
+$check($headed('/', 'path=%2F&search=%FF'), ['Anadin', 'Boots', 'Calpol'], 'header: a search that is not UTF-8 is no search');
+$check($headed('/?search=boots', 'path=%2F&search='), ['Anadin', 'Boots', 'Calpol'], 'header: an empty search says there is none, over one in the URL');
+$check($headed('/dashboard', 'path=%2Fclients&search=cal'), ['Anadin', 'Boots', 'Calpol'], 'header: one for another page, which a redirect carried here, is not read');
+$check($headed('/', 'search=cal'), ['Anadin', 'Boots', 'Calpol'], 'header: one that names no page is not read');
+$linked = fn (bool $private): string => TableQuery::paginate(Brand::query(), Request::create('/?brands_search=a&brands_sort=name&tag=x'), searchable: ['name'], sortable: ['name'], name: 'brands', perPage: 1, privateSearch: $private)->nextPageUrl() ?? '';
+$check([str_contains($linked(true), 'brands_search'), str_contains($linked(true), 'brands_sort=name'), str_contains($linked(true), 'tag=x')], [false, true, true], 'privateSearch: the links leave a search in the URL out, and keep the rest');
+$check(TableQuery::view(Request::create('/', server: ['HTTP_X_TABLE_SEARCH' => 'path=%2F&search=%20cal%20']))['search'], 'cal', 'header: view() trims it');
 // SQLite and MySQL ignore case anyway; Postgres needs ilike. Compiled only, so no server is needed
 $app['config']->set('database.connections.pgsql', ['driver' => 'pgsql', 'database' => 'x', 'prefix' => '']);
 TableQuery::search($pg = Brand::on('pgsql'), ['name'], 'ANAD');

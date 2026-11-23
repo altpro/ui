@@ -11,12 +11,18 @@ Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.4`). On 0.x a breaking cha
   - A reload or a poll records the term its rows answer. Before, an app that reloads after Back lost the search on the second Back once a row had changed.
   - A remembered term comes back only on Back or Forward. A link to the list starts it afresh, even when its rows are the same as a search's were.
   - A link's search leaves the address before the rows are asked for again, so no request names it as its Referer, and the paginator's links lose it too. A change made meanwhile no longer puts it back.
-  - The memory is cleared when a page arrives with `clearHistory`.
+  - The terms are forgotten when a page arrives with `clearHistory`, a visit that replaced its entry included.
+  - The header names the page's path first (`path=%2Fclients&clients_search=smith`), and `TableQuery` reads it only on a request for that path, so a redirect that carries it elsewhere is not searched. It goes only to the page's own origin.
+  - `TableQuery::paginate(privateSearch: true)` leaves the search out of the paginator's links, even one an old link put in the query string.
+  - A save's validation errors that come back to the list are reconciled as a success is, and the list's next request keeps them.
+  - Rows that Inertia lands under a newer page's address (a slow reload) are asked for again with that address.
+  - Back after a full page load looks the rows up as a remount does, so the box and the rows agree, and a list drawn after a partial or async reload of the page still gets its term back.
+  - A stored page size waits for a link's search to leave the address before it asks for the rows.
 - `datatable.md` says what records headers must leave out, and when a cache needs `Vary: X-Table-Search`.
 
 ### Breaking
 
-- None. A server that read the header itself sees `key=` for a list with nothing typed.
+- None for an app that reads the term through `TableQuery`. A server that read the header itself sees `path=` first, and `key=` for a list with nothing typed.
 
 ## 0.6.4 (23 November 2026)
 

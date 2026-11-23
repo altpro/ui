@@ -433,11 +433,12 @@ export const visitReloadsTable = (visit: { method: string; url: URL; only: strin
 export const SEARCH_HEADER = "X-Table-Search";
 
 /**
- * The header's value for these searches, keyed by search parameter. An empty term is sent too (`clients_search=`): it
- * says there is no search, which outranks one a link left in the query string.
+ * The header's value for these searches, keyed by search parameter, for the page at `path`: TableQuery reads it only on
+ * a request for that page, so a redirect elsewhere that carries it on finds nothing. An empty term is sent too
+ * (`clients_search=`): it says there is no search, which outranks one a link left in the query string.
  */
-export const searchHeader = (terms: Record<string, string>): string =>
-  new URLSearchParams(Object.entries(terms).map(([key, term]) => [key, term.trim()])).toString();
+export const searchHeader = (terms: Record<string, string>, path: string): string =>
+  new URLSearchParams([["path", path], ...Object.entries(terms).map(([key, term]): [string, string] => [key, term.trim()])]).toString();
 
 /** The searches a header's value holds, keyed by search parameter, the last of a repeated one winning as in PHP. */
 export const readSearchHeader = (value: string | undefined | null): Record<string, string> =>
@@ -496,28 +497,42 @@ const listen = () => {
   listening = true;
   router.on("before", ({ detail: { visit } }) => {
     if (visit.prefetch) return;
-    // a visit is not Back: a hash change may have set this without Inertia drawing anything
-    restoring = false;
+    // a visit to a page is not Back (a hash change may have set this without Inertia drawing anything); a reload of
+    // some props is not either, but a list drawn after it, such as one inside <Deferred>, still came out of the entry
+    if (!visit.async && visit.only.length === 0) restoring = false;
     // only a GET of this page that keeps its state, which keeps its lists' boxes; a save, another page or a fresh
     // visit to this one has no use for the term. A save that comes back here is asked for again on landing.
-    const ours = visit.method === "get" && !!visit.preserveState && visit.url.pathname === location.pathname && asked.size > 0;
+    const ours =
+      visit.method === "get" && !!visit.preserveState && visit.url.origin === location.origin && visit.url.pathname === location.pathname && asked.size > 0;
     const terms = ours ? Object.fromEntries([...asked].map(([key, { term }]) => [key, term])) : null;
-    if (terms) visit.headers = { ...visit.headers, [SEARCH_HEADER]: searchHeader(terms) };
+    if (terms) visit.headers = { ...visit.headers, [SEARCH_HEADER]: searchHeader(terms, visit.url.pathname) };
     carried.set(visit.id, { terms, method: visit.method, url: visit.url, only: [...visit.only] });
     keep(carried, 50);
   });
-  // success comes first, so every list has read what it needs
+  // success and error come first, so every list has read what it needs
   router.on("finish", ({ detail: { visit } }) => void carried.delete(visit.id));
-  router.on("navigate", ({ detail: { page } }) => {
-    restoring = false;
-    // the way out of an app that clears its history (a logout) clears what its lists were searching for too
-    if (page.clearHistory) {
-      remembered.clear();
-      try {
-        sessionStorage.removeItem(SEARCHED_KEY);
-      } catch {}
-    }
+  // the way out of an app that clears its history (a logout) clears what its lists were searching for too; a visit
+  // that replaces its entry fires no navigate, so success and error look as well. The fingerprints of searched rows
+  // stay: they name no term, and they are how a list Back brings searched rows to asks for them again without one
+  const forgetOn = (page: { clearHistory?: boolean } | undefined) => {
+    if (page?.clearHistory) remembered.clear();
+  };
+  router.on("navigate", ({ detail: { page, type } }) => {
+    if (type !== "history") restoring = false;
+    forgetOn(page);
   });
+  router.on("success", ({ detail: { page } }) => forgetOn(page));
+  router.on("error", ({ detail: { page } }) => forgetOn(page));
+};
+
+// The query string with its parameters in one order, to tell whether two URLs ask for the same view.
+const sameQuery = (a: string, b: string) => {
+  const sorted = (url: string) => {
+    const query = new URL(url, location.href).searchParams;
+    query.sort();
+    return query.toString();
+  };
+  return sorted(a) === sorted(b);
 };
 
 // Searches to take out of the URL a link came with, gathered so lists mounting together make one change to it, and
@@ -689,32 +704,61 @@ export const useTableState = (options: {
     apply({ search: "", filters: Object.fromEntries(options.url().filters.map((f) => [f.key, []])) });
   };
 
-  const reloadRows = () => router.reload({ only: options.only().length ? options.only() : undefined });
+  // a reload that answers a save's validation errors keeps them
+  const reloadRows = () => router.reload({ only: options.only().length ? options.only() : undefined, preserveErrors: true });
   // The rows a visit brought answer the private search it carried, if it reloaded them: a reload or a poll as much as
-  // the list's own visits. Rows that answer another term (a slow answer to an older search, a save that came back
-  // here, which carries none) are asked for again with the one in the box.
-  const offSuccess = isPrivate
-    ? router.on("success", ({ detail: { visitId } }) => {
-        const sent = visitId === undefined ? undefined : carried.get(visitId);
-        if (!sent || !options.server()) return;
-        const reloaded =
-          sent.method === "get"
-            ? visitReloadsTable({ method: "get", url: sent.url, only: sent.only, prefetch: false, async: false }, page.url, options.only())
-            : sent.only.length === 0 || options.only().length === 0 || sent.only.some((prop) => options.only().includes(prop));
-        if (!reloaded) return;
-        answered.value = sent.terms?.[searchKey] ?? "";
-        rememberTerm(answered.value);
-        if (answered.value !== (asked.get(searchKey)?.term ?? "")) reloadRows();
+  // the list's own visits, and a save whose validation errors come back here as much as one that worked. Rows that
+  // answer another term than the box's (a slow answer to an older search, a save that came back here, which carries
+  // none), or another page, sort or filter than the URL's (a slow reload Inertia applies under a newer URL), are
+  // asked for again with what the box and the URL say.
+  const reconcile = (visitId: string | undefined) => {
+    const sent = visitId === undefined ? undefined : carried.get(visitId);
+    if (!sent || !options.server()) return;
+    const reloaded =
+      sent.method === "get"
+        ? visitReloadsTable({ method: "get", url: sent.url, only: sent.only, prefetch: false, async: false }, page.url, options.only())
+        : sent.only.length === 0 || options.only().length === 0 || sent.only.some((prop) => options.only().includes(prop));
+    if (!reloaded) return;
+    answered.value = sent.terms?.[searchKey] ?? "";
+    rememberTerm(answered.value);
+    const staleView = sent.method === "get" && !sameQuery(sent.url.href, page.url);
+    if (staleView || answered.value !== (asked.get(searchKey)?.term ?? "")) reloadRows();
+  };
+  const offSuccess = isPrivate ? router.on("success", ({ detail: { visitId } }) => reconcile(visitId)) : () => {};
+  const offError = isPrivate ? router.on("error", ({ detail: { visitId } }) => reconcile(visitId)) : () => {};
+  // Back after a full page load: Inertia draws the server's rows first and puts the history entry's in afterwards,
+  // keeping the list, so the rows it shows now are looked up as a remount would look them up
+  const shown = options.rows?.();
+  const offHistory = isPrivate
+    ? router.on("navigate", ({ detail: { type } }) => {
+        if (type !== "history" || !options.server() || options.rows?.() === shown) return;
+        const key = rowsKey();
+        const term = remembered.get(key);
+        const lost = term === undefined && searchedRows().includes(fingerprint(key));
+        searchInput.value = answered.value = term ?? "";
+        setAsked(answered.value);
+        if (lost) reloadRows();
       })
     : () => {};
+  // a link's search is taken out of the address before anything else asks the server for these rows, so no request
+  // names it as its Referer: a stored page size waits for it
+  let cleaning: Array<() => void> | null = null;
+  const whenAddressClean = (then: () => void) => (cleaning ? cleaning.push(then) : then());
   onMounted(() => {
     if (!isPrivate) return;
     // The search a link put in the URL is in the box now, and the rows answer it. The address loses it first, through
     // Inertia so its own record of the page does too, and only then are the rows asked for again, with the term in the
-    // header, so no request names the old address as its Referer and the paginator's links in the history entry lose
-    // it. A change made meanwhile builds on a URL without it, as every private list's changes do.
+    // header, so the paginator's links in the history entry lose it. A change made meanwhile builds on a URL without
+    // it, as every private list's changes do.
     if (read.value.search !== "") {
-      stripSearch(searchKey, () => page.url, () => (options.server() ? reloadRows() : rememberTerm(start)));
+      cleaning = [];
+      stripSearch(searchKey, () => page.url, () => {
+        const waiting = cleaning ?? [];
+        cleaning = null;
+        waiting.forEach((then) => then());
+        if (!options.server()) rememberTerm(start);
+        else if (askedFor.value === null) reloadRows();
+      });
     } else if (forgotten) {
       reloadRows();
     }
@@ -740,6 +784,8 @@ export const useTableState = (options: {
     offStart();
     offFinish();
     offSuccess();
+    offError();
+    offHistory();
     if (asked.get(searchKey)?.owner === owner) asked.delete(searchKey);
   });
 
@@ -770,6 +816,8 @@ export const useTableState = (options: {
     apply,
     setSearch,
     clearAll,
+    /** Runs once a search a link left in the URL is out of the address, at once when there is none. */
+    whenAddressClean,
     /** The URL `apply` would visit for this change, built on the page as it stands, for a link to it. */
     href: (patch: TableStatePatch) => viewUrl(page.url, patch, { ...options.url(), server: options.server() }),
   };
@@ -880,7 +928,9 @@ export const useDataList = <TRow>(source: () => DataListSource<TRow>) => {
   onMounted(() => {
     const stored = sizeKey ? readPreference(sizeKey) : undefined;
     if (typeof stored === "number" && PAGE_SIZES.includes(stored)) preferredSize.value = stored;
-    if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value }, true);
+    state.whenAddressClean(() => {
+      if (server.value && view.value.perPage !== preferredSize.value && state.perPage.value === null) state.apply({ perPage: preferredSize.value }, true);
+    });
   });
 
   const setFilter = (key: string, values: string[]) => state.apply({ filters: { ...state.latestFilters.value, [key]: values } });

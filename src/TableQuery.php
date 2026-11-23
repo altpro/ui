@@ -4,6 +4,7 @@ namespace Altpro\Ui;
 
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Database\Query\Expression;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -27,8 +28,9 @@ final class TableQuery
 
     /**
      * The request header a list with `private-search` sends its search in, so the term stays out of the URL:
-     * the parameters the query string would have held, form-encoded (`clients_search=smith`). SEARCH_HEADER
-     * in dataTable.ts is the same.
+     * the page's path, then the parameters the query string would have held, form-encoded
+     * (`path=%2Fclients&clients_search=smith`). It is read only on a request for that path, so a redirect
+     * that carries it to another page is not searched. SEARCH_HEADER in dataTable.ts is the same.
      */
     public const SEARCH_HEADER = 'X-Table-Search';
 
@@ -49,6 +51,8 @@ final class TableQuery
      * name, or `['sent_at' => 'created_at']` when they do not. `$name` prefixes
      * every parameter and matches the component's `name` prop. `$defaultSort`
      * defaults to the first sortable key, and `$perPage` to the shared default page size.
+     * `$privateSearch` matches the component's `private-search`: the paginator's links
+     * leave the search out, even one an old link put in the query string.
      *
      * @template TModel of \Illuminate\Database\Eloquent\Model
      *
@@ -66,6 +70,7 @@ final class TableQuery
         ?string $defaultSort = null,
         string $defaultDirection = 'asc',
         ?int $perPage = null,
+        bool $privateSearch = false,
     ): LengthAwarePaginator {
         $columns = [];
 
@@ -94,7 +99,10 @@ final class TableQuery
             $paginator = $query->paginate($perPage, pageName: $pageName, page: $paginator->lastPage());
         }
 
-        return $paginator->withQueryString();
+        // a private list's search stays out of its links too, even one an old link put in the query string
+        return $privateSearch
+            ? $paginator->appends(Arr::except($request->query(), self::parameter($name, 'search')))
+            : $paginator->withQueryString();
     }
 
     /**
@@ -323,6 +331,7 @@ final class TableQuery
         }
 
         $found = null;
+        $path = null;
 
         // read by hand: parse_str() would turn a dot or a space in a list's name into an underscore, and `[` into an array
         foreach (explode('&', $header) as $pair) {
@@ -330,7 +339,14 @@ final class TableQuery
 
             if ($name === $key) {
                 $found = $value;
+            } elseif ($name === 'path') {
+                $path = $value;
             }
+        }
+
+        // for another page: a redirect carried it here
+        if ($path !== $request->getBaseUrl().$request->getPathInfo()) {
+            return null;
         }
 
         return $found === null ? null : (self::readable($found) ? $found : '');

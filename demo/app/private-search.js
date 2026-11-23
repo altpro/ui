@@ -36,6 +36,11 @@ window.visits = [];
 // test hooks: the rows, to change one; a header value to answer slowly; the router, for a reload, a poll or a save
 window.people = people;
 window.slowFor = null;
+// where the page was when each request left, which is what the browser sends as its Referer
+window.referrers = [];
+// the next answer's validation errors, and whether it clears the history, as a logout's does
+window.errorsNext = null;
+window.clearHistoryNext = false;
 window.router = router;
 // an app that asks for every page again after Back, as the unified CRM does (resources/js/lib/visitHandlers.ts there)
 let lastUrl = null;
@@ -54,10 +59,17 @@ http.setClient({
     const only = headers["x-inertia-partial-data"]?.split(",");
     const method = (config.method ?? "get").toLowerCase();
     window.visits.push({ url: url.pathname + url.search, header, ...(method !== "get" && { method }) });
-    await new Promise((resolve) => setTimeout(resolve, header !== null && header === window.slowFor ? 1500 : 50));
+    window.referrers.push(location.pathname + location.search);
+    const slow = header !== null && window.slowFor !== null && header.includes(window.slowFor);
+    // slowOnce: only the first request it matches is slow
+    if (slow && window.slowOnce) window.slowFor = null;
+    await new Promise((resolve) => setTimeout(resolve, slow ? 1500 : 50));
     // a save redirects back to the page it came from, which the browser follows with the same headers
     const answered = method === "get" ? url : new URL(location.href);
-    return { status: 200, data: JSON.stringify(pageAt(answered, header, only)), headers: { "x-inertia": "true", "content-type": "application/json" } };
+    const body = pageAt(answered, header, only);
+    if (window.errorsNext) [body.props.errors, window.errorsNext] = [window.errorsNext, null];
+    if (window.clearHistoryNext) [body.clearHistory, window.clearHistoryNext] = [true, false];
+    return { status: 200, data: JSON.stringify(body), headers: { "x-inertia": "true", "content-type": "application/json" } };
   },
 });
 
