@@ -20,6 +20,10 @@ _Avoid_: remote mode, paginated mode
 The search, filters, sort and page: what a link to the table reproduces. It lives in the query string.
 _Avoid_: state, query (when meaning all four)
 
+**Private search**:
+A list's search kept out of the URL, for a list that searches people: in server mode it travels in a request header, and the tab remembers it in memory only. The rest of the view stays in the query string.
+_Avoid_: hidden search, secret search
+
 **Latest filters** and **latest sort**:
 The filters and sort as last asked for, ahead of the view while a server visit is on its way. Controls show them; the rows and the badge answer the view.
 

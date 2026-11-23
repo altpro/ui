@@ -69,7 +69,7 @@ const stats: ListHeaderStat[] = [{ value: "a", count: 2, icon, hue: "green" }, {
   <!-- @vue-expect-error a string is not a file -->
   <FileInput model-value="photo.jpg" />
 
-  <DataTimeline caption="Log" :rows="entries" date-key="at" :filters="filters" filter-display="drawer" filter-count="changed" :search="false" :entry-class="(row) => (row.kind === 'x' ? 'danger' : undefined)">
+  <DataTimeline caption="Log" :rows="entries" date-key="at" :filters="filters" filter-display="drawer" filter-count="changed" :search="false" :private-search="true" :entry-class="(row) => (row.kind === 'x' ? 'danger' : undefined)">
     <template #marker="{ row }">{{ name(row) }}</template>
     <template #entry="{ row }">{{ name(row) }}</template>
     <template #filter-kind="{ values, set }"><button @click="set([...values, 'a'])" /></template>
@@ -92,7 +92,7 @@ const stats: ListHeaderStat[] = [{ value: "a", count: 2, icon, hue: "green" }, {
     </template>
     <template #cell-name="{ row }">{{ name(row) }}</template>
   </DataTable>
-  <DataTable caption="Entries" :columns="columns" :rows="entries" :filters="filters">
+  <DataTable caption="Entries" private-search :columns="columns" :rows="entries" :filters="filters">
     <template #header="list">
       <ListHeader v-bind="list" title="Entries" noun="entry" plural="entries" qualifier=", including old ones" stat-key="kind" :stats="stats">
         <template #actions><a href="/entries/create" class="btn primary">Add entry</a></template>

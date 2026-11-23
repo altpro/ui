@@ -10,7 +10,9 @@ import {
   groupByDay,
   instantOf,
   keyOf,
+  readSearchHeader,
   readView,
+  searchHeader,
   tableView,
   timeOfDay,
   viewUrl,
@@ -333,4 +335,13 @@ test("timeOfDay and instantOf: a time, nothing for a bare date, and what cannot 
   assert.ok(instantOf("2026-11-09T09:00:00+02:00")! < instantOf("2026-11-09T08:00:00Z")!, "offsets count");
   assert.equal(instantOf("nope"), null);
   assert.equal(instantOf(null), null);
+});
+
+test("a private search's header holds each list's term as a query string would, ASCII whatever was typed", () => {
+  const value = searchHeader({ clients_search: " Siân Łukasz ", records_search: "", search: "50% & more" });
+  assert.equal(value, "clients_search=Si%C3%A2n+%C5%81ukasz&search=50%25+%26+more");
+  assert.match(value, /^[\x20-\x7e]*$/, "a header value the browser will send");
+  assert.deepEqual(readSearchHeader(value), { clients_search: "Siân Łukasz", search: "50% & more" });
+  assert.equal(searchHeader({ clients_search: "  " }), "", "nothing to send");
+  assert.deepEqual(readSearchHeader(undefined), {});
 });

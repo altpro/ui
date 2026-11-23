@@ -68,6 +68,19 @@ $check($names('/?sort=title&dir=asc'), ['Boots', 'Anadin', 'Calpol'], 'maps the 
 $check($names('/?sort=id&dir=asc'), ['Anadin', 'Boots', 'Calpol'], 'refuses a column not on the list and falls back to the default');
 $check($names('/?search=anad'), ['Anadin'], 'searches the named columns');
 $check($names('/?search=y'), [], 'does not search columns it was not given');
+// a private search comes in a header, as the query string would have held it, so the term stays out of the URL
+$headed = fn (string $url, string $header, ?string $name = null): array => TableQuery::paginate(
+    Brand::query(), Request::create($url, server: ['HTTP_X_TABLE_SEARCH' => $header]), searchable: ['name'], sortable: ['name'], name: $name,
+)->pluck('name')->all();
+$check($headed('/', 'search=anad'), ['Anadin'], 'header: searches what the header holds');
+$check($headed('/', 'other_search=anad&brands_search=CAL', 'brands'), ['Calpol'], 'header: reads its own list\'s parameter');
+$check($headed('/?search=boots', 'brands_search=cal'), ['Boots'], 'header: another list\'s search leaves the URL\'s');
+$check($headed('/?search=boots', 'search=cal'), ['Calpol'], 'header: wins over a search in the URL');
+$check($headed('/', 'search=b&search=ana%64'), ['Anadin'], 'header: the last of a repeated one counts, percent-decoded');
+$check($headed('/', 'search=b+o'), [], 'header: a plus is a space, as a form encodes it');
+$check($headed('/?search=boots', 'search=a%00b'), ['Anadin', 'Boots', 'Calpol'], 'header: a search with a null byte is no search, not the URL\'s');
+$check($headed('/', 'search=%FF'), ['Anadin', 'Boots', 'Calpol'], 'header: a search that is not UTF-8 is no search');
+$check(TableQuery::view(Request::create('/', server: ['HTTP_X_TABLE_SEARCH' => 'search=%20cal%20']))['search'], 'cal', 'header: view() trims it');
 // SQLite and MySQL ignore case anyway; Postgres needs ilike. Compiled only, so no server is needed
 $app['config']->set('database.connections.pgsql', ['driver' => 'pgsql', 'database' => 'x', 'prefix' => '']);
 TableQuery::search($pg = Brand::on('pgsql'), ['name'], 'ANAD');

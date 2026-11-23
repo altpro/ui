@@ -65,6 +65,7 @@ const list = useDataList<TRow>(() => ({
   filters: props.filters,
   searchable: props.searchable,
   search: props.search,
+  privateSearch: props.privateSearch,
   name: props.name,
   storageKey: props.name || columnKeys,
   perPage: props.perPage,

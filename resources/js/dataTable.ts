@@ -1,7 +1,7 @@
 // Types, helpers and URL state for DataTable.vue.
 // A page imports the types to type its columns: `const columns: DataTableColumn<Brand>[] = [...]`.
 // Without the annotation `key` widens to string and stops being checked against the row.
-import { computed, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
+import { computed, nextTick, onMounted, onUnmounted, ref, shallowRef, watch } from "vue";
 import { router, usePage } from "@inertiajs/vue3";
 import pageSizes from "./dataTable.json" with { type: "json" };
 
@@ -426,6 +426,92 @@ export const visitReloadsTable = (visit: { method: string; url: URL; only: strin
   visit.url.pathname === pageUrl.split("?")[0] &&
   (visit.only.length === 0 || only.length === 0 || visit.only.some((prop) => only.includes(prop)));
 
+/**
+ * The request header a private search travels in, as the URL would have held it: `clients_search=smith`, one parameter
+ * per list, form-encoded so any name is plain ASCII. TableQuery reads a list's search from here before the query string.
+ */
+export const SEARCH_HEADER = "X-Table-Search";
+
+/** The header's value for these searches, keyed by search parameter; an empty term is left out. "" when none is left. */
+export const searchHeader = (terms: Record<string, string>): string =>
+  new URLSearchParams(Object.entries(terms).filter(([, term]) => term.trim() !== "").map(([key, term]) => [key, term.trim()])).toString();
+
+/** The searches a header's value holds, keyed by search parameter, the last of a repeated one winning as in PHP. */
+export const readSearchHeader = (value: string | undefined | null): Record<string, string> =>
+  Object.fromEntries(new URLSearchParams(value ?? ""));
+
+// cyrb53: a short, stable name for a page of rows, so a list can know them again without keeping who is in them
+const fingerprint = (text: string): string => {
+  let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  return (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(36);
+};
+
+// Private searches. A term lives in this tab's memory and nowhere else: not in the URL, the history entry or storage.
+// `asked` is each server-mode list on the page by search parameter, with the term it last asked for, which every
+// visit that keeps the page's state carries in the header (a poll, a reload, a save that comes back here).
+const asked = new Map<string, { owner: object; term: string }>();
+// The terms a visit carried, by visit id, so a list knows what the rows it was given answer.
+const carried = new Map<string, { terms: Record<string, string>; visit: { method: string; url: URL; only: string[]; prefetch: boolean; async?: boolean } }>();
+// What a list's search was, by a fingerprint of the page and rows it was shown with, so Back brings it back with them.
+const remembered = new Map<string, string>();
+// Fingerprints of rows a search answered, kept for the tab in sessionStorage: after a reload the terms are gone, and
+// a page of searched rows that Back brings out of the history entry is then asked for again without its search.
+const SEARCHED_KEY = "altpro-ui:searched";
+const keep = (map: Map<string, unknown>, limit: number) => {
+  while (map.size > limit) map.delete(map.keys().next().value!);
+};
+const searchedRows = (): string[] => {
+  try {
+    const stored: unknown = JSON.parse(sessionStorage.getItem(SEARCHED_KEY) ?? "[]");
+    return Array.isArray(stored) ? stored.filter((v): v is string => typeof v === "string") : [];
+  } catch {
+    return [];
+  }
+};
+const noteSearchedRows = (key: string) => {
+  try {
+    const kept = searchedRows().filter((k) => k !== key);
+    sessionStorage.setItem(SEARCHED_KEY, JSON.stringify([...kept, key].slice(-500)));
+  } catch {}
+};
+let listening = false;
+const listen = () => {
+  if (listening) return;
+  listening = true;
+  router.on("before", ({ detail: { visit } }) => {
+    // a visit that keeps the page's state keeps its lists' boxes, so their rows must answer them. A GET elsewhere is
+    // another page; any other method may come back here through a redirect, which takes the header with it.
+    if (visit.prefetch || !visit.preserveState || (visit.method === "get" && visit.url.pathname !== location.pathname)) return;
+    const terms = Object.fromEntries([...asked].map(([key, { term }]) => [key, term]));
+    const value = searchHeader(terms);
+    if (value !== "") visit.headers = { ...visit.headers, [SEARCH_HEADER]: value };
+    carried.set(visit.id, { terms, visit });
+    keep(carried, 50);
+  });
+};
+
+// Searches to take out of the URL a link came with, gathered so lists mounting together make one change to it.
+let stripping: string[] | null = null;
+const stripSearch = (key: string, url: () => string) => {
+  if (stripping) return void stripping.push(key);
+  stripping = [key];
+  queueMicrotask(() => {
+    const [path = "", search = ""] = url().split("?");
+    const query = new URLSearchParams(search);
+    for (const k of stripping ?? []) query.delete(k);
+    stripping = null;
+    const qs = query.toString();
+    router.replace({ url: qs === "" ? path : `${path}?${qs}`, preserveScroll: true, preserveState: true });
+  });
+};
+
 // The URL of the server visit on its way. The page's URL only moves when the response lands and a new visit cancels the
 // one in flight, so a change made meanwhile must build on this or the first change is lost. One for the page, as lists share the URL.
 const askedFor = shallowRef<string | null>(null);
@@ -446,32 +532,88 @@ export const useTableState = (options: {
   server: () => boolean;
   /** Props a server visit reloads; empty reloads them all. */
   only: () => string[];
+  /** Keep the search out of the URL: see `privateSearch` on DataListSource. Read once. */
+  privateSearch?: boolean;
+  /** The rows as given, which a private search in server mode knows again on Back. */
+  rows?: () => unknown;
 }) => {
   const page = usePage();
   const readUrl = (url: string) => readView(new URLSearchParams(url.split("?")[1] ?? ""), options.url());
   const read = computed(() => readUrl(page.url));
   const latest = computed(() => (askedFor.value === null ? read.value : readUrl(askedFor.value)));
 
+  const isPrivate = options.privateSearch === true;
+  const searchKey = parameter(options.url().name, "search");
+  const owner = {};
+  // a private search in server mode: the term the rows on screen answer, which the URL would otherwise say
+  const answered = ref("");
+  // what a private search was is known by the page and, in server mode, the rows it was shown with: a list in the
+  // browser filters its rows itself, so they are the same whatever was typed
+  const rowsKey = () => `${searchKey}@${location.pathname}${options.server() ? `#${fingerprint(JSON.stringify(options.rows?.() ?? null))}` : ""}`;
+  const setAsked = (term: string) => {
+    if (options.server()) asked.set(searchKey, { owner, term });
+  };
+  // after the rows change, so the fingerprint is of the rows the term goes with
+  const rememberTerm = (term: string) =>
+    nextTick(() => {
+      const key = rowsKey();
+      remembered.delete(key);
+      remembered.set(key, term);
+      keep(remembered, 200);
+      if (term !== "" && options.server()) noteSearchedRows(fingerprint(key));
+    });
+
+  let start = read.value.search;
+  let forgotten = false;
+  if (isPrivate && typeof window !== "undefined") {
+    listen();
+    // a search in the URL (a link from before the list kept it private) is taken into the box and out of the URL below
+    if (start === "") {
+      const key = rowsKey();
+      start = remembered.get(key) ?? "";
+      // rows a search answered, brought back by Back after a reload took the term with it: asked for again without one below
+      forgotten = !remembered.has(key) && options.server() && searchedRows().includes(fingerprint(key));
+    }
+    answered.value = start;
+    setAsked(start);
+  }
+
   // the box answers each keystroke; the URL (a request, in server mode) catches up after a pause
-  const searchInput = ref(read.value.search);
+  const searchInput = ref(start);
   let searchTimer: ReturnType<typeof setTimeout> | undefined;
   // back button, or a clear from elsewhere: the URL wins unless the reader is mid-typing,
   // or the box differs only by the spaces the URL trims, which would eat the one between two words
-  watch(
-    () => read.value.search,
-    (value) => {
-      if (searchTimer === undefined && value !== searchInput.value.trim()) searchInput.value = value;
-    },
-  );
+  if (!isPrivate) {
+    watch(
+      () => read.value.search,
+      (value) => {
+        if (searchTimer === undefined && value !== searchInput.value.trim()) searchInput.value = value;
+      },
+    );
+  }
 
   // a sort, page or filter is a step Back undoes; a search rewrites its entry as it is typed, and page size is a preference
   const apply = (patch: TableStatePatch, replace = false) => {
     const from = askedFor.value ?? page.url;
-    const url = viewUrl(from, patch, { ...options.url(), server: options.server() });
-    if (url === from) return;
+    const term = isPrivate ? patch.search?.trim() : undefined;
+    const termChanged = term !== undefined && term !== (options.server() ? (asked.get(searchKey)?.term ?? "") : answered.value);
+    // a private search never reaches the URL; changing it still goes back to page one, as viewUrl does for any change
+    const { search: _search, ...rest } = patch;
+    const url = viewUrl(from, isPrivate ? rest : patch, { ...options.url(), server: options.server() });
+    if (url === from && !termChanged) return;
+    if (termChanged) {
+      setAsked(term);
+      if (!options.server()) {
+        answered.value = term;
+        rememberTerm(term);
+      }
+    }
     const overtaking = askedFor.value !== null;
     // a list in the browser needs no server, unless a server's answer is coming that would put the URL back without this change
-    if (!options.server() && !overtaking) return router[replace ? "replace" : "push"]({ url, preserveScroll: true, preserveState: true });
+    if (!options.server() && !overtaking) {
+      if (url !== from) router[replace ? "replace" : "push"]({ url, preserveScroll: true, preserveState: true });
+      return;
+    }
     const own = options.server() ? options.only() : askedOnly;
     const only = !overtaking ? own : own.length && askedOnly.length ? [...new Set([...askedOnly, ...own])] : [];
     const replaceEntry = replace && (!overtaking || askedReplace);
@@ -522,6 +664,27 @@ export const useTableState = (options: {
     apply({ search: "", filters: Object.fromEntries(options.url().filters.map((f) => [f.key, []])) });
   };
 
+  // the rows a visit brought answer the private search it carried, if it reloaded them
+  const offSuccess = isPrivate
+    ? router.on("success", ({ detail: { visitId } }) => {
+        const sent = visitId === undefined ? undefined : carried.get(visitId);
+        if (!sent || !options.server() || (sent.visit.method === "get" && !visitReloadsTable({ ...sent.visit, prefetch: false }, page.url, options.only()))) return;
+        answered.value = sent.terms[searchKey] ?? "";
+        rememberTerm(answered.value);
+      })
+    : () => {};
+  onMounted(() => {
+    if (!isPrivate) return;
+    // the search a link put in the URL is in the box now, and the rows answer it: the URL forgets it, and every
+    // visit from here carries it in the header
+    if (read.value.search !== "") {
+      stripSearch(searchKey, () => page.url);
+      rememberTerm(answered.value);
+    } else if (forgotten) {
+      router.reload({ only: options.only().length ? options.only() : undefined });
+    }
+  });
+
   // the dim belongs to the visit that started it: a row's save finishing during a reload says nothing about the reload
   const busy = ref(false);
   let reloading: object | null = null;
@@ -541,6 +704,8 @@ export const useTableState = (options: {
     clearTimeout(searchTimer);
     offStart();
     offFinish();
+    offSuccess();
+    if (asked.get(searchKey)?.owner === owner) asked.delete(searchKey);
   });
 
   return {
@@ -559,8 +724,11 @@ export const useTableState = (options: {
     /** The sort as last asked for, ahead of `sort` in the same way. */
     latestSort: computed(() => latest.value.sort),
     latestDirection: computed(() => latest.value.direction),
-    /** The search the URL holds, which in server mode is the one the rows on screen answer; the box may be ahead of it. */
-    search: computed(() => read.value.search),
+    /**
+     * The search the rows on screen answer in server mode, which the URL holds unless the search is private; the box
+     * may be ahead of it. In client mode, the URL's search, or a private search as it was last applied.
+     */
+    search: computed(() => (isPrivate ? answered.value : read.value.search)),
     /** The page size the URL asks the server for, if any. */
     perPage: computed(() => read.value.perPage),
     busy,
@@ -604,6 +772,12 @@ export interface DataListSource<TRow> {
   searchable?: ReadonlyArray<string>;
   /** False removes the search box. */
   search?: boolean;
+  /**
+   * Keep what is typed in the search box out of the URL, for a list that searches people: a name or a reference
+   * then reaches no server log, browser history or copied link. Server mode sends it in a request header that
+   * TableQuery reads. Read once, when the list is set up.
+   */
+  privateSearch?: boolean;
   /** Client mode: the timezone a date filter's days start in. Defaults to the reader's. */
   timeZone?: string;
   /** The default sort; a list with `sortOptions` defaults to the first of them. */
@@ -643,6 +817,8 @@ export const useDataList = <TRow>(source: () => DataListSource<TRow>) => {
     },
     server: () => server.value,
     only: () => source().only ?? [],
+    privateSearch: start.privateSearch,
+    rows: () => source().rows,
   });
 
   // Page size is a preference, not the view: a link you send shows the rows, not your page size.
@@ -750,6 +926,8 @@ export interface DataListProps<TRow> {
   searchable?: ReadonlyArray<keyof TRow & string>;
   /** False removes the search box. */
   search?: boolean;
+  /** Keep the search out of the URL, server logs, history and copied links; server mode sends it in a header TableQuery reads. */
+  privateSearch?: boolean;
   filters?: ReadonlyArray<DataTableFilter<TRow>>;
   direction?: DataTableDirection;
   searchPlaceholder?: string;

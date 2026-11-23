@@ -62,6 +62,7 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 | `unfiltered-total` | Server mode: the count before search and filters, so the table can say "filtered from" and pick the right empty message. |
 | `only` | Server mode: the props a change reloads, e.g. `['brands']`. Give it, with the controller's other props as closures (below), so a table change skips their queries. |
 | `search-placeholder` | Defaults to "Search…". |
+| `private-search` | Keeps what is typed in the search box out of the URL, for a list that searches people: see [A private search](#a-private-search). |
 | `:search="false"` | Removes the search box. Give it when the server has nothing to search: `TableQuery` ignores a term with no searchable columns, and a box that does nothing is worse than none. |
 | `filter-display` | `inline` (default) or `drawer`, which keeps the filters in a panel behind one Filters button. See [datalist.md](datalist.md). |
 | `filter-count` | What the Filters button's badge counts: `in-force` (default) or `changed`. See [datalist.md](datalist.md). |
@@ -89,6 +90,21 @@ Type the columns (`DataTableColumn<Brand>[]`): without it `key` is any string an
 - `presets: true` on a `daterange` adds a select beside the dates: Today, Last 7 days, Last 30 days, This month (the whole calendar month), counted in the browser's local time. A preset only fills in both dates, so the URL and `TableQuery` see plain `from` and `to`. The select names a preset while both dates still match it, and says "Custom" once either is edited ("Any time" with no range). Give it to backward-looking ranges such as orders placed; a schedule looking forward is better without. `{ key: "placed", label: "Placed", type: "daterange", presets: true }`.
 - Markup: `.datatable` wraps `.header` (with the slot), `.controls`, `.bulk`, a scrolling `.scroll` region holding a `.table.hover`, and `.foot` (count, page size, pagination). Utilities on `thClass`/`tdClass` handle alignment and wrapping (`text-right tabular-nums`, `whitespace-nowrap`). Each body row is `position: relative`, so a link in it can cover the row with `after:absolute after:inset-0`, and the checkbox cell sits above that link. Anything else a cell holds that must take its own clicks, such as a button, takes `relative z-1`.
 - The search box fills the room the other controls leave. On a phone it takes the toolbar's first row, and the Filters button, the sort select and Columns share the next.
+
+### A private search
+
+A list of people (clients, patients, staff) is searched by name or by a reference such as an NI number, and a term in the URL reaches the web server's access log, the browser's history and every link copied from the address bar. `private-search` keeps it out: the sort, page and filters stay in the URL, the search does not.
+
+```vue
+<DataTable caption="Clients" name="clients" private-search :columns="columns" :rows="clients" :unfiltered-total="unfilteredTotal" :only="['clients']" />
+```
+
+- Server mode sends the term in a request header, `X-Table-Search` (`TableQuery::SEARCH_HEADER`), as the URL would have held it: `clients_search=smith`, form-encoded, one parameter per list on the page. `TableQuery::paginate()` and `::view()` read a list's search from the header before the query string, so the controller does not change. Read the term through `TableQuery::view($request, name: 'clients')['search']`, never `$request->query('clients_search')`, which is now empty.
+- Every Inertia visit that keeps the page's state carries the header: the table's own, a `router.reload()`, a poll, and a save whose redirect comes back to the page, as a redirect keeps the request's headers. A visit that does not (a plain link to the page) starts the list afresh, with nothing typed.
+- The term lives in the tab's memory only: never in the URL, the history entry or storage. Back to the list brings it back with the rows it was shown with. After a reload has emptied the memory, rows a search answered that Back brings out of the history entry are asked for again without it, so the box and the rows always agree. The rows themselves are in the history entry, as every page's props are: turn on Inertia's history encryption to cover those.
+- A search in a link's URL, from before the list kept it private, is taken into the box and out of the URL.
+- Client mode filters in the browser and writes no term anywhere.
+- A "Select all N matching" selection still carries the search, in the body of the POST.
 
 ### A list page
 
@@ -165,4 +181,4 @@ return Inertia::render('brands/Index', [
 - After the sort, rows are ordered by the model's key in the same direction, so rows tied on a repeated name, status or date fall on the same side of a page break every time.
 - `per_page` is honoured only for `TableQuery::pageSizes()` (10, 25, 50, 100); `perPage:` defaults to 25. A page past the end shows the last page.
 - A parameter with a NUL byte or invalid UTF-8 in it reads as absent, since Postgres refuses both even when bound: no search, the default sort or filter. In a `multiple` filter only that value is dropped. The browser reads the same view.
-- Search is a case-insensitive `LIKE %term%` on each `searchable` column (`ilike` on Postgres), and a typed `%` or `_` is a wildcard. A JSON path such as `'data->postcode'` is searchable too; it is lowered on both sides, since MySQL compares JSON values case-sensitively. Client mode matches a case-insensitive substring.
+- Search is a case-insensitive `LIKE %term%` on each `searchable` column (`ilike` on Postgres), and a typed `%` or `_` is the character itself, as in client mode. A JSON path such as `'data->postcode'` is searchable too; it is lowered on both sides, since MySQL compares JSON values case-sensitively. Client mode matches a case-insensitive substring.

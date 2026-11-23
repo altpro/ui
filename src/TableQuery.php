@@ -26,6 +26,13 @@ final class TableQuery
     private const MAX_PAGE = 1_000_000_000;
 
     /**
+     * The request header a list with `private-search` sends its search in, so the term stays out of the URL:
+     * the parameters the query string would have held, form-encoded (`clients_search=smith`). SEARCH_HEADER
+     * in dataTable.ts is the same.
+     */
+    public const SEARCH_HEADER = 'X-Table-Search';
+
+    /**
      * Page sizes the picker offers, from resources/js/dataTable.json, which
      * DataTable.vue reads too. Anything else in the URL is ignored, so a
      * hand-typed `per_page=100000` cannot ask the database for everything.
@@ -117,7 +124,8 @@ final class TableQuery
         $perPage = $at('per_page');
 
         return [
-            'search' => trim($at('search')),
+            // a private search comes in the header; one in the query string is from a link made before it was private
+            'search' => trim(self::headerSearch($request, self::parameter($name, 'search')) ?? $at('search')),
             // with no default, the first sortable key, as DataTable takes its first sortable column
             'sort' => in_array($sort, $sortable, true) ? $sort : ($defaultSort ?? array_values($sortable)[0] ?? ''),
             'direction' => match ($direction) {
@@ -300,6 +308,32 @@ final class TableQuery
             $from !== '' && $to !== '' && $from > $to => [$to, $from],
             default => $ends,
         };
+    }
+
+    /**
+     * The search the SEARCH_HEADER holds for this parameter, or null when it holds none. Repeated, the last
+     * one counts, as in a query string; one no database takes (see readable()) is no search, as in the URL.
+     */
+    private static function headerSearch(Request $request, string $key): ?string
+    {
+        $header = $request->headers->get(self::SEARCH_HEADER);
+
+        if (! is_string($header) || $header === '') {
+            return null;
+        }
+
+        $found = null;
+
+        // read by hand: parse_str() would turn a dot or a space in a list's name into an underscore, and `[` into an array
+        foreach (explode('&', $header) as $pair) {
+            [$name, $value] = array_map(urldecode(...), explode('=', $pair, 2) + [1 => '']);
+
+            if ($name === $key) {
+                $found = $value;
+            }
+        }
+
+        return $found === null ? null : (self::readable($found) ? $found : '');
     }
 
     /**

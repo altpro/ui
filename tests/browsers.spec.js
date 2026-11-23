@@ -1767,3 +1767,89 @@ test("list frame: a long pager fits a phone, and a list with no search box ignor
   await expect(listIn(page, "A footer of your own").locator("ul.grid > li")).toHaveCount(3);
 });
 
+
+// lists whose search stays out of the URL, against a stand-in server that reads it from the header as TableQuery does
+const privateSearch = async (page, query = "") => {
+  await page.goto(`/app/private-search.html${query}`);
+  await expect(page.locator(".datatable").first()).toBeVisible();
+};
+
+test("private search: what is typed goes in a header, never the URL or history, and every later visit carries it", async ({ page }) => {
+  await privateSearch(page);
+  const people = listNamed(page, "People");
+  const before = await page.evaluate(() => history.length);
+  await people.getByRole("searchbox").fill("alex");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 10, filtered from 30");
+  await expect(people.locator("li", { hasText: "Sam" })).toHaveCount(0);
+  expect(new URL(page.url()).search).toBe("");
+  expect(await page.evaluate(() => history.length)).toBe(before);
+  expect(await page.evaluate(() => JSON.stringify(history.state))).not.toContain("alex");
+  const typed = await page.evaluate(() => window.visits.at(-1));
+  expect(typed).toEqual({ url: "/app/private-search.html", header: "people_search=alex" });
+
+  await people.getByRole("searchbox").fill("sam");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 20, filtered from 30");
+  await people.getByRole("button", { name: "Next page" }).click();
+  await expect(people.getByRole("status")).toHaveText("Showing 11–20 of 20, filtered from 30");
+  await expect(page).toHaveURL(/people_page=2/);
+  expect(page.url()).not.toContain("sam");
+  expect((await page.evaluate(() => window.visits.at(-1))).header).toBe("people_search=sam");
+
+  // Clear empties the box and sends no search
+  await people.getByRole("searchbox").fill("");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 30");
+  expect((await page.evaluate(() => window.visits.at(-1))).header).toBeNull();
+});
+
+test("private search: Back to the list brings the search back with its rows, and a list in the browser keeps its own", async ({ page }) => {
+  await privateSearch(page);
+  const people = listNamed(page, "People"), nearby = listNamed(page, "Nearby");
+  await nearby.getByRole("searchbox").fill("neighbour 1");
+  await expect(nearby.getByRole("status")).toHaveText("Showing 1–3 of 3, filtered from 12");
+  await people.getByRole("searchbox").fill("sam");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 20, filtered from 30");
+  expect(new URL(page.url()).search).toBe("");
+  await people.getByRole("link", { name: "Sam 02" }).click();
+  await expect(page.getByRole("heading", { name: "Sam 02" })).toBeVisible();
+  const visits = await page.evaluate(() => window.visits.length);
+
+  await page.goBack();
+  await expect(people.getByRole("searchbox")).toHaveValue("sam");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 20, filtered from 30");
+  await expect(nearby.getByRole("searchbox")).toHaveValue("neighbour 1");
+  await expect(nearby.getByRole("status")).toHaveText("Showing 1–3 of 3, filtered from 12");
+  expect(await page.evaluate(() => window.visits.length), "Back shows the rows from history").toBe(visits);
+  await people.getByRole("button", { name: "Next page" }).click();
+  await expect(people.getByRole("status")).toHaveText("Showing 11–20 of 20, filtered from 30");
+  expect((await page.evaluate(() => window.visits.at(-1))).header).toBe("people_search=sam");
+});
+
+test("private search: a search in a link's URL is taken into the box and out of the URL", async ({ page }) => {
+  await privateSearch(page, "?people_search=sam&nearby_search=neighbour+1");
+  const people = listNamed(page, "People"), nearby = listNamed(page, "Nearby");
+  await expect(people.getByRole("searchbox")).toHaveValue("sam");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 20, filtered from 30");
+  await expect(nearby.getByRole("searchbox")).toHaveValue("neighbour 1");
+  await expect(nearby.getByRole("status")).toHaveText("Showing 1–3 of 3, filtered from 12");
+  await expect.poll(() => new URL(page.url()).search).toBe("");
+  await people.getByRole("button", { name: "Next page" }).click();
+  await expect(people.getByRole("status")).toHaveText("Showing 11–20 of 20, filtered from 30");
+  await expect(page).toHaveURL(/people_page=2/);
+  expect((await page.evaluate(() => window.visits.at(-1))).header).toBe("people_search=sam");
+});
+
+test("private search: rows a search answered, brought back after a reload took the term, are asked for again without it", async ({ page }) => {
+  await privateSearch(page);
+  const people = listNamed(page, "People");
+  await people.getByRole("searchbox").fill("alex");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 10, filtered from 30");
+  await people.getByRole("link", { name: "Alex 04" }).click();
+  await expect(page.getByRole("heading", { name: "Alex 04" })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole("heading", { name: "Alex 04" })).toBeVisible();
+  await page.goBack();
+  await expect(people.getByRole("searchbox")).toHaveValue("");
+  await expect(people.getByRole("status")).toHaveText("Showing 1–10 of 30");
+  // Inertia brought the searched rows back from the history entry, and the list asked for them again
+  expect(await page.evaluate(() => window.visits)).toEqual([{ url: "/app/private-search.html", header: null }]);
+});

@@ -64,6 +64,7 @@ Put `aria-busy` on a direct child of the frame, as above, and it dims while the 
 | `perPage` | Rows per page until the reader picks another. |
 | `searchable` | Client mode: the keys to search. Without it there is no search box, as it could find nothing. |
 | `search` | `false` removes the search box in either mode, and a `search` in the URL is then ignored. |
+| `privateSearch` | `true` keeps what is typed out of the URL, for a list that searches people; server mode sends it in a header `TableQuery` reads. See [datatable.md](datatable.md#a-private-search). Read once, when the list is set up. |
 | `sortOptions` | `[{ key, direction, label }]`. Draws a sort select, and adds the keys to what a URL may sort by. In server mode list them in `TableQuery`'s `sortable` too. |
 | `sort`, `direction` | The default sort. Defaults to the first of `sortOptions`. |
 | `sortable` | Further keys a URL may sort by. |

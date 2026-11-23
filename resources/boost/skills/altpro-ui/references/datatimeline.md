@@ -51,7 +51,7 @@ On the server, `created_at` is the sort, newest first:
 |------|---------|
 | `date-key` | Required. The field holding each entry's date. |
 | `caption` | Required. Names the search box and pagination, and keys the saved page size unless there is a `name`. |
-| `rows`, `filters`, `name`, `per-page`, `searchable`, `:search="false"`, `search-placeholder`, `unfiltered-total`, `only`, `locale`, `filter-display`, `filter-count` | As in [datatable.md](datatable.md). In client mode, with no `searchable` there is no search box. |
+| `rows`, `filters`, `name`, `per-page`, `searchable`, `:search="false"`, `private-search`, `search-placeholder`, `unfiltered-total`, `only`, `locale`, `filter-display`, `filter-count` | As in [datatable.md](datatable.md). In client mode, with no `searchable` there is no search box. |
 | `direction` | `desc` (default) or `asc`. The reader can change it with Order, newest or oldest first. There is no other sort, which would break the days up. |
 | `row-key` | The field that identifies an entry. Default `id`. |
 | `heading-level` | The day headings and the empty state's. Default 2, for `<h2>`: set it to fit the page's outline. |

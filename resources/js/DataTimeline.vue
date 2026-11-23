@@ -48,6 +48,7 @@ const list = useDataList<TRow>(() => ({
   filters: props.filters,
   searchable: props.searchable,
   search: props.search,
+  privateSearch: props.privateSearch,
   // the days a date filter picks are the days the headings show
   timeZone: props.timeZone,
   name: props.name,
