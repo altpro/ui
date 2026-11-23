@@ -16,7 +16,9 @@ const paginate = (query, header) => {
   const lastPage = Math.max(1, Math.ceil(matching.length / perPage));
   const page = Math.min(view.page, lastPage);
   const data = matching.slice((page - 1) * perPage, page * perPage);
-  return { data, current_page: page, last_page: lastPage, per_page: perPage, total: matching.length, from: data.length ? (page - 1) * perPage + 1 : null, to: data.length ? (page - 1) * perPage + data.length : null };
+  // withQueryString(): Laravel's paginator links carry the request's query string, a search in it included
+  const first_page_url = `/app/private-search.html?${new URLSearchParams([...query].filter(([k]) => k !== "people_page"))}`;
+  return { data, first_page_url, current_page: page, last_page: lastPage, per_page: perPage, total: matching.length, from: data.length ? (page - 1) * perPage + 1 : null, to: data.length ? (page - 1) * perPage + data.length : null };
 };
 const pageAt = (url, header, only) => {
   const record = url.searchParams.get("record");

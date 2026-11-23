@@ -1832,6 +1832,9 @@ test("private search: a search in a link's URL is taken into the box and out of 
   await expect(nearby.getByRole("searchbox")).toHaveValue("neighbour 1");
   await expect(nearby.getByRole("status")).toHaveText("Showing 1–3 of 3, filtered from 12");
   await expect.poll(() => new URL(page.url()).search).toBe("");
+  // the server's rows came with the term in the paginator's links: they are asked for again, and the entry keeps neither
+  await expect.poll(() => page.evaluate(() => JSON.stringify(history.state))).not.toContain("people_search");
+  expect((await page.evaluate(() => window.visits.at(-1)))).toEqual({ url: "/app/private-search.html", header: "people_search=sam" });
   await people.getByRole("button", { name: "Next page" }).click();
   await expect(people.getByRole("status")).toHaveText("Showing 11–20 of 20, filtered from 30");
   await expect(page).toHaveURL(/people_page=2/);

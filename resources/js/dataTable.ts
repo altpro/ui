@@ -498,17 +498,24 @@ const listen = () => {
 };
 
 // Searches to take out of the URL a link came with, gathered so lists mounting together make one change to it.
-let stripping: string[] | null = null;
-const stripSearch = (key: string, url: () => string) => {
-  if (stripping) return void stripping.push(key);
-  stripping = [key];
+// A server-mode list's rows came with the term in the paginator's links too, so those lists are asked for again under
+// the URL without it, the term going in the header, and the history entry is rewritten with rows that do not name it.
+let stripping: Array<{ key: string; server: boolean; only: string[] }> | null = null;
+const stripSearch = (list: { key: string; server: boolean; only: string[] }, url: () => string) => {
+  if (stripping) return void stripping.push(list);
+  stripping = [list];
   queueMicrotask(() => {
+    const lists = stripping ?? [];
+    stripping = null;
     const [path = "", search = ""] = url().split("?");
     const query = new URLSearchParams(search);
-    for (const k of stripping ?? []) query.delete(k);
-    stripping = null;
+    for (const { key } of lists) query.delete(key);
     const qs = query.toString();
-    router.replace({ url: qs === "" ? path : `${path}?${qs}`, preserveScroll: true, preserveState: true });
+    const next = qs === "" ? path : `${path}?${qs}`;
+    const server = lists.filter((l) => l.server);
+    if (server.length === 0) return router.replace({ url: next, preserveScroll: true, preserveState: true });
+    const only = server.some((l) => l.only.length === 0) ? [] : [...new Set(server.flatMap((l) => l.only))];
+    router.get(next, {}, { replace: true, preserveScroll: true, preserveState: true, only: only.length ? only : undefined });
   });
 };
 
@@ -678,7 +685,7 @@ export const useTableState = (options: {
     // the search a link put in the URL is in the box now, and the rows answer it: the URL forgets it, and every
     // visit from here carries it in the header
     if (read.value.search !== "") {
-      stripSearch(searchKey, () => page.url);
+      stripSearch({ key: searchKey, server: options.server(), only: options.only() }, () => page.url);
       rememberTerm(answered.value);
     } else if (forgotten) {
       router.reload({ only: options.only().length ? options.only() : undefined });
