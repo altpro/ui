@@ -1,6 +1,14 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.5`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.6`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+
+## 0.6.6 (23 November 2026)
+
+- `Combobox` no longer throws (`Cannot read properties of null (reading 'contains')`) when it unmounts with focus inside it, as a page change does after something is picked: Vue clears its refs before the browser reports the focus leaving.
+
+### Breaking
+
+- None.
 
 ## 0.6.5 (23 November 2026)
 
