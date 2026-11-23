@@ -20,6 +20,7 @@ const lists = [
 
 <template>
   <div class="space-y-10">
+    <Link href="/app/private-search.html">Everyone</Link>
     <section v-for="{ list, caption } in lists" :key="caption" class="space-y-3">
       <h2 class="text-xl font-semibold">{{ caption }}</h2>
       <DataList :list="list" :caption="caption" v-slot="{ rows, busy }">

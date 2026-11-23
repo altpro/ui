@@ -2,6 +2,22 @@
 
 Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.4`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
+## 0.6.5 (23 November 2026)
+
+- `private-search` (0.6.4), after a review and driving it in the app that asked for it:
+  - The header goes only on a GET of the page itself that keeps its state. 0.6.4 sent it on any save that kept state too, a logout included. The library also no longer keeps a visit's data (a form's) while it waits for the answer.
+  - An empty term is sent as well (`clients_search=`), and `TableQuery` reads it as no search over one in the query string. A box cleared while a link's search was still in the URL used to fall back to it.
+  - Rows that answer another term than the box's are asked for again: a save that comes back to the page, or a slow answer (a reload, a poll) to an older search landing after a newer one.
+  - A reload or a poll records the term its rows answer. Before, an app that reloads after Back lost the search on the second Back once a row had changed.
+  - A remembered term comes back only on Back or Forward. A link to the list starts it afresh, even when its rows are the same as a search's were.
+  - A link's search leaves the address before the rows are asked for again, so no request names it as its Referer, and the paginator's links lose it too. A change made meanwhile no longer puts it back.
+  - The memory is cleared when a page arrives with `clearHistory`.
+- `datatable.md` says what records headers must leave out, and when a cache needs `Vary: X-Table-Search`.
+
+### Breaking
+
+- None. A server that read the header itself sees `key=` for a list with nothing typed.
+
 ## 0.6.4 (23 November 2026)
 
 - `private-search` on `DataTable`, `DataTimeline` and `useDataList` (`privateSearch`): what is typed in the search box stays out of the URL, so a name or a reference such as an NI number reaches no access log, browser history or copied link. The sort, page and filters stay in the URL. In server mode the term travels in a request header, `X-Table-Search`, as the query string would have held it (`clients_search=smith`), on every Inertia visit that keeps the page's state; `TableQuery::paginate()` and `::view()` read it before the query string, so a controller needs no change, except one that read `$request->query('…_search')` itself, which reads `TableQuery::view()['search']` instead. The term is kept in the tab's memory only, and Back to the list brings it back with its rows; after a reload, searched rows that Back brings out of the history entry are asked for again without the search, so the box and the rows agree. A search in a link's URL is taken into the box and out of the URL. See "A private search" in `datatable.md`. Markup is unchanged, and a list without the prop works as before.

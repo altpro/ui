@@ -80,6 +80,7 @@ $check($headed('/', 'search=b&search=ana%64'), ['Anadin'], 'header: the last of 
 $check($headed('/', 'search=b+o'), [], 'header: a plus is a space, as a form encodes it');
 $check($headed('/?search=boots', 'search=a%00b'), ['Anadin', 'Boots', 'Calpol'], 'header: a search with a null byte is no search, not the URL\'s');
 $check($headed('/', 'search=%FF'), ['Anadin', 'Boots', 'Calpol'], 'header: a search that is not UTF-8 is no search');
+$check($headed('/?search=boots', 'search='), ['Anadin', 'Boots', 'Calpol'], 'header: an empty search says there is none, over one in the URL');
 $check(TableQuery::view(Request::create('/', server: ['HTTP_X_TABLE_SEARCH' => 'search=%20cal%20']))['search'], 'cal', 'header: view() trims it');
 // SQLite and MySQL ignore case anyway; Postgres needs ilike. Compiled only, so no server is needed
 $app['config']->set('database.connections.pgsql', ['driver' => 'pgsql', 'database' => 'x', 'prefix' => '']);

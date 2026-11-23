@@ -1,6 +1,6 @@
 // A test page, not in the menu: lists whose search stays out of the URL, against a stand-in server that reads it from
 // the header as TableQuery does. window.visits records each request's URL and header.
-import { createInertiaApp, http } from "@inertiajs/vue3";
+import { createInertiaApp, http, router } from "@inertiajs/vue3";
 import { h } from "vue";
 import { readSearchHeader, readView, SEARCH_HEADER } from "@ui/dataTable";
 import PrivateSearch, { peopleOptions } from "./PrivateSearch.vue";
@@ -33,6 +33,17 @@ const pageAt = (url, header, only) => {
 };
 
 window.visits = [];
+// test hooks: the rows, to change one; a header value to answer slowly; the router, for a reload, a poll or a save
+window.people = people;
+window.slowFor = null;
+window.router = router;
+// an app that asks for every page again after Back, as the unified CRM does (resources/js/lib/visitHandlers.ts there)
+let lastUrl = null;
+router.on("navigate", (event) => {
+  const url = new URL(event.detail.page.url, location.href).href;
+  if (window.reloadOnBack && event.detail.type === "history" && url !== lastUrl) router.reload();
+  lastUrl = url;
+});
 
 http.setClient({
   async request(config) {
@@ -41,9 +52,12 @@ http.setClient({
     const headers = Object.fromEntries(Object.entries(config.headers ?? {}).map(([key, value]) => [key.toLowerCase(), value]));
     const header = headers[SEARCH_HEADER.toLowerCase()] ?? null;
     const only = headers["x-inertia-partial-data"]?.split(",");
-    window.visits.push({ url: url.pathname + url.search, header });
-    await new Promise((resolve) => setTimeout(resolve, 50));
-    return { status: 200, data: JSON.stringify(pageAt(url, header, only)), headers: { "x-inertia": "true", "content-type": "application/json" } };
+    const method = (config.method ?? "get").toLowerCase();
+    window.visits.push({ url: url.pathname + url.search, header, ...(method !== "get" && { method }) });
+    await new Promise((resolve) => setTimeout(resolve, header !== null && header === window.slowFor ? 1500 : 50));
+    // a save redirects back to the page it came from, which the browser follows with the same headers
+    const answered = method === "get" ? url : new URL(location.href);
+    return { status: 200, data: JSON.stringify(pageAt(answered, header, only)), headers: { "x-inertia": "true", "content-type": "application/json" } };
   },
 });
 
