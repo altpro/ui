@@ -1,6 +1,6 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.4`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.5`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
 
 ## 0.6.5 (23 November 2026)
 
