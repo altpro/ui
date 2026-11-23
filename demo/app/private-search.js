@@ -1,6 +1,7 @@
 // A test page, not in the menu: lists whose search stays out of the URL, against a stand-in server that reads it from
 // the header as TableQuery does. window.visits records each request's URL and header.
 import { createInertiaApp, http, router } from "@inertiajs/vue3";
+import { HttpNetworkError } from "@inertiajs/core";
 import { h } from "vue";
 import { readSearchHeader, readView, SEARCH_HEADER } from "@ui/dataTable";
 import PrivateSearch, { peopleOptions } from "./PrivateSearch.vue";
@@ -11,7 +12,8 @@ const perPage = 10;
 const paginate = (query, header) => {
   const view = readView(query, peopleOptions);
   const term = (readSearchHeader(header).people_search ?? view.search).toLowerCase();
-  const matching = people.filter((p) => p.name.toLowerCase().includes(term));
+  const [kind] = view.filters.kind ?? [];
+  const matching = people.filter((p) => p.name.toLowerCase().includes(term) && (!kind || p.name.toLowerCase().startsWith(kind)));
   if (view.direction === "desc") matching.reverse();
   const lastPage = Math.max(1, Math.ceil(matching.length / perPage));
   const page = Math.min(view.page, lastPage);
@@ -20,12 +22,19 @@ const paginate = (query, header) => {
   const first_page_url = `/app/private-search.html?${new URLSearchParams([...query].filter(([k]) => k !== "people_page"))}`;
   return { data, first_page_url, current_page: page, last_page: lastPage, per_page: perPage, total: matching.length, from: data.length ? (page - 1) * perPage + 1 : null, to: data.length ? (page - 1) * perPage + data.length : null };
 };
+const numbered = (search) => {
+  const counts = {};
+  const query = [...new URLSearchParams(search)].map(([key, value]) =>
+    key.endsWith("[]") ? [`${key.slice(0, -2)}[${(counts[key] = (counts[key] ?? -1) + 1)}]`, value] : [key, value]);
+  return query.length ? `?${new URLSearchParams(query)}` : "";
+};
 const pageAt = (url, header, only) => {
   const record = url.searchParams.get("record");
   return {
     component: record ? "Person" : "PrivateSearch",
     props: { errors: {}, ...(record ? { person: people[Number(record) - 1] } : (!only || only.includes("people")) && { people: paginate(url.searchParams, header) }) },
-    url: url.pathname + url.search,
+    // as Laravel's fullUrl() has it: a list parameter is numbered, `key[]` coming back as `key[0]`
+    url: url.pathname + numbered(url.search),
     version: null,
     clearHistory: false,
     encryptHistory: false,
@@ -41,7 +50,11 @@ window.referrers = [];
 // the next answer's validation errors, and whether it clears the history, as a logout's does
 window.errorsNext = null;
 window.clearHistoryNext = false;
+// the next request fails, as when the network drops
+window.failNext = false;
 window.router = router;
+// an app that says so itself when the network drops, as the unified CRM does, rather than leave Inertia to throw
+router.on("networkError", (event) => event.preventDefault());
 // an app that asks for every page again after Back, as the unified CRM does (resources/js/lib/visitHandlers.ts there)
 let lastUrl = null;
 router.on("navigate", (event) => {
@@ -60,6 +73,10 @@ http.setClient({
     const method = (config.method ?? "get").toLowerCase();
     window.visits.push({ url: url.pathname + url.search, header, ...(method !== "get" && { method }) });
     window.referrers.push(location.pathname + location.search);
+    if (window.failNext) {
+      window.failNext = false;
+      throw new HttpNetworkError("The network dropped", undefined, undefined);
+    }
     const slow = header !== null && window.slowFor !== null && header.includes(window.slowFor);
     // slowOnce: only the first request it matches is slow
     if (slow && window.slowOnce) window.slowFor = null;

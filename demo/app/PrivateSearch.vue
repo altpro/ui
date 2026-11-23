@@ -1,6 +1,7 @@
 <script>
 // the server's half reads the URL with these too, as a controller does through TableQuery
-export const peopleOptions = { name: "people", defaultSort: "name", defaultDirection: "asc", sortable: ["name"], filters: [] };
+const kinds = [{ key: "kind", label: "Kind", type: "multiple", options: ["alex", "sam"].map((value) => ({ value, label: value })) }];
+export const peopleOptions = { name: "people", defaultSort: "name", defaultDirection: "asc", sortable: ["name"], filters: kinds };
 </script>
 
 <script setup>
@@ -10,7 +11,7 @@ import { useDataList } from "@ui/dataTable";
 
 const props = defineProps({ people: Object });
 
-const people = useDataList(() => ({ rows: props.people, name: "people", only: ["people"], unfilteredTotal: 30, perPage: 10, sort: "name", direction: "asc", sortable: ["name"], privateSearch: true }));
+const people = useDataList(() => ({ rows: props.people, filters: kinds, name: "people", only: ["people"], unfilteredTotal: 30, perPage: 10, sort: "name", direction: "asc", sortable: ["name"], privateSearch: true }));
 const nearby = useDataList(() => ({ rows: Array.from({ length: 12 }, (_, i) => ({ id: i, name: `Neighbour ${String(i + 1).padStart(2, "0")}` })), name: "nearby", searchable: ["name"], privateSearch: true }));
 const lists = [
   { list: people, caption: "People" },

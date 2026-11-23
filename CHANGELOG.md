@@ -17,7 +17,12 @@ Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.4`). On 0.x a breaking cha
   - A save's validation errors that come back to the list are reconciled as a success is, and the list's next request keeps them.
   - Rows that Inertia lands under a newer page's address (a slow reload) are asked for again with that address.
   - Back after a full page load looks the rows up as a remount does, so the box and the rows agree, and a list drawn after a partial or async reload of the page still gets its term back.
-  - A stored page size waits for a link's search to leave the address before it asks for the rows.
+  - A stored page size waits for a link's search to leave the address before it asks for the rows, whichever private list on the page it was for.
+  - A list compares the view a visit asked for with the page's as `TableQuery` reads them, so the server writing `key[]` back as `key[0]`, or another list's parameters, no longer counts as a stale view (which doubled every request on a list with a `multiple` filter).
+  - The same term typed again after a failed search is asked for again.
+  - A page that clears the history while a private list is on screen empties its box, and a visit that left before the clear does not bring the term back.
+  - A header a visit inherited (Inertia copies them when it follows an `X-Inertia-Redirect`) is dropped when the visit is not for the list's page.
+  - Several lists that ask for their rows again at once do it in one reload, as one reload cancels another.
 - `datatable.md` says what records headers must leave out, and when a cache needs `Vary: X-Table-Search`.
 
 ### Breaking
