@@ -237,9 +237,10 @@ function keydown(e) {
   }
 }
 
-// Escape closes this popover only, not a dialog it sits in; focus leaving the trigger and panel closes it
+// Escape closes this popover only, not a dialog it sits in; focus leaving the trigger and panel closes it. A component
+// unmounting with focus inside it (the page changing) has its refs cleared before the browser reports the focus leaving
 const escape = (e) => open.value && (e.preventDefault(), close(true));
-const focusout = (e) => ![trigger.value, pop.value].some((el) => el.contains(e.relatedTarget)) && close();
+const focusout = (e) => ![trigger.value, pop.value].some((el) => el?.contains(e.relatedTarget)) && close();
 watch(activeId, (v) => v && nextTick(() => document.getElementById(v)?.scrollIntoView({ block: "nearest" })));
 </script>
 

@@ -2053,3 +2053,15 @@ test("private search: a header a visit inherits is dropped when the visit is not
   await page.evaluate(() => window.router.get("/elsewhere", {}, { headers: { "X-Table-Search": "path=%2Fapp%2Fprivate-search.html&people_search=alex" } }));
   await expect.poll(() => page.evaluate(() => window.visits.at(-1))).toEqual({ url: "/elsewhere", header: null });
 });
+
+test("combobox: unmounting with focus inside it, as a page change does, throws nothing", async ({ page }) => {
+  const errors = [];
+  page.on("pageerror", (e) => errors.push(e.message));
+  await page.goto("/combobox.html");
+  const assignee = page.locator("#long").getByRole("combobox", { name: "Assignee", exact: true });
+  await assignee.click();
+  await expect(page.locator("#long").getByRole("combobox", { name: "Search Assignee" })).toBeFocused();
+  await page.evaluate(() => window.demoApps["#long"].unmount());
+  await expect(page.locator("#long .combobox")).toHaveCount(0);
+  expect(errors).toEqual([]);
+});

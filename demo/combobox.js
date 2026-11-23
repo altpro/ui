@@ -3,10 +3,12 @@ import { createApp, h, ref } from "vue";
 import { Form } from "@inertiajs/vue3";
 import Combobox from "@ui/Combobox.vue";
 
+// each app on window.demoApps, so a browser test can unmount one as a page change would
 const mount = (selector, render) => {
   const app = createApp({ setup: () => render });
   app.config.idPrefix = selector.slice(1);
   app.mount(selector);
+  (window.demoApps ??= {})[selector] = app;
 };
 const list = (...labels) => labels.map((label, i) => ({ value: i + 1, label }));
 // a labelled combobox with its v-model shown beside it
