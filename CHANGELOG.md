@@ -22,7 +22,8 @@ Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.4`). On 0.x a breaking cha
   - The same term typed again after a failed search is asked for again.
   - A page that clears the history while a private list is on screen empties its box, and a visit that left before the clear does not bring the term back.
   - A header a visit inherited (Inertia copies them when it follows an `X-Inertia-Redirect`) is dropped when the visit is not for the list's page.
-  - Several lists that ask for their rows again at once do it in one reload, as one reload cancels another.
+  - Several lists that ask for their rows again at once do it in one reload.
+  - `datatable.md`: an app should answer a redirect of a request that carries the header with an Inertia location, as the browser takes a request's headers with it when it follows a redirect.
 - `datatable.md` says what records headers must leave out, and when a cache needs `Vary: X-Table-Search`.
 
 ### Breaking

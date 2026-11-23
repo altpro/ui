@@ -565,7 +565,7 @@ const stripSearch = (key: string, url: () => string, then: () => void) => {
 };
 const whenAddressClean = (then: () => void) => (cleaning ? cleaning.push(then) : then());
 
-// Rows asked for again by several lists at once go in one reload, as one reload cancels another.
+// Rows asked for again by several lists at once go in one reload: one request rather than several, each answer reconciled.
 let reloadQueue: Set<string> | null = null;
 const reloadRowsOf = (only: string[]) => {
   if (reloadQueue) {
