@@ -1,6 +1,15 @@
 # Changelog
 
-Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.3`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+Apps pin `altpro/ui:^0.6` (npm `github:altpro/ui#v0.6.4`). On 0.x a breaking change bumps the minor version (0.6 to 0.7), which `^0.6` already stops at, so apps take it only when someone raises the constraint. Each release lists its breaking changes first, under **Breaking**, with what to change in the app.
+
+## 0.6.4 (23 November 2026)
+
+- `private-search` on `DataTable`, `DataTimeline` and `useDataList` (`privateSearch`): what is typed in the search box stays out of the URL, so a name or a reference such as an NI number reaches no access log, browser history or copied link. The sort, page and filters stay in the URL. In server mode the term travels in a request header, `X-Table-Search`, as the query string would have held it (`clients_search=smith`), on every Inertia visit that keeps the page's state; `TableQuery::paginate()` and `::view()` read it before the query string, so a controller needs no change, except one that read `$request->query('…_search')` itself, which reads `TableQuery::view()['search']` instead. The term is kept in the tab's memory only, and Back to the list brings it back with its rows; after a reload, searched rows that Back brings out of the history entry are asked for again without the search, so the box and the rows agree. A search in a link's URL is taken into the box and out of the URL. See "A private search" in `datatable.md`. Markup is unchanged, and a list without the prop works as before.
+- `datatable.md` no longer says a typed `%` or `_` is a wildcard, which 0.6.3 changed.
+
+### Breaking
+
+- None.
 
 ## 0.6.3 (16 November 2026)
 
